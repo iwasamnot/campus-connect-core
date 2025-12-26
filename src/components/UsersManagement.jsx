@@ -4,7 +4,7 @@ import { db } from '../firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { isAdminRole } from '../utils/helpers';
-import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check } from 'lucide-react';
+import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText } from 'lucide-react';
 
 const UsersManagement = () => {
   const { user: currentUser } = useAuth();
@@ -15,6 +15,7 @@ const UsersManagement = () => {
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Fetch all users
   useEffect(() => {
@@ -95,16 +96,25 @@ const UsersManagement = () => {
   const handleEditUser = (user) => {
     setEditing(user.id);
     setEditData({
+      name: user.name || '',
       studentEmail: user.studentEmail || '',
       personalEmail: user.personalEmail || '',
       phoneNumber: user.phoneNumber || '',
+      bio: user.bio || '',
+      profilePicture: user.profilePicture || '',
+      course: user.course || '',
+      yearOfStudy: user.yearOfStudy || '',
+      dateOfBirth: user.dateOfBirth || '',
+      address: user.address || '',
       role: user.role || 'student'
     });
+    setShowEditModal(true);
   };
 
   const handleCancelEdit = () => {
     setEditing(null);
     setEditData({});
+    setShowEditModal(false);
   };
 
   const handleSaveEdit = async (userId) => {
@@ -113,6 +123,9 @@ const UsersManagement = () => {
       const originalUser = users.find(u => u.id === userId);
       const changes = {};
 
+      if (editData.name !== (originalUser.name || '')) {
+        changes.name = editData.name.trim() || null;
+      }
       if (editData.studentEmail !== (originalUser.studentEmail || '')) {
         changes.studentEmail = editData.studentEmail.trim() || null;
       }
@@ -121,6 +134,24 @@ const UsersManagement = () => {
       }
       if (editData.phoneNumber !== (originalUser.phoneNumber || '')) {
         changes.phoneNumber = editData.phoneNumber.trim() || null;
+      }
+      if (editData.bio !== (originalUser.bio || '')) {
+        changes.bio = editData.bio.trim() || null;
+      }
+      if (editData.profilePicture !== (originalUser.profilePicture || '')) {
+        changes.profilePicture = editData.profilePicture.trim() || null;
+      }
+      if (editData.course !== (originalUser.course || '')) {
+        changes.course = editData.course.trim() || null;
+      }
+      if (editData.yearOfStudy !== (originalUser.yearOfStudy || '')) {
+        changes.yearOfStudy = editData.yearOfStudy.trim() || null;
+      }
+      if (editData.dateOfBirth !== (originalUser.dateOfBirth || '')) {
+        changes.dateOfBirth = editData.dateOfBirth.trim() || null;
+      }
+      if (editData.address !== (originalUser.address || '')) {
+        changes.address = editData.address.trim() || null;
       }
       if (editData.role !== originalUser.role) {
         changes.role = editData.role;
@@ -140,6 +171,7 @@ const UsersManagement = () => {
 
       setEditing(null);
       setEditData({});
+      setShowEditModal(false);
       success('User updated successfully.');
     } catch (error) {
       console.error('Error updating user:', error);
@@ -245,25 +277,13 @@ const UsersManagement = () => {
                       {user.id.substring(0, 12)}...
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {editing === user.id ? (
-                        <select
-                          value={editData.role}
-                          onChange={(e) => setEditData(prev => ({ ...prev, role: e.target.value }))}
-                          className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          disabled={saving === user.id}
-                        >
-                          <option value="student">Student</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      ) : (
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          isAdminRole(user.role)
-                            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
-                            : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
-                        }`}>
-                          {user.role || 'N/A'}
-                        </span>
-                      )}
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        isAdminRole(user.role)
+                          ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
+                          : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
+                      }`}>
+                        {user.role || 'N/A'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                       <div className="flex items-center gap-1">
@@ -272,66 +292,33 @@ const UsersManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {editing === user.id ? (
-                        <input
-                          type="email"
-                          value={editData.studentEmail}
-                          onChange={(e) => setEditData(prev => ({ ...prev, studentEmail: e.target.value }))}
-                          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          placeholder="Student email"
-                          disabled={saving === user.id}
-                        />
+                      {user.studentEmail ? (
+                        <div className="flex items-center gap-1">
+                          <Mail size={14} className="text-gray-400 dark:text-gray-500" />
+                          {user.studentEmail}
+                        </div>
                       ) : (
-                        user.studentEmail ? (
-                          <div className="flex items-center gap-1">
-                            <Mail size={14} className="text-gray-400 dark:text-gray-500" />
-                            {user.studentEmail}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 dark:text-gray-500">-</span>
-                        )
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {editing === user.id ? (
-                        <input
-                          type="email"
-                          value={editData.personalEmail}
-                          onChange={(e) => setEditData(prev => ({ ...prev, personalEmail: e.target.value }))}
-                          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          placeholder="Personal email"
-                          disabled={saving === user.id}
-                        />
+                      {user.personalEmail ? (
+                        <div className="flex items-center gap-1">
+                          <Mail size={14} className="text-gray-400 dark:text-gray-500" />
+                          {user.personalEmail}
+                        </div>
                       ) : (
-                        user.personalEmail ? (
-                          <div className="flex items-center gap-1">
-                            <Mail size={14} className="text-gray-400 dark:text-gray-500" />
-                            {user.personalEmail}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 dark:text-gray-500">-</span>
-                        )
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {editing === user.id ? (
-                        <input
-                          type="tel"
-                          value={editData.phoneNumber}
-                          onChange={(e) => setEditData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          placeholder="Phone number"
-                          disabled={saving === user.id}
-                        />
+                      {user.phoneNumber ? (
+                        <div className="flex items-center gap-1">
+                          <Phone size={14} className="text-gray-400 dark:text-gray-500" />
+                          {user.phoneNumber}
+                        </div>
                       ) : (
-                        user.phoneNumber ? (
-                          <div className="flex items-center gap-1">
-                            <Phone size={14} className="text-gray-400 dark:text-gray-500" />
-                            {user.phoneNumber}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 dark:text-gray-500">-</span>
-                        )
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -342,53 +329,30 @@ const UsersManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center gap-2">
-                        {editing === user.id ? (
-                          <>
-                            <button
-                              onClick={() => handleSaveEdit(user.id)}
-                              disabled={saving === user.id}
-                              className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                            >
-                              <Check size={14} />
-                              <span>Save</span>
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              disabled={saving === user.id}
-                              className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                            >
-                              <X size={14} />
-                              <span>Cancel</span>
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEditUser(user)}
-                              disabled={user.id === currentUser?.uid}
-                              className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                              title={user.id === currentUser?.uid ? 'Cannot edit your own account' : 'Edit user'}
-                            >
-                              <Edit2 size={14} />
-                              <span>Edit</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user.id, user.email)}
-                              disabled={deleting === user.id || isAdminRole(user.role) || user.id === currentUser?.uid}
-                              className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                              title={
-                                user.id === currentUser?.uid 
-                                  ? 'Cannot delete your own account' 
-                                  : isAdminRole(user.role)
-                                  ? 'Cannot delete admin accounts' 
-                                  : 'Delete user'
-                              }
-                            >
-                              <Trash2 size={14} />
-                              <span>Delete</span>
-                            </button>
-                          </>
-                        )}
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          disabled={user.id === currentUser?.uid}
+                          className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                          title={user.id === currentUser?.uid ? 'Cannot edit your own account' : 'Edit user profile'}
+                        >
+                          <Edit2 size={14} />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.email)}
+                          disabled={deleting === user.id || isAdminRole(user.role) || user.id === currentUser?.uid}
+                          className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                          title={
+                            user.id === currentUser?.uid 
+                              ? 'Cannot delete your own account' 
+                              : isAdminRole(user.role)
+                              ? 'Cannot delete admin accounts' 
+                              : 'Delete user'
+                          }
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete</span>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -406,6 +370,230 @@ const UsersManagement = () => {
           <span>Total Users: {users.length} | Showing: {filteredUsers.length}</span>
         </div>
       </div>
+
+      {/* Edit User Modal */}
+      {showEditModal && editing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Edit User Profile</h3>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <User className="inline mr-2" size={16} />
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={editData.name}
+                  onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Role
+                </label>
+                <select
+                  value={editData.role}
+                  onChange={(e) => setEditData(prev => ({ ...prev, role: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                >
+                  <option value="student">Student</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              {/* Student Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Mail className="inline mr-2" size={16} />
+                  Student Email
+                </label>
+                <input
+                  type="email"
+                  value={editData.studentEmail}
+                  onChange={(e) => setEditData(prev => ({ ...prev, studentEmail: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                />
+              </div>
+
+              {/* Personal Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Mail className="inline mr-2" size={16} />
+                  Personal Email
+                </label>
+                <input
+                  type="email"
+                  value={editData.personalEmail}
+                  onChange={(e) => setEditData(prev => ({ ...prev, personalEmail: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Phone className="inline mr-2" size={16} />
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editData.phoneNumber}
+                  onChange={(e) => setEditData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                />
+              </div>
+
+              {/* Profile Picture */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Image className="inline mr-2" size={16} />
+                  Profile Picture URL
+                </label>
+                <input
+                  type="url"
+                  value={editData.profilePicture}
+                  onChange={(e) => setEditData(prev => ({ ...prev, profilePicture: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                />
+                {editData.profilePicture && (
+                  <img 
+                    src={editData.profilePicture} 
+                    alt="Profile preview" 
+                    className="mt-2 w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                )}
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FileText className="inline mr-2" size={16} />
+                  Bio / About Me
+                </label>
+                <textarea
+                  value={editData.bio}
+                  onChange={(e) => setEditData(prev => ({ ...prev, bio: e.target.value }))}
+                  rows={4}
+                  maxLength={500}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 resize-none"
+                  disabled={saving === editing}
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {editData.bio.length}/500 characters
+                </p>
+              </div>
+
+              {/* Course */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <GraduationCap className="inline mr-2" size={16} />
+                  Course / Major
+                </label>
+                <input
+                  type="text"
+                  value={editData.course}
+                  onChange={(e) => setEditData(prev => ({ ...prev, course: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                />
+              </div>
+
+              {/* Year of Study */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <GraduationCap className="inline mr-2" size={16} />
+                  Year of Study
+                </label>
+                <select
+                  value={editData.yearOfStudy}
+                  onChange={(e) => setEditData(prev => ({ ...prev, yearOfStudy: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                >
+                  <option value="">Select year...</option>
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                  <option value="5+">Year 5+</option>
+                  <option value="Graduate">Graduate</option>
+                </select>
+              </div>
+
+              {/* Date of Birth */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Calendar className="inline mr-2" size={16} />
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={editData.dateOfBirth}
+                  onChange={(e) => setEditData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={saving === editing}
+                />
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <MapPin className="inline mr-2" size={16} />
+                  Address
+                </label>
+                <textarea
+                  value={editData.address}
+                  onChange={(e) => setEditData(prev => ({ ...prev, address: e.target.value }))}
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 resize-none"
+                  disabled={saving === editing}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => handleSaveEdit(editing)}
+                  disabled={saving === editing}
+                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Check size={20} />
+                  <span>{saving === editing ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={saving === editing}
+                  className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <X size={20} />
+                  <span>Cancel</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

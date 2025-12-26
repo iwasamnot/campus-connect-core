@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { User, Mail, Phone, Save, Loader, Edit2, X } from 'lucide-react';
+import { User, Mail, Phone, Save, Loader, Edit2, X, Image, GraduationCap, Calendar, MapPin, FileText } from 'lucide-react';
 
 const StudentProfile = () => {
   const { user } = useAuth();
@@ -16,14 +16,26 @@ const StudentProfile = () => {
     name: '',
     studentEmail: '',
     personalEmail: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    bio: '',
+    profilePicture: '',
+    course: '',
+    yearOfStudy: '',
+    dateOfBirth: '',
+    address: ''
   });
 
   const [originalData, setOriginalData] = useState({
     name: '',
     studentEmail: '',
     personalEmail: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    bio: '',
+    profilePicture: '',
+    course: '',
+    yearOfStudy: '',
+    dateOfBirth: '',
+    address: ''
   });
 
   // Fetch user profile data
@@ -39,7 +51,13 @@ const StudentProfile = () => {
             name: userData.name || '',
             studentEmail: userData.studentEmail || '',
             personalEmail: userData.personalEmail || '',
-            phoneNumber: userData.phoneNumber || ''
+            phoneNumber: userData.phoneNumber || '',
+            bio: userData.bio || '',
+            profilePicture: userData.profilePicture || '',
+            course: userData.course || '',
+            yearOfStudy: userData.yearOfStudy || '',
+            dateOfBirth: userData.dateOfBirth || '',
+            address: userData.address || ''
           };
           setFormData(data);
           setOriginalData(data);
@@ -118,6 +136,12 @@ const StudentProfile = () => {
         studentEmail: formData.studentEmail.trim() || null,
         personalEmail: formData.personalEmail.trim() || null,
         phoneNumber: formData.phoneNumber.trim() || null,
+        bio: formData.bio.trim() || null,
+        profilePicture: formData.profilePicture.trim() || null,
+        course: formData.course.trim() || null,
+        yearOfStudy: formData.yearOfStudy.trim() || null,
+        dateOfBirth: formData.dateOfBirth.trim() || null,
+        address: formData.address.trim() || null,
         updatedAt: new Date().toISOString()
       });
 
@@ -286,6 +310,199 @@ const StudentProfile = () => {
                 ) : (
                   <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
                     {formData.phoneNumber || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Picture */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Image className="inline mr-2" size={16} />
+                  Profile Picture URL
+                </label>
+                {editing ? (
+                  <>
+                    <input
+                      type="url"
+                      name="profilePicture"
+                      value={formData.profilePicture}
+                      onChange={handleChange}
+                      placeholder="https://example.com/profile.jpg"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      URL to your profile picture (optional)
+                    </p>
+                    {formData.profilePicture && (
+                      <div className="mt-2">
+                        <img 
+                          src={formData.profilePicture} 
+                          alt="Profile preview" 
+                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    {formData.profilePicture ? (
+                      <img 
+                        src={formData.profilePicture} 
+                        alt="Profile" 
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <User size={32} className="text-gray-400 dark:text-gray-500" />
+                      </div>
+                    )}
+                    <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center flex-1">
+                      {formData.profilePicture || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FileText className="inline mr-2" size={16} />
+                  Bio / About Me
+                </label>
+                {editing ? (
+                  <>
+                    <textarea
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      placeholder="Tell us about yourself..."
+                      rows={4}
+                      maxLength={500}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent resize-none"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {formData.bio.length}/500 characters (optional)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[100px] flex items-start">
+                    {formData.bio || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Course/Major */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <GraduationCap className="inline mr-2" size={16} />
+                  Course / Major
+                </label>
+                {editing ? (
+                  <>
+                    <input
+                      type="text"
+                      name="course"
+                      value={formData.course}
+                      onChange={handleChange}
+                      placeholder="Computer Science, Business, etc."
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your course or major (optional)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.course || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Year of Study */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <GraduationCap className="inline mr-2" size={16} />
+                  Year of Study
+                </label>
+                {editing ? (
+                  <>
+                    <select
+                      name="yearOfStudy"
+                      value={formData.yearOfStudy}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    >
+                      <option value="">Select year...</option>
+                      <option value="1">Year 1</option>
+                      <option value="2">Year 2</option>
+                      <option value="3">Year 3</option>
+                      <option value="4">Year 4</option>
+                      <option value="5+">Year 5+</option>
+                      <option value="Graduate">Graduate</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your current year of study (optional)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.yearOfStudy || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Date of Birth */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Calendar className="inline mr-2" size={16} />
+                  Date of Birth
+                </label>
+                {editing ? (
+                  <>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleChange}
+                      max={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your date of birth (optional)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <MapPin className="inline mr-2" size={16} />
+                  Address
+                </label>
+                {editing ? (
+                  <>
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      placeholder="Your address..."
+                      rows={2}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent resize-none"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your address (optional)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.address || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
                   </div>
                 )}
               </div>
