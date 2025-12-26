@@ -6,7 +6,25 @@ export default {
   ],
   darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // Logo accent colors
+        'campus-dark': '#1e3a8a',      // Dark blue from logo left side
+        'campus-bright': '#3b82f6',     // Bright blue from logo right side
+        'campus-blue': {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',  // Bright blue
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',  // Dark blue
+        }
+      }
+    },
   },
   plugins: [],
 }
