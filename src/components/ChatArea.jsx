@@ -646,19 +646,26 @@ const ChatArea = () => {
                   {/* Reactions */}
                   {Object.keys(reactionCounts).length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {Object.entries(reactionCounts).map(([emoji, count]) => (
-                        <button
-                          key={emoji}
-                          onClick={() => handleReaction(message.id, emoji)}
-                          className={`px-2 py-1 rounded text-xs ${
-                            userReaction === emoji
-                              ? 'bg-indigo-400 dark:bg-indigo-500'
-                              : 'bg-indigo-100 dark:bg-indigo-700 text-black dark:text-white border border-indigo-300 dark:border-indigo-600'
-                          }`}
-                        >
-                          {emoji} {count}
-                        </button>
-                      ))}
+                      {Object.entries(reactionCounts).map(([emoji, count]) => {
+                        const reactionKey = `${message.id}-${emoji}`;
+                        const isReacting = reacting.has(reactionKey);
+                        return (
+                          <button
+                            key={emoji}
+                            onClick={() => !isReacting && handleReaction(message.id, emoji)}
+                            disabled={isReacting}
+                            className={`px-2 py-1 rounded text-xs transition-opacity ${
+                              isReacting ? 'opacity-50 cursor-wait' : ''
+                            } ${
+                              userReaction === emoji
+                                ? 'bg-indigo-400 dark:bg-indigo-500'
+                                : 'bg-indigo-100 dark:bg-indigo-700 text-black dark:text-white border border-indigo-300 dark:border-indigo-600'
+                            }`}
+                          >
+                            {emoji} {count}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 
