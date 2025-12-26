@@ -370,6 +370,8 @@ const ChatArea = () => {
               acc[emoji] = (acc[emoji] || 0) + 1;
               return acc;
             }, {}) : {};
+            const userProfile = userProfiles[message.userId] || {};
+            const profilePicture = userProfile.profilePicture;
 
             return (
               <div
@@ -378,6 +380,31 @@ const ChatArea = () => {
                   isAuthor ? 'justify-end' : 'justify-start'
                 }`}
               >
+                {/* Profile Picture - Only show for other users */}
+                {!isAuthor && (
+                  <button
+                    onClick={() => setSelectedUserId(message.userId)}
+                    className="flex-shrink-0 mt-1"
+                  >
+                    {profilePicture ? (
+                      <img 
+                        src={profilePicture} 
+                        alt={userNames[message.userId] || 'User'} 
+                        className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className={`w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors ${profilePicture ? 'hidden' : ''}`}
+                    >
+                      <User size={20} className="text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                  </button>
+                )}
+
                 <div
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative group ${
                     isAuthor
@@ -387,9 +414,12 @@ const ChatArea = () => {
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <div className="text-xs font-medium opacity-90">
+                      <button
+                        onClick={() => setSelectedUserId(message.userId)}
+                        className="text-xs font-medium opacity-90 hover:underline cursor-pointer"
+                      >
                         {userNames[message.userId] || message.userName || message.userEmail?.split('@')[0] || 'Unknown'}
-                      </div>
+                      </button>
                       {onlineUsers[message.userId]?.isOnline && (
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
                       )}
