@@ -133,7 +133,7 @@ const CreateUser = () => {
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-400 rounded-lg text-sm flex items-center gap-2">
+          <div className="mb-4 p-3 bg-sistc-100 dark:bg-sistc-900/30 border border-sistc-400 dark:border-sistc-700 text-sistc-700 dark:text-sistc-400 rounded-lg text-sm flex items-center gap-2">
             <CheckCircle size={18} />
             <span>User created successfully! You will be redirected to login page...</span>
           </div>

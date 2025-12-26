@@ -411,7 +411,7 @@ const ChatArea = () => {
                       />
                       <button
                         onClick={() => handleEditMessage(message.id)}
-                        className="p-1 hover:bg-green-600 rounded"
+                        className="p-1 hover:bg-sistc-600 rounded"
                       >
                         <Check size={16} />
                       </button>
@@ -516,7 +516,7 @@ const ChatArea = () => {
                                   setReporting(null);
                                   setReportReason('');
                                 }}
-                                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
+                                className="px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white text-xs rounded"
                               >
                                 Cancel
                               </button>

@@ -176,7 +176,7 @@ const StudentProfile = () => {
             )}
 
             {success && (
-              <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-400 rounded-lg">
+              <div className="mb-6 p-4 bg-sistc-100 dark:bg-sistc-900/30 border border-sistc-400 dark:border-sistc-700 text-sistc-700 dark:text-sistc-400 rounded-lg">
                 Profile updated successfully!
               </div>
             )}

@@ -258,7 +258,7 @@ const UsersManagement = () => {
                       ) : (
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           isAdminRole(user.role)
-                            ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+                            ? 'bg-sistc-100 dark:bg-sistc-900 text-sistc-800 dark:text-sistc-200'
                             : 'bg-sistc-100 dark:bg-sistc-900 text-sistc-800 dark:text-sistc-200'
                         }`}>
                           {user.role || 'N/A'}
@@ -347,7 +347,7 @@ const UsersManagement = () => {
                             <button
                               onClick={() => handleSaveEdit(user.id)}
                               disabled={saving === user.id}
-                              className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              className="flex items-center gap-1 px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                             >
                               <Check size={14} />
                               <span>Save</span>
