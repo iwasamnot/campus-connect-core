@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar } from 'lucide-react';
+import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
 
-// SISTC Knowledge Base - extracted from sistc.edu.au
+// Enhanced SISTC Knowledge Base with more detailed information
 const SISTC_KNOWLEDGE_BASE = {
   about: {
     story: "Sydney International School of Technology and Commerce (SISTC) opened its doors in 2020. We offer innovative courses designed to prepare students for careers in Information Technology.",
     focus: "SISTC focuses on providing quality IT education with industry partnerships and work-integrated learning opportunities.",
     locations: "SISTC has campuses in Sydney CBD, Parramatta, and Melbourne.",
-    accreditation: "SISTC is an Accredited Institute of Higher Education. TEQSA PRV14311, CRICOS 03836J, ABN 746 130 55440"
+    accreditation: "SISTC is an Accredited Institute of Higher Education. TEQSA PRV14311, CRICOS 03836J, ABN 746 130 55440",
+    mission: "To provide innovative IT education that prepares students for successful careers in the information economy."
   },
   courses: {
     undergraduate: [
@@ -17,7 +18,9 @@ const SISTC_KNOWLEDGE_BASE = {
         name: "Bachelor of Information Technology",
         majors: ["Business Information Systems", "Digital Enterprise"],
         certified: "ACS Certified",
-        nested: ["Diploma of Business Information Systems", "Diploma of Information Technology"]
+        nested: ["Diploma of Business Information Systems", "Diploma of Information Technology"],
+        duration: "3 years full-time",
+        description: "Comprehensive IT degree with choice of two majors focusing on business applications or digital transformation."
       }
     ],
     postgraduate: [
@@ -25,112 +28,275 @@ const SISTC_KNOWLEDGE_BASE = {
         name: "Master of Information Technology",
         specialisations: ["Data Analytics", "Digital Leadership", "Cyber Security Major"],
         certified: "ACS Certified",
-        nested: ["Graduate Diploma in IT", "Graduate Certificate in IT"]
+        nested: ["Graduate Diploma in IT", "Graduate Certificate in IT"],
+        duration: "2 years full-time",
+        description: "Advanced IT degree with three specialisation options for career advancement."
       }
     ]
   },
   locations: {
     sydney: {
       description: "Sydney CBD campus is located in the heart of Sydney's Central Business District (CBD), amidst cafes, shopping, and entertainment.",
-      highlights: ["Iconic Landmarks at Sydney Harbour", "World-Class Shopping in CBD", "Diverse Dining Across the City"]
+      highlights: ["Iconic Landmarks at Sydney Harbour", "World-Class Shopping in CBD", "Diverse Dining Across the City"],
+      address: "Sydney CBD, New South Wales"
     },
     parramatta: {
       description: "Parramatta is a vibrant and rapidly growing city located in the heart of Greater Western Sydney.",
-      highlights: ["Fantastic Shopping at Westfield Parramatta", "Global Cuisine on Church Street", "Historic Landmarks in Parramatta Park"]
+      highlights: ["Fantastic Shopping at Westfield Parramatta", "Global Cuisine on Church Street", "Historic Landmarks in Parramatta Park"],
+      address: "Parramatta, Greater Western Sydney, New South Wales"
     },
     melbourne: {
       description: "Melbourne is a vibrant city known for its trendy shopping, diverse dining, rich arts scene, beautiful parks, and world-class sporting events.",
-      highlights: ["Trendy Shopping on Collins Street", "Laneway Cafés and Global Cuisine", "Iconic Arts and Music Festivals"]
+      highlights: ["Trendy Shopping on Collins Street", "Laneway Cafés and Global Cuisine", "Iconic Arts and Music Festivals"],
+      address: "Melbourne, Victoria"
     }
   },
   contact: {
     phone: "+61 (2) 9061 5900",
     website: "https://sistc.edu.au/",
-    campuses: ["Sydney", "Parramatta", "Melbourne"]
+    campuses: ["Sydney", "Parramatta", "Melbourne"],
+    email: "General enquiries available through website contact form"
   },
   statistics: {
     students: "500+ Students in Sydney & Melbourne",
     teaching: "85.1% rated Teaching Practices positively (National average: 79.8%)",
     support: "85.4% rated Support Services positively (National average: 72.7%)",
-    development: "82.4% rated Skill Development positively (National average: 79.8%)"
+    development: "82.4% rated Skill Development positively (National average: 79.8%)",
+    survey: "Based on Undergraduate Student Experience Survey 2021-2022"
   },
   applying: {
     requirements: "A Student visa is required for International Students. You must always follow the conditions of your visa.",
-    process: "Entry Requirements, Credit for Prior Learning, Education Agents, How to Apply, Fees"
+    process: "Entry Requirements, Credit for Prior Learning, Education Agents, How to Apply, Fees",
+    steps: [
+      "Check entry requirements for your chosen course",
+      "Apply for credit for prior learning if applicable",
+      "Contact an education agent or apply directly",
+      "Submit application with required documents",
+      "Pay application fees",
+      "Receive offer and accept",
+      "Apply for student visa (international students)"
+    ]
   },
   support: {
     services: "Student Support, Digital Library, Graduation support available",
-    academic: "Academic Integrity, Work Integrated Learning, Capstone Projects Expo"
+    academic: "Academic Integrity, Work Integrated Learning, Capstone Projects Expo",
+    wellbeing: "Health & Wellbeing support available",
+    library: "Digital Library with extensive resources"
+  },
+  life: {
+    studentLife: "SISTC offers a vibrant student life with various activities and support services",
+    womenInIT: "Women in IT program to support female students",
+    capstone: "Capstone Projects Expo showcases student work",
+    workIntegrated: "Work Integrated Learning opportunities available"
   }
 };
 
-// Simple keyword-based search and answer system
-const findAnswer = (question) => {
-  const lowerQuestion = question.toLowerCase();
-  
-  // Course-related questions
-  if (lowerQuestion.includes('course') || lowerQuestion.includes('degree') || lowerQuestion.includes('program')) {
-    if (lowerQuestion.includes('bachelor') || lowerQuestion.includes('undergraduate')) {
-      const course = SISTC_KNOWLEDGE_BASE.courses.undergraduate[0];
-      return `**${course.name}**\n\n**Majors Available:**\n${course.majors.map(m => `• ${m}`).join('\n')}\n\n**Certification:** ${course.certified}\n\n**Nested Courses (Exit Only):**\n${course.nested.map(n => `• ${n}`).join('\n')}\n\nFor more details, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+// Advanced question understanding and classification
+class IntelligentAI {
+  constructor() {
+    this.context = [];
+    this.synonyms = {
+      course: ['program', 'degree', 'study', 'education', 'qualification', 'certificate', 'diploma'],
+      location: ['campus', 'where', 'address', 'place', 'city', 'site'],
+      contact: ['phone', 'email', 'reach', 'call', 'speak', 'talk', 'connect'],
+      apply: ['application', 'enroll', 'enrolment', 'admission', 'join', 'register', 'sign up'],
+      fee: ['cost', 'price', 'tuition', 'payment', 'charge', 'expense', 'money'],
+      about: ['what is', 'tell me', 'information', 'details', 'overview', 'background'],
+      support: ['help', 'assistance', 'service', 'aid', 'guidance'],
+      requirement: ['need', 'require', 'prerequisite', 'eligibility', 'qualification']
+    };
+  }
+
+  // Calculate similarity between two strings
+  similarity(str1, str2) {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    if (longer.length === 0) return 1.0;
+    const distance = this.levenshteinDistance(longer.toLowerCase(), shorter.toLowerCase());
+    return (longer.length - distance) / longer.length;
+  }
+
+  // Levenshtein distance for fuzzy matching
+  levenshteinDistance(str1, str2) {
+    const matrix = [];
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
     }
-    if (lowerQuestion.includes('master') || lowerQuestion.includes('postgraduate') || lowerQuestion.includes('graduate')) {
-      const course = SISTC_KNOWLEDGE_BASE.courses.postgraduate[0];
-      return `**${course.name}**\n\n**Specialisations Available:**\n${course.specialisations.map(s => `• ${s}`).join('\n')}\n\n**Certification:** ${course.certified}\n\n**Nested Courses (Exit Only):**\n${course.nested.map(n => `• ${n}`).join('\n')}\n\nFor more details, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
     }
-    return `SISTC offers both undergraduate and postgraduate courses:\n\n**Undergraduate:**\n• Bachelor of Information Technology (with majors in Business Information Systems or Digital Enterprise)\n\n**Postgraduate:**\n• Master of Information Technology (with specialisations in Data Analytics, Digital Leadership, or Cyber Security)\n\nAll courses are ACS Certified. Visit ${SISTC_KNOWLEDGE_BASE.contact.website} for detailed information.`;
-  }
-
-  // Location questions
-  if (lowerQuestion.includes('location') || lowerQuestion.includes('campus') || lowerQuestion.includes('where')) {
-    if (lowerQuestion.includes('sydney')) {
-      const loc = SISTC_KNOWLEDGE_BASE.locations.sydney;
-      return `**Sydney Campus**\n\n${loc.description}\n\n**Highlights:**\n${loc.highlights.map(h => `• ${h}`).join('\n')}\n\nContact: ${SISTC_KNOWLEDGE_BASE.contact.phone}`;
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
     }
-    if (lowerQuestion.includes('parramatta')) {
-      const loc = SISTC_KNOWLEDGE_BASE.locations.parramatta;
-      return `**Parramatta Campus**\n\n${loc.description}\n\n**Highlights:**\n${loc.highlights.map(h => `• ${h}`).join('\n')}\n\nContact: ${SISTC_KNOWLEDGE_BASE.contact.phone}`;
+    return matrix[str2.length][str1.length];
+  }
+
+  // Extract keywords and intent
+  extractIntent(question) {
+    const lower = question.toLowerCase();
+    const intents = {
+      course: 0,
+      location: 0,
+      contact: 0,
+      apply: 0,
+      fee: 0,
+      about: 0,
+      support: 0,
+      requirement: 0
+    };
+
+    // Check for direct matches
+    Object.keys(this.synonyms).forEach(intent => {
+      this.synonyms[intent].forEach(synonym => {
+        if (lower.includes(synonym)) {
+          intents[intent] += 2;
+        }
+      });
+    });
+
+    // Check for specific course names
+    if (lower.includes('bachelor') || lower.includes('undergraduate') || lower.includes('bachelor of')) {
+      intents.course += 3;
+      intents.requirement += 1;
     }
-    if (lowerQuestion.includes('melbourne')) {
-      const loc = SISTC_KNOWLEDGE_BASE.locations.melbourne;
-      return `**Melbourne Campus**\n\n${loc.description}\n\n**Highlights:**\n${loc.highlights.map(h => `• ${h}`).join('\n')}\n\nContact: ${SISTC_KNOWLEDGE_BASE.contact.phone}`;
+    if (lower.includes('master') || lower.includes('postgraduate') || lower.includes('graduate')) {
+      intents.course += 3;
+      intents.requirement += 1;
     }
-    return `SISTC has three campus locations:\n\n**1. Sydney CBD** - Heart of Sydney's CBD\n**2. Parramatta** - Greater Western Sydney\n**3. Melbourne** - Vibrant city with arts and culture\n\nFor specific campus information, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+
+    // Check for location names
+    if (lower.includes('sydney')) intents.location += 3;
+    if (lower.includes('parramatta')) intents.location += 3;
+    if (lower.includes('melbourne')) intents.location += 3;
+
+    // Check for question types
+    if (lower.startsWith('what') || lower.startsWith('which') || lower.startsWith('tell me')) {
+      intents.about += 2;
+    }
+    if (lower.startsWith('how') || lower.startsWith('can i')) {
+      intents.apply += 2;
+      intents.support += 1;
+    }
+    if (lower.startsWith('where')) {
+      intents.location += 3;
+    }
+    if (lower.startsWith('when')) {
+      intents.about += 1;
+    }
+
+    // Find dominant intent
+    const maxIntent = Object.keys(intents).reduce((a, b) => intents[a] > intents[b] ? a : b);
+    return intents[maxIntent] > 0 ? maxIntent : 'about';
   }
 
-  // Contact questions
-  if (lowerQuestion.includes('contact') || lowerQuestion.includes('phone') || lowerQuestion.includes('email') || lowerQuestion.includes('reach')) {
-    return `**Contact SISTC**\n\n**Phone:** ${SISTC_KNOWLEDGE_BASE.contact.phone}\n**Website:** ${SISTC_KNOWLEDGE_BASE.contact.website}\n**Campuses:** ${SISTC_KNOWLEDGE_BASE.contact.campuses.join(', ')}\n\nFor general enquiries, visit the Contact page on our website.`;
+  // Generate comprehensive answer
+  generateAnswer(question, intent) {
+    const lower = question.toLowerCase();
+    let answer = '';
+
+    switch (intent) {
+      case 'course':
+        if (lower.includes('bachelor') || lower.includes('undergraduate') || lower.includes('degree')) {
+          const course = SISTC_KNOWLEDGE_BASE.courses.undergraduate[0];
+          answer = `**${course.name}**\n\n${course.description}\n\n**Duration:** ${course.duration}\n\n**Majors Available:**\n${course.majors.map(m => `• ${m}`).join('\n')}\n\n**Certification:** ${course.certified}\n\n**Nested Courses (Exit Only):**\n${course.nested.map(n => `• ${n}`).join('\n')}\n\nThis program prepares you for a career in IT with a focus on either business information systems or digital enterprise transformation.`;
+        } else if (lower.includes('master') || lower.includes('postgraduate') || lower.includes('graduate')) {
+          const course = SISTC_KNOWLEDGE_BASE.courses.postgraduate[0];
+          answer = `**${course.name}**\n\n${course.description}\n\n**Duration:** ${course.duration}\n\n**Specialisations Available:**\n${course.specialisations.map(s => `• ${s}`).join('\n')}\n\n**Certification:** ${course.certified}\n\n**Nested Courses (Exit Only):**\n${course.nested.map(n => `• ${n}`).join('\n')}\n\nThis advanced program allows you to specialise in data analytics, digital leadership, or cyber security.`;
+        } else {
+          answer = `SISTC offers comprehensive IT education programs:\n\n**Undergraduate Programs:**\n• **${SISTC_KNOWLEDGE_BASE.courses.undergraduate[0].name}** - ${SISTC_KNOWLEDGE_BASE.courses.undergraduate[0].description}\n  - Majors: ${SISTC_KNOWLEDGE_BASE.courses.undergraduate[0].majors.join(', ')}\n\n**Postgraduate Programs:**\n• **${SISTC_KNOWLEDGE_BASE.courses.postgraduate[0].name}** - ${SISTC_KNOWLEDGE_BASE.courses.postgraduate[0].description}\n  - Specialisations: ${SISTC_KNOWLEDGE_BASE.courses.postgraduate[0].specialisations.join(', ')}\n\nAll courses are ${SISTC_KNOWLEDGE_BASE.courses.undergraduate[0].certified}.`;
+        }
+        break;
+
+      case 'location':
+        if (lower.includes('sydney')) {
+          const loc = SISTC_KNOWLEDGE_BASE.locations.sydney;
+          answer = `**Sydney Campus**\n\n${loc.description}\n\n**Address:** ${loc.address}\n\n**Highlights:**\n${loc.highlights.map(h => `• ${h}`).join('\n')}\n\nThe Sydney CBD campus offers easy access to public transport, shopping, dining, and entertainment.`;
+        } else if (lower.includes('parramatta')) {
+          const loc = SISTC_KNOWLEDGE_BASE.locations.parramatta;
+          answer = `**Parramatta Campus**\n\n${loc.description}\n\n**Address:** ${loc.address}\n\n**Highlights:**\n${loc.highlights.map(h => `• ${h}`).join('\n')}\n\nParramatta is a growing hub in Western Sydney with excellent amenities and transport links.`;
+        } else if (lower.includes('melbourne')) {
+          const loc = SISTC_KNOWLEDGE_BASE.locations.melbourne;
+          answer = `**Melbourne Campus**\n\n${loc.description}\n\n**Address:** ${loc.address}\n\n**Highlights:**\n${loc.highlights.map(h => `• ${h}`).join('\n')}\n\nMelbourne offers a vibrant cultural scene and is known for its excellent quality of life.`;
+        } else {
+          answer = `SISTC operates three campuses across Australia:\n\n**1. Sydney CBD**\n${SISTC_KNOWLEDGE_BASE.locations.sydney.description}\n\n**2. Parramatta**\n${SISTC_KNOWLEDGE_BASE.locations.parramatta.description}\n\n**3. Melbourne**\n${SISTC_KNOWLEDGE_BASE.locations.melbourne.description}\n\nEach campus offers modern facilities and excellent student support services.`;
+        }
+        break;
+
+      case 'contact':
+        answer = `**Contact SISTC**\n\n**Phone:** ${SISTC_KNOWLEDGE_BASE.contact.phone}\n**Website:** ${SISTC_KNOWLEDGE_BASE.contact.website}\n**Email:** ${SISTC_KNOWLEDGE_BASE.contact.email}\n\n**Campus Locations:**\n${SISTC_KNOWLEDGE_BASE.contact.campuses.map(c => `• ${c}`).join('\n')}\n\nYou can visit us at any of our campuses or contact us via phone or email for general enquiries, feedback, and appeals.`;
+        break;
+
+      case 'apply':
+        if (lower.includes('step') || lower.includes('process') || lower.includes('how')) {
+          answer = `**Application Process**\n\n${SISTC_KNOWLEDGE_BASE.applying.requirements}\n\n**Steps to Apply:**\n${SISTC_KNOWLEDGE_BASE.applying.steps.map((step, idx) => `${idx + 1}. ${step}`).join('\n')}\n\n**What You'll Need:**\n• Academic transcripts\n• English language proficiency (for international students)\n• Student visa application (for international students)\n• Application fee\n\nFor detailed information, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+        } else {
+          answer = `**Applying to SISTC**\n\n${SISTC_KNOWLEDGE_BASE.applying.requirements}\n\n**Application Includes:**\n${SISTC_KNOWLEDGE_BASE.applying.process.split(',').map(p => `• ${p.trim()}`).join('\n')}\n\nInternational students will need a Student visa. Visit ${SISTC_KNOWLEDGE_BASE.contact.website} for detailed application information.`;
+        }
+        break;
+
+      case 'fee':
+        answer = `**Fees & Charges**\n\nFee structures vary depending on:\n• Course level (undergraduate/postgraduate)\n• Study mode (full-time/part-time)\n• Student type (domestic/international)\n• Credit for prior learning\n\n**For Detailed Fee Information:**\n• Visit the Fees section on our website: ${SISTC_KNOWLEDGE_BASE.contact.website}\n• Contact us directly: ${SISTC_KNOWLEDGE_BASE.contact.phone}\n• Speak with an education agent\n\nWe also offer information about payment plans and financial assistance options.`;
+        break;
+
+      case 'requirement':
+        if (lower.includes('bachelor') || lower.includes('undergraduate')) {
+          answer = `**Entry Requirements for Bachelor of Information Technology**\n\n**Academic Requirements:**\n• Australian Year 12 qualification or equivalent\n• Minimum ATAR or equivalent score (check website for current requirements)\n\n**English Language Requirements (International Students):**\n• IELTS, TOEFL, or equivalent English proficiency test\n• Minimum scores vary - check current requirements\n\n**Additional Requirements:**\n• Student visa for international students\n• Health insurance (OSHC) for international students\n\nFor current specific requirements, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+        } else if (lower.includes('master') || lower.includes('postgraduate')) {
+          answer = `**Entry Requirements for Master of Information Technology**\n\n**Academic Requirements:**\n• Bachelor's degree in IT or related field, OR\n• Graduate Diploma or Graduate Certificate in IT\n• Relevant work experience may be considered\n\n**English Language Requirements (International Students):**\n• IELTS, TOEFL, or equivalent English proficiency test\n• Higher minimum scores than undergraduate programs\n\n**Additional Requirements:**\n• Student visa for international students\n• Health insurance (OSHC) for international students\n\nFor current specific requirements, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+        } else {
+          answer = `**Entry Requirements**\n\nRequirements vary by course level:\n\n**Undergraduate:** Australian Year 12 or equivalent\n**Postgraduate:** Bachelor's degree or equivalent\n\n**For International Students:**\n• Student visa required\n• English language proficiency test\n• Health insurance (OSHC)\n\nFor detailed, current requirements, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+        }
+        break;
+
+      case 'support':
+        answer = `**Student Support Services**\n\n${SISTC_KNOWLEDGE_BASE.support.services}\n\n**Academic Support:**\n${SISTC_KNOWLEDGE_BASE.support.academic}\n\n**Additional Support:**\n• ${SISTC_KNOWLEDGE_BASE.support.wellbeing}\n• ${SISTC_KNOWLEDGE_BASE.support.library}\n\n**Student Life:**\n${SISTC_KNOWLEDGE_BASE.life.studentLife}\n• ${SISTC_KNOWLEDGE_BASE.life.womenInIT}\n• ${SISTC_KNOWLEDGE_BASE.life.capstone}\n• ${SISTC_KNOWLEDGE_BASE.life.workIntegrated}\n\nContact: ${SISTC_KNOWLEDGE_BASE.contact.phone} or visit ${SISTC_KNOWLEDGE_BASE.contact.website}`;
+        break;
+
+      case 'about':
+      default:
+        if (lower.includes('rating') || lower.includes('statistic') || lower.includes('review')) {
+          answer = `**Student Feedback & Statistics**\n\n${SISTC_KNOWLEDGE_BASE.statistics.students}\n\n**Teaching Practices:** ${SISTC_KNOWLEDGE_BASE.statistics.teaching}\n**Support Services:** ${SISTC_KNOWLEDGE_BASE.statistics.support}\n**Skill Development:** ${SISTC_KNOWLEDGE_BASE.statistics.development}\n\n*${SISTC_KNOWLEDGE_BASE.statistics.survey}*\n\nThese ratings demonstrate SISTC's commitment to providing quality education and student support.`;
+        } else {
+          answer = `**About SISTC**\n\n${SISTC_KNOWLEDGE_BASE.about.story}\n\n**Our Mission:** ${SISTC_KNOWLEDGE_BASE.about.mission}\n\n**Our Focus:** ${SISTC_KNOWLEDGE_BASE.about.focus}\n\n**Accreditation:** ${SISTC_KNOWLEDGE_BASE.about.accreditation}\n\n**Locations:** ${SISTC_KNOWLEDGE_BASE.about.locations}\n\n**Student Statistics:** ${SISTC_KNOWLEDGE_BASE.statistics.students}\n\nSISTC is committed to providing innovative IT education that prepares students for successful careers in the information economy.`;
+        }
+        break;
+    }
+
+    // Add context-aware follow-up
+    if (this.context.length > 0) {
+      const lastIntent = this.context[this.context.length - 1].intent;
+      if (lastIntent === intent && this.context.length > 1) {
+        answer += `\n\nIs there anything specific about this topic you'd like to know more about?`;
+      }
+    }
+
+    return answer;
   }
 
-  // Application questions
-  if (lowerQuestion.includes('apply') || lowerQuestion.includes('admission') || lowerQuestion.includes('enroll') || lowerQuestion.includes('enrolment')) {
-    return `**Applying to SISTC**\n\n${SISTC_KNOWLEDGE_BASE.applying.requirements}\n\n**Application Process Includes:**\n• Entry Requirements\n• Credit for Prior Learning\n• Education Agents\n• How to Apply\n• Fees Information\n\nVisit ${SISTC_KNOWLEDGE_BASE.contact.website} for detailed application information.`;
-  }
+  // Main processing function
+  processQuestion(question) {
+    const intent = this.extractIntent(question);
+    const answer = this.generateAnswer(question, intent);
+    
+    // Store context
+    this.context.push({ question, intent, timestamp: Date.now() });
+    if (this.context.length > 5) {
+      this.context.shift(); // Keep only last 5 interactions
+    }
 
-  // About questions
-  if (lowerQuestion.includes('about') || lowerQuestion.includes('what is sistc') || lowerQuestion.includes('who')) {
-    return `**About SISTC**\n\n${SISTC_KNOWLEDGE_BASE.about.story}\n\n${SISTC_KNOWLEDGE_BASE.about.focus}\n\n**Accreditation:** ${SISTC_KNOWLEDGE_BASE.about.accreditation}\n\n**Locations:** ${SISTC_KNOWLEDGE_BASE.about.locations}`;
+    return answer;
   }
-
-  // Support questions
-  if (lowerQuestion.includes('support') || lowerQuestion.includes('help') || lowerQuestion.includes('service')) {
-    return `**Student Support Services**\n\n${SISTC_KNOWLEDGE_BASE.support.services}\n\n**Academic Support:**\n${SISTC_KNOWLEDGE_BASE.support.academic}\n\nContact: ${SISTC_KNOWLEDGE_BASE.contact.phone} or visit ${SISTC_KNOWLEDGE_BASE.contact.website}`;
-  }
-
-  // Statistics/ratings
-  if (lowerQuestion.includes('rating') || lowerQuestion.includes('statistic') || lowerQuestion.includes('review') || lowerQuestion.includes('feedback')) {
-    return `**Student Feedback & Statistics**\n\n${SISTC_KNOWLEDGE_BASE.statistics.students}\n\n**Teaching Practices:** ${SISTC_KNOWLEDGE_BASE.statistics.teaching}\n**Support Services:** ${SISTC_KNOWLEDGE_BASE.statistics.support}\n**Skill Development:** ${SISTC_KNOWLEDGE_BASE.statistics.development}\n\n*Based on Undergraduate Student Experience Survey 2021-2022*`;
-  }
-
-  // Fees
-  if (lowerQuestion.includes('fee') || lowerQuestion.includes('cost') || lowerQuestion.includes('price') || lowerQuestion.includes('tuition')) {
-    return `**Fees & Charges**\n\nFor detailed information about fees and charges, please visit the Fees section on our website: ${SISTC_KNOWLEDGE_BASE.contact.website}\n\nYou can also contact us directly at ${SISTC_KNOWLEDGE_BASE.contact.phone} for fee-related enquiries.`;
-  }
-
-  // Default response
-  return `I can help you with information about SISTC! Here are some topics I can answer:\n\n• **Courses** - Bachelor and Master programs\n• **Locations** - Sydney, Parramatta, Melbourne campuses\n• **Contact** - Phone, email, and campus locations\n• **Application** - How to apply and entry requirements\n• **Support** - Student services and support\n• **About** - SISTC history and accreditation\n\nTry asking: "What courses do you offer?" or "Where are your campuses?"\n\nFor more detailed information, visit: ${SISTC_KNOWLEDGE_BASE.contact.website}`;
-};
+}
 
 const AIHelp = () => {
   const { darkMode } = useTheme();
@@ -139,13 +305,14 @@ const AIHelp = () => {
     {
       id: 1,
       type: 'bot',
-      content: "Hello! I'm the SISTC AI Assistant. I can help you with information about courses, campuses, applications, and more. What would you like to know?",
+      content: "Hello! I'm the SISTC AI Assistant. I can help you with information about courses, campuses, applications, requirements, fees, and more. What would you like to know?",
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const ai = useRef(new IntelligentAI());
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,13 +330,14 @@ const AIHelp = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const question = input.trim();
     setInput('');
     setLoading(true);
 
-    // Simulate AI processing delay
+    // Simulate AI processing with intelligent analysis
     setTimeout(() => {
       try {
-        const answer = findAnswer(input.trim());
+        const answer = ai.current.processQuestion(question);
         const botMessage = {
           id: Date.now() + 1,
           type: 'bot',
@@ -183,19 +351,19 @@ const AIHelp = () => {
       } finally {
         setLoading(false);
       }
-    }, 500);
+    }, 800); // Slightly longer delay to show "thinking"
   };
 
   const quickQuestions = [
     { icon: GraduationCap, text: "What courses do you offer?", question: "What courses do you offer?" },
     { icon: MapPin, text: "Where are your campuses?", question: "Where are your campuses located?" },
     { icon: Phone, text: "How can I contact you?", question: "How can I contact SISTC?" },
-    { icon: BookOpen, text: "How do I apply?", question: "How do I apply to SISTC?" }
+    { icon: BookOpen, text: "How do I apply?", question: "What is the application process?" },
+    { icon: Calendar, text: "What are the entry requirements?", question: "What are the entry requirements for the Bachelor program?" }
   ];
 
   const handleQuickQuestion = (question) => {
     setInput(question);
-    // Trigger send after a brief delay
     setTimeout(() => {
       const form = document.querySelector('form');
       if (form) {
@@ -206,19 +374,55 @@ const AIHelp = () => {
   };
 
   const formatMessage = (content) => {
-    // Simple markdown-like formatting
-    return content.split('\n').map((line, idx) => {
-      if (line.startsWith('**') && line.endsWith('**')) {
-        return <strong key={idx} className="font-bold text-indigo-600 dark:text-indigo-400">{line.slice(2, -2)}</strong>;
-      }
-      if (line.startsWith('•')) {
-        return <div key={idx} className="ml-4">{line}</div>;
-      }
+    const lines = content.split('\n');
+    const elements = [];
+    let key = 0;
+
+    lines.forEach((line, idx) => {
       if (line.trim() === '') {
-        return <br key={idx} />;
+        elements.push(<br key={`br-${key++}`} />);
+        return;
       }
-      return <div key={idx}>{line}</div>;
+
+      // Bold text
+      if (line.startsWith('**') && line.endsWith('**')) {
+        elements.push(
+          <strong key={`bold-${key++}`} className="font-bold text-indigo-600 dark:text-indigo-400">
+            {line.slice(2, -2)}
+          </strong>
+        );
+        return;
+      }
+
+      // Bullet points
+      if (line.trim().startsWith('•')) {
+        elements.push(
+          <div key={`bullet-${key++}`} className="ml-4 my-1">
+            {line}
+          </div>
+        );
+        return;
+      }
+
+      // Numbered list
+      if (/^\d+\.\s/.test(line.trim())) {
+        elements.push(
+          <div key={`numbered-${key++}`} className="ml-4 my-1">
+            {line}
+          </div>
+        );
+        return;
+      }
+
+      // Regular text
+      elements.push(
+        <div key={`text-${key++}`} className="my-1">
+          {line}
+        </div>
+      );
     });
+
+    return elements;
   };
 
   return (
@@ -229,9 +433,12 @@ const AIHelp = () => {
           <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
             <Bot className="text-indigo-600 dark:text-indigo-400" size={24} />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Get answers about SISTC courses, campuses, and more</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
+              <Sparkles className="text-indigo-500" size={20} />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Intelligent answers about SISTC courses, campuses, and more</p>
           </div>
         </div>
       </div>
@@ -295,7 +502,10 @@ const AIHelp = () => {
               <Bot className="text-indigo-600 dark:text-indigo-400" size={20} />
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
-              <Loader className="animate-spin text-indigo-600 dark:text-indigo-400" size={20} />
+              <div className="flex items-center gap-2">
+                <Loader className="animate-spin text-indigo-600 dark:text-indigo-400" size={20} />
+                <span className="text-sm text-gray-600 dark:text-gray-400">Thinking...</span>
+              </div>
             </div>
           </div>
         )}
@@ -309,7 +519,7 @@ const AIHelp = () => {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything about SISTC..."
+            placeholder="Ask me anything about SISTC... (e.g., 'What are the requirements for Master of IT?')"
             className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             disabled={loading}
           />
@@ -323,7 +533,7 @@ const AIHelp = () => {
           </button>
         </form>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-          Information sourced from <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">sistc.edu.au</a>
+          Powered by intelligent AI • Information sourced from <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">sistc.edu.au</a>
         </p>
       </div>
     </div>
@@ -331,4 +541,3 @@ const AIHelp = () => {
 };
 
 export default AIHelp;
-
