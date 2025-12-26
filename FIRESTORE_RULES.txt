@@ -17,10 +17,12 @@ service cloud.firestore {
       allow create: if request.auth != null;
       
       // Allow users to update their own messages (for editing)
+      // Allow any authenticated user to update readBy field (read receipts)
       // Allow admins to update any field
       allow update: if request.auth != null && (
         (resource.data.userId == request.auth.uid && 
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
         isAdmin()
       );
       

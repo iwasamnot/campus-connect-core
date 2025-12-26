@@ -30,35 +30,67 @@ const GroupChat = ({ group, onBack }) => {
   const [editText, setEditText] = useState('');
   const [userNames, setUserNames] = useState({});
   const [userProfiles, setUserProfiles] = useState({});
+  const [onlineUsers, setOnlineUsers] = useState({});
   const [selectedUserId, setSelectedUserId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Fetch user names and profiles
+  // Fetch user names, profiles, and online status
   useEffect(() => {
     if (!group?.members) return;
 
-    const fetchUsers = async () => {
+    const q = query(collection(db, 'users'), where('__name__', 'in', group.members));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const names = {};
       const profiles = {};
+      const online = {};
       
-      for (const userId of group.members) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', userId));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            names[userId] = userData.name || userData.email?.split('@')[0] || userId.substring(0, 8);
-            profiles[userId] = userData;
-          }
-        } catch (error) {
-          console.error('Error fetching user:', error);
-        }
-      }
+      snapshot.docs.forEach(doc => {
+        const userData = doc.data();
+        names[doc.id] = userData.name || userData.email?.split('@')[0] || doc.id.substring(0, 8);
+        profiles[doc.id] = userData;
+        online[doc.id] = {
+          isOnline: userData.isOnline || false,
+          lastSeen: userData.lastSeen || null
+        };
+      });
       
       setUserNames(names);
       setUserProfiles(profiles);
-    };
+      setOnlineUsers(online);
+    }, (error) => {
+      // Fallback to individual fetches if 'in' query fails
+      const fetchUsers = async () => {
+        const names = {};
+        const profiles = {};
+        const online = {};
+        
+        for (const userId of group.members) {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              names[userId] = userData.name || userData.email?.split('@')[0] || userId.substring(0, 8);
+              profiles[userId] = userData;
+              online[userId] = {
+                isOnline: userData.isOnline || false,
+                lastSeen: userData.lastSeen || null
+              };
+            }
+          } catch (error) {
+            console.error('Error fetching user:', error);
+          }
+        }
+        
+        setUserNames(names);
+        setUserProfiles(profiles);
+        setOnlineUsers(online);
+      };
 
-    fetchUsers();
+      fetchUsers();
+    });
+
+    return () => unsubscribe();
   }, [group]);
 
   // Scroll to bottom when new messages arrive
@@ -82,6 +114,25 @@ const GroupChat = ({ group, onBack }) => {
         ...doc.data()
       }));
       setMessages(messagesData);
+      
+      // Mark all messages as read by current user
+      if (user) {
+        messagesData.forEach(async (message) => {
+          const readBy = message.readBy || {};
+          if (!readBy[user.uid]) {
+            try {
+              await updateDoc(doc(db, 'groupMessages', message.id), {
+                readBy: {
+                  ...readBy,
+                  [user.uid]: serverTimestamp()
+                }
+              });
+            } catch (error) {
+              console.error('Error marking message as read:', error);
+            }
+          }
+        });
+      }
     });
 
     return () => unsubscribe();
@@ -111,7 +162,10 @@ const GroupChat = ({ group, onBack }) => {
         displayText: displayText,
         toxic: isToxic,
         isAI: false,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
+        readBy: {
+          [user.uid]: serverTimestamp() // Sender has seen their own message
+        }
       });
       setNewMessage('');
     } catch (error) {
@@ -175,6 +229,36 @@ const GroupChat = ({ group, onBack }) => {
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
     return date.toLocaleDateString();
+  };
+
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return 'Never';
+    const date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getReadReceiptInfo = (message) => {
+    if (!message.readBy) return { count: 0, users: [] };
+    const readBy = message.readBy;
+    const readUserIds = Object.keys(readBy).filter(uid => uid !== message.userId); // Exclude sender
+    return {
+      count: readUserIds.length,
+      users: readUserIds.map(uid => ({
+        uid,
+        name: userNames[uid] || userProfiles[uid]?.name || 'Unknown',
+        timestamp: readBy[uid]
+      }))
+    };
   };
 
   if (!group) {
@@ -272,9 +356,21 @@ const GroupChat = ({ group, onBack }) => {
                       <button
                         onClick={() => setSelectedUserId(message.userId)}
                         className="text-xs font-medium opacity-90 hover:underline cursor-pointer"
+                        title={
+                          onlineUsers[message.userId]?.isOnline
+                            ? 'Online'
+                            : onlineUsers[message.userId]?.lastSeen
+                            ? `Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`
+                            : 'Offline'
+                        }
                       >
                         {userNames[message.userId] || message.userEmail?.split('@')[0] || 'Unknown'}
                       </button>
+                      {onlineUsers[message.userId]?.isOnline ? (
+                        <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
+                      ) : onlineUsers[message.userId]?.lastSeen ? (
+                        <div className="w-2 h-2 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`} />
+                      ) : null}
                     </div>
                     <div className="text-xs opacity-75 ml-2">
                       {formatTimestamp(message.timestamp)}
@@ -330,6 +426,30 @@ const GroupChat = ({ group, onBack }) => {
                           ⚠️ Flagged by AI
                         </div>
                       )}
+                      
+                      {/* Read Receipts */}
+                      {isAuthor && message.readBy && (() => {
+                        const readInfo = getReadReceiptInfo(message);
+                        if (readInfo.count > 0) {
+                          return (
+                            <div className="text-xs mt-1 opacity-60 flex items-center gap-1">
+                              <span>Seen by {readInfo.count}</span>
+                              <div className="relative group/read">
+                                <span className="cursor-help">👁️</span>
+                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block bg-gray-800 dark:bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg z-10 min-w-[150px]">
+                                  <div className="font-semibold mb-1">Seen by:</div>
+                                  {readInfo.users.map((readUser, idx) => (
+                                    <div key={readUser.uid} className="py-1">
+                                      {readUser.name} - {formatTimestamp(readUser.timestamp)}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </>
                   )}
 

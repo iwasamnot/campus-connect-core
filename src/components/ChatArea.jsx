@@ -55,10 +55,11 @@ const ChatArea = () => {
       const names = {};
       snapshot.docs.forEach(doc => {
         const userData = doc.data();
-        users[doc.id] = userData;
-        if (userData.isOnline) {
-          users[doc.id] = userData;
-        }
+        users[doc.id] = {
+          isOnline: userData.isOnline || false,
+          lastSeen: userData.lastSeen || null,
+          ...userData
+        };
         // Store name for display
         if (userData.name) {
           names[doc.id] = userData.name;
@@ -98,10 +99,29 @@ const ChatArea = () => {
         ...doc.data()
       }));
       setMessages(messagesData);
+      
+      // Mark all messages as read by current user
+      if (user) {
+        messagesData.forEach(async (message) => {
+          const readBy = message.readBy || {};
+          if (!readBy[user.uid]) {
+            try {
+              await updateDoc(doc(db, 'messages', message.id), {
+                readBy: {
+                  ...readBy,
+                  [user.uid]: serverTimestamp()
+                }
+              });
+            } catch (error) {
+              console.error('Error marking message as read:', error);
+            }
+          }
+        });
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // AI Moderation Logic
   const checkToxicity = (text) => {
@@ -162,7 +182,10 @@ const ChatArea = () => {
         timestamp: serverTimestamp(),
         reactions: {},
         edited: false,
-        editedAt: null
+        editedAt: null,
+        readBy: {
+          [user.uid]: serverTimestamp() // Sender has seen their own message
+        }
       });
 
       setNewMessage('');
@@ -301,6 +324,36 @@ const ChatArea = () => {
     return date.toLocaleDateString();
   };
 
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return 'Never';
+    const date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getReadReceiptInfo = (message) => {
+    if (!message.readBy) return { count: 0, users: [] };
+    const readBy = message.readBy;
+    const readUserIds = Object.keys(readBy).filter(uid => uid !== message.userId); // Exclude sender
+    return {
+      count: readUserIds.length,
+      users: readUserIds.map(uid => ({
+        uid,
+        name: userNames[uid] || userProfiles[uid]?.name || 'Unknown',
+        timestamp: readBy[uid]
+      }))
+    };
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Chat Header */}
@@ -412,17 +465,26 @@ const ChatArea = () => {
                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setSelectedUserId(message.userId)}
                         className="text-xs font-medium opacity-90 hover:underline cursor-pointer"
+                        title={
+                          onlineUsers[message.userId]?.isOnline
+                            ? 'Online'
+                            : onlineUsers[message.userId]?.lastSeen
+                            ? `Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`
+                            : 'Offline'
+                        }
                       >
                         {userNames[message.userId] || message.userName || message.userEmail?.split('@')[0] || 'Unknown'}
                       </button>
-                      {onlineUsers[message.userId]?.isOnline && (
+                      {onlineUsers[message.userId]?.isOnline ? (
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
-                      )}
+                      ) : onlineUsers[message.userId]?.lastSeen ? (
+                        <div className="w-2 h-2 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`} />
+                      ) : null}
                     </div>
                     <div className="text-xs opacity-75 ml-2">
                       {formatTimestamp(message.timestamp)}
@@ -478,6 +540,30 @@ const ChatArea = () => {
                           ⚠️ Flagged by AI
                         </div>
                       )}
+                      
+                      {/* Read Receipts */}
+                      {isAuthor && message.readBy && (() => {
+                        const readInfo = getReadReceiptInfo(message);
+                        if (readInfo.count > 0) {
+                          return (
+                            <div className="text-xs mt-1 opacity-60 flex items-center gap-1">
+                              <span>Seen by {readInfo.count}</span>
+                              <div className="relative group/read">
+                                <span className="cursor-help">👁️</span>
+                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block bg-gray-800 dark:bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg z-10 min-w-[150px]">
+                                  <div className="font-semibold mb-1">Seen by:</div>
+                                  {readInfo.users.map((readUser, idx) => (
+                                    <div key={readUser.uid} className="py-1">
+                                      {readUser.name} - {formatTimestamp(readUser.timestamp)}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </>
                   )}
 
