@@ -2,16 +2,24 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { User, Mail, Phone, Save, Loader } from 'lucide-react';
+import { User, Mail, Phone, Save, Loader, Edit2, X } from 'lucide-react';
 
 const StudentProfile = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   
   const [formData, setFormData] = useState({
+    name: '',
+    studentEmail: '',
+    personalEmail: '',
+    phoneNumber: ''
+  });
+
+  const [originalData, setOriginalData] = useState({
     name: '',
     studentEmail: '',
     personalEmail: '',
@@ -27,12 +35,14 @@ const StudentProfile = () => {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setFormData({
+          const data = {
             name: userData.name || '',
             studentEmail: userData.studentEmail || '',
             personalEmail: userData.personalEmail || '',
             phoneNumber: userData.phoneNumber || ''
-          });
+          };
+          setFormData(data);
+          setOriginalData(data);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -51,6 +61,19 @@ const StudentProfile = () => {
       ...prev,
       [name]: value
     }));
+    setError(null);
+    setSuccess(false);
+  };
+
+  const handleEdit = () => {
+    setEditing(true);
+    setError(null);
+    setSuccess(false);
+  };
+
+  const handleCancel = () => {
+    setFormData({ ...originalData });
+    setEditing(false);
     setError(null);
     setSuccess(false);
   };
@@ -98,6 +121,8 @@ const StudentProfile = () => {
         updatedAt: new Date().toISOString()
       });
 
+      setOriginalData({ ...formData });
+      setEditing(false);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -110,35 +135,48 @@ const StudentProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <Loader className="animate-spin mx-auto text-indigo-600 mb-4" size={48} />
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <h2 className="text-2xl font-bold text-gray-800">My Profile</h2>
-        <p className="text-sm text-gray-500">Manage your contact information</p>
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">My Profile</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Manage your contact information</p>
+          </div>
+          {!editing && (
+            <button
+              onClick={handleEdit}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            >
+              <Edit2 size={18} />
+              <span>Edit Profile</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Profile Form */}
       <div className="flex-1 overflow-y-auto px-6 py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8">
             {error && (
-              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+              <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-400 rounded-lg">
                 Profile updated successfully!
               </div>
             )}
@@ -146,114 +184,157 @@ const StudentProfile = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <User className="inline mr-2" size={16} />
                   Full Name
                 </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="John Doe"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Your display name (will be shown in chat)
-                </p>
+                {editing ? (
+                  <>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="John Doe"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your display name (will be shown in chat)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.name || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
               </div>
 
               {/* Student Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Student Email
                 </label>
-                <input
-                  type="email"
-                  name="studentEmail"
-                  value={formData.studentEmail}
-                  onChange={handleChange}
-                  placeholder="student@university.edu"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Your official university email address
-                </p>
+                {editing ? (
+                  <>
+                    <input
+                      type="email"
+                      name="studentEmail"
+                      value={formData.studentEmail}
+                      onChange={handleChange}
+                      placeholder="student@university.edu"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your official university email address
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.studentEmail || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
               </div>
 
               {/* Personal Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Personal Email
                 </label>
-                <input
-                  type="email"
-                  name="personalEmail"
-                  value={formData.personalEmail}
-                  onChange={handleChange}
-                  placeholder="yourname@example.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Your personal email address (optional)
-                </p>
+                {editing ? (
+                  <>
+                    <input
+                      type="email"
+                      name="personalEmail"
+                      value={formData.personalEmail}
+                      onChange={handleChange}
+                      placeholder="yourname@example.com"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your personal email address (optional)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.personalEmail || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
               </div>
 
               {/* Phone Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Phone className="inline mr-2" size={16} />
                   Phone Number
                 </label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  placeholder="+1 (555) 123-4567"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Your contact phone number (optional)
-                </p>
+                {editing ? (
+                  <>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      placeholder="+1 (555) 123-4567"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Your contact phone number (optional)
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
+                    {formData.phoneNumber || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  </div>
+                )}
               </div>
 
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                >
-                  {saving ? (
-                    <>
-                      <Loader className="animate-spin" size={20} />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save size={20} />
-                      <span>Save Profile</span>
-                    </>
-                  )}
-                </button>
-              </div>
+              {/* Action Buttons */}
+              {editing && (
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader className="animate-spin" size={20} />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save size={20} />
+                        <span>Save Changes</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={saving}
+                    className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <X size={20} />
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              )}
             </form>
 
             {/* Current Account Info */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
                 <User className="mr-2" size={16} />
                 Account Information
               </h3>
-              <div className="space-y-2 text-sm text-gray-600">
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <p>
-                  <span className="font-medium">Login Email:</span> {user?.email || 'N/A'}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Login Email:</span> {user?.email || 'N/A'}
                 </p>
                 <p>
-                  <span className="font-medium">User ID:</span> {user?.uid.substring(0, 20)}...
+                  <span className="font-medium text-gray-700 dark:text-gray-300">User ID:</span> {user?.uid.substring(0, 20)}...
                 </p>
               </div>
             </div>
@@ -265,4 +346,3 @@ const StudentProfile = () => {
 };
 
 export default StudentProfile;
-
