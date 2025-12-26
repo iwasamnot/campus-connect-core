@@ -376,9 +376,15 @@ const AIHelp = () => {
 
   // Call Gemini AI
   const callGemini = async (question, localContext) => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+      console.warn('AIHelp: Gemini API key not found in callGemini');
+      return null;
+    }
+
     const model = getGeminiModel(selectedGeminiModel);
     if (!model) {
-      console.warn('AIHelp: Gemini model not available');
+      console.warn('AIHelp: Gemini model not available after initialization');
       return null;
     }
 
@@ -396,17 +402,27 @@ Be concise, friendly, and professional. Format your responses with markdown for 
 Question: ${question}`;
 
       console.log('AIHelp: Calling Gemini with model:', selectedGeminiModel);
+      console.log('AIHelp: Question length:', question.length);
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
       console.log('AIHelp: Gemini response received, length:', text?.length || 0);
-      return text ? text.trim() : null;
+      if (text && text.trim()) {
+        console.log('AIHelp: ✅ Gemini response preview:', text.substring(0, 150) + '...');
+        return text.trim();
+      } else {
+        console.warn('AIHelp: ⚠️ Gemini returned empty text');
+        return null;
+      }
     } catch (error) {
-      console.error('AIHelp: Error calling Gemini:', error);
+      console.error('AIHelp: ❌ Error calling Gemini:', error);
+      console.error('AIHelp: Error name:', error.name);
       console.error('AIHelp: Error message:', error.message);
-      console.error('AIHelp: Error stack:', error.stack);
-      // Re-throw to let caller handle it
-      throw error;
+      if (error.stack) {
+        console.error('AIHelp: Error stack:', error.stack);
+      }
+      // Return null instead of throwing so it can fall back gracefully
+      return null;
     }
   };
 
@@ -429,22 +445,14 @@ Question: ${question}`;
     });
     
     if (geminiApiKey && geminiApiKey.trim() !== '') {
-      try {
-        console.log('AIHelp: Attempting to use Gemini AI with model:', selectedGeminiModel);
-        const geminiAnswer = await callGemini(question, localAnswer);
-        if (geminiAnswer && geminiAnswer.trim() !== '') {
-          console.log('AIHelp: ✅ Gemini AI response received successfully, length:', geminiAnswer.length);
-          return geminiAnswer; // Return Gemini answer if successful
-        } else {
-          console.warn('AIHelp: ⚠️ Gemini returned empty or null response, falling back to ChatGPT or local...');
-        }
-      } catch (error) {
-        console.error('AIHelp: ❌ Gemini API error:', error);
-        console.error('AIHelp: Error details:', error.message);
-        if (error.stack) {
-          console.error('AIHelp: Error stack:', error.stack);
-        }
-        // Fall through to next option
+      console.log('AIHelp: Attempting to use Gemini AI with model:', selectedGeminiModel);
+      const geminiAnswer = await callGemini(question, localAnswer);
+      if (geminiAnswer && geminiAnswer.trim() !== '') {
+        console.log('AIHelp: ✅ Gemini AI response received successfully, length:', geminiAnswer.length);
+        console.log('AIHelp: ✅ Using Gemini response (not falling back)');
+        return geminiAnswer; // Return Gemini answer if successful
+      } else {
+        console.warn('AIHelp: ⚠️ Gemini returned empty or null response, falling back to ChatGPT or local...');
       }
     } else {
       console.log('AIHelp: ⚠️ Gemini API key not found, skipping Gemini and trying ChatGPT or local...');
