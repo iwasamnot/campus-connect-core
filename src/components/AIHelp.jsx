@@ -313,6 +313,7 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(AI_CONFIG.model || 'gpt-4o-mini');
   const [usageInfo, setUsageInfo] = useState(() => ({
     remaining: UsageLimiter.getRemaining(),
     count: UsageLimiter.getUsage().count,
@@ -320,6 +321,14 @@ const AIHelp = () => {
   }));
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
+
+  // Available models
+  const availableModels = [
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini', description: 'Fast & Cost-effective (Recommended)' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: 'Faster & Cheaper' },
+    { value: 'gpt-4o', label: 'GPT-4o', description: 'Most Capable (Slower & More Expensive)' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', description: 'High Performance' }
+  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -409,7 +418,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
           'Authorization': `Bearer ${AI_CONFIG.openaiApiKey}`
         },
         body: JSON.stringify({
-          model: AI_CONFIG.model,
+          model: selectedModel,
           messages: messages,
           temperature: AI_CONFIG.temperature,
           max_tokens: AI_CONFIG.maxTokens
@@ -586,11 +595,12 @@ Be concise, friendly, and professional. Format your responses with markdown for 
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-            <Bot className="text-indigo-600 dark:text-indigo-400" size={24} />
-          </div>
-          <div className="flex-1">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+              <Bot className="text-indigo-600 dark:text-indigo-400" size={24} />
+            </div>
+            <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
                 <Sparkles className="text-indigo-500" size={20} />
@@ -625,7 +635,32 @@ Be concise, friendly, and professional. Format your responses with markdown for 
                   </div>
                 </div>
               )}
+            </div>
           </div>
+          
+          {/* Model Selector */}
+          {AI_CONFIG.openaiApiKey && (
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                AI Model
+              </label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[180px]"
+                disabled={loading}
+              >
+                {availableModels.map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {availableModels.find(m => m.value === selectedModel)?.description}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -721,7 +756,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
           {AI_CONFIG.openaiApiKey ? (
             <>
-              Powered by {AI_CONFIG.model}
+              Powered by {selectedModel}
               {AI_CONFIG.tavilyApiKey && (
                 <>
                   {' • '}
@@ -742,9 +777,6 @@ Be concise, friendly, and professional. Format your responses with markdown for 
             <>
               Powered by intelligent AI • 
               <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
-              <span className="ml-2 text-yellow-600 dark:text-yellow-400">
-                💡 Add API keys for web-enabled AI (see config/aiConfig.js)
-              </span>
             </>
           )}
         </p>
