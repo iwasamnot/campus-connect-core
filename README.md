@@ -188,13 +188,35 @@ The platform supports two authentication methods:
 
 ## Automatic Deployment
 
-This project is configured with **automatic deployment** to Firebase Hosting:
+This project is configured with **automatic deployment** to Firebase Hosting via GitHub Actions.
+
+### How It Works
 
 - **Trigger**: Every push to the `master` branch automatically triggers deployment
 - **Process**: 
-  1. GitHub Actions builds the project
-  2. Deploys to Firebase Hosting
-  3. Your site is live within minutes
+  1. GitHub Actions checks out your code
+  2. Installs dependencies (`npm ci`)
+  3. Builds the project (`npm run build`)
+  4. Deploys to Firebase Hosting
+  5. Your site is live within minutes
+
+### Setup GitHub Secrets (One-Time)
+
+For automatic deployment to work, you need to set up GitHub Secrets:
+
+1. Go to your GitHub repository → **Settings** → **Secrets and variables** → **Actions**
+2. Add the following secrets:
+
+   - **`FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC`**: 
+     - Get this from Firebase Console → Project Settings → Service Accounts
+     - Click "Generate new private key"
+     - Copy the entire JSON content and paste it as the secret value
+   
+   - **`VITE_OPENAI_API_KEY`** (Optional):
+     - Your OpenAI API key if you want ChatGPT features in production
+     - Format: `sk-your-key-here`
+
+### Using Automatic Deployment
 
 No manual deployment needed! Just commit and push your changes:
 
@@ -204,7 +226,7 @@ git commit -m "Your changes"
 git push origin master
 ```
 
-The deployment happens automatically via GitHub Actions.
+The deployment happens automatically via GitHub Actions. You can monitor the deployment progress in the **Actions** tab of your GitHub repository.
 
 ## Project Structure
 
