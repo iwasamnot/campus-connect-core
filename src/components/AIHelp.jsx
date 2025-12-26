@@ -309,7 +309,7 @@ class IntelligentAI {
 
 const AIHelp = () => {
   const { darkMode } = useTheme();
-  const { success, error: showError } = useToast();
+  const { success, error: showError, warning } = useToast();
   const [messages, setMessages] = useState([
     {
       id: 1,

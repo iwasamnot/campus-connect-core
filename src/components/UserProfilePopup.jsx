@@ -180,19 +180,6 @@ const UserProfilePopup = ({ userId, onClose }) => {
 
               {/* Details */}
               <div className="space-y-4">
-                {/* Always show email if available */}
-                {(userData.email || userData.studentEmail || userData.personalEmail) && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">
-                      {userData.email || userData.studentEmail || userData.personalEmail || 'Not set'}
-                    </p>
-                  </div>
-                )}
-                
                 {userData.bio && userData.bio.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
