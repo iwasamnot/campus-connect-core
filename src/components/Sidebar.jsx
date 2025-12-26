@@ -32,7 +32,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('chat')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'chat'
-                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
@@ -43,7 +43,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('ai-help')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'ai-help'
-                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
@@ -54,7 +54,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('profile')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'profile'
-                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
@@ -68,7 +68,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('audit')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'audit'
-                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
@@ -79,7 +79,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('users')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'users'
-                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
@@ -90,7 +90,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('create-user')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'create-user'
-                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >

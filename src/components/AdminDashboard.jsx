@@ -304,21 +304,21 @@ const AdminDashboard = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setShowReports(!showReports)}
-              className="flex items-center gap-2 px-4 py-2 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
             >
               <AlertTriangle size={18} />
               <span>Reports ({reports.filter(r => r.status === 'pending').length})</span>
             </button>
             <button
               onClick={() => setShowAuditLogs(!showAuditLogs)}
-              className="flex items-center gap-2 px-4 py-2 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
             >
               <FileText size={18} />
               <span>Audit Logs</span>
             </button>
             <button
               onClick={exportToCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
             >
               <Download size={18} />
               <span>Export CSV</span>
@@ -398,11 +398,11 @@ const AdminDashboard = () => {
 
       {/* Reports Panel */}
       {showReports && (
-        <div className="bg-sistc-50 dark:bg-sistc-900/20 border-b border-sistc-200 dark:border-sistc-800 px-6 py-4 max-h-64 overflow-y-auto">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 px-6 py-4 max-h-64 overflow-y-auto">
           <h3 className="font-semibold text-gray-800 dark:text-white mb-2">Pending Reports ({reports.filter(r => r.status === 'pending').length})</h3>
           <div className="space-y-2">
             {reports.filter(r => r.status === 'pending').map(report => (
-              <div key={report.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-sistc-200 dark:border-sistc-800">
+              <div key={report.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-black dark:text-white">Reported by: {report.reportedByEmail}</p>
@@ -412,13 +412,13 @@ const AdminDashboard = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleResolveReport(report.id, 'resolved')}
-                      className="px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white text-xs rounded"
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
                     >
                       Resolve
                     </button>
                     <button
                       onClick={() => handleResolveReport(report.id, 'dismissed')}
-                      className="px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white text-xs rounded"
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
                     >
                       Dismiss
                     </button>
@@ -435,11 +435,11 @@ const AdminDashboard = () => {
 
       {/* Audit Logs Panel */}
       {showAuditLogs && (
-        <div className="bg-sistc-50 dark:bg-sistc-900/20 border-b border-sistc-200 dark:border-sistc-800 px-6 py-4 max-h-64 overflow-y-auto">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 px-6 py-4 max-h-64 overflow-y-auto">
           <h3 className="font-semibold text-black dark:text-white mb-2">Recent Audit Logs ({auditLogs.length})</h3>
           <div className="space-y-2">
             {auditLogs.slice(0, 10).map(log => (
-              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-sistc-200 dark:border-sistc-800 text-xs text-black dark:text-white">
+              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-indigo-200 dark:border-indigo-800 text-xs text-black dark:text-white">
                 <span className="font-medium">{log.action}</span> by {log.performedByEmail} - {formatTimestamp(log.timestamp)}
               </div>
             ))}
@@ -510,7 +510,7 @@ const AdminDashboard = () => {
                               Banned
                             </span>
                           ) : (
-                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-sistc-100 dark:bg-sistc-900 text-sistc-800 dark:text-sistc-200 w-fit">
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 w-fit">
                               Active
                             </span>
                           )}
@@ -529,7 +529,7 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => handleDeleteMessage(message.id)}
                             disabled={deleting === message.id}
-                            className="flex items-center gap-1 px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                           >
                             <Trash2 size={14} />
                             <span>Delete</span>
@@ -548,7 +548,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-sistc-200 dark:bg-sistc-700 text-black dark:text-white border-2 border-sistc-300 dark:border-sistc-600 rounded-lg hover:bg-sistc-300 dark:hover:bg-sistc-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="px-4 py-2 bg-indigo-200 dark:bg-indigo-700 text-black dark:text-white border-2 border-indigo-300 dark:border-indigo-600 rounded-lg hover:bg-indigo-300 dark:hover:bg-indigo-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Previous
                 </button>
@@ -558,7 +558,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-sistc-200 dark:bg-sistc-700 text-black dark:text-white border-2 border-sistc-300 dark:border-sistc-600 rounded-lg hover:bg-sistc-300 dark:hover:bg-sistc-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="px-4 py-2 bg-indigo-200 dark:bg-indigo-700 text-black dark:text-white border-2 border-indigo-300 dark:border-indigo-600 rounded-lg hover:bg-indigo-300 dark:hover:bg-indigo-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Next
                 </button>
