@@ -1,30 +1,44 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { X, User, Mail, Phone, Calendar, GraduationCap, MapPin, FileText, Image } from 'lucide-react';
+import { X, User, Mail, Phone, Calendar, GraduationCap, MapPin, FileText, Image, Circle } from 'lucide-react';
 
 const UserProfilePopup = ({ userId, onClose }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!userId) return;
-      
-      try {
-        const userDoc = await getDoc(doc(db, 'users', userId));
-        if (userDoc.exists()) {
-          setUserData({ id: userDoc.id, ...userDoc.data() });
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!userId) return;
 
-    fetchUserData();
+    // Use real-time listener to get online status and last seen
+    const unsubscribe = onSnapshot(doc(db, 'users', userId), (userDoc) => {
+      if (userDoc.exists()) {
+        setUserData({ id: userDoc.id, ...userDoc.data() });
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching user data:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [userId]);
+
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return 'Never';
+    const date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
 
   if (!userId) return null;
 
@@ -73,11 +87,18 @@ const UserProfilePopup = ({ userId, onClose }) => {
 
               {/* Name */}
               <div className="text-center">
-                <h4 className="text-2xl font-bold text-gray-800 dark:text-white">
-                  {userData.name || 'No Name'}
-                </h4>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <h4 className="text-2xl font-bold text-gray-800 dark:text-white">
+                    {userData.name || 'No Name'}
+                  </h4>
+                  {userData.isOnline ? (
+                    <div className="w-3 h-3 bg-green-500 rounded-full" title="Online" />
+                  ) : userData.lastSeen ? (
+                    <div className="w-3 h-3 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(userData.lastSeen)}`} />
+                  ) : null}
+                </div>
                 {userData.role && (
-                  <span className={`inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full ${
+                  <span className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full ${
                     userData.role === 'admin' || userData.role === 'admin1'
                       ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
@@ -85,6 +106,25 @@ const UserProfilePopup = ({ userId, onClose }) => {
                     {userData.role}
                   </span>
                 )}
+                {/* Online Status / Last Seen */}
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  {userData.isOnline ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <Circle size={8} className="fill-green-500 text-green-500" />
+                      Online
+                    </span>
+                  ) : userData.lastSeen ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <Circle size={8} className="fill-gray-400 text-gray-400" />
+                      Last seen: {formatLastSeen(userData.lastSeen)}
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-1">
+                      <Circle size={8} className="fill-gray-400 text-gray-400" />
+                      Offline
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Details */}
@@ -96,16 +136,6 @@ const UserProfilePopup = ({ userId, onClose }) => {
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Bio</span>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.bio}</p>
-                  </div>
-                )}
-
-                {userData.email && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Login Email</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.email}</p>
                   </div>
                 )}
 
