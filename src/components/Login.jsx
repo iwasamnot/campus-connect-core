@@ -103,7 +103,7 @@ const Login = () => {
           e.stopPropagation();
           toggleDarkMode();
         }}
-        className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50"
+        className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-800 border border-sistc-200 dark:border-sistc-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50 hover:border-sistc-400 dark:hover:border-sistc-500"
         aria-label="Toggle dark mode"
         type="button"
       >
@@ -121,7 +121,7 @@ const Login = () => {
         </div>
 
         {/* Toggle between Login and Register - Cyan background with readable text */}
-        <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1 border border-gray-200 dark:border-gray-600">
+        <div className="flex mb-6 bg-sistc-50 dark:bg-sistc-900/30 rounded-lg p-1 gap-1 border border-sistc-200 dark:border-sistc-700">
           <button
             onClick={() => {
               setMode('login');
@@ -130,7 +130,7 @@ const Login = () => {
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
                 ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-sistc-300 dark:hover:border-sistc-600'
+                : 'bg-white dark:bg-gray-800 text-sistc-700 dark:text-sistc-300 border-2 border-transparent hover:border-sistc-400 dark:hover:border-sistc-500 hover:bg-sistc-50 dark:hover:bg-sistc-900/20'
             }`}
           >
             Login
@@ -143,7 +143,7 @@ const Login = () => {
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
                 ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-sistc-300 dark:hover:border-sistc-600'
+                : 'bg-white dark:bg-gray-800 text-sistc-700 dark:text-sistc-300 border-2 border-transparent hover:border-sistc-400 dark:hover:border-sistc-500 hover:bg-sistc-50 dark:hover:bg-sistc-900/20'
             }`}
           >
             Register
