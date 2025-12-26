@@ -314,6 +314,12 @@ const AIHelp = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(AI_CONFIG.model || 'gpt-4o-mini');
+  const [aiMode, setAiMode] = useState(() => {
+    // Default: use ChatGPT if available, otherwise local
+    if (AI_CONFIG.openaiApiKey) return 'chatgpt';
+    return 'local';
+  });
+  const [useWebSearch, setUseWebSearch] = useState(AI_CONFIG.enableWebSearch && AI_CONFIG.tavilyApiKey);
   const [usageInfo, setUsageInfo] = useState(() => ({
     remaining: UsageLimiter.getRemaining(),
     count: UsageLimiter.getUsage().count,
@@ -328,6 +334,22 @@ const AIHelp = () => {
     { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: 'Faster & Cheaper' },
     { value: 'gpt-4o', label: 'GPT-4o', description: 'Most Capable (Slower & More Expensive)' },
     { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', description: 'High Performance' }
+  ];
+
+  // AI Mode options
+  const aiModeOptions = [
+    { 
+      value: 'chatgpt', 
+      label: 'ChatGPT', 
+      description: 'Uses OpenAI for intelligent, context-aware responses',
+      available: !!AI_CONFIG.openaiApiKey
+    },
+    { 
+      value: 'local', 
+      label: 'Local Knowledge Base', 
+      description: 'Uses built-in SISTC knowledge base (no API required)',
+      available: true
+    }
   ];
 
   useEffect(() => {
@@ -458,28 +480,27 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       let answer = null;
       let usedWebSearch = false;
 
-      // Try web search first if enabled
-      if (AI_CONFIG.enableWebSearch && AI_CONFIG.tavilyApiKey) {
-        const webResults = await searchWeb(question);
-        if (webResults && webResults.answer) {
-          usedWebSearch = true;
-          // Try to get enhanced answer from OpenAI with web context
-          if (AI_CONFIG.openaiApiKey) {
+      // Determine which AI mode to use
+      if (aiMode === 'chatgpt' && AI_CONFIG.openaiApiKey) {
+        // Use ChatGPT mode
+        
+        // Try web search first if enabled and available
+        if (useWebSearch && AI_CONFIG.tavilyApiKey) {
+          const webResults = await searchWeb(question);
+          if (webResults && webResults.answer) {
+            usedWebSearch = true;
+            // Get enhanced answer from OpenAI with web context
             const webContext = `Answer: ${webResults.answer}\n\nSources:\n${webResults.results?.slice(0, 3).map(r => `- ${r.title}: ${r.content}`).join('\n')}`;
             answer = await getAIResponse(question, webContext);
-          } else {
-            answer = webResults.answer;
           }
         }
-      }
 
-      // Try OpenAI API if web search didn't work or isn't available
-      if (!answer && AI_CONFIG.openaiApiKey) {
-        answer = await getAIResponse(question);
-      }
-
-      // Fallback to local knowledge base
-      if (!answer && AI_CONFIG.useFallback) {
+        // If web search didn't work or isn't enabled, use ChatGPT without web
+        if (!answer) {
+          answer = await getAIResponse(question);
+        }
+      } else {
+        // Use local knowledge base mode
         answer = ai.current.processQuestion(question);
       }
 
@@ -501,19 +522,17 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       console.error('AI Error:', err);
       
       // Fallback to local knowledge base on error
-      if (AI_CONFIG.useFallback) {
-        try {
-          const fallbackAnswer = ai.current.processQuestion(question);
-          const botMessage = {
-            id: Date.now() + 1,
-            type: 'bot',
-            content: fallbackAnswer,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, botMessage]);
-        } catch (fallbackErr) {
-          console.error('Fallback error:', fallbackErr);
-        }
+      try {
+        const fallbackAnswer = ai.current.processQuestion(question);
+        const botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: fallbackAnswer,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } catch (fallbackErr) {
+        console.error('Fallback error:', fallbackErr);
       }
     } finally {
       setLoading(false);
@@ -638,29 +657,93 @@ Be concise, friendly, and professional. Format your responses with markdown for 
             </div>
           </div>
           
-          {/* Model Selector */}
-          {AI_CONFIG.openaiApiKey && (
-            <div className="flex-shrink-0">
+          {/* AI Mode and Model Selector */}
+          <div className="flex-shrink-0 flex gap-4">
+            {/* AI Mode Selector */}
+            <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                AI Model
+                AI Source
               </label>
               <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[180px]"
+                value={aiMode}
+                onChange={(e) => setAiMode(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[200px]"
                 disabled={loading}
               >
-                {availableModels.map((model) => (
-                  <option key={model.value} value={model.value}>
-                    {model.label}
+                {aiModeOptions.map((mode) => (
+                  <option 
+                    key={mode.value} 
+                    value={mode.value}
+                    disabled={!mode.available}
+                  >
+                    {mode.label} {!mode.available ? '(Not Available)' : ''}
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {availableModels.find(m => m.value === selectedModel)?.description}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[200px]">
+                {aiModeOptions.find(m => m.value === aiMode)?.description}
               </p>
             </div>
-          )}
+
+            {/* Model Selector (only show if ChatGPT is selected) */}
+            {aiMode === 'chatgpt' && AI_CONFIG.openaiApiKey && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Model
+                </label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[180px]"
+                  disabled={loading}
+                >
+                  {availableModels.map((model) => (
+                    <option key={model.value} value={model.value}>
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[180px]">
+                  {availableModels.find(m => m.value === selectedModel)?.description}
+                </p>
+              </div>
+            )}
+
+            {/* Web Search Toggle (only show if ChatGPT is selected and Tavily is available) */}
+            {aiMode === 'chatgpt' && AI_CONFIG.tavilyApiKey && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Web Search
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUseWebSearch(!useWebSearch)}
+                    disabled={loading || usageInfo.remaining === 0}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      useWebSearch 
+                        ? 'bg-indigo-600' 
+                        : 'bg-gray-300 dark:bg-gray-600'
+                    } ${(loading || usageInfo.remaining === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        useWebSearch ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    {useWebSearch ? 'On' : 'Off'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[140px]">
+                  {useWebSearch 
+                    ? `Real-time web search (${usageInfo.remaining} left today)`
+                    : 'Local knowledge only'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
