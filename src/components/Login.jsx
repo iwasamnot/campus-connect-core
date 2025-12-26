@@ -120,8 +120,8 @@ const Login = () => {
           <p className="text-black dark:text-white mt-2 font-medium">Secure Student Messaging Platform</p>
         </div>
 
-        {/* Toggle between Login and Register - Cyan background with readable text */}
-        <div className="flex mb-6 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-1 gap-1 border border-indigo-200 dark:border-indigo-700">
+        {/* Toggle between Login and Register */}
+        <div className="flex mb-6 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-1 gap-1">
           <button
             onClick={() => {
               setMode('login');
@@ -129,8 +129,8 @@ const Login = () => {
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
-                ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-400 ring-offset-2'
-                : 'bg-indigo-100 dark:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-300 dark:border-indigo-600 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-200 dark:hover:bg-indigo-700'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-transparent text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800/50'
             }`}
           >
             Login
@@ -142,8 +142,8 @@ const Login = () => {
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
-                ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-400 ring-offset-2'
-                : 'bg-indigo-100 dark:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-300 dark:border-indigo-600 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-200 dark:hover:bg-indigo-700'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-transparent text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800/50'
             }`}
           >
             Register
