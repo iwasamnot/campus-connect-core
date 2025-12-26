@@ -462,8 +462,9 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
-      showError('Failed to get response. Please try again.');
       console.error('AI Error:', err);
+      const errorMessage = err.message || 'Failed to get response';
+      showError(`AI Error: ${errorMessage}. Falling back to local knowledge base.`);
       
       // Fallback to local knowledge base on error
       try {
@@ -477,6 +478,13 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         setMessages(prev => [...prev, botMessage]);
       } catch (fallbackErr) {
         console.error('Fallback error:', fallbackErr);
+        const errorBotMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: "I apologize, but I'm having trouble accessing my knowledge base right now. Please try again later or contact SISTC directly at +61 (2) 9061 5900 or visit https://sistc.edu.au/",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorBotMessage]);
       }
     } finally {
       setLoading(false);
