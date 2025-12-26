@@ -324,15 +324,15 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default to free model
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash-latest'); // Default to free model
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
   // Available Gemini models
   const geminiModels = [
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
     { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
-    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
+    { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
     { value: 'gemini-pro', label: 'Gemini Pro', description: 'Paid - Standard Model', free: false },
   ];
 
