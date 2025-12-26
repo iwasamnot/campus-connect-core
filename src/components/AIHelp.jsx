@@ -3,6 +3,16 @@ import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Globe, AlertTriangle } from 'lucide-react';
 import { AI_CONFIG } from '../config/aiConfig';
+
+// Debug: Log API key status (remove in production)
+if (import.meta.env.DEV) {
+  console.log('AI Config Status:', {
+    hasOpenAI: !!AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '',
+    hasTavily: !!AI_CONFIG.tavilyApiKey && AI_CONFIG.tavilyApiKey.trim() !== '',
+    openaiLength: AI_CONFIG.openaiApiKey?.length || 0,
+    tavilyLength: AI_CONFIG.tavilyApiKey?.length || 0
+  });
+}
 import { UsageLimiter } from '../utils/usageLimiter';
 
 // Enhanced SISTC Knowledge Base with more detailed information
@@ -687,26 +697,34 @@ Be concise, friendly, and professional. Format your responses with markdown for 
             </div>
 
             {/* Model Selector (only show if ChatGPT is selected) */}
-            {aiMode === 'chatgpt' && AI_CONFIG.openaiApiKey && (
+            {aiMode === 'chatgpt' && (
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Model
                 </label>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[180px]"
-                  disabled={loading}
-                >
-                  {availableModels.map((model) => (
-                    <option key={model.value} value={model.value}>
-                      {model.label}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[180px]">
-                  {availableModels.find(m => m.value === selectedModel)?.description}
-                </p>
+                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' ? (
+                  <>
+                    <select
+                      value={selectedModel}
+                      onChange={(e) => setSelectedModel(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[180px]"
+                      disabled={loading}
+                    >
+                      {availableModels.map((model) => (
+                        <option key={model.value} value={model.value}>
+                          {model.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[180px]">
+                      {availableModels.find(m => m.value === selectedModel)?.description}
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 min-w-[180px]">
+                    OpenAI API key needed
+                  </div>
+                )}
               </div>
             )}
 
@@ -716,7 +734,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Web Search
                 </label>
-                {AI_CONFIG.tavilyApiKey ? (
+                {AI_CONFIG.tavilyApiKey && AI_CONFIG.tavilyApiKey.trim() !== '' ? (
                   <>
                     <div className="flex items-center gap-2">
                       <button
