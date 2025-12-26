@@ -114,7 +114,7 @@ const Login = () => {
           <p className="text-black dark:text-white mt-2 font-medium">Secure Student Messaging Platform</p>
         </div>
 
-        {/* Toggle between Login and Register - High contrast design */}
+        {/* Toggle between Login and Register - Cyan background with readable text */}
         <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1 border-2 border-gray-200 dark:border-gray-600">
           <button
             onClick={() => {
@@ -123,7 +123,7 @@ const Login = () => {
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
-                ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
+                ? 'bg-sistc-600 text-black dark:text-black shadow-lg ring-2 ring-sistc-400 ring-offset-2'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
@@ -136,7 +136,7 @@ const Login = () => {
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
-                ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
+                ? 'bg-sistc-600 text-black dark:text-black shadow-lg ring-2 ring-sistc-400 ring-offset-2'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
@@ -193,11 +193,11 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 active:bg-sistc-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 active:bg-sistc-800 text-black dark:text-black font-bold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {loading ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
                   <span>Processing...</span>
                 </>
               ) : mode === 'register' ? (
