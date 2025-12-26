@@ -1,0 +1,15 @@
+# This workflow is a placeholder for future CI/CD
+# For now, manual commits are preferred to maintain control
+
+name: Auto Commit (Placeholder)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "Manual commits preferred for now"
+
