@@ -323,15 +323,9 @@ const AIHelp = () => {
   const [selectedModel, setSelectedModel] = useState(AI_CONFIG.model || 'gpt-4o-mini');
   const [aiMode, setAiMode] = useState(() => {
     // Default: use ChatGPT if available, otherwise local
-    if (AI_CONFIG.openaiApiKey) return 'chatgpt';
+    if (AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') return 'chatgpt';
     return 'local';
   });
-  const [useWebSearch, setUseWebSearch] = useState(AI_CONFIG.enableWebSearch && AI_CONFIG.tavilyApiKey);
-  const [usageInfo, setUsageInfo] = useState(() => ({
-    remaining: UsageLimiter.getRemaining(),
-    count: UsageLimiter.getUsage().count,
-    limit: UsageLimiter.getDailyLimit()
-  }));
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
@@ -667,48 +661,6 @@ Be concise, friendly, and professional. Format your responses with markdown for 
               </div>
             )}
 
-            {/* Web Search Toggle (show if ChatGPT is selected, indicate if Tavily is available) */}
-            {aiMode === 'chatgpt' && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Web Search
-                </label>
-                {AI_CONFIG.tavilyApiKey && AI_CONFIG.tavilyApiKey.trim() !== '' ? (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setUseWebSearch(!useWebSearch)}
-                        disabled={loading || usageInfo.remaining === 0}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          useWebSearch 
-                            ? 'bg-indigo-600' 
-                            : 'bg-gray-300 dark:bg-gray-600'
-                        } ${(loading || usageInfo.remaining === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            useWebSearch ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {useWebSearch ? 'On' : 'Off'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[140px]">
-                      {useWebSearch 
-                        ? `Real-time web search (${usageInfo.remaining} left today)`
-                        : 'Local knowledge only'}
-                    </p>
-                  </>
-                ) : (
-                  <div className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 max-w-[140px]">
-                    Tavily API key not configured
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
