@@ -9,7 +9,10 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 if (import.meta.env.DEV) {
   console.log('AI Config Status:', {
     hasOpenAI: !!AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '',
-    openaiLength: AI_CONFIG.openaiApiKey?.length || 0
+    openaiLength: AI_CONFIG.openaiApiKey?.length || 0,
+    hasGemini: !!import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim() !== '',
+    geminiLength: import.meta.env.VITE_GEMINI_API_KEY?.length || 0,
+    geminiKeyPreview: import.meta.env.VITE_GEMINI_API_KEY ? import.meta.env.VITE_GEMINI_API_KEY.substring(0, 10) + '...' : 'not set'
   });
 }
 
@@ -419,23 +422,32 @@ Question: ${question}`;
     
     // Priority 1: Try Gemini if API key is available
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    console.log('AIHelp: Checking Gemini API key...', {
+      hasKey: !!geminiApiKey,
+      keyLength: geminiApiKey?.length || 0,
+      keyPreview: geminiApiKey ? geminiApiKey.substring(0, 10) + '...' : 'not set'
+    });
+    
     if (geminiApiKey && geminiApiKey.trim() !== '') {
       try {
-        console.log('AIHelp: Attempting to use Gemini AI...');
+        console.log('AIHelp: Attempting to use Gemini AI with model:', selectedGeminiModel);
         const geminiAnswer = await callGemini(question, localAnswer);
         if (geminiAnswer && geminiAnswer.trim() !== '') {
-          console.log('AIHelp: Gemini AI response received');
+          console.log('AIHelp: ✅ Gemini AI response received successfully, length:', geminiAnswer.length);
           return geminiAnswer; // Return Gemini answer if successful
         } else {
-          console.warn('AIHelp: Gemini returned empty response, falling back...');
+          console.warn('AIHelp: ⚠️ Gemini returned empty or null response, falling back to ChatGPT or local...');
         }
       } catch (error) {
-        console.error('AIHelp: Gemini API error:', error);
-        console.error('AIHelp: Error details:', error.message, error.stack);
+        console.error('AIHelp: ❌ Gemini API error:', error);
+        console.error('AIHelp: Error details:', error.message);
+        if (error.stack) {
+          console.error('AIHelp: Error stack:', error.stack);
+        }
         // Fall through to next option
       }
     } else {
-      console.log('AIHelp: Gemini API key not found, skipping Gemini...');
+      console.log('AIHelp: ⚠️ Gemini API key not found, skipping Gemini and trying ChatGPT or local...');
     }
     
     // Priority 2: Try ChatGPT if API key is available
