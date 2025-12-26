@@ -47,7 +47,7 @@ const ChatArea = () => {
   const [reacting, setReacting] = useState(new Set()); // Track reactions in progress to prevent duplicates
   const [aiHelpMode, setAiHelpMode] = useState(false); // Toggle for AI Help mode
   const [waitingForAI, setWaitingForAI] = useState(false); // Track if waiting for AI response
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-pro'); // Default model
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default model
   const [showModelSelector, setShowModelSelector] = useState(false); // Show model selector dropdown
   const messagesEndRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
@@ -62,8 +62,8 @@ const ChatArea = () => {
 
   // Initialize Gemini AI with selected model
   const getGeminiModel = (modelName = selectedGeminiModel) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey || apiKey.trim() === '') {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    if (!apiKey || apiKey === '') {
       return null;
     }
     

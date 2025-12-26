@@ -10,9 +10,9 @@ if (import.meta.env.DEV) {
   console.log('AI Config Status:', {
     hasOpenAI: !!AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '',
     openaiLength: AI_CONFIG.openaiApiKey?.length || 0,
-    hasGemini: !!import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim() !== '',
-    geminiLength: import.meta.env.VITE_GEMINI_API_KEY?.length || 0,
-    geminiKeyPreview: import.meta.env.VITE_GEMINI_API_KEY ? import.meta.env.VITE_GEMINI_API_KEY.substring(0, 10) + '...' : 'not set'
+    hasGemini: !!(import.meta.env.VITE_GEMINI_API_KEY?.trim()),
+    geminiLength: import.meta.env.VITE_GEMINI_API_KEY?.trim()?.length || 0,
+    geminiKeyPreview: import.meta.env.VITE_GEMINI_API_KEY?.trim() ? import.meta.env.VITE_GEMINI_API_KEY.trim().substring(0, 10) + '...' : 'not set'
   });
 }
 
@@ -324,7 +324,7 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-pro'); // Default model
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default model
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
@@ -338,8 +338,8 @@ const AIHelp = () => {
 
   // Initialize Gemini AI with selected model
   const getGeminiModel = (modelName = selectedGeminiModel) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey || apiKey.trim() === '') {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    if (!apiKey || apiKey === '') {
       return null;
     }
     
@@ -376,8 +376,8 @@ const AIHelp = () => {
 
   // Call Gemini AI
   const callGemini = async (question, localContext) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey || apiKey.trim() === '') {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    if (!apiKey || apiKey === '') {
       console.warn('AIHelp: Gemini API key not found in callGemini');
       return null;
     }
@@ -437,14 +437,14 @@ Question: ${question}`;
     const localAnswer = ai.current.processQuestion(question);
     
     // Priority 1: Try Gemini if API key is available
-    const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     console.log('AIHelp: Checking Gemini API key...', {
       hasKey: !!geminiApiKey,
       keyLength: geminiApiKey?.length || 0,
       keyPreview: geminiApiKey ? geminiApiKey.substring(0, 10) + '...' : 'not set'
     });
     
-    if (geminiApiKey && geminiApiKey.trim() !== '') {
+    if (geminiApiKey && geminiApiKey !== '') {
       console.log('AIHelp: Attempting to use Gemini AI with model:', selectedGeminiModel);
       const geminiAnswer = await callGemini(question, localAnswer);
       if (geminiAnswer && geminiAnswer.trim() !== '') {
@@ -766,7 +766,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         </form>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
           {(() => {
-            const hasGemini = import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim() !== '';
+            const hasGemini = !!(import.meta.env.VITE_GEMINI_API_KEY?.trim());
             const hasOpenAI = AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '';
             if (hasGemini) {
               return (
