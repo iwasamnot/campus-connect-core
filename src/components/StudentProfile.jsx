@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebaseConfig';
 import { User, Mail, Phone, Save, Loader, Edit2, X, Image, GraduationCap, Calendar, MapPin, FileText, Upload } from 'lucide-react';
@@ -135,27 +135,59 @@ const StudentProfile = () => {
 
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
-        name: formData.name.trim() || null,
-        studentEmail: formData.studentEmail.trim() || null,
-        personalEmail: formData.personalEmail.trim() || null,
-        phoneNumber: formData.phoneNumber.trim() || null,
-        bio: formData.bio.trim() || null,
-        profilePicture: formData.profilePicture.trim() || null,
-        course: formData.course.trim() || null,
-        yearOfStudy: formData.yearOfStudy.trim() || null,
-        dateOfBirth: formData.dateOfBirth.trim() || null,
-        address: formData.address.trim() || null,
+      const userRef = doc(db, 'users', user.uid);
+      
+      // Prepare update data - only include fields that have values or are being cleared
+      const updateData = {
         updatedAt: new Date().toISOString()
-      });
+      };
+      
+      // Only add fields that have values (don't set to null if they were never set)
+      if (formData.name.trim()) updateData.name = formData.name.trim();
+      if (formData.studentEmail.trim()) updateData.studentEmail = formData.studentEmail.trim();
+      if (formData.personalEmail.trim()) updateData.personalEmail = formData.personalEmail.trim();
+      if (formData.phoneNumber.trim()) updateData.phoneNumber = formData.phoneNumber.trim();
+      if (formData.bio.trim()) updateData.bio = formData.bio.trim();
+      if (formData.profilePicture.trim()) updateData.profilePicture = formData.profilePicture.trim();
+      if (formData.course.trim()) updateData.course = formData.course.trim();
+      if (formData.yearOfStudy.trim()) updateData.yearOfStudy = formData.yearOfStudy.trim();
+      if (formData.dateOfBirth.trim()) updateData.dateOfBirth = formData.dateOfBirth.trim();
+      if (formData.address.trim()) updateData.address = formData.address.trim();
+      
+      // Use setDoc with merge to ensure document exists and update it
+      await setDoc(userRef, updateData, { merge: true });
+      
+      console.log('StudentProfile - Profile saved successfully:', updateData);
+      
+      // Refresh the data from Firestore to ensure we have the latest
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const refreshedData = {
+          name: userData.name || '',
+          studentEmail: userData.studentEmail || '',
+          personalEmail: userData.personalEmail || '',
+          phoneNumber: userData.phoneNumber || '',
+          bio: userData.bio || '',
+          profilePicture: userData.profilePicture || '',
+          course: userData.course || '',
+          yearOfStudy: userData.yearOfStudy || '',
+          dateOfBirth: userData.dateOfBirth || '',
+          address: userData.address || ''
+        };
+        setFormData(refreshedData);
+        setOriginalData(refreshedData);
+      }
 
-      setOriginalData({ ...formData });
       setEditing(false);
       setSuccess(true);
+      showSuccess('Profile updated successfully!');
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
-      setError('Failed to save profile. Please try again.');
+      const errorMessage = error.message || 'Failed to save profile. Please try again.';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setSaving(false);
     }
