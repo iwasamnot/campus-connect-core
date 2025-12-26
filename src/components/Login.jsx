@@ -89,7 +89,7 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sistc-50 to-campus-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-sistc-50 to-sistc-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 relative">
       {/* Dark Mode Toggle Button */}
       <button
         onClick={(e) => {

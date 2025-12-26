@@ -9,18 +9,18 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
 
   const { width, fontSize } = sizes[size] || sizes.default;
 
-  // SISTC-inspired color scheme: Deep blue and vibrant purple/blue
+  // SISTC accent colors: green-cyan gradient
   const colors = {
-    primary: '#1e40af',      // Deep blue (SISTC primary)
-    secondary: '#6366f1',    // Indigo/purple (SISTC accent)
-    accent: '#8b5cf6',       // Purple accent
-    dark: '#1e3a8a',        // Dark blue
-    bright: '#3b82f6'       // Bright blue
+    primary: '#1e40af',           // Deep blue (kept for contrast)
+    secondary: '#00d082',         // Vivid green-cyan (SISTC accent)
+    light: '#7adcb4',             // Light green-cyan
+    dark: '#1e3a8a',              // Dark blue
+    accent: '#00d082'             // Vivid green-cyan
   };
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      {/* Generated Logo - Shield design with SISTC colors */}
+      {/* Generated Logo - Shield design with SISTC green-cyan colors */}
       <svg
         width={width}
         height={width}
@@ -35,6 +35,10 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
             <stop offset="50%" stopColor={colors.dark} />
             <stop offset="50%" stopColor={colors.secondary} />
             <stop offset="100%" stopColor={colors.secondary} />
+          </linearGradient>
+          <linearGradient id="greenCyanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#7adcb4" />
+            <stop offset="100%" stopColor="#00d082" />
           </linearGradient>
         </defs>
         
@@ -62,10 +66,10 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
           strokeLinejoin="round"
         />
         
-        {/* Right side - Purple/indigo section */}
+        {/* Right side - Green-cyan gradient section */}
         <path
           d="M60 10 L110 25 L110 105 L60 100 Z"
-          fill={colors.secondary}
+          fill="url(#greenCyanGradient)"
         />
         
         {/* Large bold C on right side */}
@@ -86,11 +90,11 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
             width="18"
             height="12"
             rx="3"
-            fill={colors.accent}
+            fill={colors.secondary}
           />
           <path
             d="M9 12 L7 19 L11 19 Z"
-            fill={colors.accent}
+            fill={colors.secondary}
           />
           <circle cx="4.5" cy="6" r="1.8" fill="#ffffff" />
           <circle cx="9" cy="6" r="1.8" fill="#ffffff" />
