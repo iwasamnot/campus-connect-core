@@ -387,7 +387,7 @@ const AIHelp = () => {
       // Bold text
       if (line.startsWith('**') && line.endsWith('**')) {
         elements.push(
-          <strong key={`bold-${key++}`} className="font-bold text-indigo-600 dark:text-indigo-400">
+          <strong key={`bold-${key++}`} className="font-bold text-sistc-600 dark:text-sistc-400">
             {line.slice(2, -2)}
           </strong>
         );
@@ -430,13 +430,13 @@ const AIHelp = () => {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-            <Bot className="text-indigo-600 dark:text-indigo-400" size={24} />
+          <div className="p-2 bg-sistc-100 dark:bg-sistc-900 rounded-lg">
+            <Bot className="text-sistc-600 dark:text-sistc-400" size={24} />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
-              <Sparkles className="text-indigo-500" size={20} />
+              <Sparkles className="text-sistc-500" size={20} />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Intelligent answers about SISTC courses, campuses, and more</p>
           </div>
@@ -450,7 +450,7 @@ const AIHelp = () => {
             <button
               key={idx}
               onClick={() => handleQuickQuestion(q.question)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors text-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-sistc-50 dark:bg-sistc-900/30 text-sistc-700 dark:text-sistc-300 rounded-lg hover:bg-sistc-100 dark:hover:bg-sistc-900/50 transition-colors text-sm"
             >
               <q.icon size={16} />
               <span>{q.text}</span>
@@ -469,14 +469,14 @@ const AIHelp = () => {
             }`}
           >
             {message.type === 'bot' && (
-              <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-full flex-shrink-0">
-                <Bot className="text-indigo-600 dark:text-indigo-400" size={20} />
+              <div className="p-2 bg-sistc-100 dark:bg-sistc-900 rounded-full flex-shrink-0">
+                <Bot className="text-sistc-600 dark:text-sistc-400" size={20} />
               </div>
             )}
             <div
               className={`max-w-2xl px-4 py-3 rounded-lg ${
                 message.type === 'user'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-sistc-600 text-white'
                   : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
               }`}
             >
@@ -484,26 +484,26 @@ const AIHelp = () => {
                 {formatMessage(message.content)}
               </div>
               <div className={`text-xs mt-2 ${
-                message.type === 'user' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'
+                message.type === 'user' ? 'text-sistc-100' : 'text-gray-500 dark:text-gray-400'
               }`}>
                 {message.timestamp.toLocaleTimeString()}
               </div>
             </div>
             {message.type === 'user' && (
               <div className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0">
-                <div className="w-5 h-5 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
+                <div className="w-5 h-5 rounded-full bg-sistc-600 dark:bg-sistc-400"></div>
               </div>
             )}
           </div>
         ))}
         {loading && (
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-full">
-              <Bot className="text-indigo-600 dark:text-indigo-400" size={20} />
+            <div className="p-2 bg-sistc-100 dark:bg-sistc-900 rounded-full">
+              <Bot className="text-sistc-600 dark:text-sistc-400" size={20} />
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
               <div className="flex items-center gap-2">
-                <Loader className="animate-spin text-indigo-600 dark:text-indigo-400" size={20} />
+                <Loader className="animate-spin text-sistc-600 dark:text-sistc-400" size={20} />
                 <span className="text-sm text-gray-600 dark:text-gray-400">Thinking...</span>
               </div>
             </div>
@@ -520,20 +520,20 @@ const AIHelp = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything about SISTC... (e.g., 'What are the requirements for Master of IT?')"
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-campus-600 focus:border-transparent"
             disabled={loading}
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-sistc-600 hover:bg-sistc-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Send size={20} />
             <span>Send</span>
           </button>
         </form>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-          Powered by intelligent AI • Information sourced from <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">sistc.edu.au</a>
+          Powered by intelligent AI • Information sourced from <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-sistc-600 dark:text-sistc-400 hover:underline">sistc.edu.au</a>
         </p>
       </div>
     </div>

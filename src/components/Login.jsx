@@ -89,7 +89,7 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-sistc-50 to-campus-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 relative">
       {/* Dark Mode Toggle Button */}
       <button
         onClick={(e) => {
@@ -123,7 +123,7 @@ const Login = () => {
             }}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'login'
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-sistc-600 text-white'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
@@ -136,7 +136,7 @@ const Login = () => {
             }}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'register'
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-sistc-600 text-white'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
@@ -163,7 +163,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
                   disabled={loading}
                 />
               </div>
@@ -183,7 +183,7 @@ const Login = () => {
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                     required
                     minLength={mode === 'register' ? 6 : undefined}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
                     disabled={loading}
                   />
                 </div>
@@ -194,7 +194,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <>
@@ -226,7 +226,7 @@ const Login = () => {
               setMode('reset');
               setError(null);
             }}
-            className="w-full mt-4 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="w-full mt-4 text-sm text-sistc-600 dark:text-sistc-400 hover:underline"
           >
             Forgot your password?
           </button>

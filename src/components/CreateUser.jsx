@@ -155,7 +155,7 @@ const CreateUser = () => {
                 onChange={handleChange}
                 placeholder="user@example.com"
                 required
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent ${
                   darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-100 border-gray-300 text-gray-900'
                 }`}
                 disabled={loading}
@@ -179,7 +179,7 @@ const CreateUser = () => {
                 placeholder="At least 6 characters"
                 required
                 minLength={6}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent ${
                   darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-100 border-gray-300 text-gray-900'
                 }`}
                 disabled={loading}
@@ -201,8 +201,8 @@ const CreateUser = () => {
                 onClick={() => setFormData(prev => ({ ...prev, role: 'student' }))}
                 className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-colors ${
                   formData.role === 'student'
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-indigo-400`
+                    ? 'border-sistc-600 bg-sistc-50 dark:bg-sistc-900/30 text-sistc-700 dark:text-sistc-300'
+                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-sistc-400`
                 }`}
                 disabled={loading}
               >
@@ -214,8 +214,8 @@ const CreateUser = () => {
                 onClick={() => setFormData(prev => ({ ...prev, role: 'admin' }))}
                 className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-colors ${
                   formData.role === 'admin'
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-indigo-400`
+                    ? 'border-sistc-600 bg-sistc-50 dark:bg-sistc-900/30 text-sistc-700 dark:text-sistc-300'
+                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-sistc-400`
                 }`}
                 disabled={loading}
               >

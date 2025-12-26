@@ -32,7 +32,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('chat')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 activeView === 'chat'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-sistc-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800'
               }`}
             >
@@ -43,7 +43,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('ai-help')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 activeView === 'ai-help'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-sistc-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800'
               }`}
             >
@@ -54,7 +54,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('profile')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 activeView === 'profile'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-sistc-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800'
               }`}
             >
@@ -68,7 +68,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('audit')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 activeView === 'audit'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-sistc-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800'
               }`}
             >
@@ -79,7 +79,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('users')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 activeView === 'users'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-sistc-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800'
               }`}
             >
@@ -90,7 +90,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               onClick={() => setActiveView('create-user')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 activeView === 'create-user'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-sistc-600 text-white'
                   : 'text-gray-300 hover:bg-gray-800'
               }`}
             >
