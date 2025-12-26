@@ -7,12 +7,15 @@ import StudentProfile from './components/StudentProfile';
 import UsersManagement from './components/UsersManagement';
 import CreateUser from './components/CreateUser';
 import AIHelp from './components/AIHelp';
+import Groups from './components/Groups';
+import GroupChat from './components/GroupChat';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect } from 'react';
 
 function App() {
   const { user, userRole, loading } = useAuth();
   const [activeView, setActiveView] = useState('chat');
+  const [selectedGroup, setSelectedGroup] = useState(null);
 
   // Set default view based on user role
   useEffect(() => {
@@ -51,6 +54,21 @@ function App() {
             {activeView === 'chat' && <ChatArea />}
             {activeView === 'ai-help' && <AIHelp />}
             {activeView === 'profile' && <StudentProfile />}
+            {activeView === 'groups' && (
+              <Groups 
+                setActiveView={setActiveView} 
+                setSelectedGroup={setSelectedGroup}
+              />
+            )}
+            {activeView === 'group-chat' && (
+              <GroupChat 
+                group={selectedGroup}
+                onBack={() => {
+                  setActiveView('groups');
+                  setSelectedGroup(null);
+                }}
+              />
+            )}
           </>
         )}
       </div>

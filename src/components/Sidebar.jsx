@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus } from 'lucide-react';
+import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus, UserCircle } from 'lucide-react';
 import Logo from './Logo';
 
 const Sidebar = ({ activeView, setActiveView }) => {
@@ -60,6 +60,17 @@ const Sidebar = ({ activeView, setActiveView }) => {
             >
               <User size={20} />
               <span>My Profile</span>
+            </button>
+            <button
+              onClick={() => setActiveView('groups')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeView === 'groups' || activeView === 'group-chat'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <UserCircle size={20} />
+              <span>Groups</span>
             </button>
           </>
         ) : (

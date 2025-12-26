@@ -1,0 +1,433 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  addDoc, 
+  doc, 
+  updateDoc, 
+  deleteDoc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove
+} from 'firebase/firestore';
+import { db } from '../firebaseConfig';
+import { Users, Plus, Search, X, UserPlus, Trash2, Edit2, Check, Loader } from 'lucide-react';
+
+const Groups = ({ setActiveView, setSelectedGroup }) => {
+  const { user } = useAuth();
+  const { success, error: showError } = useToast();
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupDescription, setNewGroupDescription] = useState('');
+  const [joinGroupCode, setJoinGroupCode] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
+
+  // Fetch groups user is a member of
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, 'groups'),
+      where('members', 'array-contains', user.uid)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const groupsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setGroups(groupsData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching groups:', error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const generateGroupCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    if (!newGroupName.trim()) {
+      showError('Please enter a group name');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const groupCode = generateGroupCode();
+      await addDoc(collection(db, 'groups'), {
+        name: newGroupName.trim(),
+        description: newGroupDescription.trim() || null,
+        code: groupCode,
+        createdBy: user.uid,
+        createdByEmail: user.email,
+        members: [user.uid],
+        admins: [user.uid],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      success('Group created successfully!');
+      setShowCreateModal(false);
+      setNewGroupName('');
+      setNewGroupDescription('');
+    } catch (error) {
+      console.error('Error creating group:', error);
+      showError('Failed to create group. Please try again.');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleJoinGroup = async (e) => {
+    e.preventDefault();
+    if (!joinGroupCode.trim()) {
+      showError('Please enter a group code');
+      return;
+    }
+
+    setJoining(true);
+    try {
+      const groupsQuery = query(
+        collection(db, 'groups'),
+        where('code', '==', joinGroupCode.trim().toUpperCase())
+      );
+      
+      const snapshot = await getDocs(groupsQuery);
+      
+      if (snapshot.empty) {
+        showError('Group not found. Please check the code.');
+        return;
+      }
+
+      const groupDoc = snapshot.docs[0];
+      const groupData = groupDoc.data();
+
+      if (groupData.members?.includes(user.uid)) {
+        showError('You are already a member of this group');
+        return;
+      }
+
+      await updateDoc(doc(db, 'groups', groupDoc.id), {
+        members: arrayUnion(user.uid),
+        updatedAt: serverTimestamp()
+      });
+
+      success('Successfully joined the group!');
+      setShowJoinModal(false);
+      setJoinGroupCode('');
+    } catch (error) {
+      console.error('Error joining group:', error);
+      showError('Failed to join group. Please try again.');
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const handleLeaveGroup = async (groupId, groupName) => {
+    if (!confirm(`Are you sure you want to leave "${groupName}"?`)) return;
+
+    try {
+      const groupRef = doc(db, 'groups', groupId);
+      const groupSnap = await getDoc(groupRef);
+      
+      if (!groupSnap.exists()) {
+        showError('Group not found');
+        return;
+      }
+
+      const groupData = groupSnap.data();
+      
+      // If user is the only admin, delete the group
+      if (groupData.admins?.length === 1 && groupData.admins[0] === user.uid) {
+        await deleteDoc(groupRef);
+        success('Group deleted successfully');
+      } else {
+        // Remove from members and admins
+        await updateDoc(groupRef, {
+          members: arrayRemove(user.uid),
+          admins: arrayRemove(user.uid),
+          updatedAt: serverTimestamp()
+        });
+        success('Left group successfully');
+      }
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      showError('Failed to leave group. Please try again.');
+    }
+  };
+
+  const filteredGroups = groups.filter(group =>
+    group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    group.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <Loader className="animate-spin mx-auto text-indigo-600 mb-4" size={48} />
+          <p className="text-gray-600 dark:text-gray-400">Loading groups...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Groups</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Create and join study groups</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            >
+              <UserPlus size={18} />
+              <span>Join Group</span>
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            >
+              <Plus size={18} />
+              <span>Create Group</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search groups..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+          />
+        </div>
+      </div>
+
+      {/* Groups List */}
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        {filteredGroups.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <Users className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
+              <p className="text-gray-400 dark:text-gray-500 text-lg">
+                {searchTerm ? 'No groups found matching your search' : 'No groups yet. Create or join one!'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredGroups.map((group) => (
+              <div
+                key={group.id}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => {
+                  setSelectedGroup(group);
+                  setActiveView('group-chat');
+                }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">
+                      {group.name}
+                    </h3>
+                    {group.description && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                        {group.description}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLeaveGroup(group.id, group.name);
+                    }}
+                    className="ml-2 p-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                    title="Leave group"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>Code: {group.code}</span>
+                  <span>{group.members?.length || 0} member(s)</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Create Group Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Create New Group</h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateGroup} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Group Name *
+                </label>
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  placeholder="Enter group name"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  disabled={creating}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={newGroupDescription}
+                  onChange={(e) => setNewGroupDescription(e.target.value)}
+                  placeholder="Enter group description"
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 resize-none"
+                  disabled={creating}
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? (
+                    <>
+                      <Loader className="animate-spin" size={20} />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={20} />
+                      <span>Create Group</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={creating}
+                  className="px-6 py-3 border-2 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Join Group Modal */}
+      {showJoinModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowJoinModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Join Group</h3>
+              <button
+                onClick={() => setShowJoinModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleJoinGroup} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Group Code *
+                </label>
+                <input
+                  type="text"
+                  value={joinGroupCode}
+                  onChange={(e) => setJoinGroupCode(e.target.value.toUpperCase())}
+                  placeholder="Enter 6-digit group code"
+                  required
+                  maxLength={6}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 text-center text-2xl font-mono tracking-widest"
+                  disabled={joining}
+                />
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  Ask the group creator for the 6-digit code
+                </p>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={joining}
+                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {joining ? (
+                    <>
+                      <Loader className="animate-spin" size={20} />
+                      <span>Joining...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={20} />
+                      <span>Join Group</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowJoinModal(false)}
+                  disabled={joining}
+                  className="px-6 py-3 border-2 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Groups;
+

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebaseConfig';
@@ -7,6 +8,7 @@ import { User, Mail, Phone, Save, Loader, Edit2, X, Image, GraduationCap, Calend
 
 const StudentProfile = () => {
   const { user } = useAuth();
+  const { success: showSuccess, error: showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -320,31 +322,69 @@ const StudentProfile = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Image className="inline mr-2" size={16} />
-                  Profile Picture URL
+                  Profile Picture
                 </label>
                 {editing ? (
                   <>
-                    <input
-                      type="url"
-                      name="profilePicture"
-                      value={formData.profilePicture}
-                      onChange={handleChange}
-                      placeholder="https://example.com/profile.jpg"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                    />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      URL to your profile picture (optional)
-                    </p>
-                    {formData.profilePicture && (
-                      <div className="mt-2">
+                    <div className="flex items-center gap-4 mb-2">
+                      {formData.profilePicture && (
                         <img 
                           src={formData.profilePicture} 
                           alt="Profile preview" 
                           className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
+                      )}
+                      <div className="flex-1">
+                        <label className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                          <Upload size={18} />
+                          <span>{uploading ? 'Uploading...' : 'Upload Image'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              
+                              if (file.size > 5 * 1024 * 1024) {
+                                setError('Image size must be less than 5MB');
+                                showError('Image size must be less than 5MB');
+                                return;
+                              }
+
+                              setUploading(true);
+                              setError(null);
+                              try {
+                                const storageRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}_${file.name}`);
+                                await uploadBytes(storageRef, file);
+                                const downloadURL = await getDownloadURL(storageRef);
+                                setFormData(prev => ({ ...prev, profilePicture: downloadURL }));
+                                showSuccess('Image uploaded successfully!');
+                              } catch (error) {
+                                console.error('Error uploading image:', error);
+                                setError('Failed to upload image. Please try again.');
+                                showError('Failed to upload image. Please try again.');
+                              } finally {
+                                setUploading(false);
+                              }
+                            }}
+                            className="hidden"
+                            disabled={uploading}
+                          />
+                        </label>
                       </div>
-                    )}
+                    </div>
+                    <input
+                      type="url"
+                      name="profilePicture"
+                      value={formData.profilePicture}
+                      onChange={handleChange}
+                      placeholder="Or enter image URL"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Upload an image or enter a URL (optional, max 5MB)
+                    </p>
                   </>
                 ) : (
                   <div className="flex items-center gap-4">
