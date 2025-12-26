@@ -458,8 +458,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         id: Date.now() + 1,
         type: 'bot',
         content: answer,
-        timestamp: new Date(),
-        usedWebSearch: usedWebSearch
+        timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
@@ -568,10 +567,9 @@ Be concise, friendly, and professional. Format your responses with markdown for 
               <div className="flex items-center gap-2">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
                 <Sparkles className="text-indigo-500" size={20} />
-                {AI_CONFIG.openaiApiKey && (
-                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full flex items-center gap-1">
-                    <Globe size={12} />
-                    Web-Enabled
+                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' && (
+                  <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full">
+                    ChatGPT Enabled
                   </span>
                 )}
               </div>
@@ -580,25 +578,6 @@ Be concise, friendly, and professional. Format your responses with markdown for 
                   ? 'Intelligent AI with web access for accurate, up-to-date answers'
                   : 'Intelligent answers about SISTC courses, campuses, and more'}
               </p>
-              {AI_CONFIG.tavilyApiKey && (
-                <div className="mt-2 flex items-center gap-2 text-xs">
-                  <div className={`px-2 py-1 rounded-full flex items-center gap-1 ${
-                    usageInfo.remaining === 0 
-                      ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                      : usageInfo.remaining <= 2
-                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                      : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                  }`}>
-                    <Globe size={12} />
-                    <span>
-                      {usageInfo.remaining === 0 
-                        ? 'Daily limit reached'
-                        : `${usageInfo.remaining}/${usageInfo.limit} searches remaining today`
-                      }
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           
