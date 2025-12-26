@@ -137,7 +137,7 @@ const StudentProfile = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <Loader className="animate-spin mx-auto text-indigo-600 mb-4" size={48} />
+          <Loader className="animate-spin mx-auto text-sistc-600 mb-4" size={48} />
           <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
         </div>
       </div>
@@ -156,7 +156,7 @@ const StudentProfile = () => {
           {!editing && (
             <button
               onClick={handleEdit}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors"
             >
               <Edit2 size={18} />
               <span>Edit Profile</span>
@@ -196,7 +196,7 @@ const StudentProfile = () => {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="John Doe"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Your display name (will be shown in chat)
@@ -223,7 +223,7 @@ const StudentProfile = () => {
                       value={formData.studentEmail}
                       onChange={handleChange}
                       placeholder="student@university.edu"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Your official university email address
@@ -250,7 +250,7 @@ const StudentProfile = () => {
                       value={formData.personalEmail}
                       onChange={handleChange}
                       placeholder="yourname@example.com"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Your personal email address (optional)
@@ -277,7 +277,7 @@ const StudentProfile = () => {
                       value={formData.phoneNumber}
                       onChange={handleChange}
                       placeholder="+1 (555) 123-4567"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Your contact phone number (optional)
@@ -296,7 +296,7 @@ const StudentProfile = () => {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                    className="flex-1 flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                   >
                     {saving ? (
                       <>

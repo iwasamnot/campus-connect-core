@@ -323,7 +323,7 @@ const ChatArea = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search messages..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600"
               />
               {searchQuery && (
                 <button
@@ -373,7 +373,7 @@ const ChatArea = () => {
                 <div
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative group ${
                     isAuthor
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-sistc-600 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
                   }`}
                 >
@@ -452,7 +452,7 @@ const ChatArea = () => {
                           onClick={() => handleReaction(message.id, emoji)}
                           className={`px-2 py-1 rounded text-xs ${
                             userReaction === emoji
-                              ? 'bg-indigo-400 dark:bg-indigo-500'
+                              ? 'bg-sistc-400 dark:bg-sistc-500'
                               : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white border border-gray-300 dark:border-gray-600'
                           }`}
                         >
@@ -470,7 +470,7 @@ const ChatArea = () => {
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 rounded-full"
+                        className="bg-sistc-600 hover:bg-sistc-700 text-white p-1 rounded-full"
                         title="Edit message"
                       >
                         <Edit2 size={14} />
@@ -536,7 +536,7 @@ const ChatArea = () => {
                             key={emoji}
                             onClick={() => handleReaction(message.id, emoji)}
                             className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${
-                              userReaction === emoji ? 'bg-indigo-200 dark:bg-indigo-800' : ''
+                              userReaction === emoji ? 'bg-sistc-200 dark:bg-sistc-800' : ''
                             }`}
                             title="Add reaction"
                           >
@@ -562,13 +562,13 @@ const ChatArea = () => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
             disabled={sending}
           />
           <button
             type="submit"
             disabled={sending || !newMessage.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-sistc-600 hover:bg-sistc-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Send size={20} />
             <span>Send</span>
