@@ -14,17 +14,36 @@ const UserProfilePopup = ({ userId, onClose }) => {
     const unsubscribe = onSnapshot(doc(db, 'users', userId), (userDoc) => {
       if (userDoc.exists()) {
         const data = userDoc.data();
-        // Normalize isOnline to boolean and ensure name has a fallback
+        // Normalize all fields properly - ensure we preserve all data and normalize specific fields
         const normalizedData = {
+          ...data, // Spread all original data first
           id: userDoc.id,
-          ...data,
-          name: data.name || data.email?.split('@')[0] || `User ${userId.substring(0, 8)}`,
+          // Normalize name with proper fallback
+          name: (data.name && data.name.trim()) ? data.name.trim() : (data.email ? data.email.split('@')[0] : `User ${userId.substring(0, 8)}`),
+          // Normalize isOnline to boolean
           isOnline: data.isOnline === true || data.isOnline === 'true',
+          // Preserve lastSeen or set to null
           lastSeen: data.lastSeen || null,
+          // Preserve email
           email: data.email || null,
-          role: data.role || 'student'
+          // Normalize role with default
+          role: data.role || 'student',
+          // Ensure all profile fields are preserved
+          bio: data.bio || null,
+          profilePicture: data.profilePicture || null,
+          studentEmail: data.studentEmail || null,
+          personalEmail: data.personalEmail || null,
+          phoneNumber: data.phoneNumber || null,
+          course: data.course || null,
+          yearOfStudy: data.yearOfStudy || null,
+          dateOfBirth: data.dateOfBirth || null,
+          address: data.address || null
         };
-        console.log('UserProfilePopup - Loaded user data:', normalizedData);
+        console.log('UserProfilePopup - Loaded user data:', {
+          raw: data,
+          normalized: normalizedData,
+          userId: userId
+        });
         setUserData(normalizedData);
       } else {
         console.warn('UserProfilePopup - User document does not exist:', userId);
@@ -34,12 +53,22 @@ const UserProfilePopup = ({ userId, onClose }) => {
           name: `User ${userId.substring(0, 8)}`,
           isOnline: false,
           lastSeen: null,
-          role: 'student'
+          role: 'student',
+          email: null,
+          bio: null,
+          profilePicture: null,
+          studentEmail: null,
+          personalEmail: null,
+          phoneNumber: null,
+          course: null,
+          yearOfStudy: null,
+          dateOfBirth: null,
+          address: null
         });
       }
       setLoading(false);
     }, (error) => {
-      console.error('Error fetching user data:', error);
+      console.error('UserProfilePopup - Error fetching user data:', error);
       setLoading(false);
     });
 
@@ -151,14 +180,24 @@ const UserProfilePopup = ({ userId, onClose }) => {
 
               {/* Details */}
               <div className="space-y-4">
+                {/* Debug info in development */}
+                {import.meta.env.DEV && (
+                  <div className="text-xs text-gray-400 dark:text-gray-500 p-2 bg-gray-100 dark:bg-gray-900 rounded">
+                    <strong>Debug:</strong> User ID: {userId}<br/>
+                    Fields: {Object.keys(userData).join(', ')}
+                  </div>
+                )}
+                
                 {/* Always show email if available */}
-                {userData.email && (
+                {(userData.email || userData.studentEmail || userData.personalEmail) && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.email}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">
+                      {userData.email || userData.studentEmail || userData.personalEmail || 'Not set'}
+                    </p>
                   </div>
                 )}
                 
