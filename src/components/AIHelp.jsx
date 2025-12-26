@@ -336,13 +336,15 @@ const AIHelp = () => {
     { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', description: 'High Performance' }
   ];
 
-  // AI Mode options
+  // AI Mode options - Always show both, but indicate availability
   const aiModeOptions = [
     { 
       value: 'chatgpt', 
       label: 'ChatGPT', 
-      description: 'Uses OpenAI for intelligent, context-aware responses',
-      available: !!AI_CONFIG.openaiApiKey
+      description: AI_CONFIG.openaiApiKey 
+        ? 'Uses OpenAI for intelligent, context-aware responses'
+        : 'OpenAI API key not configured - using local knowledge base',
+      available: true // Always available, will fallback to local if no key
     },
     { 
       value: 'local', 
@@ -674,9 +676,8 @@ Be concise, friendly, and professional. Format your responses with markdown for 
                   <option 
                     key={mode.value} 
                     value={mode.value}
-                    disabled={!mode.available}
                   >
-                    {mode.label} {!mode.available ? '(Not Available)' : ''}
+                    {mode.label} {mode.value === 'chatgpt' && !AI_CONFIG.openaiApiKey ? '(API key needed)' : ''}
                   </option>
                 ))}
               </select>
@@ -709,38 +710,46 @@ Be concise, friendly, and professional. Format your responses with markdown for 
               </div>
             )}
 
-            {/* Web Search Toggle (only show if ChatGPT is selected and Tavily is available) */}
-            {aiMode === 'chatgpt' && AI_CONFIG.tavilyApiKey && (
+            {/* Web Search Toggle (show if ChatGPT is selected, indicate if Tavily is available) */}
+            {aiMode === 'chatgpt' && (
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Web Search
                 </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setUseWebSearch(!useWebSearch)}
-                    disabled={loading || usageInfo.remaining === 0}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      useWebSearch 
-                        ? 'bg-indigo-600' 
-                        : 'bg-gray-300 dark:bg-gray-600'
-                    } ${(loading || usageInfo.remaining === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        useWebSearch ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    {useWebSearch ? 'On' : 'Off'}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[140px]">
-                  {useWebSearch 
-                    ? `Real-time web search (${usageInfo.remaining} left today)`
-                    : 'Local knowledge only'}
-                </p>
+                {AI_CONFIG.tavilyApiKey ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setUseWebSearch(!useWebSearch)}
+                        disabled={loading || usageInfo.remaining === 0}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          useWebSearch 
+                            ? 'bg-indigo-600' 
+                            : 'bg-gray-300 dark:bg-gray-600'
+                        } ${(loading || usageInfo.remaining === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            useWebSearch ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        {useWebSearch ? 'On' : 'Off'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[140px]">
+                      {useWebSearch 
+                        ? `Real-time web search (${usageInfo.remaining} left today)`
+                        : 'Local knowledge only'}
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 max-w-[140px]">
+                    Tavily API key not configured
+                  </div>
+                )}
               </div>
             )}
           </div>
