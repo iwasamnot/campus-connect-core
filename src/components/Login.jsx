@@ -114,17 +114,17 @@ const Login = () => {
           <p className="text-black dark:text-white mt-2 font-medium">Secure Student Messaging Platform</p>
         </div>
 
-        {/* Toggle between Login and Register - Improved contrast */}
-        <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1">
+        {/* Toggle between Login and Register - High contrast design */}
+        <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1 border-2 border-gray-200 dark:border-gray-600">
           <button
             onClick={() => {
               setMode('login');
               setError(null);
             }}
-            className={`flex-1 py-2.5 px-4 rounded-md font-semibold transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
-                ? 'bg-sistc-600 text-white shadow-md scale-105'
-                : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
             Login
@@ -134,10 +134,10 @@ const Login = () => {
               setMode('register');
               setError(null);
             }}
-            className={`flex-1 py-2.5 px-4 rounded-md font-semibold transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
-                ? 'bg-sistc-600 text-white shadow-md scale-105'
-                : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
             Register
