@@ -1,14 +1,5 @@
 import React from 'react';
 
-// Try to import logo, but handle if it doesn't exist
-let logoImage = null;
-try {
-  logoImage = new URL('../assets/logo.png', import.meta.url).href;
-} catch (e) {
-  // Logo file doesn't exist yet - will use fallback
-  console.log('Logo file not found. Please add logo.png to src/assets/');
-}
-
 const Logo = ({ size = 'default', showText = true, className = '' }) => {
   const sizes = {
     small: { width: 50, fontSize: 'text-xs' },
@@ -18,30 +9,30 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
 
   const { width, fontSize } = sizes[size] || sizes.default;
 
+  // Use logo from public folder (or fallback if not found)
+  const logoPath = '/logo.png';
+
   return (
     <div className={`flex flex-col items-center ${className}`}>
       {/* Logo Image */}
-      {logoImage ? (
-        <img
-          src={logoImage}
-          alt="CampusConnect Logo"
-          width={width}
-          height={width}
-          className="mb-2 object-contain"
-          style={{ maxWidth: `${width}px`, maxHeight: `${width}px` }}
-          onError={(e) => {
-            // If image fails to load, hide it
-            e.target.style.display = 'none';
-          }}
-        />
-      ) : (
-        <div 
-          className="mb-2 bg-gradient-to-r from-blue-900 to-blue-600 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-lg"
-          style={{ width: `${width}px`, height: `${width}px` }}
-        >
-          CC
-        </div>
-      )}
+      <img
+        src={logoPath}
+        alt="CampusConnect Logo"
+        width={width}
+        height={width}
+        className="mb-2 object-contain"
+        style={{ maxWidth: `${width}px`, maxHeight: `${width}px` }}
+        onError={(e) => {
+          // If image fails to load, show fallback
+          e.target.style.display = 'none';
+          const fallback = document.createElement('div');
+          fallback.className = 'mb-2 bg-gradient-to-r from-blue-900 to-blue-600 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-lg';
+          fallback.style.width = `${width}px`;
+          fallback.style.height = `${width}px`;
+          fallback.textContent = 'CC';
+          e.target.parentNode.insertBefore(fallback, e.target);
+        }}
+      />
 
       {/* Text: CAMPUSCONNECT - CAMPUS in dark blue, CONNECT in bright blue, no space, uppercase, clean sans-serif */}
       {showText && (
