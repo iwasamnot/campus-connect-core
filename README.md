@@ -27,14 +27,26 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
    - Enable Authentication:
      - **Email/Password**: Go to Authentication → Sign-in method → Enable Email/Password
-     - **Anonymous** (optional): Enable Anonymous sign-in for quick login
    - Create a Firestore database
    - Copy your Firebase config to `src/firebaseConfig.js`
+   - Update Firestore security rules from `FIRESTORE_RULES.txt`
 
-3. **Run Development Server**
+3. **Configure OpenAI API Key (Optional - for AI Help Assistant)**
+   - Create a `.env` file in the root directory (`CampusConnect/.env`)
+   - Add your OpenAI API key:
+     ```
+     VITE_OPENAI_API_KEY=sk-your-openai-api-key-here
+     ```
+   - Get your API key from: https://platform.openai.com/api-keys
+   - **Important**: Restart the dev server after adding the API key
+   - If no API key is provided, the AI will use the local knowledge base
+
+4. **Run Development Server**
    ```bash
    npm run dev
    ```
+   
+   **Note**: If you added an OpenAI API key, make sure to restart the dev server for it to take effect.
 
 4. **Build for Production**
    ```bash
