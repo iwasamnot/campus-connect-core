@@ -1,25 +1,13 @@
 // AI Configuration
-// To use intelligent AI with web access, add your API keys here
-// You can get API keys from:
-// - OpenAI: https://platform.openai.com/api-keys
-// - Tavily (Web Search): https://tavily.com/
+// To use intelligent AI, add your OpenAI API key
+// Get your key from: https://platform.openai.com/api-keys
 
 export const AI_CONFIG = {
   // OpenAI API Key (for intelligent responses)
   // Get your key from: https://platform.openai.com/api-keys
   openaiApiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
   
-  // Tavily API Key (for web search)
-  // Get your key from: https://tavily.com/
-  tavilyApiKey: import.meta.env.VITE_TAVILY_API_KEY || '',
-  
-  // Use web search for better answers
-  enableWebSearch: true,
-  
-  // Daily limit for Tavily web searches (to conserve credits)
-  dailySearchLimit: 10, // Adjust based on your credit needs
-  
-  // Fallback to local knowledge base if API fails or limit reached
+  // Fallback to local knowledge base if API fails
   useFallback: true,
   
   // Model configuration

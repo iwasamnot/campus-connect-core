@@ -180,14 +180,6 @@ const UserProfilePopup = ({ userId, onClose }) => {
 
               {/* Details */}
               <div className="space-y-4">
-                {/* Debug info in development */}
-                {import.meta.env.DEV && (
-                  <div className="text-xs text-gray-400 dark:text-gray-500 p-2 bg-gray-100 dark:bg-gray-900 rounded">
-                    <strong>Debug:</strong> User ID: {userId}<br/>
-                    Fields: {Object.keys(userData).join(', ')}
-                  </div>
-                )}
-                
                 {/* Always show email if available */}
                 {(userData.email || userData.studentEmail || userData.personalEmail) && (
                   <div>

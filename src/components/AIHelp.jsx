@@ -1,19 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Globe, AlertTriangle } from 'lucide-react';
+import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
 import { AI_CONFIG } from '../config/aiConfig';
 
 // Debug: Log API key status (remove in production)
 if (import.meta.env.DEV) {
   console.log('AI Config Status:', {
     hasOpenAI: !!AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '',
-    hasTavily: !!AI_CONFIG.tavilyApiKey && AI_CONFIG.tavilyApiKey.trim() !== '',
-    openaiLength: AI_CONFIG.openaiApiKey?.length || 0,
-    tavilyLength: AI_CONFIG.tavilyApiKey?.length || 0
+    openaiLength: AI_CONFIG.openaiApiKey?.length || 0
   });
 }
-import { UsageLimiter } from '../utils/usageLimiter';
 
 // Enhanced SISTC Knowledge Base with more detailed information
 const SISTC_KNOWLEDGE_BASE = {
@@ -368,72 +365,25 @@ const AIHelp = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Web search using Tavily API with usage limiting
-  const searchWeb = async (query) => {
-    if (!AI_CONFIG.tavilyApiKey || !AI_CONFIG.enableWebSearch) {
-      return null;
-    }
 
-    // Check usage limit
-    if (UsageLimiter.isLimitReached()) {
-      showError(`Daily web search limit reached (${UsageLimiter.getDailyLimit()} searches/day). Using local knowledge base.`);
+  // Get AI response from OpenAI with local knowledge base context
+  const getAIResponse = async (question) => {
+    if (!AI_CONFIG.openaiApiKey || AI_CONFIG.openaiApiKey.trim() === '') {
       return null;
     }
 
     try {
-      const response = await fetch('https://api.tavily.com/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          api_key: AI_CONFIG.tavilyApiKey,
-          query: query,
-          search_depth: 'basic',
-          include_answer: true,
-          include_images: false,
-          max_results: 5
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Web search failed');
-      }
-
-      const data = await response.json();
+      // Get local knowledge base answer first to provide context
+      const localAnswer = ai.current.processQuestion(question);
       
-      // Increment usage only on successful search
-      UsageLimiter.incrementUsage();
-      setUsageInfo({
-        remaining: UsageLimiter.getRemaining(),
-        count: UsageLimiter.getUsage().count,
-        limit: UsageLimiter.getDailyLimit()
-      });
-
-      // Show warning if approaching limit
-      if (UsageLimiter.isApproachingLimit()) {
-        const remaining = UsageLimiter.getRemaining();
-        showError(`⚠️ Warning: Only ${remaining} web search${remaining === 1 ? '' : 'es'} remaining today.`);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Web search error:', error);
-      return null;
-    }
-  };
-
-  // Get AI response from OpenAI
-  const getAIResponse = async (question, webContext = null) => {
-    if (!AI_CONFIG.openaiApiKey) {
-      return null;
-    }
-
-    try {
       const systemPrompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
 You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
-${webContext ? `\n\nUse the following web search results to provide current and accurate information:\n${webContext}` : ''}
-If the question is about SISTC specifically, prioritize information from the knowledge base and web search results.
+
+Use the following local knowledge base information as reference:
+${localAnswer ? `\n${localAnswer}\n` : ''}
+
+If the question is about SISTC specifically, use the knowledge base information provided above.
+For general questions or if the knowledge base doesn't have the answer, use your general knowledge.
 Be concise, friendly, and professional. Format your responses with markdown for better readability.`;
 
       const messages = [
@@ -490,26 +440,15 @@ Be concise, friendly, and professional. Format your responses with markdown for 
 
     try {
       let answer = null;
-      let usedWebSearch = false;
 
       // Determine which AI mode to use
-      if (aiMode === 'chatgpt' && AI_CONFIG.openaiApiKey) {
-        // Use ChatGPT mode
+      if (aiMode === 'chatgpt' && AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') {
+        // Use ChatGPT mode with local knowledge base context
+        answer = await getAIResponse(question);
         
-        // Try web search first if enabled and available
-        if (useWebSearch && AI_CONFIG.tavilyApiKey) {
-          const webResults = await searchWeb(question);
-          if (webResults && webResults.answer) {
-            usedWebSearch = true;
-            // Get enhanced answer from OpenAI with web context
-            const webContext = `Answer: ${webResults.answer}\n\nSources:\n${webResults.results?.slice(0, 3).map(r => `- ${r.title}: ${r.content}`).join('\n')}`;
-            answer = await getAIResponse(question, webContext);
-          }
-        }
-
-        // If web search didn't work or isn't enabled, use ChatGPT without web
-        if (!answer) {
-          answer = await getAIResponse(question);
+        // If ChatGPT fails, fallback to local
+        if (!answer && AI_CONFIG.useFallback) {
+          answer = ai.current.processQuestion(question);
         }
       } else {
         // Use local knowledge base mode
