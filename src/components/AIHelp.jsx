@@ -565,32 +565,32 @@ Be concise, friendly, and professional. Format your responses with markdown for 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-              <Bot className="text-indigo-600 dark:text-indigo-400" size={24} />
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex-shrink-0">
+              <Bot className="text-indigo-600 dark:text-indigo-400" size={20} className="md:w-6 md:h-6" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
-                <Sparkles className="text-indigo-500" size={20} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
+                <Sparkles className="text-indigo-500 hidden sm:block" size={20} />
                 {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' && (
                   <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full">
-                    ChatGPT Enabled
+                    ChatGPT
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {AI_CONFIG.openaiApiKey 
-                  ? 'Intelligent AI with web access for accurate, up-to-date answers'
+              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== ''
+                  ? 'Intelligent AI powered by ChatGPT with local knowledge base'
                   : 'Intelligent answers about SISTC courses, campuses, and more'}
               </p>
             </div>
           </div>
           
           {/* AI Mode and Model Selector */}
-          <div className="flex-shrink-0 flex gap-4">
+          <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2 md:gap-4">
             {/* AI Mode Selector */}
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -653,8 +653,8 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       </div>
 
       {/* Quick Questions */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
-        <div className="flex flex-wrap gap-2">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-2 md:py-3">
+        <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
           {quickQuestions.map((q, idx) => (
             <button
               key={idx}
@@ -669,7 +669,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -683,7 +683,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
               </div>
             )}
             <div
-              className={`max-w-2xl px-4 py-3 rounded-lg ${
+              className={`max-w-[85%] sm:max-w-2xl px-3 md:px-4 py-2 md:py-3 rounded-lg ${
                 message.type === 'user'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
@@ -722,23 +722,23 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       </div>
 
       {/* Input Area */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
-        <form onSubmit={handleSend} className="flex gap-3">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4">
+        <form onSubmit={handleSend} className="flex gap-2 md:gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything about SISTC... (e.g., 'What are the requirements for Master of IT?')"
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+            placeholder="Ask about SISTC..."
+            className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
             disabled={loading}
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
           >
-            <Send size={20} />
-            <span>Send</span>
+            <Send size={18} className="md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Send</span>
           </button>
         </form>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">

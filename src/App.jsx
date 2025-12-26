@@ -3,6 +3,7 @@ import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { Menu } from 'lucide-react';
 
 // Code-split large components for better performance
 const ChatArea = lazy(() => import('./components/ChatArea'));
@@ -28,6 +29,7 @@ function App() {
   const { user, userRole, loading } = useAuth();
   const [activeView, setActiveView] = useState('chat');
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Set default view based on user role
   useEffect(() => {
@@ -53,8 +55,21 @@ function App() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
-      <div className="flex-1 overflow-hidden">
+      <Sidebar 
+        activeView={activeView} 
+        setActiveView={setActiveView}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+      <div className="flex-1 overflow-hidden relative">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu size={24} />
+        </button>
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>

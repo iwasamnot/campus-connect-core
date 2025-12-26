@@ -1,10 +1,10 @@
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus, UserCircle } from 'lucide-react';
+import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus, UserCircle, X } from 'lucide-react';
 import Logo from './Logo';
 
-const Sidebar = ({ activeView, setActiveView }) => {
+const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
   const { userRole, signOut } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
 
@@ -16,8 +16,52 @@ const Sidebar = ({ activeView, setActiveView }) => {
     }
   };
 
+  const handleNavClick = (view) => {
+    setActiveView(view);
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth < 768) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="w-64 bg-gray-900 dark:bg-gray-900 text-white flex flex-col h-screen border-r border-gray-800">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        fixed md:static
+        top-0 left-0
+        w-64 bg-gray-900 dark:bg-gray-900 text-white 
+        flex flex-col h-screen border-r border-gray-800
+        z-50
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {/* Mobile Close Button */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800">
+          <Logo size="small" showText={true} />
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            aria-label="Close menu"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="hidden md:block p-6 border-b border-gray-800">
+          <Logo size="small" showText={true} className="mb-2" />
+          <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
+            {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
+          </p>
+        </div>
       <div className="p-6 border-b border-gray-800">
         <Logo size="small" showText={true} className="mb-2" />
         <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
@@ -29,7 +73,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
         {!isAdminRole(userRole) ? (
           <>
             <button
-              onClick={() => setActiveView('chat')}
+              onClick={() => handleNavClick('chat')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'chat'
                   ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
@@ -40,7 +84,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               <span>Campus Chat</span>
             </button>
             <button
-              onClick={() => setActiveView('ai-help')}
+              onClick={() => handleNavClick('ai-help')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'ai-help'
                   ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
@@ -51,7 +95,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               <span>AI Help</span>
             </button>
             <button
-              onClick={() => setActiveView('profile')}
+              onClick={() => handleNavClick('profile')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'profile'
                   ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
@@ -62,7 +106,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               <span>My Profile</span>
             </button>
             <button
-              onClick={() => setActiveView('groups')}
+              onClick={() => handleNavClick('groups')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'groups' || activeView === 'group-chat'
                   ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
@@ -76,7 +120,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
         ) : (
           <>
             <button
-              onClick={() => setActiveView('audit')}
+              onClick={() => handleNavClick('audit')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'audit'
                   ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
@@ -87,7 +131,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               <span>Audit Logs</span>
             </button>
             <button
-              onClick={() => setActiveView('users')}
+              onClick={() => handleNavClick('users')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'users'
                   ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
@@ -98,7 +142,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               <span>Users Management</span>
             </button>
             <button
-              onClick={() => setActiveView('create-user')}
+              onClick={() => handleNavClick('create-user')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'create-user'
                   ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
@@ -129,6 +173,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
         </button>
       </div>
     </div>
+    </>
   );
 };
 
