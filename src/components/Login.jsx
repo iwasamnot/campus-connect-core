@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw } from 'lucide-react';
+import Logo from './Logo';
 
 const Login = () => {
   const { register, login, resetPassword } = useAuth();
@@ -109,8 +110,8 @@ const Login = () => {
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">CampusConnect</h1>
-          <p className="text-gray-600 dark:text-gray-300">Secure Student Messaging Platform</p>
+          <Logo size="large" className="mb-4" />
+          <p className="text-gray-600 dark:text-gray-300 mt-2">Secure Student Messaging Platform</p>
         </div>
 
         {/* Toggle between Login and Register */}

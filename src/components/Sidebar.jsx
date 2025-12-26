@@ -2,6 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { isAdminRole } from '../utils/helpers';
 import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus } from 'lucide-react';
+import Logo from './Logo';
 
 const Sidebar = ({ activeView, setActiveView }) => {
   const { userRole, signOut } = useAuth();
@@ -18,8 +19,8 @@ const Sidebar = ({ activeView, setActiveView }) => {
   return (
     <div className="w-64 bg-gray-900 text-white flex flex-col h-screen">
       <div className="p-6 border-b border-gray-800">
-        <h2 className="text-xl font-bold">CampusConnect</h2>
-        <p className="text-sm text-gray-400 mt-1">
+        <Logo size="small" showText={true} className="mb-2" />
+        <p className="text-sm text-gray-400 mt-1 text-center">
           {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
         </p>
       </div>
