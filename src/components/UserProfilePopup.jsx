@@ -91,11 +91,13 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   <h4 className="text-2xl font-bold text-gray-800 dark:text-white">
                     {userData.name || 'No Name'}
                   </h4>
-                  {userData.isOnline ? (
+                  {userData.isOnline === true ? (
                     <div className="w-3 h-3 bg-green-500 rounded-full" title="Online" />
                   ) : userData.lastSeen ? (
                     <div className="w-3 h-3 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(userData.lastSeen)}`} />
-                  ) : null}
+                  ) : (
+                    <div className="w-3 h-3 bg-gray-400 rounded-full" title="Offline" />
+                  )}
                 </div>
                 {userData.role && (
                   <span className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full ${
@@ -108,7 +110,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                 )}
                 {/* Online Status / Last Seen */}
                 <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  {userData.isOnline ? (
+                  {userData.isOnline === true ? (
                     <span className="flex items-center justify-center gap-1">
                       <Circle size={8} className="fill-green-500 text-green-500" />
                       Online
