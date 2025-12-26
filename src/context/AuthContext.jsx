@@ -104,14 +104,16 @@ export const AuthProvider = ({ children }) => {
     fetchUserRole();
   }, [user]);
 
-  const register = async (email, password, role) => {
+  const register = async (name, email, password, role) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
       
-      // Store user role in Firestore
+      // Store user data in Firestore
       await setDoc(doc(db, 'users', newUser.uid), {
+        name: name,
         email: email,
+        studentEmail: email, // Set registration email as default student email
         role: role,
         createdAt: new Date().toISOString()
       });

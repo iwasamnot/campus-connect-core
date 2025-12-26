@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw } from 'lucide-react';
+import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User } from 'lucide-react';
 import Logo from './Logo';
 
 const Login = () => {
@@ -10,6 +10,7 @@ const Login = () => {
   const { darkMode, toggleDarkMode } = useTheme();
   const { success, error: showError } = useToast();
   const [mode, setMode] = useState('login'); // 'login' or 'register' or 'reset'
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,12 +24,17 @@ const Login = () => {
     try {
       if (mode === 'register') {
         // Only allow student registration
+        if (!name.trim()) {
+          setError('Please enter your full name.');
+          setLoading(false);
+          return;
+        }
         if (password.length < 6) {
           setError('Password must be at least 6 characters long.');
           setLoading(false);
           return;
         }
-        await register(email, password, 'student');
+        await register(name.trim(), email, password, 'student');
       } else {
         await login(email, password);
       }
