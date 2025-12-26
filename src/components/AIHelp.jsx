@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Globe } from 'lucide-react';
+import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Globe, AlertTriangle } from 'lucide-react';
 import { AI_CONFIG } from '../config/aiConfig';
+import { UsageLimiter } from '../utils/usageLimiter';
 
 // Enhanced SISTC Knowledge Base with more detailed information
 const SISTC_KNOWLEDGE_BASE = {
@@ -312,6 +313,11 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [usageInfo, setUsageInfo] = useState(() => ({
+    remaining: UsageLimiter.getRemaining(),
+    count: UsageLimiter.getUsage().count,
+    limit: UsageLimiter.getDailyLimit()
+  }));
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
@@ -319,9 +325,15 @@ const AIHelp = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Web search using Tavily API
+  // Web search using Tavily API with usage limiting
   const searchWeb = async (query) => {
     if (!AI_CONFIG.tavilyApiKey || !AI_CONFIG.enableWebSearch) {
+      return null;
+    }
+
+    // Check usage limit
+    if (UsageLimiter.isLimitReached()) {
+      showError(`Daily web search limit reached (${UsageLimiter.getDailyLimit()} searches/day). Using local knowledge base.`);
       return null;
     }
 
@@ -346,6 +358,21 @@ const AIHelp = () => {
       }
 
       const data = await response.json();
+      
+      // Increment usage only on successful search
+      UsageLimiter.incrementUsage();
+      setUsageInfo({
+        remaining: UsageLimiter.getRemaining(),
+        count: UsageLimiter.getUsage().count,
+        limit: UsageLimiter.getDailyLimit()
+      });
+
+      // Show warning if approaching limit
+      if (UsageLimiter.isApproachingLimit()) {
+        const remaining = UsageLimiter.getRemaining();
+        showError(`⚠️ Warning: Only ${remaining} web search${remaining === 1 ? '' : 'es'} remaining today.`);
+      }
+
       return data;
     } catch (error) {
       console.error('Web search error:', error);
@@ -579,6 +606,25 @@ Be concise, friendly, and professional. Format your responses with markdown for 
                   ? 'Intelligent AI with web access for accurate, up-to-date answers'
                   : 'Intelligent answers about SISTC courses, campuses, and more'}
               </p>
+              {AI_CONFIG.tavilyApiKey && (
+                <div className="mt-2 flex items-center gap-2 text-xs">
+                  <div className={`px-2 py-1 rounded-full flex items-center gap-1 ${
+                    usageInfo.remaining === 0 
+                      ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                      : usageInfo.remaining <= 2
+                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                      : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                  }`}>
+                    <Globe size={12} />
+                    <span>
+                      {usageInfo.remaining === 0 
+                        ? 'Daily limit reached'
+                        : `${usageInfo.remaining}/${usageInfo.limit} searches remaining today`
+                      }
+                    </span>
+                  </div>
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -675,8 +721,22 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
           {AI_CONFIG.openaiApiKey ? (
             <>
-              Powered by {AI_CONFIG.model} with web search • 
-              {AI_CONFIG.tavilyApiKey && <span className="ml-1">🌐 Real-time web access enabled</span>}
+              Powered by {AI_CONFIG.model}
+              {AI_CONFIG.tavilyApiKey && (
+                <>
+                  {' • '}
+                  <span className="flex items-center justify-center gap-1 mt-1">
+                    <Globe size={12} />
+                    Web search: {usageInfo.count}/{usageInfo.limit} used today
+                    {usageInfo.remaining === 0 && (
+                      <span className="ml-1 text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertTriangle size={12} />
+                        Limit reached
+                      </span>
+                    )}
+                  </span>
+                </>
+              )}
             </>
           ) : (
             <>

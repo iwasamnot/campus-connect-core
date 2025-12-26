@@ -16,7 +16,10 @@ export const AI_CONFIG = {
   // Use web search for better answers
   enableWebSearch: true,
   
-  // Fallback to local knowledge base if API fails
+  // Daily limit for Tavily web searches (to conserve credits)
+  dailySearchLimit: 10, // Adjust based on your credit needs
+  
+  // Fallback to local knowledge base if API fails or limit reached
   useFallback: true,
   
   // Model configuration
