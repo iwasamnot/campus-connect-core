@@ -114,6 +114,17 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
         ) : (
           <>
             <button
+              onClick={() => handleNavClick('chat')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeView === 'chat'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <MessageSquare size={20} />
+              <span>Campus Chat</span>
+            </button>
+            <button
               onClick={() => handleNavClick('audit')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'audit'
