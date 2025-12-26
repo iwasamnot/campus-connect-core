@@ -138,3 +138,25 @@ The platform supports two authentication methods:
 - **Student**: Can access Global Chat and AI Help
 - **Admin**: Can access Audit Logs to review and ban users
 
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for a detailed history of changes, features, and future plans.
+
+## Contributing
+
+### Committing Changes
+
+After making changes, commit and push to GitHub:
+
+```powershell
+# Using the helper script
+.\scripts\commit-and-push.ps1 "Your commit message"
+
+# Or manually
+git add -A
+git commit -m "Your commit message"
+git push origin master
+```
+
+All changes are automatically documented in the CHANGELOG.md file.
+
