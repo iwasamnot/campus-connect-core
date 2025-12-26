@@ -54,6 +54,31 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
+    // Group messages collection
+    match /groupMessages/{messageId} {
+      // Allow authenticated users to read group messages
+      allow read: if request.auth != null;
+      
+      // Allow authenticated users to create group messages
+      allow create: if request.auth != null;
+      
+      // Allow users to update their own messages (for editing)
+      // Allow any authenticated user to update readBy field (read receipts)
+      // Allow admins to update any field
+      allow update: if request.auth != null && (
+        (resource.data.userId == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
+        isAdmin()
+      );
+      
+      // Allow message authors and admins to delete messages
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+    
     // Reports collection
     match /reports/{reportId} {
       // Allow authenticated users to create reports
