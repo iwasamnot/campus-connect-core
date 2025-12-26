@@ -201,7 +201,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   </div>
                 )}
                 
-                {userData.bio && (
+                {userData.bio && userData.bio.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <FileText size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -211,7 +211,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   </div>
                 )}
 
-                {userData.studentEmail && (
+                {userData.studentEmail && userData.studentEmail.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -221,7 +221,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   </div>
                 )}
 
-                {userData.personalEmail && (
+                {userData.personalEmail && userData.personalEmail.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -231,7 +231,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   </div>
                 )}
 
-                {userData.phoneNumber && (
+                {userData.phoneNumber && userData.phoneNumber.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Phone size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -241,7 +241,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   </div>
                 )}
 
-                {userData.course && (
+                {userData.course && userData.course.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <GraduationCap size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -251,7 +251,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   </div>
                 )}
 
-                {userData.yearOfStudy && (
+                {userData.yearOfStudy && userData.yearOfStudy.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <GraduationCap size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -273,7 +273,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   </div>
                 )}
 
-                {userData.address && (
+                {userData.address && userData.address.trim() && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <MapPin size={16} className="text-indigo-600 dark:text-indigo-400" />
