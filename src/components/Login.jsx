@@ -89,7 +89,7 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sistc-50 to-sistc-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4 relative">
       {/* Dark Mode Toggle Button */}
       <button
         onClick={(e) => {
@@ -97,7 +97,7 @@ const Login = () => {
           e.stopPropagation();
           toggleDarkMode();
         }}
-        className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50"
+        className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50"
         aria-label="Toggle dark mode"
         type="button"
       >
@@ -108,10 +108,10 @@ const Login = () => {
         )}
       </button>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <Logo size="large" className="mb-4" />
-          <p className="text-gray-600 dark:text-gray-300 mt-2">Secure Student Messaging Platform</p>
+          <p className="text-gray-700 dark:text-gray-300 mt-2 font-medium">Secure Student Messaging Platform</p>
         </div>
 
         {/* Toggle between Login and Register */}
@@ -124,7 +124,7 @@ const Login = () => {
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'login'
                 ? 'bg-sistc-600 text-white'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white'
             }`}
           >
             Login
@@ -137,7 +137,7 @@ const Login = () => {
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'register'
                 ? 'bg-sistc-600 text-white'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white'
             }`}
           >
             Register
@@ -152,18 +152,18 @@ const Login = () => {
 
         <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" size={20} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
                   disabled={loading}
                 />
               </div>
@@ -171,11 +171,11 @@ const Login = () => {
 
             {mode !== 'reset' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" size={20} />
                   <input
                     type="password"
                     value={password}
@@ -183,13 +183,12 @@ const Login = () => {
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                     required
                     minLength={mode === 'register' ? 6 : undefined}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
                     disabled={loading}
                   />
                 </div>
               </div>
             )}
-
 
             <button
               type="submit"
@@ -226,13 +225,13 @@ const Login = () => {
               setMode('reset');
               setError(null);
             }}
-            className="w-full mt-4 text-sm text-sistc-600 dark:text-sistc-400 hover:underline"
+            className="w-full mt-4 text-sm text-sistc-600 dark:text-sistc-400 hover:underline font-medium"
           >
             Forgot your password?
           </button>
         )}
 
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-700 dark:text-gray-400 mt-6">
           {mode === 'register' 
             ? 'Already have an account? Switch to Login mode.'
             : mode === 'reset'
@@ -245,4 +244,3 @@ const Login = () => {
 };
 
 export default Login;
-
