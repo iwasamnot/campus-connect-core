@@ -62,12 +62,6 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
           </p>
         </div>
-      <div className="p-6 border-b border-gray-800">
-        <Logo size="small" showText={true} className="mb-2" />
-        <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
-          {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
-        </p>
-      </div>
 
       <nav className="flex-1 p-4 space-y-2">
         {!isAdminRole(userRole) ? (
