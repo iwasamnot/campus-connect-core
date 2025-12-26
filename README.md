@@ -1,20 +1,52 @@
 # CampusConnect
 
-A secure, student-only messaging platform for universities with AI-powered content moderation.
+A secure, student-only messaging platform for universities with AI-powered content moderation, real-time chat, group messaging, and intelligent AI assistant.
 
 ## Features
 
-- **Student Portal**: Global chat with AI moderation
-- **Admin Dashboard**: Audit logs for toxic messages with user ban functionality
+### For Students
+- **Campus Chat**: Real-time global chat with AI-powered content moderation
+- **Groups**: Create and join study groups with group chat functionality
+- **AI Help Assistant**: Intelligent AI assistant powered by ChatGPT with local SISTC knowledge base
+- **My Profile**: Comprehensive profile management with:
+  - Profile picture upload
+  - Personal information (name, bio, course, year of study, date of birth, address)
+  - Contact details (student email, personal email, phone number)
+- **User Presence**: See who's online and last seen timestamps
+- **Read Receipts**: Know when your messages are seen
+- **Message Features**:
+  - Edit your own messages
+  - React with emojis
+  - Search messages
+  - Report inappropriate content
+
+### For Admins
+- **Audit Dashboard**: Review all messages with advanced filtering and sorting
+- **Users Management**: View, search, edit, and manage all user accounts
+- **Create Users**: Create new student and admin accounts from the portal
+- **Message Management**: Delete any message and review reported content
+- **Audit Trail**: Complete log of all administrative actions
+- **Export Functionality**: Export audit logs for analysis
+
+### Platform Features
 - **AI Moderation**: Automatic detection and redaction of toxic content
-- **Real-time Messaging**: Powered by Firebase Firestore
+- **Real-time Updates**: Live synchronization using Firebase Firestore
+- **Dark Mode**: Toggle between light and dark themes
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Code-Split Bundles**: Optimized performance with lazy-loaded components
+- **Secure**: Role-based access control with Firestore security rules
 
 ## Tech Stack
 
-- React (Vite)
-- Tailwind CSS
-- Firebase v9 (Firestore & Auth)
-- Lucide React (Icons)
+- **Frontend**: React 18.2 with Vite 7.3
+- **Styling**: Tailwind CSS 3.4
+- **Backend**: Firebase 12.7
+  - Firestore (Database)
+  - Authentication (Email/Password)
+  - Storage (Profile Pictures)
+- **AI**: OpenAI GPT models (optional) with local knowledge base fallback
+- **Icons**: Lucide React
+- **Deployment**: Firebase Hosting with automatic CI/CD
 
 ## Setup Instructions
 
@@ -151,8 +183,56 @@ The platform supports two authentication methods:
 
 ## User Roles
 
-- **Student**: Can access Global Chat and AI Help
-- **Admin**: Can access Audit Logs to review and ban users
+- **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
+- **Admin**: Can access Audit Logs, Users Management, and Create User functionality
+
+## Automatic Deployment
+
+This project is configured with **automatic deployment** to Firebase Hosting:
+
+- **Trigger**: Every push to the `master` branch automatically triggers deployment
+- **Process**: 
+  1. GitHub Actions builds the project
+  2. Deploys to Firebase Hosting
+  3. Your site is live within minutes
+
+No manual deployment needed! Just commit and push your changes:
+
+```bash
+git add -A
+git commit -m "Your changes"
+git push origin master
+```
+
+The deployment happens automatically via GitHub Actions.
+
+## Project Structure
+
+```
+CampusConnect/
+├── src/
+│   ├── components/       # React components
+│   │   ├── Login.jsx
+│   │   ├── ChatArea.jsx
+│   │   ├── Groups.jsx
+│   │   ├── AIHelp.jsx
+│   │   └── ...
+│   ├── context/         # React Context providers
+│   │   ├── AuthContext.jsx
+│   │   ├── ThemeContext.jsx
+│   │   └── ...
+│   ├── config/          # Configuration files
+│   │   └── aiConfig.js
+│   ├── utils/           # Utility functions
+│   └── firebaseConfig.js # Firebase configuration
+├── public/              # Static assets
+├── .github/
+│   └── workflows/       # GitHub Actions workflows
+│       └── deploy.yml   # Automatic deployment
+├── firebase.json        # Firebase Hosting config
+├── FIRESTORE_RULES.txt  # Firestore security rules
+└── package.json
+```
 
 ## Changelog
 
@@ -160,19 +240,36 @@ See [CHANGELOG.md](./CHANGELOG.md) for a detailed history of changes, features, 
 
 ## Contributing
 
-### Committing Changes
+### Making Changes
 
-After making changes, commit and push to GitHub:
+1. Make your changes locally
+2. Test with `npm run dev`
+3. Commit and push:
 
-```powershell
-# Using the helper script
-.\scripts\commit-and-push.ps1 "Your commit message"
-
-# Or manually
+```bash
 git add -A
-git commit -m "Your commit message"
+git commit -m "Description of your changes"
 git push origin master
 ```
 
-All changes are automatically documented in the CHANGELOG.md file.
+The changes will automatically:
+- ✅ Be committed to GitHub
+- ✅ Build and deploy to Firebase Hosting
+- ✅ Go live on your site
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
 
