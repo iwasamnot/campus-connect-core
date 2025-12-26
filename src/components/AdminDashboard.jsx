@@ -360,10 +360,10 @@ const AdminDashboard = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setShowOnlyToxic(!showOnlyToxic)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
                 showOnlyToxic
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  ? 'bg-red-600 text-white shadow-md scale-105'
+                  : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               <Filter size={18} />

@@ -420,7 +420,7 @@ const ChatArea = () => {
                           className={`px-2 py-1 rounded text-xs ${
                             userReaction === emoji
                               ? 'bg-sistc-400 dark:bg-sistc-500'
-                              : 'bg-gray-200 dark:bg-gray-700'
+                              : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white border border-gray-300 dark:border-gray-600'
                           }`}
                         >
                           {emoji} {count}
@@ -502,7 +502,7 @@ const ChatArea = () => {
                           <button
                             key={emoji}
                             onClick={() => handleReaction(message.id, emoji)}
-                            className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                            className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${
                               userReaction === emoji ? 'bg-sistc-200 dark:bg-sistc-800' : ''
                             }`}
                             title="Add reaction"

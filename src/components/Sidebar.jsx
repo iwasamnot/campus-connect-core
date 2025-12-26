@@ -17,10 +17,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
   };
 
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col h-screen">
+    <div className="w-64 bg-gray-900 dark:bg-gray-900 text-white flex flex-col h-screen border-r border-gray-800">
       <div className="p-6 border-b border-gray-800">
         <Logo size="small" showText={true} className="mb-2" />
-        <p className="text-sm text-gray-400 mt-1 text-center">
+        <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
           {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
         </p>
       </div>
@@ -30,10 +30,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
           <>
             <button
               onClick={() => setActiveView('chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'chat'
-                  ? 'bg-sistc-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
+                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
               <MessageSquare size={20} />
@@ -41,10 +41,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
             </button>
             <button
               onClick={() => setActiveView('ai-help')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'ai-help'
-                  ? 'bg-sistc-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
+                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
               <Bot size={20} />
@@ -52,10 +52,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
             </button>
             <button
               onClick={() => setActiveView('profile')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'profile'
-                  ? 'bg-sistc-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
+                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
               <User size={20} />
@@ -66,10 +66,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
           <>
             <button
               onClick={() => setActiveView('audit')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'audit'
-                  ? 'bg-sistc-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
+                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
               <FileText size={20} />
@@ -77,10 +77,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
             </button>
             <button
               onClick={() => setActiveView('users')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'users'
-                  ? 'bg-sistc-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
+                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
               <Users size={20} />
@@ -88,10 +88,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
             </button>
             <button
               onClick={() => setActiveView('create-user')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'create-user'
-                  ? 'bg-sistc-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
+                  ? 'bg-sistc-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
               <UserPlus size={20} />
@@ -104,14 +104,14 @@ const Sidebar = ({ activeView, setActiveView }) => {
       <div className="p-4 border-t border-gray-800 space-y-2">
         <button
           onClick={toggleDarkMode}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
         >
           {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
         </button>
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
         >
           <LogOut size={20} />
           <span>Sign Out</span>
@@ -122,4 +122,3 @@ const Sidebar = ({ activeView, setActiveView }) => {
 };
 
 export default Sidebar;
-

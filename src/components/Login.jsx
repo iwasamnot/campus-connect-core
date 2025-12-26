@@ -114,17 +114,17 @@ const Login = () => {
           <p className="text-black dark:text-white mt-2 font-medium">Secure Student Messaging Platform</p>
         </div>
 
-        {/* Toggle between Login and Register */}
-        <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        {/* Toggle between Login and Register - Improved contrast */}
+        <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1">
           <button
             onClick={() => {
               setMode('login');
               setError(null);
             }}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+            className={`flex-1 py-2.5 px-4 rounded-md font-semibold transition-all duration-200 ${
               mode === 'login'
-                ? 'bg-sistc-600 text-white'
-                : 'text-black dark:text-white hover:text-sistc-600 dark:hover:text-sistc-400'
+                ? 'bg-sistc-600 text-white shadow-md scale-105'
+                : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             Login
@@ -134,10 +134,10 @@ const Login = () => {
               setMode('register');
               setError(null);
             }}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+            className={`flex-1 py-2.5 px-4 rounded-md font-semibold transition-all duration-200 ${
               mode === 'register'
-                ? 'bg-sistc-600 text-white'
-                : 'text-black dark:text-white hover:text-sistc-600 dark:hover:text-sistc-400'
+                ? 'bg-sistc-600 text-white shadow-md scale-105'
+                : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             Register
@@ -145,7 +145,7 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border-2 border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -163,7 +163,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
+                  className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600 transition-all"
                   disabled={loading}
                 />
               </div>
@@ -183,7 +183,7 @@ const Login = () => {
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                     required
                     minLength={mode === 'register' ? 6 : undefined}
-                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
+                    className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600 transition-all"
                     disabled={loading}
                   />
                 </div>
@@ -193,7 +193,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 active:bg-sistc-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -225,13 +225,13 @@ const Login = () => {
               setMode('reset');
               setError(null);
             }}
-            className="w-full mt-4 text-sm text-sistc-600 dark:text-sistc-400 hover:underline font-medium"
+            className="w-full mt-4 text-sm text-sistc-600 dark:text-sistc-400 hover:text-sistc-700 dark:hover:text-sistc-300 hover:underline font-medium transition-colors"
           >
             Forgot your password?
           </button>
         )}
 
-        <p className="text-center text-sm text-black dark:text-white mt-6">
+        <p className="text-center text-sm text-black dark:text-white opacity-80 mt-6">
           {mode === 'register' 
             ? 'Already have an account? Switch to Login mode.'
             : mode === 'reset'
