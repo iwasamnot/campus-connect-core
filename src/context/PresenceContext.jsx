@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect } from 'react';
-import { doc, updateDoc, onDisconnect, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from './AuthContext';
 
@@ -20,6 +20,7 @@ export const PresenceProvider = ({ children }) => {
     if (!user) return;
 
     const userRef = doc(db, 'users', user.uid);
+    let intervalId;
 
     // Set user as online
     updateDoc(userRef, {
@@ -27,14 +28,18 @@ export const PresenceProvider = ({ children }) => {
       lastSeen: serverTimestamp()
     }).catch(console.error);
 
-    // Set user as offline when they disconnect
-    onDisconnect(userRef).update({
-      isOnline: false,
-      lastSeen: serverTimestamp()
-    }).catch(console.error);
+    // Update lastSeen periodically (every 30 seconds)
+    intervalId = setInterval(() => {
+      updateDoc(userRef, {
+        lastSeen: serverTimestamp()
+      }).catch(console.error);
+    }, 30000);
 
-    // Cleanup on unmount
+    // Set user as offline when component unmounts or user changes
     return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
       updateDoc(userRef, {
         isOnline: false,
         lastSeen: serverTimestamp()
