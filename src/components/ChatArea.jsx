@@ -21,6 +21,7 @@ import {
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical } from 'lucide-react';
 import Logo from './Logo';
+import UserProfilePopup from './UserProfilePopup';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -40,6 +41,8 @@ const ChatArea = () => {
   const [reportReason, setReportReason] = useState('');
   const [onlineUsers, setOnlineUsers] = useState({});
   const [userNames, setUserNames] = useState({}); // Cache user names
+  const [userProfiles, setUserProfiles] = useState({}); // Cache user profile data
+  const [selectedUserId, setSelectedUserId] = useState(null); // For profile popup
   const messagesEndRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
 
@@ -64,6 +67,11 @@ const ChatArea = () => {
         } else {
           names[doc.id] = doc.id.substring(0, 8); // Use UID prefix as last resort
         }
+        // Store full profile data
+        setUserProfiles(prev => ({
+          ...prev,
+          [doc.id]: userData
+        }));
       });
       setOnlineUsers(users);
       setUserNames(names);
@@ -301,7 +309,7 @@ const ChatArea = () => {
           <div className="flex items-center gap-3">
             <Logo size="small" showText={false} />
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Global Chat</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Campus Chat</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">Connect with your campus community</p>
             </div>
           </div>
@@ -575,6 +583,14 @@ const ChatArea = () => {
           </button>
         </form>
       </div>
+
+      {/* User Profile Popup */}
+      {selectedUserId && (
+        <UserProfilePopup 
+          userId={selectedUserId} 
+          onClose={() => setSelectedUserId(null)} 
+        />
+      )}
     </div>
   );
 };

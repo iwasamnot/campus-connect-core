@@ -37,7 +37,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
               }`}
             >
               <MessageSquare size={20} />
-              <span>Global Chat</span>
+              <span>Campus Chat</span>
             </button>
             <button
               onClick={() => setActiveView('ai-help')}

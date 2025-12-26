@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, deleteDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { isAdminRole } from '../utils/helpers';
-import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText } from 'lucide-react';
+import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText, Upload } from 'lucide-react';
 
 const UsersManagement = () => {
   const { user: currentUser } = useAuth();
@@ -14,6 +15,7 @@ const UsersManagement = () => {
   const [editing, setEditing] = useState(null);
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(null);
+  const [uploading, setUploading] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -465,23 +467,64 @@ const UsersManagement = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Image className="inline mr-2" size={16} />
-                  Profile Picture URL
+                  Profile Picture
                 </label>
+                <div className="flex items-center gap-4 mb-2">
+                  {editData.profilePicture && (
+                    <img 
+                      src={editData.profilePicture} 
+                      alt="Profile preview" 
+                      className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  )}
+                  <div className="flex-1">
+                    <label className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      <Upload size={18} />
+                      <span>{uploading === editing ? 'Uploading...' : 'Upload Image'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          
+                          if (file.size > 5 * 1024 * 1024) {
+                            showError('Image size must be less than 5MB');
+                            return;
+                          }
+
+                          setUploading(editing);
+                          try {
+                            const storageRef = ref(storage, `profile-pictures/${editing}/${Date.now()}_${file.name}`);
+                            await uploadBytes(storageRef, file);
+                            const downloadURL = await getDownloadURL(storageRef);
+                            setEditData(prev => ({ ...prev, profilePicture: downloadURL }));
+                            success('Image uploaded successfully!');
+                          } catch (error) {
+                            console.error('Error uploading image:', error);
+                            showError('Failed to upload image. Please try again.');
+                          } finally {
+                            setUploading(null);
+                          }
+                        }}
+                        className="hidden"
+                        disabled={uploading === editing || saving === editing}
+                      />
+                    </label>
+                  </div>
+                </div>
                 <input
                   type="url"
                   value={editData.profilePicture}
                   onChange={(e) => setEditData(prev => ({ ...prev, profilePicture: e.target.value }))}
+                  placeholder="Or enter image URL"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   disabled={saving === editing}
                 />
-                {editData.profilePicture && (
-                  <img 
-                    src={editData.profilePicture} 
-                    alt="Profile preview" 
-                    className="mt-2 w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                )}
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Upload an image or enter a URL (optional, max 5MB)
+                </p>
               </div>
 
               {/* Bio */}

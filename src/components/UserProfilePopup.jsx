@@ -1,0 +1,197 @@
+import { useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
+import { X, User, Mail, Phone, Calendar, GraduationCap, MapPin, FileText, Image } from 'lucide-react';
+
+const UserProfilePopup = ({ userId, onClose }) => {
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userId) return;
+      
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists()) {
+          setUserData({ id: userDoc.id, ...userDoc.data() });
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
+
+  if (!userId) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white">User Profile</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+          ) : userData ? (
+            <div className="space-y-6">
+              {/* Profile Picture */}
+              <div className="flex justify-center">
+                {userData.profilePicture ? (
+                  <img 
+                    src={userData.profilePicture} 
+                    alt={userData.name || 'Profile'} 
+                    className="w-24 h-24 rounded-full object-cover border-4 border-indigo-200 dark:border-indigo-700"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className={`w-24 h-24 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-4 border-indigo-200 dark:border-indigo-700 ${userData.profilePicture ? 'hidden' : ''}`}
+                >
+                  <User size={48} className="text-indigo-600 dark:text-indigo-400" />
+                </div>
+              </div>
+
+              {/* Name */}
+              <div className="text-center">
+                <h4 className="text-2xl font-bold text-gray-800 dark:text-white">
+                  {userData.name || 'No Name'}
+                </h4>
+                {userData.role && (
+                  <span className={`inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full ${
+                    userData.role === 'admin' || userData.role === 'admin1'
+                      ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                  }`}>
+                    {userData.role}
+                  </span>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="space-y-4">
+                {userData.bio && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Bio</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.bio}</p>
+                  </div>
+                )}
+
+                {userData.email && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Login Email</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.email}</p>
+                  </div>
+                )}
+
+                {userData.studentEmail && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Student Email</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.studentEmail}</p>
+                  </div>
+                )}
+
+                {userData.personalEmail && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Personal Email</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.personalEmail}</p>
+                  </div>
+                )}
+
+                {userData.phoneNumber && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Phone size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.phoneNumber}</p>
+                  </div>
+                )}
+
+                {userData.course && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <GraduationCap size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Course</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.course}</p>
+                  </div>
+                )}
+
+                {userData.yearOfStudy && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <GraduationCap size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Year of Study</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.yearOfStudy}</p>
+                  </div>
+                )}
+
+                {userData.dateOfBirth && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">
+                      {new Date(userData.dateOfBirth).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+
+                {userData.address && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <MapPin size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.address}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">User not found</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default UserProfilePopup;
+
