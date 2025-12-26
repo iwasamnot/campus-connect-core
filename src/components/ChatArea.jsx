@@ -307,10 +307,10 @@ const ChatArea = () => {
           </div>
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-sistc-100 dark:hover:bg-sistc-700 rounded-lg transition-colors"
             title="Search messages"
           >
-            <Search size={20} className="text-gray-600 dark:text-gray-400" />
+            <Search size={20} className="text-sistc-600 dark:text-sistc-400" />
           </button>
         </div>
         
@@ -328,7 +328,7 @@ const ChatArea = () => {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-sistc-600"
                 >
                   <X size={18} />
                 </button>
@@ -453,7 +453,7 @@ const ChatArea = () => {
                           className={`px-2 py-1 rounded text-xs ${
                             userReaction === emoji
                               ? 'bg-sistc-400 dark:bg-sistc-500'
-                              : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white border border-gray-300 dark:border-gray-600'
+                              : 'bg-sistc-100 dark:bg-sistc-700 text-black dark:text-white border border-sistc-300 dark:border-sistc-600'
                           }`}
                         >
                           {emoji} {count}
@@ -535,7 +535,7 @@ const ChatArea = () => {
                           <button
                             key={emoji}
                             onClick={() => handleReaction(message.id, emoji)}
-                            className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${
+                            className={`p-1 rounded hover:bg-sistc-200 dark:hover:bg-sistc-700 transition-colors ${
                               userReaction === emoji ? 'bg-sistc-200 dark:bg-sistc-800' : ''
                             }`}
                             title="Add reaction"
