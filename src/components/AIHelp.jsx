@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
+import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Globe } from 'lucide-react';
+import { AI_CONFIG } from '../config/aiConfig';
 
 // Enhanced SISTC Knowledge Base with more detailed information
 const SISTC_KNOWLEDGE_BASE = {
@@ -318,6 +319,89 @@ const AIHelp = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Web search using Tavily API
+  const searchWeb = async (query) => {
+    if (!AI_CONFIG.tavilyApiKey || !AI_CONFIG.enableWebSearch) {
+      return null;
+    }
+
+    try {
+      const response = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          api_key: AI_CONFIG.tavilyApiKey,
+          query: query,
+          search_depth: 'basic',
+          include_answer: true,
+          include_images: false,
+          max_results: 5
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Web search failed');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Web search error:', error);
+      return null;
+    }
+  };
+
+  // Get AI response from OpenAI
+  const getAIResponse = async (question, webContext = null) => {
+    if (!AI_CONFIG.openaiApiKey) {
+      return null;
+    }
+
+    try {
+      const systemPrompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
+You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
+${webContext ? `\n\nUse the following web search results to provide current and accurate information:\n${webContext}` : ''}
+If the question is about SISTC specifically, prioritize information from the knowledge base and web search results.
+Be concise, friendly, and professional. Format your responses with markdown for better readability.`;
+
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...ai.current.context.slice(-3).map(ctx => ({
+          role: 'user',
+          content: ctx.question
+        })),
+        { role: 'user', content: question }
+      ];
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AI_CONFIG.openaiApiKey}`
+        },
+        body: JSON.stringify({
+          model: AI_CONFIG.model,
+          messages: messages,
+          temperature: AI_CONFIG.temperature,
+          max_tokens: AI_CONFIG.maxTokens
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'API request failed');
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || null;
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      return null;
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -334,24 +418,70 @@ const AIHelp = () => {
     setInput('');
     setLoading(true);
 
-    // Simulate AI processing with intelligent analysis
-    setTimeout(() => {
-      try {
-        const answer = ai.current.processQuestion(question);
-        const botMessage = {
-          id: Date.now() + 1,
-          type: 'bot',
-          content: answer,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, botMessage]);
-      } catch (err) {
-        showError('Failed to get response. Please try again.');
-        console.error('AI Error:', err);
-      } finally {
-        setLoading(false);
+    try {
+      let answer = null;
+      let usedWebSearch = false;
+
+      // Try web search first if enabled
+      if (AI_CONFIG.enableWebSearch && AI_CONFIG.tavilyApiKey) {
+        const webResults = await searchWeb(question);
+        if (webResults && webResults.answer) {
+          usedWebSearch = true;
+          // Try to get enhanced answer from OpenAI with web context
+          if (AI_CONFIG.openaiApiKey) {
+            const webContext = `Answer: ${webResults.answer}\n\nSources:\n${webResults.results?.slice(0, 3).map(r => `- ${r.title}: ${r.content}`).join('\n')}`;
+            answer = await getAIResponse(question, webContext);
+          } else {
+            answer = webResults.answer;
+          }
+        }
       }
-    }, 800); // Slightly longer delay to show "thinking"
+
+      // Try OpenAI API if web search didn't work or isn't available
+      if (!answer && AI_CONFIG.openaiApiKey) {
+        answer = await getAIResponse(question);
+      }
+
+      // Fallback to local knowledge base
+      if (!answer && AI_CONFIG.useFallback) {
+        answer = ai.current.processQuestion(question);
+      }
+
+      // Final fallback
+      if (!answer) {
+        answer = "I apologize, but I'm having trouble accessing my knowledge base right now. Please try again later or contact SISTC directly at +61 (2) 9061 5900 or visit https://sistc.edu.au/";
+      }
+
+      const botMessage = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: answer,
+        timestamp: new Date(),
+        usedWebSearch: usedWebSearch
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      showError('Failed to get response. Please try again.');
+      console.error('AI Error:', err);
+      
+      // Fallback to local knowledge base on error
+      if (AI_CONFIG.useFallback) {
+        try {
+          const fallbackAnswer = ai.current.processQuestion(question);
+          const botMessage = {
+            id: Date.now() + 1,
+            type: 'bot',
+            content: fallbackAnswer,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botMessage]);
+        } catch (fallbackErr) {
+          console.error('Fallback error:', fallbackErr);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const quickQuestions = [
@@ -434,11 +564,21 @@ const AIHelp = () => {
             <Bot className="text-indigo-600 dark:text-indigo-400" size={24} />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
-              <Sparkles className="text-indigo-500" size={20} />
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Intelligent answers about SISTC courses, campuses, and more</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
+                <Sparkles className="text-indigo-500" size={20} />
+                {AI_CONFIG.openaiApiKey && (
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full flex items-center gap-1">
+                    <Globe size={12} />
+                    Web-Enabled
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {AI_CONFIG.openaiApiKey 
+                  ? 'Intelligent AI with web access for accurate, up-to-date answers'
+                  : 'Intelligent answers about SISTC courses, campuses, and more'}
+              </p>
           </div>
         </div>
       </div>
@@ -533,7 +673,20 @@ const AIHelp = () => {
           </button>
         </form>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-          Powered by intelligent AI • Information sourced from <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">sistc.edu.au</a>
+          {AI_CONFIG.openaiApiKey ? (
+            <>
+              Powered by {AI_CONFIG.model} with web search • 
+              {AI_CONFIG.tavilyApiKey && <span className="ml-1">🌐 Real-time web access enabled</span>}
+            </>
+          ) : (
+            <>
+              Powered by intelligent AI • 
+              <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
+              <span className="ml-2 text-yellow-600 dark:text-yellow-400">
+                💡 Add API keys for web-enabled AI (see config/aiConfig.js)
+              </span>
+            </>
+          )}
         </p>
       </div>
     </div>
