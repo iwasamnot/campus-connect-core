@@ -78,11 +78,13 @@ service cloud.firestore {
       
       // Allow users to update their own messages (for editing)
       // Allow any authenticated user to update readBy field (read receipts)
+      // Allow any authenticated user to update reactions field
       // Allow admins to update any field
       allow update: if request.auth != null && (
         (resource.data.userId == request.auth.uid && 
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])) ||
         isAdmin()
       );
       
@@ -164,13 +166,15 @@ service cloud.firestore {
       
       // Allow message authors to update their own messages (for editing)
       // Allow any group member to update readBy field (read receipts)
+      // Allow any group member to update reactions field
       allow update: if request.auth != null && 
         exists(/databases/$(database)/documents/groups/$(groupId)) &&
         get(/databases/$(database)/documents/groups/$(groupId)).data.members != null &&
         request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members && (
           (resource.data.userId == request.auth.uid && 
-           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt'])) ||
-          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']))
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']))
         );
       
       // Allow message authors and group admins to delete messages

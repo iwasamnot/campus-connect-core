@@ -43,6 +43,7 @@ const ChatArea = () => {
   const [userNames, setUserNames] = useState({}); // Cache user names
   const [userProfiles, setUserProfiles] = useState({}); // Cache user profile data
   const [selectedUserId, setSelectedUserId] = useState(null); // For profile popup
+  const [reacting, setReacting] = useState(new Set()); // Track reactions in progress to prevent duplicates
   const messagesEndRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
 
@@ -118,7 +119,23 @@ const ChatArea = () => {
         id: doc.id,
         ...doc.data()
       }));
-      setMessages(messagesData);
+      
+      // Deduplicate messages by ID to prevent duplicates
+      const uniqueMessages = messagesData.reduce((acc, message) => {
+        if (!acc.find(m => m.id === message.id)) {
+          acc.push(message);
+        }
+        return acc;
+      }, []);
+      
+      // Sort by timestamp to ensure correct order
+      uniqueMessages.sort((a, b) => {
+        const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
+        const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
+        return aTime - bTime;
+      });
+      
+      setMessages(uniqueMessages);
       
       // Mark all messages as read by current user
       if (user) {
@@ -279,8 +296,25 @@ const ChatArea = () => {
   };
 
   const handleReaction = async (messageId, emoji) => {
+    // Prevent duplicate reactions
+    const reactionKey = `${messageId}-${emoji}`;
+    if (reacting.has(reactionKey)) {
+      return; // Already processing this reaction
+    }
+
     try {
+      setReacting(prev => new Set(prev).add(reactionKey));
+      
       const message = messages.find(m => m.id === messageId);
+      if (!message) {
+        setReacting(prev => {
+          const next = new Set(prev);
+          next.delete(reactionKey);
+          return next;
+        });
+        return;
+      }
+
       const currentReactions = message?.reactions || {};
       const userReaction = currentReactions[user.uid];
 
@@ -303,6 +337,12 @@ const ChatArea = () => {
     } catch (error) {
       console.error('Error adding reaction:', error);
       showError('Failed to add reaction. Please try again.');
+    } finally {
+      setReacting(prev => {
+        const next = new Set(prev);
+        next.delete(reactionKey);
+        return next;
+      });
     }
   };
 
@@ -691,18 +731,25 @@ const ChatArea = () => {
                   {!isAuthor && (
                     <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="flex gap-1">
-                        {EMOJI_REACTIONS.map((emoji) => (
-                          <button
-                            key={emoji}
-                            onClick={() => handleReaction(message.id, emoji)}
-                            className={`p-1 rounded hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors ${
-                              userReaction === emoji ? 'bg-indigo-200 dark:bg-indigo-800' : ''
-                            }`}
-                            title="Add reaction"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
+                        {EMOJI_REACTIONS.map((emoji) => {
+                          const reactionKey = `${message.id}-${emoji}`;
+                          const isReacting = reacting.has(reactionKey);
+                          return (
+                            <button
+                              key={emoji}
+                              onClick={() => !isReacting && handleReaction(message.id, emoji)}
+                              disabled={isReacting}
+                              className={`p-1 rounded transition-all ${
+                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-200 dark:hover:bg-indigo-700'
+                              } ${
+                                userReaction === emoji ? 'bg-indigo-200 dark:bg-indigo-800' : ''
+                              }`}
+                              title="Add reaction"
+                            >
+                              {emoji}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
