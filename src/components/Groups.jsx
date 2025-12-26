@@ -197,32 +197,34 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Groups</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Create and join study groups</p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">Groups</h2>
+            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Create and join study groups</p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setShowJoinModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
             >
               <UserPlus size={18} />
-              <span>Join Group</span>
+              <span className="hidden sm:inline">Join Group</span>
+              <span className="sm:hidden">Join</span>
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
             >
               <Plus size={18} />
-              <span>Create Group</span>
+              <span className="hidden sm:inline">Create Group</span>
+              <span className="sm:hidden">Create</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <input
@@ -236,7 +238,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       </div>
 
       {/* Groups List */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4">
         {filteredGroups.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

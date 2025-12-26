@@ -207,11 +207,11 @@ const StudentProfile = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">My Profile</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Manage your contact information</p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">My Profile</h2>
+            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Manage your contact information</p>
           </div>
           {!editing && (
             <button

@@ -290,38 +290,40 @@ const AdminDashboard = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3 md:mb-4">
+          <div className="flex items-center gap-2 md:gap-3">
             <Logo size="small" showText={false} />
             <div>
-              <h2 className="text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
-              <p className="text-sm text-black dark:text-white opacity-70">
+              <h2 className="text-lg md:text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
+              <p className="text-xs md:text-sm text-black dark:text-white opacity-70">
                 Manage messages, reports, and audit logs
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setShowReports(!showReports)}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
             >
               <AlertTriangle size={18} />
-              <span>Reports ({reports.filter(r => r.status === 'pending').length})</span>
+              <span className="hidden sm:inline">Reports</span>
+              <span className="sm:hidden">({reports.filter(r => r.status === 'pending').length})</span>
+              <span className="hidden sm:inline">({reports.filter(r => r.status === 'pending').length})</span>
             </button>
             <button
               onClick={() => setShowAuditLogs(!showAuditLogs)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
             >
               <FileText size={18} />
-              <span>Audit Logs</span>
+              <span className="hidden sm:inline">Audit Logs</span>
             </button>
             <button
               onClick={exportToCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
             >
               <Download size={18} />
-              <span>Export CSV</span>
+              <span className="hidden sm:inline">Export CSV</span>
             </button>
           </div>
         </div>
@@ -448,7 +450,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 overflow-x-auto">
         {paginatedMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
