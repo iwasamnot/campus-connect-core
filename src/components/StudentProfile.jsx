@@ -12,6 +12,7 @@ const StudentProfile = () => {
   const [error, setError] = useState(null);
   
   const [formData, setFormData] = useState({
+    name: '',
     studentEmail: '',
     personalEmail: '',
     phoneNumber: ''
@@ -27,6 +28,7 @@ const StudentProfile = () => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setFormData({
+            name: userData.name || '',
             studentEmail: userData.studentEmail || '',
             personalEmail: userData.personalEmail || '',
             phoneNumber: userData.phoneNumber || ''
@@ -89,6 +91,7 @@ const StudentProfile = () => {
     setSaving(true);
     try {
       await updateDoc(doc(db, 'users', user.uid), {
+        name: formData.name.trim() || null,
         studentEmail: formData.studentEmail.trim() || null,
         personalEmail: formData.personalEmail.trim() || null,
         phoneNumber: formData.phoneNumber.trim() || null,
@@ -141,6 +144,25 @@ const StudentProfile = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <User className="inline mr-2" size={16} />
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Your display name (will be shown in chat)
+                </p>
+              </div>
+
               {/* Student Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

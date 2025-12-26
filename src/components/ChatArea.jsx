@@ -38,22 +38,34 @@ const ChatArea = () => {
   const [reporting, setReporting] = useState(null);
   const [reportReason, setReportReason] = useState('');
   const [onlineUsers, setOnlineUsers] = useState({});
+  const [userNames, setUserNames] = useState({}); // Cache user names
   const messagesEndRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
 
-  // Fetch online users
+  // Fetch all users to get names
   useEffect(() => {
-    const q = query(
-      collection(db, 'users'),
-      where('isOnline', '==', true)
-    );
+    const q = query(collection(db, 'users'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const users = {};
+      const names = {};
       snapshot.docs.forEach(doc => {
-        users[doc.id] = doc.data();
+        const userData = doc.data();
+        users[doc.id] = userData;
+        if (userData.isOnline) {
+          users[doc.id] = userData;
+        }
+        // Store name for display
+        if (userData.name) {
+          names[doc.id] = userData.name;
+        } else if (userData.email) {
+          names[doc.id] = userData.email.split('@')[0]; // Use email prefix as fallback
+        } else {
+          names[doc.id] = doc.id.substring(0, 8); // Use UID prefix as last resort
+        }
       });
       setOnlineUsers(users);
+      setUserNames(names);
     });
 
     return () => unsubscribe();
@@ -112,6 +124,23 @@ const ChatArea = () => {
     const isToxic = checkToxicity(originalText);
     const displayText = isToxic ? '[REDACTED BY AI]' : originalText;
 
+    // Get user name from cache or fetch it
+    let userName = userNames[user.uid];
+    if (!userName) {
+      // Try to get from user document
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          userName = userData.name || userData.email?.split('@')[0] || user.uid.substring(0, 8);
+        } else {
+          userName = user.email?.split('@')[0] || user.uid.substring(0, 8);
+        }
+      } catch (err) {
+        userName = user.email?.split('@')[0] || user.uid.substring(0, 8);
+      }
+    }
+
     try {
       await addDoc(collection(db, 'messages'), {
         text: originalText,
@@ -119,7 +148,7 @@ const ChatArea = () => {
         toxic: isToxic,
         isAI: false,
         userId: user.uid,
-        userName: user.email || user.uid.substring(0, 8),
+        userName: userName,
         userEmail: user.email || null,
         timestamp: serverTimestamp(),
         reactions: {},
@@ -161,9 +190,10 @@ const ChatArea = () => {
     }
   };
 
-  const handleEditMessage = async (messageId, currentText) => {
+  const handleEditMessage = async (messageId) => {
     if (!editText.trim()) {
       setEditing(null);
+      setEditText('');
       return;
     }
 
@@ -171,7 +201,8 @@ const ChatArea = () => {
     const displayText = isToxic ? '[REDACTED BY AI]' : editText.trim();
 
     try {
-      await updateDoc(doc(db, 'messages', messageId), {
+      const messageRef = doc(db, 'messages', messageId);
+      await updateDoc(messageRef, {
         text: editText.trim(),
         displayText: displayText,
         toxic: isToxic,
@@ -183,7 +214,7 @@ const ChatArea = () => {
       success('Message updated successfully.');
     } catch (error) {
       console.error('Error editing message:', error);
-      showError('Failed to edit message. Please try again.');
+      showError(`Failed to edit message: ${error.message || 'Please try again.'}`);
     }
   };
 
@@ -347,8 +378,8 @@ const ChatArea = () => {
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <div className="text-xs opacity-75">
-                        {message.userName}
+                      <div className="text-xs font-medium opacity-90">
+                        {userNames[message.userId] || message.userName || message.userEmail?.split('@')[0] || 'Unknown'}
                       </div>
                       {onlineUsers[message.userId]?.isOnline && (
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
@@ -356,6 +387,7 @@ const ChatArea = () => {
                     </div>
                     <div className="text-xs opacity-75">
                       {formatTimestamp(message.timestamp)}
+                      {message.edited && <span className="ml-1 italic">(edited)</span>}
                     </div>
                   </div>
                   
@@ -369,7 +401,7 @@ const ChatArea = () => {
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            handleEditMessage(message.id, editText);
+                            handleEditMessage(message.id);
                           } else if (e.key === 'Escape') {
                             setEditing(null);
                             setEditText('');
@@ -377,7 +409,7 @@ const ChatArea = () => {
                         }}
                       />
                       <button
-                        onClick={() => handleEditMessage(message.id, editText)}
+                        onClick={() => handleEditMessage(message.id)}
                         className="p-1 hover:bg-green-600 rounded"
                       >
                         <Check size={16} />
