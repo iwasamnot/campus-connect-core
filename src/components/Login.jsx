@@ -123,7 +123,7 @@ const Login = () => {
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
-                ? 'bg-sistc-600 text-black dark:text-black shadow-lg ring-2 ring-sistc-400 ring-offset-2'
+                ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-400 ring-offset-2'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
@@ -136,7 +136,7 @@ const Login = () => {
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
-                ? 'bg-sistc-600 text-black dark:text-black shadow-lg ring-2 ring-sistc-400 ring-offset-2'
+                ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-400 ring-offset-2'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
@@ -163,7 +163,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all"
                   disabled={loading}
                 />
               </div>
@@ -183,7 +183,7 @@ const Login = () => {
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                     required
                     minLength={mode === 'register' ? 6 : undefined}
-                    className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all"
                     disabled={loading}
                   />
                 </div>
@@ -193,7 +193,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 active:bg-sistc-800 text-black dark:text-black font-bold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -225,7 +225,7 @@ const Login = () => {
               setMode('reset');
               setError(null);
             }}
-            className="w-full mt-4 text-sm text-sistc-600 dark:text-sistc-400 hover:text-sistc-700 dark:hover:text-sistc-300 hover:underline font-medium transition-colors"
+            className="w-full mt-4 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-sistc-300 hover:underline font-medium transition-colors"
           >
             Forgot your password?
           </button>
