@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical } from 'lucide-react';
+import Logo from './Logo';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -265,9 +266,12 @@ const ChatArea = () => {
       {/* Chat Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Global Chat</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Connect with your campus community</p>
+          <div className="flex items-center gap-3">
+            <Logo size="small" showText={false} />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Global Chat</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Connect with your campus community</p>
+            </div>
           </div>
           <button
             onClick={() => setShowSearch(!showSearch)}

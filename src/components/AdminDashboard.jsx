@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import Logo from './Logo';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -291,11 +292,14 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Admin Dashboard</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Manage messages, reports, and audit logs
-            </p>
+          <div className="flex items-center gap-3">
+            <Logo size="small" showText={false} />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Admin Dashboard</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Manage messages, reports, and audit logs
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <button
