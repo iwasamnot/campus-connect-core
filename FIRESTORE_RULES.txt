@@ -41,10 +41,11 @@ service cloud.firestore {
       
       // Allow users to update their own user document
       // Students can update: studentEmail, personalEmail, phoneNumber, updatedAt, lastSeen
-      // Admins can update any field
-      allow update: if request.auth != null && request.auth.uid == userId && (
+      // Admins can update any user document (including other users)
+      allow update: if request.auth != null && (
         isAdmin() ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentEmail', 'personalEmail', 'phoneNumber', 'updatedAt', 'lastSeen', 'isOnline']))
+        (request.auth.uid == userId && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentEmail', 'personalEmail', 'phoneNumber', 'updatedAt', 'lastSeen', 'isOnline']))
       );
       
       // Allow admins to delete users

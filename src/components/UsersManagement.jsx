@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot, doc, deleteDoc, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, deleteDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { isAdminRole } from '../utils/helpers';
-import { Trash2, User, Mail, Phone, Calendar, AlertCircle } from 'lucide-react';
+import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check } from 'lucide-react';
 
 const UsersManagement = () => {
   const { user: currentUser } = useAuth();
+  const { success, error: showError } = useToast();
   const [users, setUsers] = useState([]);
   const [deleting, setDeleting] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch all users
@@ -51,18 +56,96 @@ const UsersManagement = () => {
     return () => unsubscribe();
   }, []);
 
+  // Log audit action
+  const logAuditAction = async (action, details) => {
+    try {
+      await addDoc(collection(db, 'auditLogs'), {
+        action,
+        details,
+        performedBy: currentUser.uid,
+        performedByEmail: currentUser.email,
+        timestamp: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error logging audit action:', error);
+    }
+  };
+
   const handleDeleteUser = async (userId, userEmail) => {
     if (!confirm(`Are you sure you want to delete user "${userEmail || userId}"? This action cannot be undone and will also delete all their messages.`)) return;
 
     setDeleting(userId);
     try {
       await deleteDoc(doc(db, 'users', userId));
-      alert('User has been deleted successfully.');
+      
+      await logAuditAction('delete_user', {
+        userId,
+        userEmail
+      });
+
+      success('User deleted successfully.');
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Failed to delete user. Please try again.');
+      showError('Failed to delete user. Please try again.');
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditing(user.id);
+    setEditData({
+      studentEmail: user.studentEmail || '',
+      personalEmail: user.personalEmail || '',
+      phoneNumber: user.phoneNumber || '',
+      role: user.role || 'student'
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(null);
+    setEditData({});
+  };
+
+  const handleSaveEdit = async (userId) => {
+    setSaving(userId);
+    try {
+      const originalUser = users.find(u => u.id === userId);
+      const changes = {};
+
+      if (editData.studentEmail !== (originalUser.studentEmail || '')) {
+        changes.studentEmail = editData.studentEmail.trim() || null;
+      }
+      if (editData.personalEmail !== (originalUser.personalEmail || '')) {
+        changes.personalEmail = editData.personalEmail.trim() || null;
+      }
+      if (editData.phoneNumber !== (originalUser.phoneNumber || '')) {
+        changes.phoneNumber = editData.phoneNumber.trim() || null;
+      }
+      if (editData.role !== originalUser.role) {
+        changes.role = editData.role;
+      }
+
+      changes.updatedAt = new Date().toISOString();
+      changes.updatedBy = currentUser.uid;
+      changes.updatedByEmail = currentUser.email;
+
+      await updateDoc(doc(db, 'users', userId), changes);
+
+      await logAuditAction('edit_user', {
+        userId,
+        userEmail: originalUser.email,
+        changes
+      });
+
+      setEditing(null);
+      setEditData({});
+      success('User updated successfully.');
+    } catch (error) {
+      console.error('Error updating user:', error);
+      showError('Failed to update user. Please try again.');
+    } finally {
+      setSaving(null);
     }
   };
 
@@ -96,7 +179,7 @@ const UsersManagement = () => {
           <div>
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Users Management</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Manage and delete user accounts
+              Manage, edit, and delete user accounts
             </p>
           </div>
         </div>
@@ -151,7 +234,7 @@ const UsersManagement = () => {
                     Created At
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Action
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -162,13 +245,25 @@ const UsersManagement = () => {
                       {user.id.substring(0, 12)}...
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        isAdminRole(user.role)
-                          ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
-                          : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                      }`}>
-                        {user.role || 'N/A'}
-                      </span>
+                      {editing === user.id ? (
+                        <select
+                          value={editData.role}
+                          onChange={(e) => setEditData(prev => ({ ...prev, role: e.target.value }))}
+                          className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          disabled={saving === user.id}
+                        >
+                          <option value="student">Student</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      ) : (
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          isAdminRole(user.role)
+                            ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+                            : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                        }`}>
+                          {user.role || 'N/A'}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                       <div className="flex items-center gap-1">
@@ -177,33 +272,66 @@ const UsersManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {user.studentEmail ? (
-                        <div className="flex items-center gap-1">
-                          <Mail size={14} className="text-gray-400 dark:text-gray-500" />
-                          {user.studentEmail}
-                        </div>
+                      {editing === user.id ? (
+                        <input
+                          type="email"
+                          value={editData.studentEmail}
+                          onChange={(e) => setEditData(prev => ({ ...prev, studentEmail: e.target.value }))}
+                          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Student email"
+                          disabled={saving === user.id}
+                        />
                       ) : (
-                        <span className="text-gray-400 dark:text-gray-500">-</span>
+                        user.studentEmail ? (
+                          <div className="flex items-center gap-1">
+                            <Mail size={14} className="text-gray-400 dark:text-gray-500" />
+                            {user.studentEmail}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">-</span>
+                        )
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {user.personalEmail ? (
-                        <div className="flex items-center gap-1">
-                          <Mail size={14} className="text-gray-400 dark:text-gray-500" />
-                          {user.personalEmail}
-                        </div>
+                      {editing === user.id ? (
+                        <input
+                          type="email"
+                          value={editData.personalEmail}
+                          onChange={(e) => setEditData(prev => ({ ...prev, personalEmail: e.target.value }))}
+                          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Personal email"
+                          disabled={saving === user.id}
+                        />
                       ) : (
-                        <span className="text-gray-400 dark:text-gray-500">-</span>
+                        user.personalEmail ? (
+                          <div className="flex items-center gap-1">
+                            <Mail size={14} className="text-gray-400 dark:text-gray-500" />
+                            {user.personalEmail}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">-</span>
+                        )
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {user.phoneNumber ? (
-                        <div className="flex items-center gap-1">
-                          <Phone size={14} className="text-gray-400 dark:text-gray-500" />
-                          {user.phoneNumber}
-                        </div>
+                      {editing === user.id ? (
+                        <input
+                          type="tel"
+                          value={editData.phoneNumber}
+                          onChange={(e) => setEditData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Phone number"
+                          disabled={saving === user.id}
+                        />
                       ) : (
-                        <span className="text-gray-400 dark:text-gray-500">-</span>
+                        user.phoneNumber ? (
+                          <div className="flex items-center gap-1">
+                            <Phone size={14} className="text-gray-400 dark:text-gray-500" />
+                            {user.phoneNumber}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">-</span>
+                        )
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -213,21 +341,55 @@ const UsersManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleDeleteUser(user.id, user.email)}
-                        disabled={deleting === user.id || isAdminRole(user.role) || user.id === currentUser?.uid}
-                        className="flex items-center gap-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                        title={
-                          user.id === currentUser?.uid 
-                            ? 'Cannot delete your own account' 
-                            : isAdminRole(user.role)
-                            ? 'Cannot delete admin accounts' 
-                            : 'Delete user'
-                        }
-                      >
-                        <Trash2 size={14} />
-                        <span>Delete</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {editing === user.id ? (
+                          <>
+                            <button
+                              onClick={() => handleSaveEdit(user.id)}
+                              disabled={saving === user.id}
+                              className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            >
+                              <Check size={14} />
+                              <span>Save</span>
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              disabled={saving === user.id}
+                              className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            >
+                              <X size={14} />
+                              <span>Cancel</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleEditUser(user)}
+                              disabled={user.id === currentUser?.uid}
+                              className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              title={user.id === currentUser?.uid ? 'Cannot edit your own account' : 'Edit user'}
+                            >
+                              <Edit2 size={14} />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.email)}
+                              disabled={deleting === user.id || isAdminRole(user.role) || user.id === currentUser?.uid}
+                              className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              title={
+                                user.id === currentUser?.uid 
+                                  ? 'Cannot delete your own account' 
+                                  : isAdminRole(user.role)
+                                  ? 'Cannot delete admin accounts' 
+                                  : 'Delete user'
+                              }
+                            >
+                              <Trash2 size={14} />
+                              <span>Delete</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -249,4 +411,3 @@ const UsersManagement = () => {
 };
 
 export default UsersManagement;
-
