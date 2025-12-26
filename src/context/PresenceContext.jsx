@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect } from 'react';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from './AuthContext';
 
@@ -22,17 +22,41 @@ export const PresenceProvider = ({ children }) => {
     const userRef = doc(db, 'users', user.uid);
     let intervalId;
 
-    // Set user as online
-    updateDoc(userRef, {
-      isOnline: true,
-      lastSeen: serverTimestamp()
-    }).catch(console.error);
+    // Function to set user as online (creates document if it doesn't exist)
+    const setOnline = async () => {
+      try {
+        // Check if document exists first
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          // Document exists, update it
+          await setDoc(userRef, {
+            isOnline: true,
+            lastSeen: serverTimestamp()
+          }, { merge: true });
+        } else {
+          // Document doesn't exist, create it with online status
+          await setDoc(userRef, {
+            isOnline: true,
+            lastSeen: serverTimestamp(),
+            email: user.email || null,
+            role: 'student' // Default role, will be updated by AuthContext if needed
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error('Error setting user online:', error);
+      }
+    };
+
+    // Set user as online immediately
+    setOnline();
 
     // Update lastSeen periodically (every 30 seconds)
     intervalId = setInterval(() => {
-      updateDoc(userRef, {
+      setDoc(userRef, {
         lastSeen: serverTimestamp()
-      }).catch(console.error);
+      }, { merge: true }).catch((error) => {
+        console.error('Error updating lastSeen:', error);
+      });
     }, 30000);
 
     // Set user as offline when component unmounts or user changes
@@ -40,10 +64,12 @@ export const PresenceProvider = ({ children }) => {
       if (intervalId) {
         clearInterval(intervalId);
       }
-      updateDoc(userRef, {
+      setDoc(userRef, {
         isOnline: false,
         lastSeen: serverTimestamp()
-      }).catch(console.error);
+      }, { merge: true }).catch((error) => {
+        console.error('Error setting user offline:', error);
+      });
     };
   }, [user]);
 
