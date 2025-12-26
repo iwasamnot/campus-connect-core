@@ -6,6 +6,7 @@ import AdminDashboard from './components/AdminDashboard';
 import StudentProfile from './components/StudentProfile';
 import UsersManagement from './components/UsersManagement';
 import CreateUser from './components/CreateUser';
+import AIHelp from './components/AIHelp';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect } from 'react';
 
@@ -48,14 +49,7 @@ function App() {
         ) : (
           <>
             {activeView === 'chat' && <ChatArea />}
-            {activeView === 'ai-help' && (
-              <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">AI Help</h2>
-                  <p className="text-gray-600 dark:text-gray-300">AI Help feature coming soon!</p>
-                </div>
-              </div>
-            )}
+            {activeView === 'ai-help' && <AIHelp />}
             {activeView === 'profile' && <StudentProfile />}
           </>
         )}
