@@ -11,7 +11,7 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      {/* Shield Logo */}
+      {/* Shield Logo - Exact Design */}
       <svg
         width={width}
         height={height}
@@ -20,6 +20,7 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
         xmlns="http://www.w3.org/2000/svg"
         className="mb-2"
       >
+        {/* Shield shape - divided vertically into two sections */}
         <defs>
           <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -29,7 +30,7 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
           </linearGradient>
         </defs>
         
-        {/* Shield shape - divided vertically */}
+        {/* Complete shield outline */}
         <path
           d="M10 25 L60 10 L110 25 L110 105 C110 115 100 120 90 115 L60 100 L30 115 C20 120 10 115 10 105 Z"
           fill="url(#shieldGradient)"
@@ -37,65 +38,72 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
           strokeWidth="1.5"
         />
         
-        {/* Left side - Dark blue section */}
+        {/* Left side of shield - Dark blue section */}
         <path
           d="M10 25 L60 10 L60 100 L10 105 Z"
           fill="#1e3a8a"
         />
         
-        {/* Stylized C/G shape on left side - outlined, thinner lines */}
+        {/* Abstract stylized C/G shape on left side - outlined, thinner lines, creates depth/layering */}
         <path
-          d="M25 45 Q18 35 28 35 Q38 35 40 40 Q40 45 36 47 Q33 45 30 45 Q26 45 26 50 Q26 55 30 55 Q33 55 36 53 Q40 51 40 55 Q40 60 36 63 Q33 65 28 65 Q18 65 25 55"
+          d="M22 42 Q15 32 28 32 Q41 32 43 38 Q43 43 39 45 Q36 43 33 43 Q29 43 29 48 Q29 53 33 53 Q36 53 39 51 Q43 49 43 53 Q43 58 39 61 Q36 63 28 63 Q15 63 22 53"
           stroke="#1e40af"
           strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-        />
-        
-        {/* Right side - Bright blue section */}
-        <path
-          d="M60 10 L110 25 L110 105 L60 100 Z"
-          fill="#3b82f6"
-        />
-        
-        {/* Large bold uppercase C on right side */}
-        <path
-          d="M85 40 Q75 40 75 55 Q75 70 85 70"
-          stroke="#ffffff"
-          strokeWidth="7"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         
-        {/* Speech bubble icon inside the curve of the C */}
-        <g transform="translate(78, 48)">
-          {/* Speech bubble rectangle with rounded corners */}
+        {/* Right side of shield - Bright/medium blue section */}
+        <path
+          d="M60 10 L110 25 L110 105 L60 100 Z"
+          fill="#3b82f6"
+        />
+        
+        {/* Large, bold, uppercase letter C integrated into right side design */}
+        <path
+          d="M82 38 Q72 38 72 55 Q72 72 82 72"
+          stroke="#ffffff"
+          strokeWidth="8"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        
+        {/* Speech bubble icon - inside the curve of the bright blue C */}
+        <g transform="translate(75, 46)">
+          {/* Rectangular speech bubble with rounded corners */}
           <rect
             x="0"
             y="0"
-            width="16"
-            height="11"
+            width="18"
+            height="12"
             rx="3"
             fill="#3b82f6"
           />
-          {/* Triangular pointer extending downwards from bottom-center */}
+          {/* Small triangular pointer extending downwards from bottom-center */}
           <path
-            d="M8 11 L6 17 L10 17 Z"
+            d="M9 12 L7 19 L11 19 Z"
             fill="#3b82f6"
           />
-          {/* Three small white dots horizontally aligned inside */}
-          <circle cx="4" cy="5.5" r="1.5" fill="#ffffff" />
-          <circle cx="8" cy="5.5" r="1.5" fill="#ffffff" />
-          <circle cx="12" cy="5.5" r="1.5" fill="#ffffff" />
+          {/* Three small, white, horizontally aligned dots inside speech bubble */}
+          <circle cx="4.5" cy="6" r="1.8" fill="#ffffff" />
+          <circle cx="9" cy="6" r="1.8" fill="#ffffff" />
+          <circle cx="13.5" cy="6" r="1.8" fill="#ffffff" />
         </g>
       </svg>
 
-      {/* Text: CAMPUSCONNECT - CAMPUS in dark blue, CONNECT in bright blue, no space, uppercase, sans-serif */}
+      {/* Text: CAMPUSCONNECT - CAMPUS in dark blue, CONNECT in bright blue, no space, uppercase, clean sans-serif */}
       {showText && (
-        <div className={`font-bold uppercase tracking-tight ${fontSize} leading-tight`} style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-          <span className="text-blue-900 dark:text-blue-700">CAMPUS</span>
-          <span className="text-blue-600 dark:text-blue-400">CONNECT</span>
+        <div 
+          className={`font-bold uppercase tracking-tight ${fontSize} leading-tight`} 
+          style={{ 
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            letterSpacing: '-0.02em'
+          }}
+        >
+          <span className="text-blue-900 dark:text-blue-700" style={{ color: '#1e3a8a' }}>CAMPUS</span>
+          <span className="text-blue-600 dark:text-blue-400" style={{ color: '#3b82f6' }}>CONNECT</span>
         </div>
       )}
     </div>
