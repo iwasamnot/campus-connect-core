@@ -386,7 +386,7 @@ const ChatArea = () => {
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
                       )}
                     </div>
-                    <div className="text-xs opacity-75">
+                    <div className="text-xs opacity-75 ml-2">
                       {formatTimestamp(message.timestamp)}
                       {message.edited && <span className="ml-1 italic">(edited)</span>}
                     </div>
