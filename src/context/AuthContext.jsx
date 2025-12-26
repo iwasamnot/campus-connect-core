@@ -4,7 +4,8 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -161,6 +162,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     userRole,
@@ -169,6 +179,7 @@ export const AuthProvider = ({ children }) => {
     register,
     login,
     signOut,
+    resetPassword,
     loading
   };
 

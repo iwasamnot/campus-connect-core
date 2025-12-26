@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { 
   collection, 
   query, 
@@ -7,16 +9,47 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  orderBy
+  orderBy,
+  addDoc,
+  serverTimestamp,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Ban, AlertTriangle, Trash2, Filter } from 'lucide-react';
+import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
+  const { success, error: showError } = useToast();
   const [allMessages, setAllMessages] = useState([]);
-  const [showOnlyToxic, setShowOnlyToxic] = useState(true);
+  const [reports, setReports] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [showOnlyToxic, setShowOnlyToxic] = useState(false);
   const [banning, setBanning] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('timestamp');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [filterUser, setFilterUser] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [showReports, setShowReports] = useState(false);
+  const [showAuditLogs, setShowAuditLogs] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const messagesPerPage = 50;
+
+  // Log audit action
+  const logAuditAction = async (action, details) => {
+    try {
+      await addDoc(collection(db, 'auditLogs'), {
+        action,
+        details,
+        performedBy: user.uid,
+        performedByEmail: user.email,
+        timestamp: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error logging audit action:', error);
+    }
+  };
 
   // Fetch all messages
   useEffect(() => {
@@ -36,26 +69,137 @@ const AdminDashboard = () => {
     return () => unsubscribe();
   }, []);
 
-  // Filter messages based on showOnlyToxic
-  const toxicMessages = showOnlyToxic 
-    ? allMessages.filter(msg => msg.toxic === true)
-    : allMessages;
+  // Fetch reports
+  useEffect(() => {
+    const q = query(
+      collection(db, 'reports'),
+      orderBy('timestamp', 'desc')
+    );
 
-  const handleBanUser = async (messageId, userId) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const reportsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setReports(reportsData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch audit logs
+  useEffect(() => {
+    const q = query(
+      collection(db, 'auditLogs'),
+      orderBy('timestamp', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const logsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setAuditLogs(logsData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Filter and sort messages
+  const getFilteredAndSortedMessages = () => {
+    let filtered = [...allMessages];
+
+    // Filter by toxic status
+    if (showOnlyToxic) {
+      filtered = filtered.filter(msg => msg.toxic === true);
+    }
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(msg => 
+        msg.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        msg.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        msg.userEmail?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by user
+    if (filterUser) {
+      filtered = filtered.filter(msg => 
+        msg.userEmail?.toLowerCase().includes(filterUser.toLowerCase()) ||
+        msg.userName?.toLowerCase().includes(filterUser.toLowerCase())
+      );
+    }
+
+    // Filter by date
+    if (filterDate) {
+      const filterDateObj = new Date(filterDate);
+      filtered = filtered.filter(msg => {
+        const msgDate = msg.timestamp?.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp);
+        return msgDate.toDateString() === filterDateObj.toDateString();
+      });
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'timestamp':
+          aValue = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp || 0);
+          bValue = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp || 0);
+          break;
+        case 'user':
+          aValue = a.userName || a.userEmail || '';
+          bValue = b.userName || b.userEmail || '';
+          break;
+        case 'text':
+          aValue = a.text || '';
+          bValue = b.text || '';
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortBy === 'timestamp') {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      } else {
+        return sortOrder === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+    });
+
+    return filtered;
+  };
+
+  const filteredMessages = getFilteredAndSortedMessages();
+  const totalPages = Math.ceil(filteredMessages.length / messagesPerPage);
+  const paginatedMessages = filteredMessages.slice(
+    (currentPage - 1) * messagesPerPage,
+    currentPage * messagesPerPage
+  );
+
+  const handleBanUser = async (messageId, userId, userEmail) => {
     if (!confirm('Are you sure you want to ban this user?')) return;
 
     setBanning(messageId);
     try {
-      // In a real app, you'd have a 'users' collection to update
-      // For now, we'll just mark the message as 'userBanned: true'
       await updateDoc(doc(db, 'messages', messageId), {
         userBanned: true,
-        bannedAt: new Date().toISOString()
+        bannedAt: serverTimestamp()
       });
-      alert('User has been banned.');
+
+      await logAuditAction('ban_user', {
+        messageId,
+        userId,
+        userEmail
+      });
+
+      success('User has been banned.');
     } catch (error) {
       console.error('Error banning user:', error);
-      alert('Failed to ban user. Please try again.');
+      showError('Failed to ban user. Please try again.');
     } finally {
       setBanning(null);
     }
@@ -66,14 +210,72 @@ const AdminDashboard = () => {
 
     setDeleting(messageId);
     try {
+      const message = allMessages.find(m => m.id === messageId);
       await deleteDoc(doc(db, 'messages', messageId));
-      alert('Message has been deleted.');
+
+      await logAuditAction('delete_message', {
+        messageId,
+        messageText: message?.text,
+        userId: message?.userId,
+        userEmail: message?.userEmail
+      });
+
+      success('Message has been deleted.');
     } catch (error) {
       console.error('Error deleting message:', error);
-      alert('Failed to delete message. Please try again.');
+      showError('Failed to delete message. Please try again.');
     } finally {
       setDeleting(null);
     }
+  };
+
+  const handleResolveReport = async (reportId, status) => {
+    try {
+      await updateDoc(doc(db, 'reports', reportId), {
+        status,
+        resolvedAt: serverTimestamp(),
+        resolvedBy: user.uid,
+        resolvedByEmail: user.email
+      });
+
+      await logAuditAction('resolve_report', {
+        reportId,
+        status
+      });
+
+      success(`Report ${status === 'resolved' ? 'resolved' : 'dismissed'}.`);
+    } catch (error) {
+      console.error('Error resolving report:', error);
+      showError('Failed to resolve report. Please try again.');
+    }
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Timestamp', 'User', 'Email', 'Message', 'Toxic', 'Banned', 'Edited'];
+    const rows = filteredMessages.map(msg => [
+      msg.timestamp?.toDate ? msg.timestamp.toDate().toLocaleString() : 'N/A',
+      msg.userName || 'N/A',
+      msg.userEmail || 'N/A',
+      msg.text || 'N/A',
+      msg.toxic ? 'Yes' : 'No',
+      msg.userBanned ? 'Yes' : 'No',
+      msg.edited ? 'Yes' : 'No'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    success('Audit logs exported successfully.');
   };
 
   const formatTimestamp = (timestamp) => {
@@ -88,128 +290,277 @@ const AdminDashboard = () => {
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Audit Logs</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Admin Dashboard</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {showOnlyToxic 
-                ? 'Review and manage toxic messages flagged by AI'
-                : 'View and manage all messages'}
+              Manage messages, reports, and audit logs
             </p>
           </div>
-          <button
-            onClick={() => setShowOnlyToxic(!showOnlyToxic)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowReports(!showReports)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+            >
+              <AlertTriangle size={18} />
+              <span>Reports ({reports.filter(r => r.status === 'pending').length})</span>
+            </button>
+            <button
+              onClick={() => setShowAuditLogs(!showAuditLogs)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              <FileText size={18} />
+              <span>Audit Logs</span>
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            >
+              <Download size={18} />
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search messages..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            />
+          </div>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={filterUser}
+              onChange={(e) => setFilterUser(e.target.value)}
+              placeholder="Filter by user..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            />
+          </div>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowOnlyToxic(!showOnlyToxic)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                showOnlyToxic
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              <Filter size={18} />
+              <span>Toxic Only</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Sort Controls */}
+        <div className="flex items-center gap-4 mt-4">
+          <label className="text-sm text-gray-600 dark:text-gray-400">Sort by:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
           >
-            <Filter size={18} />
-            <span>{showOnlyToxic ? 'Show All Messages' : 'Show Only Toxic'}</span>
+            <option value="timestamp">Timestamp</option>
+            <option value="user">User</option>
+            <option value="text">Message</option>
+          </select>
+          <button
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          >
+            {sortOrder === 'asc' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            Showing {paginatedMessages.length} of {filteredMessages.length} messages
+          </span>
         </div>
       </div>
 
+      {/* Reports Panel */}
+      {showReports && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-6 py-4 max-h-64 overflow-y-auto">
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-2">Pending Reports ({reports.filter(r => r.status === 'pending').length})</h3>
+          <div className="space-y-2">
+            {reports.filter(r => r.status === 'pending').map(report => (
+              <div key={report.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">Reported by: {report.reportedByEmail}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Reason: {report.reason}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{formatTimestamp(report.timestamp)}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleResolveReport(report.id, 'resolved')}
+                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded"
+                    >
+                      Resolve
+                    </button>
+                    <button
+                      onClick={() => handleResolveReport(report.id, 'dismissed')}
+                      className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {reports.filter(r => r.status === 'pending').length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">No pending reports</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Audit Logs Panel */}
+      {showAuditLogs && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-6 py-4 max-h-64 overflow-y-auto">
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-2">Recent Audit Logs ({auditLogs.length})</h3>
+          <div className="space-y-2">
+            {auditLogs.slice(0, 10).map(log => (
+              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-blue-200 dark:border-blue-800 text-xs">
+                <span className="font-medium">{log.action}</span> by {log.performedByEmail} - {formatTimestamp(log.timestamp)}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        {toxicMessages.length === 0 ? (
+        {paginatedMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <AlertTriangle className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-              <p className="text-gray-400 dark:text-gray-500 text-lg">
-                {showOnlyToxic ? 'No toxic messages found' : 'No messages found'}
-              </p>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
-                {showOnlyToxic ? 'All messages are clean!' : 'Start the conversation!'}
-              </p>
+              <p className="text-gray-400 dark:text-gray-500 text-lg">No messages found</p>
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Timestamp
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Original Message
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Display Text
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {toxicMessages.map((message) => (
-                  <tr key={message.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {formatTimestamp(message.timestamp)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      <div className="font-mono text-xs">
-                        {message.userEmail || message.userName || message.userId?.substring(0, 12)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 max-w-xs">
-                      <div className="truncate" title={message.text}>
-                        {message.text}
-                      </div>
-                    </td>
-                    <td className={`px-6 py-4 text-sm font-semibold ${
-                      message.toxic ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'
-                    }`}>
-                      {message.displayText || message.text}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        {message.toxic && (
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 w-fit">
-                            Toxic
-                          </span>
-                        )}
-                        {message.userBanned ? (
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 w-fit">
-                            Banned
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 w-fit">
-                            Active
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleBanUser(message.id, message.userId)}
-                          disabled={banning === message.id || message.userBanned}
-                          className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                        >
-                          <Ban size={14} />
-                          <span>{message.userBanned ? 'Banned' : 'Ban'}</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMessage(message.id)}
-                          disabled={deleting === message.id}
-                          className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                        >
-                          <Trash2 size={14} />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Timestamp
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Message
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {paginatedMessages.map((message) => (
+                    <tr key={message.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {formatTimestamp(message.timestamp)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        <div className="font-mono text-xs">
+                          {message.userEmail || message.userName || message.userId?.substring(0, 12)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 max-w-xs">
+                        <div className="truncate" title={message.text}>
+                          {message.text}
+                        </div>
+                        {message.edited && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 italic">(edited)</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          {message.toxic && (
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 w-fit">
+                              Toxic
+                            </span>
+                          )}
+                          {message.userBanned ? (
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 w-fit">
+                              Banned
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 w-fit">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleBanUser(message.id, message.userId, message.userEmail)}
+                            disabled={banning === message.id || message.userBanned}
+                            className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                          >
+                            <Ban size={14} />
+                            <span>{message.userBanned ? 'Banned' : 'Ban'}</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMessage(message.id)}
+                            disabled={deleting === message.id}
+                            className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                          >
+                            <Trash2 size={14} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -217,4 +568,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

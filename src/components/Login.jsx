@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Mail, Lock, UserPlus, LogIn, Moon, Sun } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw } from 'lucide-react';
 
 const Login = () => {
-  const { register, login } = useAuth();
+  const { register, login, resetPassword } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
-  const [mode, setMode] = useState('login'); // 'login' or 'register'
+  const { success, error: showError } = useToast();
+  const [mode, setMode] = useState('login'); // 'login' or 'register' or 'reset'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,37 @@ const Login = () => {
         errorMessage = 'Network error. Please check your internet connection.';
       }
       setError(errorMessage);
+      showError(errorMessage);
       console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      setError('Please enter your email address.');
+      showError('Please enter your email address.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await resetPassword(email);
+      success('Password reset email sent! Please check your inbox.');
+      setMode('login');
+    } catch (err) {
+      let errorMessage = 'Failed to send password reset email. Please try again.';
+      if (err.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email address.';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      }
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -117,7 +149,7 @@ const Login = () => {
           </div>
         )}
 
-        <form onSubmit={handleEmailAuth} className="space-y-4">
+        <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
@@ -136,24 +168,26 @@ const Login = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
-                  required
-                  minLength={mode === 'register' ? 6 : undefined}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  disabled={loading}
-                />
+            {mode !== 'reset' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
+                    required
+                    minLength={mode === 'register' ? 6 : undefined}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
 
             <button
@@ -171,6 +205,11 @@ const Login = () => {
                   <UserPlus size={20} />
                   <span>Create Account</span>
                 </>
+              ) : mode === 'reset' ? (
+                <>
+                  <RotateCcw size={20} />
+                  <span>Send Reset Email</span>
+                </>
               ) : (
                 <>
                   <LogIn size={20} />
@@ -180,9 +219,23 @@ const Login = () => {
             </button>
           </form>
 
+        {mode !== 'reset' && (
+          <button
+            onClick={() => {
+              setMode('reset');
+              setError(null);
+            }}
+            className="w-full mt-4 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
+            Forgot your password?
+          </button>
+        )}
+
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
           {mode === 'register' 
             ? 'Already have an account? Switch to Login mode.'
+            : mode === 'reset'
+            ? 'Remember your password? Switch to Login mode.'
             : "Don't have an account? Switch to Register mode."}
         </p>
       </div>

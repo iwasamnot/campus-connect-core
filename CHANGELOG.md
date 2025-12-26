@@ -7,9 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Toast Notification System**: Global toast notifications for success, error, warning, and info messages
+- **Password Reset Functionality**: Users can now reset their passwords via email
+- **Message Editing**: Message authors can now edit their own messages (one-time edit)
+- **Message Reactions**: Users can react to messages with emojis (👍, ❤️, 😂, 😮, 😢, 🔥)
+- **Message Search**: Real-time search functionality to find messages by content, user, or email
+- **Message Reporting**: Users can report inappropriate messages with reasons
+- **User Presence Indicators**: Online/offline status indicators for users
+- **Admin Audit Trail**: Complete logging of all administrative actions (ban, delete, resolve reports)
+- **Advanced Admin Dashboard**: 
+  - Advanced filtering (by date, user, toxic status)
+  - Sorting options (by timestamp, user, message)
+  - Pagination for better performance
+  - Reports management panel
+  - Audit logs viewer
+- **Export Functionality**: Export audit logs to CSV format
+- **Rate Limiting**: 3-second cooldown between messages to prevent spam
+- **Error Boundary**: Global error handling with user-friendly error messages
+- **Responsive Design**: Improved mobile and tablet support
+- **Custom Scrollbars**: Styled scrollbars for better UX
+
 ### Changed
 - Removed "admin1" role option from user creation portal - admins can now only create users with "student" or "admin" roles
 - Updated CreateUser component to use 2-column grid layout instead of 3-column for role selection
+- Enhanced ChatArea with message editing, reactions, search, and reporting
+- Enhanced AdminDashboard with advanced filtering, sorting, pagination, and export
+- Updated Firestore security rules to support message editing, reactions, reports, and audit logs
+- Improved error handling throughout the application
+- Better loading states and user feedback
 
 ## [1.0.0] - 2024-12-XX
 

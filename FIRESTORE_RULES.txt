@@ -16,15 +16,19 @@ service cloud.firestore {
       // Allow authenticated users to create messages
       allow create: if request.auth != null;
       
-      // Allow authenticated users to update only ban-related fields
-      // Admins can update any field
+      // Allow users to update their own messages (for editing)
+      // Allow admins to update any field
       allow update: if request.auth != null && (
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userBanned', 'bannedAt'])) ||
+        (resource.data.userId == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
         isAdmin()
       );
       
-      // Allow admins to delete messages
-      allow delete: if isAdmin();
+      // Allow message authors and admins to delete messages
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
     }
     
     // Users collection
@@ -36,16 +40,45 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == userId;
       
       // Allow users to update their own user document
-      // Students can update: studentEmail, personalEmail, phoneNumber, updatedAt
+      // Students can update: studentEmail, personalEmail, phoneNumber, updatedAt, lastSeen
       // Admins can update any field
       allow update: if request.auth != null && request.auth.uid == userId && (
         isAdmin() ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentEmail', 'personalEmail', 'phoneNumber', 'updatedAt']))
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentEmail', 'personalEmail', 'phoneNumber', 'updatedAt', 'lastSeen', 'isOnline']))
       );
       
       // Allow admins to delete users
       allow delete: if isAdmin();
     }
+    
+    // Reports collection
+    match /reports/{reportId} {
+      // Allow authenticated users to create reports
+      allow create: if request.auth != null;
+      
+      // Allow admins to read all reports
+      allow read: if isAdmin();
+      
+      // Allow admins to update report status
+      allow update: if isAdmin();
+      
+      // Allow admins to delete reports
+      allow delete: if isAdmin();
+    }
+    
+    // Audit logs collection
+    match /auditLogs/{logId} {
+      // Only admins can read audit logs
+      allow read: if isAdmin();
+      
+      // Only admins can create audit logs (via backend/admin functions)
+      allow create: if isAdmin();
+      
+      // Only admins can update audit logs
+      allow update: if isAdmin();
+      
+      // Only admins can delete audit logs
+      allow delete: if isAdmin();
+    }
   }
 }
-
