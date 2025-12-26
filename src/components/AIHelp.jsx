@@ -330,7 +330,7 @@ const AIHelp = () => {
 
   // Available Gemini models
   const geminiModels = [
-    { value: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
     { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
     { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
     { value: 'gemini-pro', label: 'Gemini Pro', description: 'Paid - Standard Model', free: false },
