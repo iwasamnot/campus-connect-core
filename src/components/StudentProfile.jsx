@@ -314,7 +314,7 @@ const StudentProfile = () => {
                     type="button"
                     onClick={handleCancel}
                     disabled={saving}
-                    className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-sistc-300 dark:border-sistc-600 text-sistc-700 dark:text-sistc-300 font-semibold rounded-lg hover:bg-sistc-50 dark:hover:bg-sistc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <X size={20} />
                     <span>Cancel</span>

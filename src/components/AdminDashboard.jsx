@@ -418,7 +418,7 @@ const AdminDashboard = () => {
                     </button>
                     <button
                       onClick={() => handleResolveReport(report.id, 'dismissed')}
-                      className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
+                      className="px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white text-xs rounded"
                     >
                       Dismiss
                     </button>
@@ -529,7 +529,7 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => handleDeleteMessage(message.id)}
                             disabled={deleting === message.id}
-                            className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            className="flex items-center gap-1 px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                           >
                             <Trash2 size={14} />
                             <span>Delete</span>
@@ -548,7 +548,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="px-4 py-2 bg-sistc-200 dark:bg-sistc-700 text-black dark:text-white border-2 border-sistc-300 dark:border-sistc-600 rounded-lg hover:bg-sistc-300 dark:hover:bg-sistc-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Previous
                 </button>
@@ -558,7 +558,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="px-4 py-2 bg-sistc-200 dark:bg-sistc-700 text-black dark:text-white border-2 border-sistc-300 dark:border-sistc-600 rounded-lg hover:bg-sistc-300 dark:hover:bg-sistc-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Next
                 </button>

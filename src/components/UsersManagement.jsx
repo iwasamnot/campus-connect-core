@@ -355,7 +355,7 @@ const UsersManagement = () => {
                             <button
                               onClick={handleCancelEdit}
                               disabled={saving === user.id}
-                              className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              className="flex items-center gap-1 px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                             >
                               <X size={14} />
                               <span>Cancel</span>

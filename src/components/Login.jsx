@@ -130,7 +130,7 @@ const Login = () => {
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
                 ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-sistc-300 dark:hover:border-sistc-600'
             }`}
           >
             Login
@@ -143,7 +143,7 @@ const Login = () => {
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
                 ? 'bg-sistc-600 text-white shadow-lg ring-2 ring-sistc-400 ring-offset-2'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-sistc-300 dark:hover:border-sistc-600'
             }`}
           >
             Register
