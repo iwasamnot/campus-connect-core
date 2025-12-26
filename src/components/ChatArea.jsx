@@ -19,9 +19,10 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot } from 'lucide-react';
 import Logo from './Logo';
 import UserProfilePopup from './UserProfilePopup';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -44,8 +45,48 @@ const ChatArea = () => {
   const [userProfiles, setUserProfiles] = useState({}); // Cache user profile data
   const [selectedUserId, setSelectedUserId] = useState(null); // For profile popup
   const [reacting, setReacting] = useState(new Set()); // Track reactions in progress to prevent duplicates
+  const [aiHelpMode, setAiHelpMode] = useState(false); // Toggle for AI Help mode
+  const [waitingForAI, setWaitingForAI] = useState(false); // Track if waiting for AI response
   const messagesEndRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
+
+  // Initialize Gemini AI
+  const getGeminiModel = () => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+      return null;
+    }
+    
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: 'gemini-1.5-pro',
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+        ],
+        systemInstruction: 'You are an empathetic, knowledgeable Senior Student at the university. Keep answers under 3 sentences.',
+      });
+      return model;
+    } catch (error) {
+      console.error('Error initializing Gemini:', error);
+      return null;
+    }
+  };
 
   // Fetch all users to get names and profile data
   useEffect(() => {
@@ -173,6 +214,25 @@ const ChatArea = () => {
     return false;
   };
 
+  // Call Gemini AI
+  const callGemini = async (userMessage) => {
+    const model = getGeminiModel();
+    if (!model) {
+      console.warn('Gemini API key not configured');
+      return null;
+    }
+
+    try {
+      const result = await model.generateContent(userMessage);
+      const response = await result.response;
+      const text = response.text();
+      return text.trim();
+    } catch (error) {
+      console.error('Error calling Gemini:', error);
+      return null;
+    }
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
@@ -216,6 +276,7 @@ const ChatArea = () => {
     }
 
     try {
+      // Save user message
       await addDoc(collection(db, 'messages'), {
         text: originalText,
         displayText: displayText,
@@ -236,6 +297,39 @@ const ChatArea = () => {
       setNewMessage('');
       setLastMessageTime(now);
       success('Message sent!');
+
+      // If message is NOT toxic AND AI Help mode is enabled, get Gemini response
+      if (!isToxic && aiHelpMode) {
+        setWaitingForAI(true);
+        try {
+          const aiResponse = await callGemini(originalText);
+          if (aiResponse) {
+            // Save AI response to Firestore
+            await addDoc(collection(db, 'messages'), {
+              text: aiResponse,
+              displayText: aiResponse,
+              toxic: false,
+              isAI: true,
+              userId: 'virtual-senior', // Special ID for AI
+              userName: 'Virtual Senior',
+              userEmail: null,
+              sender: 'Virtual Senior', // As per requirement
+              timestamp: serverTimestamp(),
+              reactions: {},
+              edited: false,
+              editedAt: null,
+              readBy: {
+                [user.uid]: serverTimestamp() // User has seen the AI response
+              }
+            });
+          }
+        } catch (aiError) {
+          console.error('Error getting AI response:', aiError);
+          // Don't show error to user, just log it
+        } finally {
+          setWaitingForAI(false);
+        }
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       showError('Failed to send message. Please try again.');
@@ -434,13 +528,32 @@ const ChatArea = () => {
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Connect with your campus community</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
-            title="Search messages"
-          >
-            <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* AI Help Mode Toggle */}
+            <button
+              onClick={() => setAiHelpMode(!aiHelpMode)}
+              className={`p-2 rounded-lg transition-colors ${
+                aiHelpMode
+                  ? 'bg-indigo-600 text-white'
+                  : 'hover:bg-indigo-100 dark:hover:bg-indigo-700 text-indigo-600 dark:text-indigo-400'
+              }`}
+              title={aiHelpMode ? 'AI Help Mode: ON - Virtual Senior will respond' : 'AI Help Mode: OFF - Click to enable'}
+            >
+              <Bot size={20} />
+            </button>
+            {aiHelpMode && (
+              <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hidden sm:inline">
+                AI Help ON
+              </span>
+            )}
+            <button
+              onClick={() => setShowSearch(!showSearch)}
+              className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+              title="Search messages"
+            >
+              <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
+            </button>
+          </div>
         </div>
         
         {showSearch && (
@@ -547,6 +660,10 @@ const ChatArea = () => {
                         }
                       >
                         {(() => {
+                          // Check if this is an AI message
+                          if (message.isAI || message.sender === 'Virtual Senior') {
+                            return 'Virtual Senior';
+                          }
                           // Priority: cached name > message userName > userProfile name > email > fallback
                           const cachedName = userNames[message.userId];
                           const messageName = message.userName;
@@ -775,19 +892,33 @@ const ChatArea = () => {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
+                placeholder={aiHelpMode ? "Type your message... (AI Help enabled)" : "Type your message..."}
                 className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                disabled={sending}
+                disabled={sending || waitingForAI}
               />
               <button
                 type="submit"
-                disabled={sending || !newMessage.trim()}
+                disabled={sending || waitingForAI || !newMessage.trim()}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
               >
-                <Send size={18} className="md:w-5 md:h-5" />
-                <span className="hidden sm:inline">Send</span>
+                {waitingForAI ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span className="hidden sm:inline">AI thinking...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} className="md:w-5 md:h-5" />
+                    <span className="hidden sm:inline">Send</span>
+                  </>
+                )}
               </button>
             </form>
+            {aiHelpMode && (
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 text-center">
+                💡 AI Help Mode: Virtual Senior will respond to your non-toxic messages
+              </p>
+            )}
           </div>
 
       {/* User Profile Popup */}
