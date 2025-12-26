@@ -13,7 +13,17 @@ const UserProfilePopup = ({ userId, onClose }) => {
     // Use real-time listener to get online status and last seen
     const unsubscribe = onSnapshot(doc(db, 'users', userId), (userDoc) => {
       if (userDoc.exists()) {
-        setUserData({ id: userDoc.id, ...userDoc.data() });
+        const data = userDoc.data();
+        // Normalize isOnline to boolean
+        const normalizedData = {
+          id: userDoc.id,
+          ...data,
+          isOnline: data.isOnline === true || data.isOnline === 'true',
+          lastSeen: data.lastSeen || null
+        };
+        setUserData(normalizedData);
+      } else {
+        setUserData(null);
       }
       setLoading(false);
     }, (error) => {
