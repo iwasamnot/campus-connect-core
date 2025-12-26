@@ -47,11 +47,21 @@ const ChatArea = () => {
   const [reacting, setReacting] = useState(new Set()); // Track reactions in progress to prevent duplicates
   const [aiHelpMode, setAiHelpMode] = useState(false); // Toggle for AI Help mode
   const [waitingForAI, setWaitingForAI] = useState(false); // Track if waiting for AI response
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default to free model
+  const [showModelSelector, setShowModelSelector] = useState(false); // Show model selector dropdown
   const messagesEndRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
 
-  // Initialize Gemini AI
-  const getGeminiModel = () => {
+  // Available Gemini models
+  const geminiModels = [
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
+    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Paid - Standard Model', free: false },
+  ];
+
+  // Initialize Gemini AI with selected model
+  const getGeminiModel = (modelName = selectedGeminiModel) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey || apiKey.trim() === '') {
       return null;
@@ -60,7 +70,7 @@ const ChatArea = () => {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-pro',
+        model: modelName,
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -214,9 +224,9 @@ const ChatArea = () => {
     return false;
   };
 
-  // Call Gemini AI
+  // Call Gemini AI with selected model
   const callGemini = async (userMessage) => {
-    const model = getGeminiModel();
+    const model = getGeminiModel(selectedGeminiModel);
     if (!model) {
       console.warn('Gemini API key not configured');
       return null;
@@ -916,7 +926,7 @@ const ChatArea = () => {
             </form>
             {aiHelpMode && (
               <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 text-center">
-                💡 AI Help Mode: Virtual Senior will respond to your non-toxic messages
+                💡 AI Help Mode: Virtual Senior ({geminiModels.find(m => m.value === selectedGeminiModel)?.label}) will respond to your non-toxic messages
               </p>
             )}
           </div>

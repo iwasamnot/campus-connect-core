@@ -63,15 +63,17 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - Copy your Firebase config to `src/firebaseConfig.js`
    - Update Firestore security rules from `FIRESTORE_RULES.txt`
 
-3. **Configure OpenAI API Key (Optional - for AI Help Assistant)**
+3. **Configure API Keys (Optional - for AI Features)**
    - Create a `.env` file in the root directory (`CampusConnect/.env`)
-   - Add your OpenAI API key:
+   - Add your API keys:
      ```
      VITE_OPENAI_API_KEY=sk-your-openai-api-key-here
+     VITE_GEMINI_API_KEY=your-gemini-api-key-here
      ```
-   - Get your API key from: https://platform.openai.com/api-keys
-   - **Important**: Restart the dev server after adding the API key
-   - If no API key is provided, the AI will use the local knowledge base
+   - **OpenAI API Key**: Get from https://platform.openai.com/api-keys (for AI Help Assistant)
+   - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for Virtual Senior in Campus Chat)
+   - **Important**: Restart the dev server after adding API keys
+   - If no API keys are provided, the AI will use the local knowledge base
 
 4. **Run Development Server**
    ```bash
@@ -215,6 +217,11 @@ For automatic deployment to work, you need to set up GitHub Secrets:
    - **`VITE_OPENAI_API_KEY`** (Optional):
      - Your OpenAI API key if you want ChatGPT features in production
      - Format: `sk-your-key-here`
+   
+   - **`VITE_GEMINI_API_KEY`** (Optional):
+     - Your Google Gemini API key if you want Virtual Senior AI responses in Campus Chat
+     - Format: `AIzaSy...`
+     - Get from: https://makersuite.google.com/app/apikey
 
 ### Using Automatic Deployment
 
