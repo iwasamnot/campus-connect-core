@@ -30,14 +30,16 @@ function App() {
   const [activeView, setActiveView] = useState('chat');
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [hasSetDefaultView, setHasSetDefaultView] = useState(false);
 
   // Set default view based on user role (only on initial load)
   useEffect(() => {
-    if (isAdminRole(userRole) && activeView === 'chat') {
+    if (isAdminRole(userRole) && !hasSetDefaultView) {
       // Default to audit on first load, but allow admins to navigate to chat later
       setActiveView('audit');
+      setHasSetDefaultView(true);
     }
-  }, [userRole]);
+  }, [userRole, hasSetDefaultView]);
 
   if (loading) {
     return (
