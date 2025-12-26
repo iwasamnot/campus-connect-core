@@ -1,97 +1,35 @@
 import React from 'react';
+import logoImage from '../assets/logo.png';
 
 const Logo = ({ size = 'default', showText = true, className = '' }) => {
   const sizes = {
-    small: { width: 50, height: 50, fontSize: 'text-xs' },
-    default: { width: 80, height: 80, fontSize: 'text-lg' },
-    large: { width: 120, height: 120, fontSize: 'text-3xl' }
+    small: { width: 50, fontSize: 'text-xs' },
+    default: { width: 80, fontSize: 'text-lg' },
+    large: { width: 120, fontSize: 'text-3xl' }
   };
 
-  const { width, height, fontSize } = sizes[size] || sizes.default;
+  const { width, fontSize } = sizes[size] || sizes.default;
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      {/* Shield Logo - Exact Design */}
-      <svg
-        width={width}
-        height={height}
-        viewBox="0 0 120 140"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="mb-2"
-      >
-        {/* Shield shape - divided vertically into two sections */}
-        <defs>
-          <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1e3a8a" />
-            <stop offset="50%" stopColor="#1e3a8a" />
-            <stop offset="50%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </linearGradient>
-        </defs>
-        
-        {/* Complete shield outline */}
-        <path
-          d="M10 25 L60 10 L110 25 L110 105 C110 115 100 120 90 115 L60 100 L30 115 C20 120 10 115 10 105 Z"
-          fill="url(#shieldGradient)"
-          stroke="#1e40af"
-          strokeWidth="1.5"
+      {/* Logo Image */}
+      {logoImage ? (
+        <img
+          src={logoImage}
+          alt="CampusConnect Logo"
+          width={width}
+          height={width}
+          className="mb-2 object-contain"
+          style={{ maxWidth: `${width}px`, maxHeight: `${width}px` }}
         />
-        
-        {/* Left side of shield - Dark blue section */}
-        <path
-          d="M10 25 L60 10 L60 100 L10 105 Z"
-          fill="#1e3a8a"
-        />
-        
-        {/* Abstract stylized C/G shape on left side - outlined, thinner lines, creates depth/layering */}
-        <path
-          d="M22 42 Q15 32 28 32 Q41 32 43 38 Q43 43 39 45 Q36 43 33 43 Q29 43 29 48 Q29 53 33 53 Q36 53 39 51 Q43 49 43 53 Q43 58 39 61 Q36 63 28 63 Q15 63 22 53"
-          stroke="#1e40af"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        
-        {/* Right side of shield - Bright/medium blue section */}
-        <path
-          d="M60 10 L110 25 L110 105 L60 100 Z"
-          fill="#3b82f6"
-        />
-        
-        {/* Large, bold, uppercase letter C integrated into right side design */}
-        <path
-          d="M82 38 Q72 38 72 55 Q72 72 82 72"
-          stroke="#ffffff"
-          strokeWidth="8"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        
-        {/* Speech bubble icon - inside the curve of the bright blue C */}
-        <g transform="translate(75, 46)">
-          {/* Rectangular speech bubble with rounded corners */}
-          <rect
-            x="0"
-            y="0"
-            width="18"
-            height="12"
-            rx="3"
-            fill="#3b82f6"
-          />
-          {/* Small triangular pointer extending downwards from bottom-center */}
-          <path
-            d="M9 12 L7 19 L11 19 Z"
-            fill="#3b82f6"
-          />
-          {/* Three small, white, horizontally aligned dots inside speech bubble */}
-          <circle cx="4.5" cy="6" r="1.8" fill="#ffffff" />
-          <circle cx="9" cy="6" r="1.8" fill="#ffffff" />
-          <circle cx="13.5" cy="6" r="1.8" fill="#ffffff" />
-        </g>
-      </svg>
+      ) : (
+        <div 
+          className="mb-2 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 text-xs"
+          style={{ width: `${width}px`, height: `${width}px` }}
+        >
+          Logo
+        </div>
+      )}
 
       {/* Text: CAMPUSCONNECT - CAMPUS in dark blue, CONNECT in bright blue, no space, uppercase, clean sans-serif */}
       {showText && (
