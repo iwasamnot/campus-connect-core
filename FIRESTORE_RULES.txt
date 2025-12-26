@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin1');
+    }
+    
+    // Messages collection
+    match /messages/{messageId} {
+      // Allow authenticated users to read all messages
+      allow read: if request.auth != null;
+      
+      // Allow authenticated users to create messages
+      allow create: if request.auth != null;
+      
+      // Allow authenticated users to update only ban-related fields
+      // Admins can update any field
+      allow update: if request.auth != null && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userBanned', 'bannedAt'])) ||
+        isAdmin()
+      );
+      
+      // Allow admins to delete messages
+      allow delete: if isAdmin();
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Allow authenticated users to read any user document
+      allow read: if request.auth != null;
+      
+      // Allow users to create their own user document (during registration)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow users to update their own user document
+      // Students can update: studentEmail, personalEmail, phoneNumber, updatedAt
+      // Admins can update any field
+      allow update: if request.auth != null && request.auth.uid == userId && (
+        isAdmin() ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentEmail', 'personalEmail', 'phoneNumber', 'updatedAt']))
+      );
+      
+      // Allow admins to delete users
+      allow delete: if isAdmin();
+    }
+  }
+}
+
