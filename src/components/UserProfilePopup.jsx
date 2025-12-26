@@ -14,16 +14,28 @@ const UserProfilePopup = ({ userId, onClose }) => {
     const unsubscribe = onSnapshot(doc(db, 'users', userId), (userDoc) => {
       if (userDoc.exists()) {
         const data = userDoc.data();
-        // Normalize isOnline to boolean
+        // Normalize isOnline to boolean and ensure name has a fallback
         const normalizedData = {
           id: userDoc.id,
           ...data,
+          name: data.name || data.email?.split('@')[0] || `User ${userId.substring(0, 8)}`,
           isOnline: data.isOnline === true || data.isOnline === 'true',
-          lastSeen: data.lastSeen || null
+          lastSeen: data.lastSeen || null,
+          email: data.email || null,
+          role: data.role || 'student'
         };
+        console.log('UserProfilePopup - Loaded user data:', normalizedData);
         setUserData(normalizedData);
       } else {
-        setUserData(null);
+        console.warn('UserProfilePopup - User document does not exist:', userId);
+        // Create a minimal user data object with fallback info
+        setUserData({
+          id: userId,
+          name: `User ${userId.substring(0, 8)}`,
+          isOnline: false,
+          lastSeen: null,
+          role: 'student'
+        });
       }
       setLoading(false);
     }, (error) => {
@@ -99,7 +111,7 @@ const UserProfilePopup = ({ userId, onClose }) => {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <h4 className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {userData.name || 'No Name'}
+                    {userData.name}
                   </h4>
                   {userData.isOnline === true ? (
                     <div className="w-3 h-3 bg-green-500 rounded-full" title="Online" />
@@ -109,15 +121,13 @@ const UserProfilePopup = ({ userId, onClose }) => {
                     <div className="w-3 h-3 bg-gray-400 rounded-full" title="Offline" />
                   )}
                 </div>
-                {userData.role && (
-                  <span className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full ${
-                    userData.role === 'admin' || userData.role === 'admin1'
-                      ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                  }`}>
-                    {userData.role}
-                  </span>
-                )}
+                <span className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full ${
+                  userData.role === 'admin' || userData.role === 'admin1'
+                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                }`}>
+                  {userData.role || 'student'}
+                </span>
                 {/* Online Status / Last Seen */}
                 <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                   {userData.isOnline === true ? (
@@ -141,6 +151,17 @@ const UserProfilePopup = ({ userId, onClose }) => {
 
               {/* Details */}
               <div className="space-y-4">
+                {/* Always show email if available */}
+                {userData.email && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.email}</p>
+                  </div>
+                )}
+                
                 {userData.bio && (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
