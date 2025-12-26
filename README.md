@@ -58,56 +58,60 @@ const firebaseConfig = {
 
 ## Firestore Rules
 
-Make sure to set up proper Firestore security rules:
+Make sure to set up proper Firestore security rules. See `FIRESTORE_RULES.txt` for the complete, up-to-date rules.
+
+The rules include:
+- **Messages**: Read/create for all authenticated users, edit/delete for authors and admins
+- **Users**: Read for all, create/update own profile, admins can manage all users
+- **Reports**: Create for all users, read/update/delete for admins only
+- **Audit Logs**: Admin-only access for complete security
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is admin (supports both 'admin' and 'admin1')
+    // Helper function to check if user is admin
     function isAdmin() {
       return request.auth != null && 
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin1');
     }
     
-    // Messages collection
+    // Messages collection - supports editing, reactions, and reporting
     match /messages/{messageId} {
-      // Allow authenticated users to read all messages
       allow read: if request.auth != null;
-      
-      // Allow authenticated users to create messages
       allow create: if request.auth != null;
-      
-      // Allow authenticated users to update only ban-related fields
-      // Admins can update any field
       allow update: if request.auth != null && (
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userBanned', 'bannedAt'])) ||
+        (resource.data.userId == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
         isAdmin()
       );
-      
-      // Allow admins to delete messages
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+    
+    // Users collection - supports presence tracking
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId && (
+        isAdmin() ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentEmail', 'personalEmail', 'phoneNumber', 'updatedAt', 'lastSeen', 'isOnline']))
+      );
       allow delete: if isAdmin();
     }
     
-    // Users collection
-    match /users/{userId} {
-      // Allow authenticated users to read any user document
-      allow read: if request.auth != null;
-      
-      // Allow users to create their own user document (during registration)
-      allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow users to update their own user document
-      // Students can update: studentEmail, personalEmail, phoneNumber, updatedAt
-      // Admins can update any field
-      allow update: if request.auth != null && request.auth.uid == userId && (
-        isAdmin() ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentEmail', 'personalEmail', 'phoneNumber', 'updatedAt']))
-      );
-      
-      // Allow admins to delete users
-      allow delete: if isAdmin();
+    // Reports collection
+    match /reports/{reportId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if isAdmin();
+    }
+    
+    // Audit logs collection
+    match /auditLogs/{logId} {
+      allow read, create, update, delete: if isAdmin();
     }
   }
 }
