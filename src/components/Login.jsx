@@ -104,14 +104,14 @@ const Login = () => {
         {darkMode ? (
           <Sun className="text-yellow-500 dark:text-yellow-400" size={24} />
         ) : (
-          <Moon className="text-gray-700 dark:text-gray-300" size={24} />
+          <Moon className="text-black dark:text-white" size={24} />
         )}
       </button>
 
       <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <Logo size="large" className="mb-4" />
-          <p className="text-gray-700 dark:text-gray-300 mt-2 font-medium">Secure Student Messaging Platform</p>
+          <p className="text-black dark:text-white mt-2 font-medium">Secure Student Messaging Platform</p>
         </div>
 
         {/* Toggle between Login and Register */}
@@ -124,7 +124,7 @@ const Login = () => {
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'login'
                 ? 'bg-sistc-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white'
+                : 'text-black dark:text-white hover:text-sistc-600 dark:hover:text-sistc-400'
             }`}
           >
             Login
@@ -137,7 +137,7 @@ const Login = () => {
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'register'
                 ? 'bg-sistc-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white'
+                : 'text-black dark:text-white hover:text-sistc-600 dark:hover:text-sistc-400'
             }`}
           >
             Register
@@ -152,18 +152,18 @@ const Login = () => {
 
         <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-black dark:text-white mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" size={20} />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
+                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
                   disabled={loading}
                 />
               </div>
@@ -171,11 +171,11 @@ const Login = () => {
 
             {mode !== 'reset' && (
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-black dark:text-white mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" size={20} />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="password"
                     value={password}
@@ -183,7 +183,7 @@ const Login = () => {
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                     required
                     minLength={mode === 'register' ? 6 : undefined}
-                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
+                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-sistc-600"
                     disabled={loading}
                   />
                 </div>
@@ -231,7 +231,7 @@ const Login = () => {
           </button>
         )}
 
-        <p className="text-center text-sm text-gray-700 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-black dark:text-white mt-6">
           {mode === 'register' 
             ? 'Already have an account? Switch to Login mode.'
             : mode === 'reset'

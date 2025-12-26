@@ -295,8 +295,8 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-3">
             <Logo size="small" showText={false} />
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Admin Dashboard</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <h2 className="text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
+              <p className="text-sm text-black dark:text-white opacity-70">
                 Manage messages, reports, and audit logs
               </p>
             </div>
@@ -311,7 +311,7 @@ const AdminDashboard = () => {
             </button>
             <button
               onClick={() => setShowAuditLogs(!showAuditLogs)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors"
             >
               <FileText size={18} />
               <span>Audit Logs</span>
@@ -374,7 +374,7 @@ const AdminDashboard = () => {
 
         {/* Sort Controls */}
         <div className="flex items-center gap-4 mt-4">
-          <label className="text-sm text-gray-600 dark:text-gray-400">Sort by:</label>
+          <label className="text-sm text-black dark:text-white">Sort by:</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -390,7 +390,7 @@ const AdminDashboard = () => {
           >
             {sortOrder === 'asc' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-black dark:text-white opacity-70">
             Showing {paginatedMessages.length} of {filteredMessages.length} messages
           </span>
         </div>
@@ -405,9 +405,9 @@ const AdminDashboard = () => {
               <div key={report.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">Reported by: {report.reportedByEmail}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Reason: {report.reason}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{formatTimestamp(report.timestamp)}</p>
+                    <p className="text-sm font-medium text-black dark:text-white">Reported by: {report.reportedByEmail}</p>
+                    <p className="text-xs text-black dark:text-white opacity-80 mt-1">Reason: {report.reason}</p>
+                    <p className="text-xs text-black dark:text-white opacity-70 mt-1">{formatTimestamp(report.timestamp)}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -427,7 +427,7 @@ const AdminDashboard = () => {
               </div>
             ))}
             {reports.filter(r => r.status === 'pending').length === 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">No pending reports</p>
+              <p className="text-sm text-black dark:text-white opacity-70">No pending reports</p>
             )}
           </div>
         </div>
@@ -435,11 +435,11 @@ const AdminDashboard = () => {
 
       {/* Audit Logs Panel */}
       {showAuditLogs && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-6 py-4 max-h-64 overflow-y-auto">
-          <h3 className="font-semibold text-gray-800 dark:text-white mb-2">Recent Audit Logs ({auditLogs.length})</h3>
+        <div className="bg-sistc-50 dark:bg-sistc-900/20 border-b border-sistc-200 dark:border-sistc-800 px-6 py-4 max-h-64 overflow-y-auto">
+          <h3 className="font-semibold text-black dark:text-white mb-2">Recent Audit Logs ({auditLogs.length})</h3>
           <div className="space-y-2">
             {auditLogs.slice(0, 10).map(log => (
-              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-blue-200 dark:border-blue-800 text-xs">
+              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-sistc-200 dark:border-sistc-800 text-xs text-black dark:text-white">
                 <span className="font-medium">{log.action}</span> by {log.performedByEmail} - {formatTimestamp(log.timestamp)}
               </div>
             ))}
@@ -452,8 +452,8 @@ const AdminDashboard = () => {
         {paginatedMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <AlertTriangle className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-              <p className="text-gray-400 dark:text-gray-500 text-lg">No messages found</p>
+              <AlertTriangle className="mx-auto text-black dark:text-white opacity-50 mb-4" size={48} />
+              <p className="text-black dark:text-white opacity-70 text-lg">No messages found</p>
             </div>
           </div>
         ) : (
@@ -462,19 +462,19 @@ const AdminDashboard = () => {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
                       Timestamp
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
                       User
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
                       Message
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -482,10 +482,10 @@ const AdminDashboard = () => {
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {paginatedMessages.map((message) => (
                     <tr key={message.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white opacity-70">
                         {formatTimestamp(message.timestamp)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white">
                         <div className="font-mono text-xs">
                           {message.userEmail || message.userName || message.userId?.substring(0, 12)}
                         </div>

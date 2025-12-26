@@ -437,7 +437,7 @@ const ChatArea = () => {
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded-full"
+                        className="bg-sistc-600 hover:bg-sistc-700 text-white p-1 rounded-full"
                         title="Edit message"
                       >
                         <Edit2 size={14} />

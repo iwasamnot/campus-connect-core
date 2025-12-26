@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 const Logo = ({ size = 'default', showText = true, className = '' }) => {
+  const { darkMode } = useTheme();
   const sizes = {
     small: { width: 50, fontSize: 'text-xs' },
     default: { width: 80, fontSize: 'text-lg' },
@@ -9,18 +11,17 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
 
   const { width, fontSize } = sizes[size] || sizes.default;
 
-  // SISTC accent colors: green-cyan gradient
+  // SISTC accent colors: green-cyan gradient (no blue)
   const colors = {
-    primary: '#1e40af',           // Deep blue (kept for contrast)
-    secondary: '#00d082',         // Vivid green-cyan (SISTC accent)
-    light: '#7adcb4',             // Light green-cyan
-    dark: '#1e3a8a',              // Dark blue
-    accent: '#00d082'             // Vivid green-cyan
+    black: '#000000',              // Black for dark sections
+    secondary: '#00d082',           // Vivid green-cyan (SISTC accent)
+    light: '#7adcb4',               // Light green-cyan
+    accent: '#00d082'               // Vivid green-cyan
   };
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      {/* Generated Logo - Shield design with SISTC green-cyan colors */}
+      {/* Generated Logo - Shield design with SISTC green-cyan and black colors */}
       <svg
         width={width}
         height={width}
@@ -31,8 +32,8 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
       >
         <defs>
           <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.dark} />
-            <stop offset="50%" stopColor={colors.dark} />
+            <stop offset="0%" stopColor={colors.black} />
+            <stop offset="50%" stopColor={colors.black} />
             <stop offset="50%" stopColor={colors.secondary} />
             <stop offset="100%" stopColor={colors.secondary} />
           </linearGradient>
@@ -46,20 +47,20 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
         <path
           d="M10 25 L60 10 L110 25 L110 105 C110 115 100 120 90 115 L60 100 L30 115 C20 120 10 115 10 105 Z"
           fill="url(#shieldGradient)"
-          stroke={colors.primary}
+          stroke={colors.black}
           strokeWidth="1.5"
         />
         
-        {/* Left side - Dark blue section */}
+        {/* Left side - Black section */}
         <path
           d="M10 25 L60 10 L60 100 L10 105 Z"
-          fill={colors.dark}
+          fill={colors.black}
         />
         
-        {/* Stylized C/G shape on left - outlined */}
+        {/* Stylized C/G shape on left - outlined in white */}
         <path
           d="M22 42 Q15 32 28 32 Q41 32 43 38 Q43 43 39 45 Q36 43 33 43 Q29 43 29 48 Q29 53 33 53 Q36 53 39 51 Q43 49 43 53 Q43 58 39 61 Q36 63 28 63 Q15 63 22 53"
-          stroke={colors.primary}
+          stroke="#ffffff"
           strokeWidth="2"
           fill="none"
           strokeLinecap="round"
@@ -102,7 +103,7 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
         </g>
       </svg>
 
-      {/* Text: CAMPUSCONNECT - using SISTC colors */}
+      {/* Text: CAMPUSCONNECT - using black and green-cyan */}
       {showText && (
         <div 
           className={`font-bold uppercase tracking-tight ${fontSize} leading-tight`} 
@@ -111,7 +112,7 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
             letterSpacing: '-0.02em'
           }}
         >
-          <span style={{ color: colors.dark }}>CAMPUS</span>
+          <span className="text-black dark:text-white">CAMPUS</span>
           <span style={{ color: colors.secondary }}>CONNECT</span>
         </div>
       )}

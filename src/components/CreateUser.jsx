@@ -249,14 +249,14 @@ const CreateUser = () => {
         </form>
 
         {/* Info Box */}
-        <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-blue-900/20 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
+        <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-sistc-900/20 border border-sistc-700' : 'bg-sistc-50 border border-sistc-200'}`}>
           <div className="flex items-start gap-2">
-            <AlertCircle className={`${darkMode ? 'text-blue-400' : 'text-blue-600'} mt-0.5`} size={18} />
+            <AlertCircle className={`${darkMode ? 'text-sistc-400' : 'text-sistc-600'} mt-0.5`} size={18} />
             <div className="text-sm">
-              <p className={`font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+              <p className={`font-medium ${darkMode ? 'text-sistc-300' : 'text-sistc-800'}`}>
                 Important Note
               </p>
-              <p className={`mt-1 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
+              <p className={`mt-1 ${darkMode ? 'text-sistc-400' : 'text-sistc-700'}`}>
                 After creating a user, you will be signed out and redirected to the login page. 
                 This is because the system needs to create the user account. Please sign back in to continue.
               </p>
