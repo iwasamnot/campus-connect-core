@@ -244,6 +244,12 @@ const Login = () => {
             ? 'Remember your password? Switch to Login mode.'
             : "Don't have an account? Switch to Register mode."}
         </p>
+        
+        {mode === 'register' && (
+          <p className="text-center text-xs text-black dark:text-white opacity-60 mt-2">
+            Your registration email will be set as your student email
+          </p>
+        )}
       </div>
     </div>
   );
