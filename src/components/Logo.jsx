@@ -9,53 +9,20 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
 
   const { width, fontSize } = sizes[size] || sizes.default;
 
-  // Try different possible logo file names and formats
-  const possibleLogos = [
-    '/logo.png',
-    '/logo.jpg',
-    '/logo.jpeg',
-    '/logo.svg',
-    '/Logo.png',
-    '/Logo.jpg',
-    '/Logo.svg',
-    '/CAMPUSCONNECT.png',
-    '/CAMPUSCONNECT.jpg',
-    '/CAMPUSCONNECT.svg'
-  ];
-
-  const [logoSrc, setLogoSrc] = React.useState(possibleLogos[0]);
-  const [logoError, setLogoError] = React.useState(false);
-
-  const handleImageError = () => {
-    const currentIndex = possibleLogos.indexOf(logoSrc);
-    if (currentIndex < possibleLogos.length - 1) {
-      setLogoSrc(possibleLogos[currentIndex + 1]);
-    } else {
-      setLogoError(true);
-    }
-  };
+  // Use logo.png from public folder or root
+  const logoSrc = '/logo.png';
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
       {/* Logo Image */}
-      {!logoError ? (
-        <img
-          src={logoSrc}
-          alt="CampusConnect Logo"
-          width={width}
-          height={width}
-          className="mb-2 object-contain"
-          style={{ maxWidth: `${width}px`, maxHeight: `${width}px` }}
-          onError={handleImageError}
-        />
-      ) : (
-        <div 
-          className="mb-2 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 text-xs"
-          style={{ width: `${width}px`, height: `${width}px` }}
-        >
-          Logo
-        </div>
-      )}
+      <img
+        src={logoSrc}
+        alt="CampusConnect Logo"
+        width={width}
+        height={width}
+        className="mb-2 object-contain"
+        style={{ maxWidth: `${width}px`, maxHeight: `${width}px` }}
+      />
 
       {/* Text: CAMPUSCONNECT - CAMPUS in dark blue, CONNECT in bright blue, no space, uppercase, clean sans-serif */}
       {showText && (
