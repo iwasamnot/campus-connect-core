@@ -192,7 +192,7 @@ const UsersManagement = () => {
           placeholder="Search by email, phone, or user ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
         />
       </div>
 
@@ -259,7 +259,7 @@ const UsersManagement = () => {
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           isAdminRole(user.role)
                             ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
-                            : 'bg-sistc-100 dark:bg-sistc-900 text-sistc-800 dark:text-sistc-200'
+                            : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
                         }`}>
                           {user.role || 'N/A'}
                         </span>
@@ -366,7 +366,7 @@ const UsersManagement = () => {
                             <button
                               onClick={() => handleEditUser(user)}
                               disabled={user.id === currentUser?.uid}
-                              className="flex items-center gap-1 px-3 py-1 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                               title={user.id === currentUser?.uid ? 'Cannot edit your own account' : 'Edit user'}
                             >
                               <Edit2 size={14} />
@@ -400,8 +400,8 @@ const UsersManagement = () => {
       </div>
 
       {/* Info Banner */}
-      <div className="bg-sistc-50 dark:bg-sistc-900/20 border-t border-sistc-200 dark:border-sistc-800 px-6 py-3">
-        <div className="flex items-center gap-2 text-sm text-sistc-800 dark:text-sistc-300">
+      <div className="bg-indigo-50 dark:bg-indigo-900/20 border-t border-indigo-200 dark:border-indigo-800 px-6 py-3">
+        <div className="flex items-center gap-2 text-sm text-indigo-800 dark:text-indigo-300">
           <AlertCircle size={16} />
           <span>Total Users: {users.length} | Showing: {filteredUsers.length}</span>
         </div>

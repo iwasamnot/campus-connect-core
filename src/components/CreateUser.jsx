@@ -155,7 +155,7 @@ const CreateUser = () => {
                 onChange={handleChange}
                 placeholder="user@example.com"
                 required
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${
                   darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-100 border-gray-300 text-gray-900'
                 }`}
                 disabled={loading}
@@ -179,7 +179,7 @@ const CreateUser = () => {
                 placeholder="At least 6 characters"
                 required
                 minLength={6}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${
                   darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-100 border-gray-300 text-gray-900'
                 }`}
                 disabled={loading}
@@ -201,8 +201,8 @@ const CreateUser = () => {
                 onClick={() => setFormData(prev => ({ ...prev, role: 'student' }))}
                 className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-colors ${
                   formData.role === 'student'
-                    ? 'border-sistc-600 bg-sistc-50 dark:bg-sistc-900/30 text-sistc-700 dark:text-sistc-300'
-                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-sistc-400`
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-indigo-400`
                 }`}
                 disabled={loading}
               >
@@ -214,8 +214,8 @@ const CreateUser = () => {
                 onClick={() => setFormData(prev => ({ ...prev, role: 'admin' }))}
                 className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-colors ${
                   formData.role === 'admin'
-                    ? 'border-sistc-600 bg-sistc-50 dark:bg-sistc-900/30 text-sistc-700 dark:text-sistc-300'
-                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-sistc-400`
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-indigo-400`
                 }`}
                 disabled={loading}
               >
@@ -232,7 +232,7 @@ const CreateUser = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-sistc-600 hover:bg-sistc-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
           >
             {loading ? (
               <>
@@ -249,14 +249,14 @@ const CreateUser = () => {
         </form>
 
         {/* Info Box */}
-        <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-sistc-900/20 border border-sistc-700' : 'bg-sistc-50 border border-sistc-200'}`}>
+        <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-indigo-900/20 border border-indigo-700' : 'bg-indigo-50 border border-indigo-200'}`}>
           <div className="flex items-start gap-2">
-            <AlertCircle className={`${darkMode ? 'text-sistc-400' : 'text-sistc-600'} mt-0.5`} size={18} />
+            <AlertCircle className={`${darkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-0.5`} size={18} />
             <div className="text-sm">
-              <p className={`font-medium ${darkMode ? 'text-sistc-300' : 'text-sistc-800'}`}>
+              <p className={`font-medium ${darkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
                 Important Note
               </p>
-              <p className={`mt-1 ${darkMode ? 'text-sistc-400' : 'text-sistc-700'}`}>
+              <p className={`mt-1 ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>
                 After creating a user, you will be signed out and redirected to the login page. 
                 This is because the system needs to create the user account. Please sign back in to continue.
               </p>
