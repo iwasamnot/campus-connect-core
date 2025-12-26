@@ -508,13 +508,16 @@ Be concise, friendly, and professional. Format your responses with markdown for 
     setLoading(true);
 
     try {
-      // Use hybrid model: ChatGPT with local knowledge base, fallback to local
+      // Use hybrid model: Gemini first, then ChatGPT, then local knowledge base
+      console.log('AIHelp: Getting AI response for question:', question);
       const answer = await getHybridAIResponse(question);
 
-      if (!answer) {
+      if (!answer || answer.trim() === '') {
+        console.warn('AIHelp: No answer generated, using fallback');
         throw new Error('No answer generated');
       }
 
+      console.log('AIHelp: Using AI response, length:', answer.length);
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
@@ -523,10 +526,12 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
-      console.error('AI Error:', err);
+      console.error('AIHelp: AI Error:', err);
+      console.error('AIHelp: Error details:', err.message);
       
       // Final fallback to local knowledge base
       try {
+        console.log('AIHelp: Using local knowledge base fallback');
         const fallbackAnswer = ai.current.processQuestion(question);
         const botMessage = {
           id: Date.now() + 1,
@@ -536,7 +541,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         };
         setMessages(prev => [...prev, botMessage]);
       } catch (fallbackErr) {
-        console.error('Fallback error:', fallbackErr);
+        console.error('AIHelp: Fallback error:', fallbackErr);
         const errorBotMessage = {
           id: Date.now() + 1,
           type: 'bot',
