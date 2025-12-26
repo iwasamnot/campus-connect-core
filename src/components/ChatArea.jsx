@@ -15,7 +15,8 @@ import {
   updateDoc,
   limit,
   startAfter,
-  getDocs
+  getDocs,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical } from 'lucide-react';
