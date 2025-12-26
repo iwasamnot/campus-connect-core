@@ -345,7 +345,7 @@ const GroupChat = ({ group, onBack }) => {
                 )}
 
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative group ${
+                  className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg relative group ${
                     isAuthor
                       ? 'bg-indigo-600 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
