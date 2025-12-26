@@ -311,7 +311,7 @@ const AdminDashboard = () => {
             </button>
             <button
               onClick={() => setShowAuditLogs(!showAuditLogs)}
-              className="flex items-center gap-2 px-4 py-2 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
             >
               <FileText size={18} />
               <span>Audit Logs</span>
@@ -435,11 +435,11 @@ const AdminDashboard = () => {
 
       {/* Audit Logs Panel */}
       {showAuditLogs && (
-        <div className="bg-sistc-50 dark:bg-sistc-900/20 border-b border-sistc-200 dark:border-sistc-800 px-6 py-4 max-h-64 overflow-y-auto">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 px-6 py-4 max-h-64 overflow-y-auto">
           <h3 className="font-semibold text-black dark:text-white mb-2">Recent Audit Logs ({auditLogs.length})</h3>
           <div className="space-y-2">
             {auditLogs.slice(0, 10).map(log => (
-              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-sistc-200 dark:border-sistc-800 text-xs text-black dark:text-white">
+              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-indigo-200 dark:border-indigo-800 text-xs text-black dark:text-white">
                 <span className="font-medium">{log.action}</span> by {log.performedByEmail} - {formatTimestamp(log.timestamp)}
               </div>
             ))}

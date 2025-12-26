@@ -225,7 +225,7 @@ const Login = () => {
               setMode('reset');
               setError(null);
             }}
-            className="w-full mt-4 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-sistc-300 hover:underline font-medium transition-colors"
+            className="w-full mt-4 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline font-medium transition-colors"
           >
             Forgot your password?
           </button>
