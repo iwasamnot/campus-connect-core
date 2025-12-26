@@ -615,7 +615,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
           <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex-shrink-0">
-              <Bot className="text-indigo-600 dark:text-indigo-400" size={20} className="md:w-6 md:h-6" />
+              <Bot className="text-indigo-600 dark:text-indigo-400 md:w-6 md:h-6" size={20} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -727,17 +727,31 @@ Be concise, friendly, and professional. Format your responses with markdown for 
           </button>
         </form>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-          {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' ? (
-            <>
-              Hybrid AI: ChatGPT + SISTC Knowledge Base • 
-              <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
-            </>
-          ) : (
-            <>
-              Powered by SISTC Knowledge Base • 
-              <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
-            </>
-          )}
+          {(() => {
+            const hasGemini = import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim() !== '';
+            const hasOpenAI = AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '';
+            if (hasGemini) {
+              return (
+                <>
+                  Hybrid AI: Gemini ({geminiModels.find(m => m.value === selectedGeminiModel)?.label}) + SISTC Knowledge Base • 
+                  <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
+                </>
+              );
+            } else if (hasOpenAI) {
+              return (
+                <>
+                  Hybrid AI: ChatGPT + SISTC Knowledge Base • 
+                  <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
+                </>
+              );
+            }
+            return (
+              <>
+                Powered by SISTC Knowledge Base • 
+                <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
+              </>
+            );
+          })()}
         </p>
       </div>
     </div>
