@@ -320,100 +320,70 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(AI_CONFIG.model || 'gpt-4o-mini');
-  const [aiMode, setAiMode] = useState(() => {
-    // Default: use ChatGPT if available, otherwise local
-    if (AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') return 'chatgpt';
-    return 'local';
-  });
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
-
-  // Available models
-  const availableModels = [
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini', description: 'Fast & Cost-effective (Recommended)' },
-    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', description: 'Faster & Cheaper' },
-    { value: 'gpt-4o', label: 'GPT-4o', description: 'Most Capable (Slower & More Expensive)' },
-    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', description: 'High Performance' }
-  ];
-
-  // AI Mode options - Always show both, but indicate availability
-  const aiModeOptions = [
-    { 
-      value: 'chatgpt', 
-      label: 'ChatGPT', 
-      description: AI_CONFIG.openaiApiKey 
-        ? 'Uses OpenAI for intelligent, context-aware responses'
-        : 'OpenAI API key not configured - using local knowledge base',
-      available: true // Always available, will fallback to local if no key
-    },
-    { 
-      value: 'local', 
-      label: 'Local Knowledge Base', 
-      description: 'Uses built-in SISTC knowledge base (no API required)',
-      available: true
-    }
-  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
 
-  // Get AI response from OpenAI with local knowledge base context
-  const getAIResponse = async (question) => {
-    if (!AI_CONFIG.openaiApiKey || AI_CONFIG.openaiApiKey.trim() === '') {
-      return null;
-    }
-
-    try {
-      // Get local knowledge base answer first to provide context
-      const localAnswer = ai.current.processQuestion(question);
-      
-      const systemPrompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
+  // Hybrid AI: Get response from OpenAI with local knowledge base context, fallback to local
+  const getHybridAIResponse = async (question) => {
+    // Always get local knowledge base answer first
+    const localAnswer = ai.current.processQuestion(question);
+    
+    // Try ChatGPT if API key is available
+    if (AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') {
+      try {
+        const systemPrompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
 You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
 
 Use the following local knowledge base information as reference:
 ${localAnswer ? `\n${localAnswer}\n` : ''}
 
-If the question is about SISTC specifically, use the knowledge base information provided above.
+If the question is about SISTC specifically, prioritize and use the knowledge base information provided above.
 For general questions or if the knowledge base doesn't have the answer, use your general knowledge.
 Be concise, friendly, and professional. Format your responses with markdown for better readability.`;
 
-      const messages = [
-        { role: 'system', content: systemPrompt },
-        ...ai.current.context.slice(-3).map(ctx => ({
-          role: 'user',
-          content: ctx.question
-        })),
-        { role: 'user', content: question }
-      ];
+        const messages = [
+          { role: 'system', content: systemPrompt },
+          ...ai.current.context.slice(-3).map(ctx => ({
+            role: 'user',
+            content: ctx.question
+          })),
+          { role: 'user', content: question }
+        ];
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AI_CONFIG.openaiApiKey}`
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: messages,
-          temperature: AI_CONFIG.temperature,
-          max_tokens: AI_CONFIG.maxTokens
-        })
-      });
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${AI_CONFIG.openaiApiKey}`
+          },
+          body: JSON.stringify({
+            model: AI_CONFIG.model || 'gpt-4o-mini',
+            messages: messages,
+            temperature: AI_CONFIG.temperature,
+            max_tokens: AI_CONFIG.maxTokens
+          })
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'API request failed');
+        if (response.ok) {
+          const data = await response.json();
+          const chatGPTAnswer = data.choices[0]?.message?.content || null;
+          if (chatGPTAnswer) {
+            return chatGPTAnswer; // Return ChatGPT answer if successful
+          }
+        }
+      } catch (error) {
+        console.error('OpenAI API error:', error);
+        // Fall through to local answer
       }
-
-      const data = await response.json();
-      return data.choices[0]?.message?.content || null;
-    } catch (error) {
-      console.error('OpenAI API error:', error);
-      return null;
     }
+    
+    // Fallback to local knowledge base answer
+    return localAnswer;
   };
 
   const handleSend = async (e) => {
@@ -433,25 +403,11 @@ Be concise, friendly, and professional. Format your responses with markdown for 
     setLoading(true);
 
     try {
-      let answer = null;
+      // Use hybrid model: ChatGPT with local knowledge base, fallback to local
+      const answer = await getHybridAIResponse(question);
 
-      // Determine which AI mode to use
-      if (aiMode === 'chatgpt' && AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') {
-        // Use ChatGPT mode with local knowledge base context
-        answer = await getAIResponse(question);
-        
-        // If ChatGPT fails, fallback to local
-        if (!answer && AI_CONFIG.useFallback) {
-          answer = ai.current.processQuestion(question);
-        }
-      } else {
-        // Use local knowledge base mode
-        answer = ai.current.processQuestion(question);
-      }
-
-      // Final fallback
       if (!answer) {
-        answer = "I apologize, but I'm having trouble accessing my knowledge base right now. Please try again later or contact SISTC directly at +61 (2) 9061 5900 or visit https://sistc.edu.au/";
+        throw new Error('No answer generated');
       }
 
       const botMessage = {
@@ -463,16 +419,14 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
       console.error('AI Error:', err);
-      const errorMessage = err.message || 'Failed to get response';
-      showError(`AI Error: ${errorMessage}. Falling back to local knowledge base.`);
       
-      // Fallback to local knowledge base on error
+      // Final fallback to local knowledge base
       try {
         const fallbackAnswer = ai.current.processQuestion(question);
         const botMessage = {
           id: Date.now() + 1,
           type: 'bot',
-          content: fallbackAnswer,
+          content: fallbackAnswer || "I apologize, but I'm having trouble accessing my knowledge base right now. Please try again later or contact SISTC directly at +61 (2) 9061 5900 or visit https://sistc.edu.au/",
           timestamp: new Date()
         };
         setMessages(prev => [...prev, botMessage]);
@@ -583,71 +537,10 @@ Be concise, friendly, and professional. Format your responses with markdown for 
               </div>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
                 {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== ''
-                  ? 'Intelligent AI powered by ChatGPT with local knowledge base'
+                  ? 'Hybrid AI: Powered by ChatGPT enhanced with SISTC knowledge base'
                   : 'Intelligent answers about SISTC courses, campuses, and more'}
               </p>
             </div>
-          </div>
-          
-          {/* AI Mode and Model Selector */}
-          <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2 md:gap-4">
-            {/* AI Mode Selector */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                AI Source
-              </label>
-              <select
-                value={aiMode}
-                onChange={(e) => setAiMode(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[200px]"
-                disabled={loading}
-              >
-                {aiModeOptions.map((mode) => (
-                  <option 
-                    key={mode.value} 
-                    value={mode.value}
-                  >
-                    {mode.label} {mode.value === 'chatgpt' && !AI_CONFIG.openaiApiKey ? '(API key needed)' : ''}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[200px]">
-                {aiModeOptions.find(m => m.value === aiMode)?.description}
-              </p>
-            </div>
-
-            {/* Model Selector (only show if ChatGPT is selected) */}
-            {aiMode === 'chatgpt' && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Model
-                </label>
-                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' ? (
-                  <>
-                    <select
-                      value={selectedModel}
-                      onChange={(e) => setSelectedModel(e.target.value)}
-                      className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent min-w-[180px]"
-                      disabled={loading}
-                    >
-                      {availableModels.map((model) => (
-                        <option key={model.value} value={model.value}>
-                          {model.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[180px]">
-                      {availableModels.find(m => m.value === selectedModel)?.description}
-                    </p>
-                  </>
-                ) : (
-                  <div className="px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 min-w-[180px]">
-                    OpenAI API key needed
-                  </div>
-                )}
-              </div>
-            )}
-
           </div>
         </div>
       </div>
@@ -742,28 +635,14 @@ Be concise, friendly, and professional. Format your responses with markdown for 
           </button>
         </form>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-          {AI_CONFIG.openaiApiKey ? (
+          {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' ? (
             <>
-              Powered by {selectedModel}
-              {AI_CONFIG.tavilyApiKey && (
-                <>
-                  {' • '}
-                  <span className="flex items-center justify-center gap-1 mt-1">
-                    <Globe size={12} />
-                    Web search: {usageInfo.count}/{usageInfo.limit} used today
-                    {usageInfo.remaining === 0 && (
-                      <span className="ml-1 text-red-600 dark:text-red-400 flex items-center gap-1">
-                        <AlertTriangle size={12} />
-                        Limit reached
-                      </span>
-                    )}
-                  </span>
-                </>
-              )}
+              Hybrid AI: ChatGPT + SISTC Knowledge Base • 
+              <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
             </>
           ) : (
             <>
-              Powered by intelligent AI • 
+              Powered by SISTC Knowledge Base • 
               <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
             </>
           )}
