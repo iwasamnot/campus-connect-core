@@ -1,5 +1,13 @@
 import React from 'react';
-import logoImage from '../assets/logo.png';
+
+// Try to import logo, but handle if it doesn't exist
+let logoImage = null;
+try {
+  logoImage = new URL('../assets/logo.png', import.meta.url).href;
+} catch (e) {
+  // Logo file doesn't exist yet - will use fallback
+  console.log('Logo file not found. Please add logo.png to src/assets/');
+}
 
 const Logo = ({ size = 'default', showText = true, className = '' }) => {
   const sizes = {
@@ -21,13 +29,17 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
           height={width}
           className="mb-2 object-contain"
           style={{ maxWidth: `${width}px`, maxHeight: `${width}px` }}
+          onError={(e) => {
+            // If image fails to load, hide it
+            e.target.style.display = 'none';
+          }}
         />
       ) : (
         <div 
-          className="mb-2 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 text-xs"
+          className="mb-2 bg-gradient-to-r from-blue-900 to-blue-600 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-lg"
           style={{ width: `${width}px`, height: `${width}px` }}
         >
-          Logo
+          CC
         </div>
       )}
 
