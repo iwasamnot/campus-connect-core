@@ -520,7 +520,7 @@ const AIHelp = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything about SISTC... (e.g., 'What are the requirements for Master of IT?')"
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-campus-600 focus:border-transparent"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sistc-600 focus:border-transparent"
             disabled={loading}
           />
           <button
