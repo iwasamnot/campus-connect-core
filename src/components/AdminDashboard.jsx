@@ -304,7 +304,7 @@ const AdminDashboard = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setShowReports(!showReports)}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-sistc-600 hover:bg-sistc-700 text-white rounded-lg transition-colors"
             >
               <AlertTriangle size={18} />
               <span>Reports ({reports.filter(r => r.status === 'pending').length})</span>
