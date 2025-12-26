@@ -46,36 +46,56 @@ const ChatArea = () => {
   const messagesEndRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
 
-  // Fetch all users to get names
+  // Fetch all users to get names and profile data
   useEffect(() => {
     const q = query(collection(db, 'users'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const users = {};
       const names = {};
+      const profiles = {};
+      
       snapshot.docs.forEach(doc => {
         const userData = doc.data();
+        
+        // Determine the display name with proper fallback
+        let displayName = 'Unknown';
+        if (userData.name && userData.name.trim()) {
+          displayName = userData.name.trim();
+        } else if (userData.email) {
+          displayName = userData.email.split('@')[0];
+        } else {
+          displayName = `User ${doc.id.substring(0, 8)}`;
+        }
+        
+        // Store user data with online status
         users[doc.id] = {
-          isOnline: userData.isOnline || false,
+          isOnline: userData.isOnline === true || userData.isOnline === 'true',
           lastSeen: userData.lastSeen || null,
           ...userData
         };
-        // Store name for display
-        if (userData.name) {
-          names[doc.id] = userData.name;
-        } else if (userData.email) {
-          names[doc.id] = userData.email.split('@')[0]; // Use email prefix as fallback
-        } else {
-          names[doc.id] = doc.id.substring(0, 8); // Use UID prefix as last resort
-        }
+        
+        // Store display name
+        names[doc.id] = displayName;
+        
         // Store full profile data
-        setUserProfiles(prev => ({
-          ...prev,
-          [doc.id]: userData
-        }));
+        profiles[doc.id] = {
+          ...userData,
+          name: displayName // Ensure name is always set
+        };
       });
+      
       setOnlineUsers(users);
       setUserNames(names);
+      setUserProfiles(profiles);
+      
+      console.log('ChatArea - Loaded users:', { 
+        count: snapshot.docs.length, 
+        names: names,
+        userIds: Object.keys(names)
+      });
+    }, (error) => {
+      console.error('ChatArea - Error fetching users:', error);
     });
 
     return () => unsubscribe();
@@ -156,17 +176,25 @@ const ChatArea = () => {
     // Get user name from cache or fetch it
     let userName = userNames[user.uid];
     if (!userName) {
-      // Try to get from user document
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          userName = userData.name || userData.email?.split('@')[0] || user.uid.substring(0, 8);
-        } else {
-          userName = user.email?.split('@')[0] || user.uid.substring(0, 8);
+      // Try to get from userProfiles cache first
+      const cachedProfile = userProfiles[user.uid];
+      if (cachedProfile?.name) {
+        userName = cachedProfile.name;
+      } else {
+        // Try to get from user document
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userName = (userData.name && userData.name.trim()) 
+              ? userData.name.trim() 
+              : (userData.email ? userData.email.split('@')[0] : `User ${user.uid.substring(0, 8)}`);
+          } else {
+            userName = user.email?.split('@')[0] || `User ${user.uid.substring(0, 8)}`;
+          }
+        } catch (err) {
+          userName = user.email?.split('@')[0] || `User ${user.uid.substring(0, 8)}`;
         }
-      } catch (err) {
-        userName = user.email?.split('@')[0] || user.uid.substring(0, 8);
       }
     }
 
@@ -469,7 +497,7 @@ const ChatArea = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setSelectedUserId(message.userId)}
-                        className="text-xs font-medium opacity-90 hover:underline cursor-pointer"
+                        className="text-sm font-semibold opacity-90 hover:underline cursor-pointer"
                         title={
                           onlineUsers[message.userId]?.isOnline
                             ? 'Online'
@@ -478,7 +506,15 @@ const ChatArea = () => {
                             : 'Offline'
                         }
                       >
-                        {userNames[message.userId] || message.userName || message.userEmail?.split('@')[0] || 'Unknown'}
+                        {(() => {
+                          // Priority: cached name > message userName > userProfile name > email > fallback
+                          const cachedName = userNames[message.userId];
+                          const messageName = message.userName;
+                          const profileName = userProfiles[message.userId]?.name;
+                          const emailName = message.userEmail?.split('@')[0];
+                          
+                          return cachedName || messageName || profileName || emailName || 'Unknown';
+                        })()}
                       </button>
                       {onlineUsers[message.userId]?.isOnline ? (
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
