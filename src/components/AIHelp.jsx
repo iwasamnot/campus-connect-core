@@ -375,6 +375,7 @@ const AIHelp = () => {
   const callGemini = async (question, localContext) => {
     const model = getGeminiModel(selectedGeminiModel);
     if (!model) {
+      console.warn('AIHelp: Gemini model not available');
       return null;
     }
 
@@ -391,13 +392,18 @@ Be concise, friendly, and professional. Format your responses with markdown for 
 
 Question: ${question}`;
 
+      console.log('AIHelp: Calling Gemini with model:', selectedGeminiModel);
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-      return text.trim();
+      console.log('AIHelp: Gemini response received, length:', text?.length || 0);
+      return text ? text.trim() : null;
     } catch (error) {
-      console.error('Error calling Gemini:', error);
-      return null;
+      console.error('AIHelp: Error calling Gemini:', error);
+      console.error('AIHelp: Error message:', error.message);
+      console.error('AIHelp: Error stack:', error.stack);
+      // Re-throw to let caller handle it
+      throw error;
     }
   };
 
@@ -415,14 +421,21 @@ Question: ${question}`;
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (geminiApiKey && geminiApiKey.trim() !== '') {
       try {
+        console.log('AIHelp: Attempting to use Gemini AI...');
         const geminiAnswer = await callGemini(question, localAnswer);
-        if (geminiAnswer) {
+        if (geminiAnswer && geminiAnswer.trim() !== '') {
+          console.log('AIHelp: Gemini AI response received');
           return geminiAnswer; // Return Gemini answer if successful
+        } else {
+          console.warn('AIHelp: Gemini returned empty response, falling back...');
         }
       } catch (error) {
-        console.error('Gemini API error:', error);
+        console.error('AIHelp: Gemini API error:', error);
+        console.error('AIHelp: Error details:', error.message, error.stack);
         // Fall through to next option
       }
+    } else {
+      console.log('AIHelp: Gemini API key not found, skipping Gemini...');
     }
     
     // Priority 2: Try ChatGPT if API key is available
