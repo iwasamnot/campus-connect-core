@@ -3,6 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
 import { AI_CONFIG } from '../config/aiConfig';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 // Debug: Log API key status (remove in production)
 if (import.meta.env.DEV) {
@@ -320,20 +321,111 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default to free model
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
+
+  // Available Gemini models
+  const geminiModels = [
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
+    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Paid - Standard Model', free: false },
+  ];
+
+  // Initialize Gemini AI with selected model
+  const getGeminiModel = (modelName = selectedGeminiModel) => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+      return null;
+    }
+    
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+        ],
+        systemInstruction: 'You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). You provide accurate, helpful information about SISTC courses, campuses, applications, and student services. Be concise, friendly, and professional. Format your responses with markdown for better readability.',
+      });
+      return model;
+    } catch (error) {
+      console.error('Error initializing Gemini:', error);
+      return null;
+    }
+  };
+
+  // Call Gemini AI
+  const callGemini = async (question, localContext) => {
+    const model = getGeminiModel(selectedGeminiModel);
+    if (!model) {
+      return null;
+    }
+
+    try {
+      const prompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
+You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
+
+Use the following local knowledge base information as reference:
+${localContext ? `\n${localContext}\n` : ''}
+
+If the question is about SISTC specifically, prioritize and use the knowledge base information provided above.
+For general questions or if the knowledge base doesn't have the answer, use your general knowledge.
+Be concise, friendly, and professional. Format your responses with markdown for better readability.
+
+Question: ${question}`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      return text.trim();
+    } catch (error) {
+      console.error('Error calling Gemini:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
 
-  // Hybrid AI: Get response from OpenAI with local knowledge base context, fallback to local
+  // Hybrid AI: Try Gemini first, then ChatGPT, then fallback to local knowledge base
   const getHybridAIResponse = async (question) => {
-    // Always get local knowledge base answer first
+    // Always get local knowledge base answer first for context
     const localAnswer = ai.current.processQuestion(question);
     
-    // Try ChatGPT if API key is available
+    // Priority 1: Try Gemini if API key is available
+    const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (geminiApiKey && geminiApiKey.trim() !== '') {
+      try {
+        const geminiAnswer = await callGemini(question, localAnswer);
+        if (geminiAnswer) {
+          return geminiAnswer; // Return Gemini answer if successful
+        }
+      } catch (error) {
+        console.error('Gemini API error:', error);
+        // Fall through to next option
+      }
+    }
+    
+    // Priority 2: Try ChatGPT if API key is available
     if (AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') {
       try {
         const systemPrompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
