@@ -47,18 +47,28 @@ const UsersManagement = () => {
       },
       (error) => {
         console.error('Error fetching users:', error);
-        // Try without orderBy if there's an index error (with limit)
-        const simpleQuery = query(
-          collection(db, 'users'),
-          limit(200)
-        );
-        onSnapshot(simpleQuery, (snapshot) => {
-          const usersData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setUsers(usersData);
-        });
+        if (error.code === 'resource-exhausted') {
+          console.warn('UsersManagement: Firestore quota exceeded');
+        } else if (error.code === 'failed-precondition') {
+          console.warn('UsersManagement: Index missing, using simple query');
+          // Try without orderBy if there's an index error (with limit and cleanup)
+          const simpleQuery = query(
+            collection(db, 'users'),
+            limit(200)
+          );
+          const fallbackUnsubscribe = onSnapshot(simpleQuery, (snapshot) => {
+            const usersData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+            setUsers(usersData);
+          });
+          // Return cleanup for fallback listener
+          return () => {
+            unsubscribe();
+            fallbackUnsubscribe();
+          };
+        }
       }
     );
 

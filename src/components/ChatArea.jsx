@@ -75,18 +75,45 @@ const ChatArea = ({ setActiveView }) => {
   // Typing indicator (for global chat, chatId can be 'global')
   const typingUsers = useTypingIndicator('global', 'global');
   
-  // Fetch pinned messages
+  // Fetch pinned messages (with proper index: pinned ASC, pinnedAt DESC)
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     
-    const q = query(collection(db, 'messages'), where('pinned', '==', true), orderBy('pinnedAt', 'desc'), limit(10));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const pinned = snapshot.docs.map(doc => doc.id);
-      setPinnedMessages(pinned);
-    });
+    const q = query(
+      collection(db, 'messages'), 
+      where('pinned', '==', true), 
+      orderBy('pinnedAt', 'desc'), 
+      limit(10)
+    );
+    
+    const unsubscribe = onSnapshot(
+      q, 
+      (snapshot) => {
+        const pinned = snapshot.docs.map(doc => doc.id);
+        setPinnedMessages(pinned);
+      },
+      (error) => {
+        // Handle missing index error gracefully
+        if (error.code === 'failed-precondition') {
+          console.warn('ChatArea: Pinned messages index not found. Please create the index in Firestore Console.');
+          // Fallback: fetch without orderBy
+          const fallbackQuery = query(
+            collection(db, 'messages'),
+            where('pinned', '==', true),
+            limit(10)
+          );
+          onSnapshot(fallbackQuery, (snapshot) => {
+            const pinned = snapshot.docs.map(doc => doc.id);
+            setPinnedMessages(pinned);
+          });
+        } else {
+          console.error('ChatArea: Error fetching pinned messages:', error);
+        }
+      }
+    );
     
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.uid]); // Only depend on user.uid to prevent re-renders
 
   // Available Gemini models
   const geminiModels = [
@@ -231,41 +258,51 @@ const ChatArea = ({ setActiveView }) => {
           
           setMessages(uniqueMessages);
           
-          // Mark all messages as read by current user and send notifications
-          if (user) {
-            uniqueMessages.forEach(async (message) => {
+          // Mark messages as read and send notifications (debounced to prevent infinite loops)
+          // Use a separate effect to avoid triggering snapshot updates
+          if (user?.uid) {
+            // Batch read updates to prevent infinite loops
+            const unreadMessages = uniqueMessages.filter(message => {
               const readBy = message.readBy || {};
-              if (!readBy[user.uid]) {
-                try {
-                  await updateDoc(doc(db, 'messages', message.id), {
-                    readBy: {
-                      ...readBy,
-                      [user.uid]: serverTimestamp()
-                    }
-                  });
-                  
-                  // Send notification for new messages (not from current user and not AI)
-                  if (message.userId !== user.uid && !message.isAI && !document.hasFocus()) {
-                    const messageUser = userProfiles[message.userId] || {};
-                    await notificationService.showMessage(
-                      message,
-                      messageUser.name || message.userName || 'Someone'
-                    );
-                  }
-                  
-                  // Check if user was mentioned
-                  if (message.mentions && message.mentions.includes(user.uid)) {
-                    const messageUser = userProfiles[message.userId] || {};
-                    await notificationService.showMention(
-                      message,
-                      messageUser.name || message.userName || 'Someone'
-                    );
-                  }
-                } catch (error) {
-                  console.error('Error marking message as read:', error);
-                }
-              }
+              return !readBy[user.uid] && message.userId !== user.uid;
             });
+            
+            // Process read updates in batches with delay to prevent quota exhaustion
+            if (unreadMessages.length > 0) {
+              setTimeout(() => {
+                unreadMessages.slice(0, 10).forEach(async (message) => { // Limit to 10 at a time
+                  try {
+                    const readBy = message.readBy || {};
+                    await updateDoc(doc(db, 'messages', message.id), {
+                      readBy: {
+                        ...readBy,
+                        [user.uid]: serverTimestamp()
+                      }
+                    });
+                    
+                    // Send notification for new messages (not from current user and not AI)
+                    if (!message.isAI && !document.hasFocus()) {
+                      const messageUser = userProfiles[message.userId] || {};
+                      await notificationService.showMessage(
+                        message,
+                        messageUser.name || message.userName || 'Someone'
+                      );
+                    }
+                    
+                    // Check if user was mentioned
+                    if (message.mentions && message.mentions.includes(user.uid)) {
+                      const messageUser = userProfiles[message.userId] || {};
+                      await notificationService.showMention(
+                        message,
+                        messageUser.name || message.userName || 'Someone'
+                      );
+                    }
+                  } catch (error) {
+                    console.error('Error marking message as read:', error);
+                  }
+                });
+              }, 1000); // Delay to prevent immediate re-triggering
+            }
           }
         } catch (error) {
           console.error('Error processing messages:', error);
@@ -273,13 +310,23 @@ const ChatArea = ({ setActiveView }) => {
         }
       },
       (error) => {
+        if (!mounted) return;
         console.error('Error fetching messages:', error);
-        showError('Failed to load messages. Please check your connection and refresh.');
+        if (error.code === 'resource-exhausted') {
+          showError('Firestore quota exceeded. Please try again later.');
+        } else if (error.code === 'failed-precondition') {
+          showError('Firestore index missing. Please create the required index.');
+        } else {
+          showError('Failed to load messages. Please check your connection and refresh.');
+        }
       }
     );
 
-    return () => unsubscribe();
-  }, [user?.uid]); // Only depend on user.uid to prevent infinite loops
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [user?.uid, showError]); // Include showError but it's stable from context
 
   // Toxicity checking is now handled by the toxicityChecker utility
 
