@@ -14,10 +14,11 @@ import {
   deleteDoc,
   updateDoc,
   getDoc,
-  setDoc
+  setDoc,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
 
 const PrivateChat = () => {
@@ -36,6 +37,9 @@ const PrivateChat = () => {
   const [userProfiles, setUserProfiles] = useState({});
   const [onlineUsers, setOnlineUsers] = useState({});
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [disappearingMessagesEnabled, setDisappearingMessagesEnabled] = useState(false);
+  const [disappearingMessagesDuration, setDisappearingMessagesDuration] = useState(24); // 24 hours or 7 days (168 hours)
+  const [showDisappearingSettings, setShowDisappearingSettings] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Generate chat ID from two user IDs (sorted to ensure consistency)
@@ -113,13 +117,35 @@ const PrivateChat = () => {
         ...doc.data()
       }));
 
-      // Deduplicate messages by ID
+      // Deduplicate messages by ID and filter expired messages
+      const now = new Date();
+      const expiredMessageIds = [];
       const uniqueMessages = messagesData.reduce((acc, message) => {
         if (!acc.find(m => m.id === message.id)) {
+          // Check if message has expired
+          if (message.expiresAt) {
+            const expiresAt = message.expiresAt.toDate ? message.expiresAt.toDate() : new Date(message.expiresAt);
+            if (expiresAt <= now) {
+              // Message has expired, mark for deletion
+              expiredMessageIds.push(message.id);
+              return acc; // Don't add expired message
+            }
+          }
           acc.push(message);
         }
         return acc;
       }, []);
+
+      // Delete expired messages asynchronously
+      if (expiredMessageIds.length > 0) {
+        Promise.all(
+          expiredMessageIds.map(messageId =>
+            deleteDoc(doc(db, 'privateChats', selectedChatId, 'messages', messageId)).catch(err => {
+              console.error('Error deleting expired message:', err);
+            })
+          )
+        );
+      }
 
       // Sort by timestamp
       uniqueMessages.sort((a, b) => {
@@ -158,6 +184,52 @@ const PrivateChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Cleanup expired messages periodically
+  useEffect(() => {
+    if (!selectedChatId) return;
+
+    const cleanupInterval = setInterval(async () => {
+      try {
+        const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
+        const q = query(messagesRef);
+        const snapshot = await getDocs(q);
+        const now = new Date();
+
+        const deletePromises = [];
+        snapshot.docs.forEach((docSnapshot) => {
+          const messageData = docSnapshot.data();
+          if (messageData.expiresAt) {
+            const expiresAt = messageData.expiresAt.toDate ? messageData.expiresAt.toDate() : new Date(messageData.expiresAt);
+            if (expiresAt <= now) {
+              deletePromises.push(
+                deleteDoc(doc(db, 'privateChats', selectedChatId, 'messages', docSnapshot.id)).catch(err => {
+                  console.error('Error deleting expired message:', err);
+                })
+              );
+            }
+          }
+        });
+        await Promise.all(deletePromises);
+      } catch (error) {
+        console.error('Error cleaning up expired messages:', error);
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(cleanupInterval);
+  }, [selectedChatId]);
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDisappearingSettings && !event.target.closest('.disappearing-settings-container')) {
+        setShowDisappearingSettings(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDisappearingSettings]);
+
   // Select or create a chat with a user
   const selectChat = async (otherUser) => {
     const chatId = getChatId(user.uid, otherUser.id);
@@ -172,8 +244,17 @@ const PrivateChat = () => {
           participants: [user.uid, otherUser.id].sort(),
           createdAt: serverTimestamp(),
           lastMessage: null,
-          lastMessageTime: null
+          lastMessageTime: null,
+          disappearingMessagesEnabled: false,
+          disappearingMessagesDuration: 24 // Default 24 hours
         });
+        setDisappearingMessagesEnabled(false);
+        setDisappearingMessagesDuration(24);
+      } else {
+        // Load existing chat settings
+        const chatData = chatDoc.data();
+        setDisappearingMessagesEnabled(chatData.disappearingMessagesEnabled || false);
+        setDisappearingMessagesDuration(chatData.disappearingMessagesDuration || 24);
       }
     } catch (error) {
       console.error('Error creating chat:', error);
@@ -198,7 +279,15 @@ const PrivateChat = () => {
 
     setSending(true);
     try {
-      await addDoc(collection(db, 'privateChats', selectedChatId, 'messages'), {
+      // Calculate expiration time if disappearing messages is enabled
+      let expiresAt = null;
+      if (disappearingMessagesEnabled) {
+        const now = new Date();
+        const expirationTime = new Date(now.getTime() + (disappearingMessagesDuration * 60 * 60 * 1000)); // Convert hours to milliseconds
+        expiresAt = expirationTime;
+      }
+
+      const messageData = {
         userId: user.uid,
         userEmail: user.email,
         text: newMessage.trim(),
@@ -208,7 +297,13 @@ const PrivateChat = () => {
         readBy: {
           [user.uid]: serverTimestamp() // Sender has seen their own message
         }
-      });
+      };
+
+      if (expiresAt) {
+        messageData.expiresAt = expiresAt;
+      }
+
+      await addDoc(collection(db, 'privateChats', selectedChatId, 'messages'), messageData);
 
       // Update chat's last message
       await updateDoc(doc(db, 'privateChats', selectedChatId), {
@@ -224,6 +319,41 @@ const PrivateChat = () => {
     } finally {
       setSending(false);
     }
+  };
+
+  // Update disappearing messages settings
+  const updateDisappearingSettings = async () => {
+    if (!selectedChatId) return;
+
+    try {
+      await updateDoc(doc(db, 'privateChats', selectedChatId), {
+        disappearingMessagesEnabled: disappearingMessagesEnabled,
+        disappearingMessagesDuration: disappearingMessagesDuration
+      });
+      setShowDisappearingSettings(false);
+      success('Disappearing messages settings updated.');
+    } catch (error) {
+      console.error('Error updating disappearing messages settings:', error);
+      showError('Failed to update settings. Please try again.');
+    }
+  };
+
+  // Get time remaining until message expires
+  const getTimeRemaining = (expiresAt) => {
+    if (!expiresAt) return null;
+    const expiration = expiresAt.toDate ? expiresAt.toDate() : new Date(expiresAt);
+    const now = new Date();
+    const diff = expiration - now;
+    
+    if (diff <= 0) return null; // Already expired
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
   };
 
   // Delete message
@@ -407,6 +537,68 @@ const PrivateChat = () => {
               </p>
             </button>
           </div>
+          {/* Disappearing Messages Settings Button */}
+          <div className="relative disappearing-settings-container">
+            <button
+              onClick={() => setShowDisappearingSettings(!showDisappearingSettings)}
+              className={`p-2 rounded-lg transition-colors ${
+                disappearingMessagesEnabled 
+                  ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400' 
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+              }`}
+              title="Disappearing Messages Settings"
+            >
+              <Clock size={20} />
+            </button>
+            
+            {/* Disappearing Messages Settings Dropdown */}
+            {showDisappearingSettings && (
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Disappearing Messages</h3>
+                  <button
+                    onClick={() => setShowDisappearingSettings(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={disappearingMessagesEnabled}
+                      onChange={(e) => setDisappearingMessagesEnabled(e.target.checked)}
+                      className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Enable disappearing messages</span>
+                  </label>
+                  
+                  {disappearingMessagesEnabled && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
+                      <select
+                        value={disappearingMessagesDuration}
+                        onChange={(e) => setDisappearingMessagesDuration(Number(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value={24}>24 hours</option>
+                        <option value={168}>7 days</option>
+                      </select>
+                    </div>
+                  )}
+                  
+                  <button
+                    onClick={updateDisappearingSettings}
+                    className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                  >
+                    Save Settings
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -501,6 +693,12 @@ const PrivateChat = () => {
                             <span className="text-xs opacity-70 mt-1">(edited)</span>
                           )}
                           <div className="flex items-center gap-2 mt-1">
+                            {message.expiresAt && (
+                              <div className="flex items-center gap-1 text-xs opacity-70" title={`Expires in ${getTimeRemaining(message.expiresAt)}`}>
+                                <Clock size={12} />
+                                <span>{getTimeRemaining(message.expiresAt)}</span>
+                              </div>
+                            )}
                             <span className="text-xs opacity-70">
                               {formatTime(message.timestamp)}
                             </span>
