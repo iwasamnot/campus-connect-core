@@ -70,6 +70,7 @@ const AdminDashboard = () => {
         
         try {
           // Handle document changes properly (including deletions)
+          // snapshot.docs only contains existing documents, so deleted ones are automatically excluded
           const messagesData = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -79,7 +80,16 @@ const AdminDashboard = () => {
           const validMessages = messagesData.filter(msg => msg && msg.id);
           
           console.log('AdminDashboard: Received snapshot with', validMessages.length, 'messages');
-          setAllMessages(validMessages);
+          console.log('AdminDashboard: Snapshot metadata:', {
+            hasPendingWrites: snapshot.metadata.hasPendingWrites,
+            fromCache: snapshot.metadata.fromCache
+          });
+          
+          // Only update if we have valid messages or if snapshot is from server (not cache)
+          // This prevents stale cache from overwriting optimistic deletions
+          if (!snapshot.metadata.fromCache || validMessages.length > 0) {
+            setAllMessages(validMessages);
+          }
           setLoading(false);
         } catch (error) {
           console.error('Error processing messages:', error);
