@@ -19,9 +19,12 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
 
-  // Fetch all users
+  // Fetch all users (limited to prevent quota exhaustion)
   useEffect(() => {
-    const q = query(collection(db, 'users'));
+    const q = query(
+      collection(db, 'users'),
+      limit(200) // Limit to 200 users
+    );
 
     const unsubscribe = onSnapshot(
       q, 

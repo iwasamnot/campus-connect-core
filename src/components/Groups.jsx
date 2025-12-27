@@ -70,7 +70,10 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
     }
 
     console.log('Groups: Fetching all groups for browsing');
-    const q = query(collection(db, 'groups'));
+    const q = query(
+      collection(db, 'groups'),
+      limit(50) // Limit to 50 groups to prevent quota exhaustion
+    );
 
     const unsubscribe = onSnapshot(
       q,

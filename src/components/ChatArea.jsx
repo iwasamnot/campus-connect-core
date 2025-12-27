@@ -194,11 +194,12 @@ const ChatArea = ({ setActiveView }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Fetch messages from Firestore with pagination
+  // Fetch messages from Firestore (limited to prevent quota exhaustion)
   useEffect(() => {
     const q = query(
       collection(db, 'messages'),
-      orderBy('timestamp', 'asc')
+      orderBy('timestamp', 'desc'),
+      limit(100) // Limit to 100 most recent messages, then reverse for display
     );
 
     const unsubscribe = onSnapshot(
@@ -275,7 +276,7 @@ const ChatArea = ({ setActiveView }) => {
     );
 
     return () => unsubscribe();
-  }, [user, userProfiles, showError]);
+  }, [user?.uid]); // Only depend on user.uid to prevent infinite loops
 
   // Toxicity checking is now handled by the toxicityChecker utility
 

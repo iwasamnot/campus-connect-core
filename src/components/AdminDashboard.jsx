@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
@@ -13,7 +13,8 @@ import {
   addDoc,
   serverTimestamp,
   getDocs,
-  getDoc
+  getDoc,
+  limit
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText } from 'lucide-react';
@@ -54,13 +55,14 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch all messages with error handling
+  // Fetch all messages with error handling (limited to prevent quota exhaustion)
   useEffect(() => {
     let mounted = true;
     
     const q = query(
       collection(db, 'messages'),
-      orderBy('timestamp', 'desc')
+      orderBy('timestamp', 'desc'),
+      limit(100) // Limit to 100 most recent messages to prevent quota exhaustion
     );
 
     const unsubscribe = onSnapshot(
@@ -115,15 +117,16 @@ const AdminDashboard = () => {
       mounted = false;
       unsubscribe();
     };
-  }, [showError]);
+  }, []); // Remove showError from dependencies to prevent infinite loops
 
-  // Fetch reports with error handling
+  // Fetch reports with error handling (limited to prevent quota exhaustion)
   useEffect(() => {
     let mounted = true;
     
     const q = query(
       collection(db, 'reports'),
-      orderBy('timestamp', 'desc')
+      orderBy('timestamp', 'desc'),
+      limit(50) // Limit to 50 most recent reports
     );
 
     const unsubscribe = onSnapshot(
@@ -155,13 +158,14 @@ const AdminDashboard = () => {
     };
   }, []);
 
-  // Fetch audit logs with error handling
+  // Fetch audit logs with error handling (limited to prevent quota exhaustion)
   useEffect(() => {
     let mounted = true;
     
     const q = query(
       collection(db, 'auditLogs'),
-      orderBy('timestamp', 'desc')
+      orderBy('timestamp', 'desc'),
+      limit(50) // Limit to 50 most recent audit logs
     );
 
     const unsubscribe = onSnapshot(
