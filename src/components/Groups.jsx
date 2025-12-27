@@ -64,13 +64,18 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
   // Fetch all groups for browsing (when modal is open)
   useEffect(() => {
-    if (!user || !showBrowseModal) return;
+    if (!user || !showBrowseModal) {
+      setAllGroups([]);
+      return;
+    }
 
+    console.log('Groups: Fetching all groups for browsing');
     const q = query(collection(db, 'groups'));
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('Groups: Fetched', snapshot.docs.length, 'groups');
         const groupsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -79,6 +84,8 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       },
       (error) => {
         console.error('Error fetching all groups:', error);
+        showError('Failed to load groups. Please try again.');
+        setAllGroups([]);
       }
     );
 
@@ -199,10 +206,18 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
   );
 
   const filteredBrowseGroups = allGroups.filter(group => {
-    const isMember = group.members?.includes(user?.uid);
-    const matchesSearch = group.name?.toLowerCase().includes(browseSearchTerm.toLowerCase()) ||
+    const matchesSearch = !browseSearchTerm || 
+                         group.name?.toLowerCase().includes(browseSearchTerm.toLowerCase()) ||
                          group.description?.toLowerCase().includes(browseSearchTerm.toLowerCase());
-    return !isMember && matchesSearch;
+    return matchesSearch;
+  }).sort((a, b) => {
+    // Sort: non-members first, then by member count (descending)
+    const aIsMember = a.members?.includes(user?.uid);
+    const bIsMember = b.members?.includes(user?.uid);
+    if (aIsMember !== bIsMember) {
+      return aIsMember ? 1 : -1;
+    }
+    return (b.members?.length || 0) - (a.members?.length || 0);
   });
 
   if (loading) {
@@ -433,16 +448,22 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
             {/* Groups List */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
-              {filteredBrowseGroups.length === 0 ? (
+              {allGroups.length === 0 ? (
+                <div className="text-center py-8">
+                  <Loader className="animate-spin mx-auto text-indigo-600 dark:text-indigo-400 mb-4" size={48} />
+                  <p className="text-gray-500 dark:text-gray-400">Loading groups...</p>
+                </div>
+              ) : filteredBrowseGroups.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
                   <p className="text-gray-500 dark:text-gray-400">
-                    {browseSearchTerm ? 'No groups found matching your search' : 'No groups available to join'}
+                    {browseSearchTerm ? 'No groups found matching your search' : 'No groups available. Create one to get started!'}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {filteredBrowseGroups.map((group) => {
+                    const isMember = group.members?.includes(user?.uid);
                     const hasRequested = group.joinRequests?.includes(user?.uid);
                     
                     return (
@@ -452,9 +473,21 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-800 dark:text-white mb-1">
-                              {group.name}
-                            </h4>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-800 dark:text-white">
+                                {group.name}
+                              </h4>
+                              {isMember && (
+                                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs font-medium">
+                                  Joined
+                                </span>
+                              )}
+                              {group.admins?.includes(user?.uid) && (
+                                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium">
+                                  Admin
+                                </span>
+                              )}
+                            </div>
                             {group.description && (
                               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                                 {group.description}
@@ -467,32 +500,46 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
                               )}
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleRequestToJoin(group.id)}
-                            disabled={requesting === group.id || hasRequested}
-                            className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                              hasRequested
-                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'
-                                : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
-                            }`}
-                          >
-                            {requesting === group.id ? (
-                              <>
-                                <Loader className="animate-spin" size={16} />
-                                <span>Requesting...</span>
-                              </>
-                            ) : hasRequested ? (
-                              <>
-                                <CheckCircle size={16} />
-                                <span>Requested</span>
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus size={16} />
-                                <span>Request to Join</span>
-                              </>
-                            )}
-                          </button>
+                          {!isMember ? (
+                            <button
+                              onClick={() => handleRequestToJoin(group.id)}
+                              disabled={requesting === group.id || hasRequested}
+                              className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                                hasRequested
+                                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'
+                                  : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                              }`}
+                            >
+                              {requesting === group.id ? (
+                                <>
+                                  <Loader className="animate-spin" size={16} />
+                                  <span>Requesting...</span>
+                                </>
+                              ) : hasRequested ? (
+                                <>
+                                  <CheckCircle size={16} />
+                                  <span>Requested</span>
+                                </>
+                              ) : (
+                                <>
+                                  <UserPlus size={16} />
+                                  <span>Request to Join</span>
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setShowBrowseModal(false);
+                                setSelectedGroup(group);
+                                setActiveView('group-chat');
+                              }}
+                              className="ml-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors text-sm font-medium"
+                            >
+                              <Users size={16} />
+                              <span>Open</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
