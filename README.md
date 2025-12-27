@@ -18,6 +18,12 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Edit your own messages
   - React with emojis
   - Search messages
+  - Reply to messages
+  - Forward messages to other chats
+  - Pin messages (admin only)
+  - File and image sharing
+  - Markdown formatting support
+  - User @mentions with autocomplete
   - Report inappropriate content
 
 ### For Admins
@@ -54,12 +60,16 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - User preference controls
   - Easy destination selection
 - **Real-time Updates**: Live synchronization using Firebase Firestore
+- **Typing Indicators**: See when others are typing in real-time
+- **Read Receipts**: Know when your messages are read
+- **Browser Notifications**: Desktop notifications for new messages and mentions
 - **Dark Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Code-Split Bundles**: Optimized performance with lazy-loaded components
 - **Secure**: Role-based access control with Firestore security rules
 - **Direct Messages**: Private messaging between users with chat history
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days
+- **Comprehensive Error Handling**: Detailed error messages and graceful error recovery
 - **Group Management**: Comprehensive group system
   - Browse and request to join groups
   - View all groups (including joined groups)
@@ -208,8 +218,9 @@ The platform uses **Google Gemini AI** for intelligent toxicity detection:
 - Handles context and edge cases intelligently
 
 ### Fallback System
-- Comprehensive hate words list (100+ words) if Gemini is unavailable
+- Comprehensive hate words list (500+ words) if Gemini is unavailable
 - Covers: profanity, hate speech, violence, harassment, slurs, and more
+- Multi-language support (English, Hindi, Urdu, Punjabi, Bengali, Nepali, Persian)
 - Word boundary matching for accurate detection
 
 ### Features
