@@ -96,7 +96,12 @@ const PrivateChat = () => {
             id: doc.id,
             ...userData
           });
-          names[doc.id] = userData.name || userData.email?.split('@')[0] || doc.id.substring(0, 8);
+          // Extract name with fallback priority: name > studentEmail > email > personalEmail > userId
+          names[doc.id] = userData.name || 
+                          userData.studentEmail?.split('@')[0] || 
+                          userData.email?.split('@')[0] || 
+                          userData.personalEmail?.split('@')[0] ||
+                          doc.id.substring(0, 8);
           profiles[doc.id] = userData;
           online[doc.id] = {
             isOnline: userData.isOnline || false,
@@ -393,10 +398,16 @@ const PrivateChat = () => {
               return prev;
             });
             
-            // Update caches
+            // Update caches - ensure name is properly set
+            const userName = userToSelect.name || 
+                            userToSelect.studentEmail?.split('@')[0] || 
+                            userToSelect.email?.split('@')[0] || 
+                            userToSelect.personalEmail?.split('@')[0] ||
+                            `User ${userToSelect.id.substring(0, 8)}`;
+            
             setUserNames(prev => ({
               ...prev,
-              [userToSelect.id]: userToSelect.name || userToSelect.email?.split('@')[0] || userToSelect.id.substring(0, 8)
+              [userToSelect.id]: userName
             }));
             setUserProfiles(prev => ({
               ...prev,
@@ -701,10 +712,12 @@ const PrivateChat = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                {isAdminRole(userRole) ? 'Private Chat with Students' : 'Private Chat with Admins'}
+                Direct Messages
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Select a user to start a private conversation
+                {isAdminRole(userRole) 
+                  ? 'Start a private conversation with a student' 
+                  : 'Start a private conversation with an admin'}
               </p>
             </div>
             <button
@@ -821,7 +834,12 @@ const PrivateChat = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                        {userNames[otherUser.id] || 'Unknown User'}
+                        {userNames[otherUser.id] || 
+                         otherUser.name || 
+                         otherUser.studentEmail?.split('@')[0] || 
+                         otherUser.email?.split('@')[0] || 
+                         otherUser.personalEmail?.split('@')[0] ||
+                         `User ${otherUser.id.substring(0, 8)}`}
                       </h3>
                       {isAdminRole(otherUser.role) && (
                         <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded">
@@ -884,7 +902,12 @@ const PrivateChat = () => {
               className="text-left"
             >
               <h2 className="font-semibold text-gray-900 dark:text-white truncate">
-                {userNames[selectedUser.id] || 'Unknown User'}
+                {userNames[selectedUser.id] || 
+                 selectedUser.name || 
+                 selectedUser.studentEmail?.split('@')[0] || 
+                 selectedUser.email?.split('@')[0] || 
+                 selectedUser.personalEmail?.split('@')[0] ||
+                 `User ${selectedUser.id.substring(0, 8)}`}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                 {onlineUsers[selectedUser.id]?.isOnline ? 'Online' : 
