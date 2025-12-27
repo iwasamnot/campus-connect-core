@@ -152,14 +152,8 @@ const PrivateChat = () => {
         
         // Now set up the messages listener
         const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
-        // Use orderBy with a fallback - if timestamp doesn't exist, order by document ID
-        let q;
-        try {
-          q = query(messagesRef, orderBy('timestamp', 'asc'));
-        } catch (error) {
-          console.warn('PrivateChat: Error creating ordered query, using simple query:', error);
-          q = query(messagesRef);
-        }
+        // Always use orderBy for timestamp - Firestore will handle missing timestamps
+        const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
         unsubscribe = onSnapshot(q, 
           (snapshot) => {
@@ -362,6 +356,23 @@ const PrivateChat = () => {
       // Only set selected chat after document is created/verified
       setSelectedChatId(chatId);
       setSelectedUser(otherUser);
+      
+      // Ensure user name is in cache
+      const userName = otherUser.name || 
+                      otherUser.studentEmail?.split('@')[0] || 
+                      otherUser.email?.split('@')[0] || 
+                      otherUser.personalEmail?.split('@')[0] ||
+                      `User ${otherUser.id.substring(0, 8)}`;
+      
+      setUserNames(prev => ({
+        ...prev,
+        [otherUser.id]: userName
+      }));
+      
+      setUserProfiles(prev => ({
+        ...prev,
+        [otherUser.id]: otherUser
+      }));
     } catch (error) {
       console.error('PrivateChat: Error creating/loading chat:', error);
       console.error('PrivateChat: Error details:', {
