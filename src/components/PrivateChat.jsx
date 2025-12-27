@@ -119,6 +119,8 @@ const PrivateChat = () => {
   useEffect(() => {
     if (!selectedChatId || !user) return;
 
+    let unsubscribe = null;
+
     // Verify chat document exists before querying messages
     const verifyAndFetchMessages = async () => {
       try {
@@ -137,90 +139,98 @@ const PrivateChat = () => {
         }
         
         console.log('PrivateChat: Chat verified, fetching messages');
+        
+        // Now set up the messages listener
+        const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
+        const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+        unsubscribe = onSnapshot(q, 
+          (snapshot) => {
+            const messagesData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+
+            // Deduplicate messages by ID and filter expired messages
+            const now = new Date();
+            const expiredMessageIds = [];
+            const uniqueMessages = messagesData.reduce((acc, message) => {
+              if (!acc.find(m => m.id === message.id)) {
+                // Check if message has expired
+                if (message.expiresAt) {
+                  const expiresAt = message.expiresAt.toDate ? message.expiresAt.toDate() : new Date(message.expiresAt);
+                  if (expiresAt <= now) {
+                    // Message has expired, mark for deletion
+                    expiredMessageIds.push(message.id);
+                    return acc; // Don't add expired message
+                  }
+                }
+                acc.push(message);
+              }
+              return acc;
+            }, []);
+
+            // Delete expired messages asynchronously
+            if (expiredMessageIds.length > 0) {
+              Promise.all(
+                expiredMessageIds.map(messageId =>
+                  deleteDoc(doc(db, 'privateChats', selectedChatId, 'messages', messageId)).catch(err => {
+                    console.error('Error deleting expired message:', err);
+                  })
+                )
+              );
+            }
+
+            // Sort by timestamp
+            uniqueMessages.sort((a, b) => {
+              const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
+              const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
+              return aTime - bTime;
+            });
+
+            setMessages(uniqueMessages);
+
+            // Mark messages as read
+            messagesData.forEach(async (message) => {
+              if (message.userId !== user.uid) {
+                const readBy = message.readBy || {};
+                if (!readBy[user.uid]) {
+                  try {
+                    await updateDoc(doc(db, 'privateChats', selectedChatId, 'messages', message.id), {
+                      readBy: {
+                        ...readBy,
+                        [user.uid]: serverTimestamp()
+                      }
+                    });
+                  } catch (error) {
+                    console.error('Error marking message as read:', error);
+                  }
+                }
+              }
+            });
+          },
+          (error) => {
+            console.error('PrivateChat: Error fetching messages:', error);
+            console.error('PrivateChat: Error details:', {
+              code: error.code,
+              message: error.message
+            });
+            showError(`Failed to load messages: ${error.message || 'Please refresh the page.'}`);
+          }
+        );
       } catch (error) {
         console.error('PrivateChat: Error verifying chat:', error);
-        showError('Failed to verify chat access.');
-        return;
+        showError(`Failed to verify chat access: ${error.message || 'Please try again.'}`);
       }
     };
 
     verifyAndFetchMessages();
 
-    const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
-    const q = query(messagesRef, orderBy('timestamp', 'asc'));
-
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
-        const messagesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        // Deduplicate messages by ID and filter expired messages
-        const now = new Date();
-        const expiredMessageIds = [];
-        const uniqueMessages = messagesData.reduce((acc, message) => {
-          if (!acc.find(m => m.id === message.id)) {
-            // Check if message has expired
-            if (message.expiresAt) {
-              const expiresAt = message.expiresAt.toDate ? message.expiresAt.toDate() : new Date(message.expiresAt);
-              if (expiresAt <= now) {
-                // Message has expired, mark for deletion
-                expiredMessageIds.push(message.id);
-                return acc; // Don't add expired message
-              }
-            }
-            acc.push(message);
-          }
-          return acc;
-        }, []);
-
-        // Delete expired messages asynchronously
-        if (expiredMessageIds.length > 0) {
-          Promise.all(
-            expiredMessageIds.map(messageId =>
-              deleteDoc(doc(db, 'privateChats', selectedChatId, 'messages', messageId)).catch(err => {
-                console.error('Error deleting expired message:', err);
-              })
-            )
-          );
-        }
-
-        // Sort by timestamp
-        uniqueMessages.sort((a, b) => {
-          const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
-          const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
-          return aTime - bTime;
-        });
-
-        setMessages(uniqueMessages);
-
-        // Mark messages as read
-        messagesData.forEach(async (message) => {
-          if (message.userId !== user.uid) {
-            const readBy = message.readBy || {};
-            if (!readBy[user.uid]) {
-              try {
-                await updateDoc(doc(db, 'privateChats', selectedChatId, 'messages', message.id), {
-                  readBy: {
-                    ...readBy,
-                    [user.uid]: serverTimestamp()
-                  }
-                });
-              } catch (error) {
-                console.error('Error marking message as read:', error);
-              }
-            }
-          }
-        });
-      },
-      (error) => {
-        console.error('Error fetching messages:', error);
-        showError('Failed to load messages. Please refresh the page.');
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
       }
-    );
-
-    return () => unsubscribe();
+    };
   }, [selectedChatId, user]);
 
   // Scroll to bottom when new messages arrive
