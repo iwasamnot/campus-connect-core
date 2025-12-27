@@ -69,11 +69,17 @@ const AdminDashboard = () => {
         if (!mounted) return;
         
         try {
+          // Handle document changes properly (including deletions)
           const messagesData = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
           }));
-          setAllMessages(messagesData);
+          
+          // Filter out any null or undefined messages (shouldn't happen, but safety check)
+          const validMessages = messagesData.filter(msg => msg && msg.id);
+          
+          console.log('AdminDashboard: Received snapshot with', validMessages.length, 'messages');
+          setAllMessages(validMessages);
           setLoading(false);
         } catch (error) {
           console.error('Error processing messages:', error);
@@ -307,20 +313,31 @@ const AdminDashboard = () => {
         userEmail: user.email
       });
 
-      // Delete the message
+      // Optimistically remove message from local state immediately
+      setAllMessages(prev => prev.filter(msg => msg.id !== messageId));
+      console.log('AdminDashboard: Message removed from local state');
+
+      // Delete the message from Firestore
       await deleteDoc(messageRef);
-      console.log('AdminDashboard: Message deleted successfully');
+      console.log('AdminDashboard: Message deleted from Firestore successfully');
 
       // Verify deletion by checking if document still exists
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for Firestore to process
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit longer for Firestore to process
       const verifySnap = await getDoc(messageRef);
       if (verifySnap.exists()) {
         console.error('AdminDashboard: Message still exists after deletion!');
+        // Re-add message to state if deletion failed
+        setAllMessages(prev => {
+          if (!prev.find(m => m.id === messageId)) {
+            return [...prev, message];
+          }
+          return prev;
+        });
         showError('Failed to delete message. It may have been recreated or permission was denied.');
         setDeleting(null);
         return;
       }
-      console.log('AdminDashboard: Deletion verified - message no longer exists');
+      console.log('AdminDashboard: Deletion verified - message no longer exists in Firestore');
 
       // Log audit action
       try {
