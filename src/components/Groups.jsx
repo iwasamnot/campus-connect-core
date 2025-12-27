@@ -118,7 +118,10 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       setNewGroupDescription('');
     } catch (error) {
       console.error('Error creating group:', error);
-      showError('Failed to create group. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to create groups.'
+        : error.message || 'Failed to create group. Please try again.';
+      showError(errorMessage);
     } finally {
       setCreating(false);
     }
@@ -153,7 +156,10 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       }
     } catch (error) {
       console.error('Error leaving group:', error);
-      showError('Failed to leave group. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to leave this group.'
+        : error.message || 'Failed to leave group. Please try again.';
+      showError(errorMessage);
     }
   };
 
@@ -194,7 +200,10 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       success('Join request sent! The group admin will review it.');
     } catch (error) {
       console.error('Error requesting to join:', error);
-      showError('Failed to send join request. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to request to join this group.'
+        : error.message || 'Failed to send join request. Please try again.';
+      showError(errorMessage);
     } finally {
       setRequesting(null);
     }

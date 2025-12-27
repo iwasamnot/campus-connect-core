@@ -199,7 +199,12 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
-      showError('Failed to send message. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to send messages in this group.'
+        : error.code === 'not-found'
+        ? 'Group not found. Please try refreshing the page.'
+        : error.message || 'Failed to send message. Please try again.';
+      showError(errorMessage);
     } finally {
       setSending(false);
     }
@@ -214,7 +219,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       success('Message deleted successfully.');
     } catch (error) {
       console.error('Error deleting message:', error);
-      showError('Failed to delete message. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to delete this message.'
+        : error.message || 'Failed to delete message. Please try again.';
+      showError(errorMessage);
     } finally {
       setDeleting(null);
     }
@@ -247,7 +255,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       success('Message updated successfully.');
     } catch (error) {
       console.error('Error editing message:', error);
-      showError('Failed to edit message. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to edit this message.'
+        : error.message || 'Failed to edit message. Please try again.';
+      showError(errorMessage);
     }
   };
 
