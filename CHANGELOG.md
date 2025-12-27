@@ -16,6 +16,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-language support
 - Progressive Web App (PWA) features
 
+## [1.2.2] - 2024-12-27
+
+### Added
+- **Smooth Animations Throughout App**: Comprehensive animation system for enhanced user experience
+  - Custom Tailwind animations: fade-in, slide-in (all directions), scale-in, bounce-in, shimmer
+  - Smooth button hover and active states with scale and shadow effects
+  - Page transition animations with fade-in effects
+  - Card hover effects with elevation and shadow
+  - Toast notification slide-in animations
+  - Message enter animations
+  - Modal fade-in animations
+  - Skeleton loading animations
+  - Global smooth transitions for all interactive elements (buttons, inputs, cards)
+  - Animation utility file for consistent animations across components
+- **Settings Page**: Dedicated settings page accessible from sidebar
+  - Dark mode toggle with smooth switch animation
+  - Sign out button
+  - My Profile access (for students)
+  - Clean, organized settings interface
+  - Mobile-responsive design
+
+### Changed
+- Enhanced Sidebar navigation buttons with smooth hover/active scale animations
+- Improved Toast notifications with enhanced slide-in animations
+- Updated Settings component with smooth animations for all interactive elements
+- Enhanced mobile menu button with smooth hover/active states
+- Improved overall UI responsiveness with consistent animation timing
+- Updated Gemini AI model to `gemini-2.5-flash` for newer API key support
+- Hardcoded Gemini model name to ensure consistent model usage
+- Moved dark mode and sign out buttons from sidebar footer to Settings page
+
+### Fixed
+- Improved visual feedback for all user interactions
+- Enhanced user experience with polished, professional animations
+- Fixed mobile sidebar buttons being hidden by browser UI (Chrome tab bar)
+- Fixed private chat creation permissions in Firestore rules
+
 ## [1.2.1] - 2024-12-27
 
 ### Added
@@ -203,6 +240,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v1.2.2** (2024-12-27) - Smooth animations throughout the app
 - **v1.2.1** (2024-12-27) - Disappearing Messages feature
 - **v1.2.0** (2024-12-27) - Private Chat system
 - **v1.1.0** (2024-12-26) - Google Gemini AI integration
