@@ -488,12 +488,38 @@ const ChatArea = ({ setActiveView }) => {
     setDeleting(messageId);
     try {
       const messageRef = doc(db, 'messages', messageId);
+      
+      // Verify message exists before deleting
+      const messageSnap = await getDoc(messageRef);
+      if (!messageSnap.exists()) {
+        showError('Message not found. It may have already been deleted.');
+        setDeleting(null);
+        return;
+      }
+
+      console.log('ChatArea: Deleting message:', {
+        messageId,
+        messageUserId,
+        isAIMessage,
+        currentUser: user.uid,
+        isAuthor,
+        isAdmin
+      });
+
+      // Delete the message
       await deleteDoc(messageRef);
+      console.log('ChatArea: Message deleted successfully');
+      
       success('Message deleted successfully.');
     } catch (error) {
       console.error('Error deleting message:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
       const errorMessage = error.code === 'permission-denied' 
-        ? 'Permission denied. You may not have permission to delete this message.'
+        ? 'Permission denied. You may not have permission to delete this message. Please check your permissions.'
         : error.message || 'Failed to delete message. Please try again.';
       showError(errorMessage);
     } finally {

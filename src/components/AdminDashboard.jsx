@@ -12,7 +12,8 @@ import {
   orderBy,
   addDoc,
   serverTimestamp,
-  getDocs
+  getDocs,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText } from 'lucide-react';
@@ -268,23 +269,69 @@ const AdminDashboard = () => {
     setDeleting(messageId);
     try {
       const message = allMessages.find(m => m.id === messageId);
+      if (!message) {
+        showError('Message not found in current view.');
+        setDeleting(null);
+        return;
+      }
+
       const messageRef = doc(db, 'messages', messageId);
       
-      await deleteDoc(messageRef);
+      // Verify message exists before deleting
+      const messageSnap = await getDoc(messageRef);
+      if (!messageSnap.exists()) {
+        showError('Message not found. It may have already been deleted.');
+        setDeleting(null);
+        return;
+      }
 
-      await logAuditAction('delete_message', {
+      console.log('AdminDashboard: Deleting message:', {
         messageId,
-        messageText: message?.text,
-        userId: message?.userId,
-        userEmail: message?.userEmail,
-        isAI: message?.isAI || message?.userId === 'virtual-senior'
+        userId: message.userId,
+        isAI: message.isAI,
+        currentUser: user.uid,
+        userRole: userRole
       });
+
+      // Delete the message
+      await deleteDoc(messageRef);
+      console.log('AdminDashboard: Message deleted successfully');
+
+      // Verify deletion by checking if document still exists
+      await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for Firestore to process
+      const verifySnap = await getDoc(messageRef);
+      if (verifySnap.exists()) {
+        console.error('AdminDashboard: Message still exists after deletion!');
+        showError('Failed to delete message. It may have been recreated or permission was denied.');
+        setDeleting(null);
+        return;
+      }
+      console.log('AdminDashboard: Deletion verified - message no longer exists');
+
+      // Log audit action
+      try {
+        await logAuditAction('delete_message', {
+          messageId,
+          messageText: message?.text,
+          userId: message?.userId,
+          userEmail: message?.userEmail,
+          isAI: message?.isAI || message?.userId === 'virtual-senior'
+        });
+      } catch (auditError) {
+        console.error('Error logging audit action:', auditError);
+        // Don't fail the deletion if audit logging fails
+      }
 
       success('Message has been deleted.');
     } catch (error) {
       console.error('Error deleting message:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
       const errorMessage = error.code === 'permission-denied'
-        ? 'Permission denied. You may not have permission to delete this message.'
+        ? 'Permission denied. You may not have permission to delete this message. Please check your admin role in Firestore.'
         : error.code === 'not-found'
         ? 'Message not found. It may have already been deleted.'
         : error.message || 'Failed to delete message. Please try again.';
