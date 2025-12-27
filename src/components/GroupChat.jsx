@@ -337,7 +337,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       success(`${userNames[memberId] || 'Member'} has been removed from the group`);
     } catch (error) {
       console.error('Error removing member:', error);
-      showError('Failed to remove member. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to remove members.'
+        : error.message || 'Failed to remove member. Please try again.';
+      showError(errorMessage);
     } finally {
       setRemovingMember(null);
     }
@@ -444,7 +447,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       setShowInviteModal(false);
     } catch (error) {
       console.error('Error inviting user:', error);
-      showError('Failed to invite user. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to invite users.'
+        : error.message || 'Failed to invite user. Please try again.';
+      showError(errorMessage);
     } finally {
       setInviting(false);
     }
@@ -466,7 +472,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       success('Join request approved!');
     } catch (error) {
       console.error('Error approving request:', error);
-      showError('Failed to approve request. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to approve requests.'
+        : error.message || 'Failed to approve request. Please try again.';
+      showError(errorMessage);
     } finally {
       setProcessingRequest(null);
     }
@@ -487,7 +496,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       success('Join request denied');
     } catch (error) {
       console.error('Error denying request:', error);
-      showError('Failed to deny request. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to deny requests.'
+        : error.message || 'Failed to deny request. Please try again.';
+      showError(errorMessage);
     } finally {
       setProcessingRequest(null);
     }
@@ -526,7 +538,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       }
     } catch (error) {
       console.error('Error leaving group:', error);
-      showError('Failed to leave group. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to leave this group.'
+        : error.message || 'Failed to leave group. Please try again.';
+      showError(errorMessage);
     }
   };
 
