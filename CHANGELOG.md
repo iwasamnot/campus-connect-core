@@ -15,6 +15,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Voice messages
 - Message scheduling
 
+## [2.0.1] - 2024-12-27
+
+### Added
+- **Private Chat from User Popup**: Start private chat directly from user profile popup
+  - "Start Private Chat" button in user profile popup (Campus Chat, Group Chat, Private Chat)
+  - Automatic navigation to Direct Messages with user pre-selected
+  - Works for both students and admins
+- **Email Search in Direct Messages**: Search and add users by email address
+  - "Add by Email" button in Direct Messages view
+  - Search users by email, studentEmail, or personalEmail
+  - Automatically adds found users to chat list
+  - Validates role compatibility (student ↔ admin)
+- **Message History Preview**: See last message and timestamp in Direct Messages user list
+  - Last message preview for each conversation
+  - Relative timestamps (Just now, 5m ago, 2h ago, 3d ago)
+  - Shows email if no conversation exists yet
+  - Real-time updates when new messages are sent
+- **Enhanced Settings Page**: Expanded settings with more options
+  - Notifications section with browser notification enable button
+  - Privacy & Security section with account security information
+  - Help & Support section with AI Help access and About information
+  - Organized into logical sections for better navigation
+  - All settings options with smooth animations
+
+### Changed
+- **Direct Messages Heading**: Changed from "Private Chat with Students/Admins" to "Direct Messages"
+  - More modern and user-friendly heading
+  - Updated subtitle to be more descriptive
+- **User Name Display**: Improved name extraction and display throughout private chat
+  - Better fallback logic for user names (name → studentEmail → email → personalEmail → userId)
+  - Name properly displayed in chat header
+  - Name properly displayed in user list
+  - Name properly cached when selecting chats
+- **Emoji Picker**: Improved visibility and positioning
+  - Better responsive sizing for mobile and desktop
+  - Proper z-index to appear above other elements
+  - Right-aligned positioning for better visibility
+  - Improved mobile layout (6 columns on mobile, 8 on desktop)
+
+### Fixed
+- **Private Chat Button Visibility**: Fixed button not showing in user profile popup
+  - Button now always shows when callback is provided
+  - Removed overly strict role checking that was hiding button
+  - Proper navigation to Direct Messages view
+- **Private Chat Not Starting**: Fixed issue where clicking "Start Private Chat" didn't work
+  - Now stores both userId and userData in sessionStorage
+  - Automatically adds user to availableUsers if not already present
+  - Proper role validation and user caching
+  - Better error handling and logging
+- **Unknown User Display**: Fixed "Unknown User" appearing in private chat
+  - Improved name extraction with multiple fallback options
+  - Proper name caching when users are added
+  - Name displayed correctly in chat header and user list
+- **Message History Not Showing**: Fixed previous messages not displaying in private chat
+  - Improved message fetching with better timestamp handling
+  - Added optimistic updates for immediate message display
+  - Enhanced logging for debugging message issues
+  - Better error handling for message queries
+  - Fixed message sorting and deduplication
+- **Emoji Picker Not Visible**: Fixed emoji picker being cut off or not visible
+  - Improved positioning with proper container
+  - Better responsive sizing
+  - Higher z-index for proper layering
+- **Message Sending Issues**: Fixed messages not appearing after sending
+  - Added optimistic updates for immediate feedback
+  - Improved message state management
+  - Better synchronization with Firestore
+
 ## [2.0.0] - 2024-12-27
 
 ### Added
@@ -328,6 +396,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v2.0.1** (2024-12-27) - Private chat improvements, email search, message history preview, enhanced settings, and bug fixes
 - **v2.0.0** (2024-12-27) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
 - **v1.2.2** (2024-12-27) - Smooth animations throughout the app
 - **v1.2.1** (2024-12-27) - Disappearing Messages feature
