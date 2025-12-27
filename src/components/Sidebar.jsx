@@ -1,20 +1,10 @@
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus, UserCircle, X, MessageCircle } from 'lucide-react';
+import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings } from 'lucide-react';
 import Logo from './Logo';
 
 const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
-  const { userRole, signOut } = useAuth();
-  const { darkMode, toggleDarkMode } = useTheme();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
+  const { userRole } = useAuth();
 
   const handleNavClick = (view) => {
     setActiveView(view);
@@ -89,17 +79,6 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
               <span>AI Help</span>
             </button>
             <button
-              onClick={() => handleNavClick('profile')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeView === 'profile'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
-              <User size={20} />
-              <span>My Profile</span>
-            </button>
-            <button
               onClick={() => handleNavClick('groups')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 activeView === 'groups' || activeView === 'group-chat'
@@ -120,6 +99,17 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             >
               <MessageCircle size={20} />
               <span>Private Chat</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('settings')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeView === 'settings'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <Settings size={20} />
+              <span>Settings</span>
             </button>
           </>
         ) : (
@@ -179,26 +169,20 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
               <MessageCircle size={20} />
               <span>Private Chat</span>
             </button>
+            <button
+              onClick={() => handleNavClick('settings')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeView === 'settings'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <Settings size={20} />
+              <span>Settings</span>
+            </button>
           </>
         )}
       </nav>
-
-      <div className="p-4 pb-20 md:pb-4 border-t border-gray-800 space-y-2 flex-shrink-0 bg-gray-900 dark:bg-gray-900" style={{ paddingBottom: 'max(5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem))' }}>
-        <button
-          onClick={toggleDarkMode}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
-        >
-          {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-        </button>
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
-        >
-          <LogOut size={20} />
-          <span>Sign Out</span>
-        </button>
-      </div>
     </div>
     </>
   );

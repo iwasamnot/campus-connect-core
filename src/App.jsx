@@ -15,6 +15,7 @@ const AIHelp = lazy(() => import('./components/AIHelp'));
 const Groups = lazy(() => import('./components/Groups'));
 const GroupChat = lazy(() => import('./components/GroupChat'));
 const PrivateChat = lazy(() => import('./components/PrivateChat'));
+const Settings = lazy(() => import('./components/Settings'));
 
 // Loading component for lazy-loaded routes
 const LoadingSpinner = () => (
@@ -82,6 +83,7 @@ function App() {
               {activeView === 'users' && <UsersManagement />}
               {activeView === 'create-user' && <CreateUser />}
               {activeView === 'private-chat' && <PrivateChat />}
+              {activeView === 'settings' && <Settings setActiveView={setActiveView} />}
             </>
           ) : (
             <>
@@ -104,6 +106,7 @@ function App() {
                 />
               )}
               {activeView === 'private-chat' && <PrivateChat />}
+              {activeView === 'settings' && <Settings setActiveView={setActiveView} />}
             </>
           )}
         </Suspense>
