@@ -342,26 +342,48 @@ const PrivateChat = () => {
     const initialUserDataStr = sessionStorage.getItem('initialPrivateChatUserData');
     
     if (initialUserId) {
-      // Don't clear immediately - wait until we successfully select
+      console.log('PrivateChat: Found initialUserId in sessionStorage:', initialUserId);
+      console.log('PrivateChat: Has userData:', !!initialUserDataStr);
+      console.log('PrivateChat: Current userRole:', userRole);
+      console.log('PrivateChat: AvailableUsers count:', availableUsers.length);
       
       // Try to find user in availableUsers first
       let userToSelect = availableUsers.find(u => u.id === initialUserId);
+      console.log('PrivateChat: Found in availableUsers:', !!userToSelect);
       
       // If not found in availableUsers, try to use the stored userData
       if (!userToSelect && initialUserDataStr) {
         try {
           const storedUserData = JSON.parse(initialUserDataStr);
+          console.log('PrivateChat: Parsed storedUserData:', {
+            id: storedUserData.id,
+            role: storedUserData.role,
+            name: storedUserData.name
+          });
+          
           // Check if user can chat (student with admin, admin with student)
           const currentUserIsAdmin = isAdminRole(userRole);
           const storedUserIsAdmin = isAdminRole(storedUserData.role);
           const canChat = (currentUserIsAdmin && !storedUserIsAdmin) || (!currentUserIsAdmin && storedUserIsAdmin);
           
-          if (canChat && storedUserData.id === initialUserId) {
+          console.log('PrivateChat: Role check:', {
+            currentUserIsAdmin,
+            storedUserIsAdmin,
+            canChat,
+            currentRole: userRole,
+            storedRole: storedUserData.role
+          });
+          
+          // Allow chat if we have valid userData (let Firestore rules and selectChat handle permissions)
+          // Only block if it's clearly the same user
+          if (storedUserData.id === initialUserId && storedUserData.id !== user.uid) {
             // Add user to availableUsers and user caches
             userToSelect = {
               id: storedUserData.id,
               ...storedUserData
             };
+            
+            console.log('PrivateChat: Adding user to availableUsers:', userToSelect.id);
             
             // Add to availableUsers if not already there
             setAvailableUsers(prev => {
@@ -387,6 +409,12 @@ const PrivateChat = () => {
                 lastSeen: userToSelect.lastSeen || null
               }
             }));
+          } else {
+            console.warn('PrivateChat: Cannot add user - role mismatch or invalid data:', {
+              canChat,
+              hasRole: !!storedUserData.role,
+              idMatch: storedUserData.id === initialUserId
+            });
           }
         } catch (error) {
           console.error('PrivateChat: Error parsing stored user data:', error);
@@ -403,7 +431,11 @@ const PrivateChat = () => {
         selectChat(userToSelect);
       } else if (availableUsers.length > 0) {
         // Only show error if we've loaded users but still can't find this one
-        console.warn('PrivateChat: User not found in availableUsers:', initialUserId);
+        console.warn('PrivateChat: User not found in availableUsers after all attempts:', {
+          initialUserId,
+          hasUserData: !!initialUserDataStr,
+          availableUsersCount: availableUsers.length
+        });
         sessionStorage.removeItem('initialPrivateChatUserId');
         sessionStorage.removeItem('initialPrivateChatUserData');
         showError('User not available for private chat. Please try adding them by email.');
