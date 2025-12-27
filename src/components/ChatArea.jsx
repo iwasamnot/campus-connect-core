@@ -451,9 +451,15 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
-  const handleDeleteMessage = async (messageId, messageUserId) => {
+  const handleDeleteMessage = async (messageId, messageUserId, isAIMessage = false) => {
     const isAuthor = messageUserId === user?.uid;
     const isAdmin = isAdminRole(userRole);
+    
+    // Allow admins to delete AI messages, or users to delete their own messages
+    if (isAIMessage && !isAdmin) {
+      showError('Only administrators can delete AI messages.');
+      return;
+    }
     
     if (!isAuthor && !isAdmin) {
       showError('You can only delete your own messages.');
@@ -815,8 +821,10 @@ const ChatArea = ({ setActiveView }) => {
           filteredMessages.map((message) => {
             const isAuthor = message.userId === user?.uid;
             const isAdmin = isAdminRole(userRole);
+            const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
             const canEdit = isAuthor && !message.edited;
-            const canDelete = isAuthor || isAdmin;
+            // Allow admins to delete AI messages, or users to delete their own messages
+            const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
             const userReaction = message.reactions?.[user.uid];
             const reactionCounts = message.reactions ? Object.values(message.reactions).reduce((acc, emoji) => {
               acc[emoji] = (acc[emoji] || 0) + 1;
@@ -1129,10 +1137,10 @@ const ChatArea = ({ setActiveView }) => {
                     )}
                     {canDelete && (
                       <button
-                        onClick={() => handleDeleteMessage(message.id, message.userId)}
+                        onClick={() => handleDeleteMessage(message.id, message.userId, isAIMessage)}
                         disabled={deleting === message.id}
                         className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 disabled:transform-none"
-                        title="Delete message"
+                        title={isAIMessage ? "Delete AI message (Admin only)" : "Delete message"}
                       >
                         <Trash2 size={14} />
                       </button>
