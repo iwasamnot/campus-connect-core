@@ -1007,34 +1007,68 @@ const PrivateChat = () => {
           >
             <ArrowLeft size={20} className="text-gray-600 dark:text-gray-400" />
           </button>
-          <div className="relative">
-            {selectedUser?.profilePicture ? (
-              <img
-                src={selectedUser.profilePicture}
-                alt={userNames[selectedUser.id] || 'User'}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
-                {(userNames[selectedUser.id] || 'U')[0].toUpperCase()}
-              </div>
-            )}
-            {onlineUsers[selectedUser.id]?.isOnline && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-            )}
-          </div>
+          <button
+            onClick={() => setSelectedUserId(selectedUser.id)}
+            className="relative flex-shrink-0"
+          >
+            {(() => {
+              const userProfile = userProfiles[selectedUser.id] || selectedUser;
+              const profilePicture = userProfile.profilePicture || selectedUser.profilePicture;
+              const displayName = userNames[selectedUser.id] || 
+                                 userProfile.name || 
+                                 selectedUser.name || 
+                                 userProfile.studentEmail?.split('@')[0] || 
+                                 selectedUser.studentEmail?.split('@')[0] || 
+                                 userProfile.email?.split('@')[0] || 
+                                 selectedUser.email?.split('@')[0] || 
+                                 userProfile.personalEmail?.split('@')[0] ||
+                                 selectedUser.personalEmail?.split('@')[0] ||
+                                 `User ${selectedUser.id.substring(0, 8)}`;
+              
+              return (
+                <>
+                  {profilePicture ? (
+                    <img
+                      src={profilePicture}
+                      alt={displayName}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={`w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
+                  >
+                    {displayName[0].toUpperCase()}
+                  </div>
+                  {onlineUsers[selectedUser.id]?.isOnline && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                  )}
+                </>
+              );
+            })()}
+          </button>
           <div className="flex-1 min-w-0">
             <button
               onClick={() => setSelectedUserId(selectedUser.id)}
-              className="text-left"
+              className="text-left w-full"
             >
               <h2 className="font-semibold text-gray-900 dark:text-white truncate">
-                {userNames[selectedUser.id] || 
-                 selectedUser.name || 
-                 selectedUser.studentEmail?.split('@')[0] || 
-                 selectedUser.email?.split('@')[0] || 
-                 selectedUser.personalEmail?.split('@')[0] ||
-                 `User ${selectedUser.id.substring(0, 8)}`}
+                {(() => {
+                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                  return userNames[selectedUser.id] || 
+                         userProfile.name || 
+                         selectedUser.name || 
+                         userProfile.studentEmail?.split('@')[0] || 
+                         selectedUser.studentEmail?.split('@')[0] || 
+                         userProfile.email?.split('@')[0] || 
+                         selectedUser.email?.split('@')[0] || 
+                         userProfile.personalEmail?.split('@')[0] ||
+                         selectedUser.personalEmail?.split('@')[0] ||
+                         `User ${selectedUser.id.substring(0, 8)}`;
+                })()}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                 {onlineUsers[selectedUser.id]?.isOnline ? 'Online' : 
