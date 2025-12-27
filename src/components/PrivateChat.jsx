@@ -615,6 +615,15 @@ const PrivateChat = () => {
         messageData.expiresAt = expiresAt;
       }
 
+      // Add optimistic update - show message immediately
+      const optimisticMessage = {
+        id: 'temp-' + Date.now(),
+        ...messageData,
+        timestamp: new Date(), // Use current date for optimistic update
+        isOptimistic: true
+      };
+      setMessages(prev => [...prev, optimisticMessage]);
+
       const messageRef = await addDoc(collection(db, 'privateChats', selectedChatId, 'messages'), messageData);
       console.log('PrivateChat: Message sent successfully, ID:', messageRef.id);
       console.log('PrivateChat: Message data:', messageData);
@@ -625,6 +634,9 @@ const PrivateChat = () => {
         lastMessageTime: serverTimestamp()
       });
 
+      // Remove optimistic message - the real one will come from the listener
+      setMessages(prev => prev.filter(m => !m.isOptimistic));
+      
       setNewMessage('');
       success('Message sent!');
     } catch (error) {
