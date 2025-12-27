@@ -19,8 +19,16 @@ const Settings = lazy(() => import('./components/Settings'));
 
 // Loading component for lazy-loaded routes
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+  <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
     <div className="text-center">
+      <img 
+        src="/logo.png" 
+        alt="CampusConnect Logo" 
+        className="w-24 h-24 mx-auto mb-4 animate-pulse-slow object-contain"
+        onError={(e) => {
+          e.target.style.display = 'none';
+        }}
+      />
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
       <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
     </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import Logo from './Logo';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -18,8 +19,11 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 animate-fade-in">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full">
+            <div className="flex items-center justify-center mb-4">
+              <Logo size="small" showText={false} className="mb-2" />
+            </div>
             <div className="flex items-center justify-center mb-4">
               <AlertTriangle className="text-red-600 dark:text-red-400" size={48} />
             </div>

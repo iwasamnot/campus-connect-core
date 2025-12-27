@@ -13,13 +13,32 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      {/* Simple CC Logo */}
+      {/* Logo Image */}
+      <img
+        src="/logo.png"
+        alt="CampusConnect Logo"
+        className="mb-2 object-contain transition-all duration-300 ease-in-out"
+        style={{
+          width: `${width + 16}px`,
+          height: `${width + 16}px`,
+          maxWidth: '100%',
+          height: 'auto'
+        }}
+        onError={(e) => {
+          // Fallback to text logo if image fails to load
+          e.target.style.display = 'none';
+          const fallback = e.target.nextElementSibling;
+          if (fallback) fallback.style.display = 'flex';
+        }}
+      />
+      {/* Fallback text logo (hidden by default) */}
       <div
         className="mb-2 rounded-lg p-2 flex items-center justify-center bg-indigo-600 text-white font-bold"
         style={{
           width: `${width + 16}px`,
           height: `${width + 16}px`,
-          fontSize: `${width * 0.4}px`
+          fontSize: `${width * 0.4}px`,
+          display: 'none'
         }}
       >
         CC
