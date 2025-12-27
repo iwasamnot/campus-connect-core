@@ -403,6 +403,106 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
         </div>
       )}
 
+      {/* Browse Groups Modal */}
+      {showBrowseModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowBrowseModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Browse Groups</h3>
+              <button
+                onClick={() => setShowBrowseModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            {/* Search */}
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search groups..."
+                  value={browseSearchTerm}
+                  onChange={(e) => setBrowseSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+            </div>
+
+            {/* Groups List */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {filteredBrowseGroups.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {browseSearchTerm ? 'No groups found matching your search' : 'No groups available to join'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredBrowseGroups.map((group) => {
+                    const hasRequested = group.joinRequests?.includes(user?.uid);
+                    
+                    return (
+                      <div
+                        key={group.id}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-800 dark:text-white mb-1">
+                              {group.name}
+                            </h4>
+                            {group.description && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                {group.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                              <span>{group.members?.length || 0} member(s)</span>
+                              {group.admins?.length > 0 && (
+                                <span>{group.admins.length} admin(s)</span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRequestToJoin(group.id)}
+                            disabled={requesting === group.id || hasRequested}
+                            className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                              hasRequested
+                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'
+                                : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                            }`}
+                          >
+                            {requesting === group.id ? (
+                              <>
+                                <Loader className="animate-spin" size={16} />
+                                <span>Requesting...</span>
+                              </>
+                            ) : hasRequested ? (
+                              <>
+                                <CheckCircle size={16} />
+                                <span>Requested</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus size={16} />
+                                <span>Request to Join</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
