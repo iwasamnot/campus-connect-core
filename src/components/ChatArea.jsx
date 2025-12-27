@@ -13,16 +13,23 @@ import {
   doc,
   deleteDoc,
   updateDoc,
+  setDoc,
   limit,
   startAfter,
   getDocs,
   getDoc
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File } from 'lucide-react';
 import Logo from './Logo';
 import UserProfilePopup from './UserProfilePopup';
+import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
+import EmojiPicker from './EmojiPicker';
+import FileUpload from './FileUpload';
+import MentionAutocomplete from './MentionAutocomplete';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { parseMarkdown, hasMarkdown } from '../utils/markdown';
+import notificationService from '../utils/notifications';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -49,8 +56,32 @@ const ChatArea = () => {
   const [waitingForAI, setWaitingForAI] = useState(false); // Track if waiting for AI response
   const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-pro'); // Default model
   const [showModelSelector, setShowModelSelector] = useState(false); // Show model selector dropdown
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Show emoji picker
+  const [showFileUpload, setShowFileUpload] = useState(false); // Show file upload
+  const [attachedFile, setAttachedFile] = useState(null); // Attached file
+  const [replyingTo, setReplyingTo] = useState(null); // Message being replied to
+  const [pinnedMessages, setPinnedMessages] = useState([]); // Pinned messages
+  const [cursorPosition, setCursorPosition] = useState(0); // Cursor position for mentions
+  const [showMentions, setShowMentions] = useState(false); // Show mention autocomplete
   const messagesEndRef = useRef(null);
+  const messageInputRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
+  
+  // Typing indicator (for global chat, chatId can be 'global')
+  const typingUsers = useTypingIndicator('global', 'global');
+  
+  // Fetch pinned messages
+  useEffect(() => {
+    if (!user) return;
+    
+    const q = query(collection(db, 'messages'), where('pinned', '==', true), orderBy('pinnedAt', 'desc'), limit(10));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const pinned = snapshot.docs.map(doc => doc.id);
+      setPinnedMessages(pinned);
+    });
+    
+    return () => unsubscribe();
+  }, [user]);
 
   // Available Gemini models
   const geminiModels = [
@@ -188,7 +219,7 @@ const ChatArea = () => {
       
       setMessages(uniqueMessages);
       
-      // Mark all messages as read by current user
+      // Mark all messages as read by current user and send notifications
       if (user) {
         messagesData.forEach(async (message) => {
           const readBy = message.readBy || {};
@@ -200,6 +231,24 @@ const ChatArea = () => {
                   [user.uid]: serverTimestamp()
                 }
               });
+              
+              // Send notification for new messages (not from current user and not AI)
+              if (message.userId !== user.uid && !message.isAI && !document.hasFocus()) {
+                const messageUser = userProfiles[message.userId] || {};
+                await notificationService.showMessage(
+                  message,
+                  messageUser.name || message.userName || 'Someone'
+                );
+              }
+              
+              // Check if user was mentioned
+              if (message.mentions && message.mentions.includes(user.uid)) {
+                const messageUser = userProfiles[message.userId] || {};
+                await notificationService.showMention(
+                  message,
+                  messageUser.name || message.userName || 'Someone'
+                );
+              }
             } catch (error) {
               console.error('Error marking message as read:', error);
             }
@@ -285,9 +334,24 @@ const ChatArea = () => {
       }
     }
 
+    // Extract mentions from text
+    const mentionRegex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = mentionRegex.exec(originalText)) !== null) {
+      // Find user by name
+      const mentionedName = match[1];
+      const mentionedUser = Object.values(userProfiles).find(u => 
+        u.name?.toLowerCase() === mentionedName.toLowerCase()
+      );
+      if (mentionedUser) {
+        mentions.push(mentionedUser.id);
+      }
+    }
+
     try {
       // Save user message
-      await addDoc(collection(db, 'messages'), {
+      const messageData = {
         text: originalText,
         displayText: displayText,
         toxic: isToxic,
@@ -302,9 +366,48 @@ const ChatArea = () => {
         readBy: {
           [user.uid]: serverTimestamp() // Sender has seen their own message
         }
-      });
+      };
+
+      // Add reply reference if replying
+      if (replyingTo) {
+        messageData.replyTo = replyingTo.id;
+        messageData.replyToText = replyingTo.text || replyingTo.displayText;
+        messageData.replyToUserName = replyingTo.userName;
+      }
+
+      // Add file attachment if present
+      if (attachedFile) {
+        messageData.attachment = {
+          url: attachedFile.url,
+          name: attachedFile.name,
+          type: attachedFile.type,
+          size: attachedFile.size
+        };
+      }
+
+      // Add mentions
+      if (mentions.length > 0) {
+        messageData.mentions = mentions;
+      }
+
+      const messageRef = await addDoc(collection(db, 'messages'), messageData);
+
+      // Send notifications to mentioned users
+      if (mentions.length > 0) {
+        mentions.forEach(async (mentionedUserId) => {
+          if (mentionedUserId !== user.uid) {
+            const mentionedUser = userProfiles[mentionedUserId];
+            await notificationService.showMention(
+              { text: originalText, userProfilePicture: userProfiles[user.uid]?.profilePicture },
+              userName
+            );
+          }
+        });
+      }
 
       setNewMessage('');
+      setAttachedFile(null);
+      setReplyingTo(null);
       setLastMessageTime(now);
       success('Message sent!');
 
@@ -648,6 +751,32 @@ const ChatArea = () => {
         )}
       </div>
 
+          {/* Pinned Messages Section */}
+          {pinnedMessages.length > 0 && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-3 md:px-6 py-2 animate-slide-in-down">
+              <div className="flex items-center gap-2 mb-2">
+                <Pin size={16} className="text-yellow-600 dark:text-yellow-400" />
+                <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Pinned Messages</h3>
+              </div>
+              <div className="space-y-2">
+                {messages
+                  .filter(m => pinnedMessages.includes(m.id))
+                  .slice(0, 3)
+                  .map((message) => (
+                    <div key={message.id} className="text-xs p-2 bg-white dark:bg-gray-800 rounded border border-yellow-200 dark:border-yellow-700 card-hover">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{message.userName || 'User'}</span>
+                        <Pin size={12} className="text-yellow-600 dark:text-yellow-400" />
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400 truncate">
+                        {message.displayText || message.text}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
         {filteredMessages.length === 0 ? (
@@ -791,9 +920,6 @@ const ChatArea = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="text-sm">
-                        {message.displayText || message.text}
-                      </div>
                       {message.edited && (
                         <div className="text-xs mt-1 opacity-75 italic">
                           (edited)
@@ -857,15 +983,118 @@ const ChatArea = () => {
                     </div>
                   )}
 
+                  {/* Reply Preview in Message */}
+                  {message.replyTo && (
+                    <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 border-l-2 border-indigo-500 rounded text-xs">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Reply size={12} className="text-indigo-600 dark:text-indigo-400" />
+                        <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                          {message.replyToUserName || 'User'}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400 truncate">
+                        {message.replyToText || 'Message'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Attachment Display */}
+                  {message.attachment && (
+                    <div className="mb-2">
+                      {message.attachment.type?.startsWith('image/') ? (
+                        <a
+                          href={message.attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity"
+                        >
+                          <img
+                            src={message.attachment.url}
+                            alt={message.attachment.name}
+                            className="max-w-full max-h-64 object-contain"
+                          />
+                        </a>
+                      ) : (
+                        <a
+                          href={message.attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          <File size={20} className="text-indigo-600 dark:text-indigo-400" />
+                          <span className="text-sm font-medium">{message.attachment.name}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            ({(message.attachment.size / 1024).toFixed(1)} KB)
+                          </span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Message Text with Markdown */}
+                  {message.displayText && (
+                    <p 
+                      className="text-sm whitespace-pre-wrap break-words"
+                      dangerouslySetInnerHTML={{
+                        __html: hasMarkdown(message.displayText) 
+                          ? parseMarkdown(message.displayText)
+                          : message.displayText.replace(/\n/g, '<br />')
+                      }}
+                    />
+                  )}
+
                   {/* Action buttons */}
                   <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                    {!isAuthor && (
+                      <button
+                        onClick={() => setReplyingTo(message)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
+                        title="Reply to message"
+                      >
+                        <Reply size={14} />
+                      </button>
+                    )}
+                    {isAdminRole(userRole) && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const isPinned = pinnedMessages.includes(message.id);
+                            if (isPinned) {
+                              await updateDoc(doc(db, 'messages', message.id), {
+                                pinned: false
+                              });
+                              setPinnedMessages(prev => prev.filter(id => id !== message.id));
+                              success('Message unpinned');
+                            } else {
+                              await updateDoc(doc(db, 'messages', message.id), {
+                                pinned: true,
+                                pinnedAt: serverTimestamp()
+                              });
+                              setPinnedMessages(prev => [...prev, message.id]);
+                              success('Message pinned');
+                            }
+                          } catch (error) {
+                            console.error('Error pinning message:', error);
+                            showError('Failed to pin message');
+                          }
+                        }}
+                        className={`p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 ${
+                          pinnedMessages.includes(message.id)
+                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                            : 'bg-gray-600 hover:bg-gray-700 text-white'
+                        }`}
+                        title={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
+                      >
+                        <Pin size={14} />
+                      </button>
+                    )}
                     {canEdit && (
                       <button
                         onClick={() => {
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 rounded-full"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
                         title="Edit message"
                       >
                         <Edit2 size={14} />
@@ -875,7 +1104,7 @@ const ChatArea = () => {
                       <button
                         onClick={() => handleDeleteMessage(message.id, message.userId)}
                         disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 disabled:transform-none"
                         title="Delete message"
                       >
                         <Trash2 size={14} />
@@ -956,34 +1185,210 @@ const ChatArea = () => {
         <div ref={messagesEndRef} />
       </div>
 
+          {/* Typing Indicator */}
+          {Object.keys(typingUsers).length > 0 && (
+            <TypingIndicator typingUsers={typingUsers} userNames={userNames} />
+          )}
+
           {/* Message Input */}
           <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4">
-            <form onSubmit={sendMessage} className="flex gap-2 md:gap-3">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={aiHelpMode ? "Type your message... (AI Help enabled)" : "Type your message..."}
-                className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                disabled={sending || waitingForAI}
-              />
-              <button
-                type="submit"
-                disabled={sending || waitingForAI || !newMessage.trim()}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
-              >
-                {waitingForAI ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span className="hidden sm:inline">AI thinking...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send size={18} className="md:w-5 md:h-5" />
-                    <span className="hidden sm:inline">Send</span>
-                  </>
+            {/* Reply Preview */}
+            {replyingTo && (
+              <div className="mb-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between animate-slide-in-down">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Reply size={16} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                      Replying to {replyingTo.userName}
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                      {replyingTo.text || replyingTo.displayText}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  className="p-1 hover:bg-indigo-100 dark:hover:bg-indigo-800 rounded transition-colors flex-shrink-0"
+                >
+                  <X size={16} className="text-indigo-600 dark:text-indigo-400" />
+                </button>
+              </div>
+            )}
+
+            {/* File Preview */}
+            {attachedFile && (
+              <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {attachedFile.type?.startsWith('image/') ? (
+                    <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                  ) : (
+                    <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      {attachedFile.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {(attachedFile.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setAttachedFile(null)}
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+                >
+                  <X size={16} className="text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
+              <div className="flex-1 relative">
+                <input
+                  ref={messageInputRef}
+                  type="text"
+                  value={newMessage}
+                  onChange={async (e) => {
+                    setNewMessage(e.target.value);
+                    // Trigger typing indicator
+                    if (e.target.value.length > 0) {
+                      try {
+                        const typingRef = doc(db, 'typing', user.uid);
+                        await updateDoc(typingRef, {
+                          typing: true,
+                          timestamp: serverTimestamp()
+                        });
+                      } catch (error) {
+                        // Create if doesn't exist
+                        try {
+                          await setDoc(doc(db, 'typing', user.uid), {
+                            typing: true,
+                            timestamp: serverTimestamp()
+                          });
+                        } catch (err) {
+                          // Ignore errors
+                        }
+                      }
+                    }
+                    if (messageInputRef.current) {
+                      setCursorPosition(messageInputRef.current.selectionStart || 0);
+                    }
+                    // Show mention autocomplete if @ is typed
+                    if (e.target.value.includes('@')) {
+                      setShowMentions(true);
+                    } else {
+                      setShowMentions(false);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (messageInputRef.current) {
+                      setCursorPosition(messageInputRef.current.selectionStart || 0);
+                    }
+                  }}
+                  onSelect={(e) => {
+                    if (messageInputRef.current) {
+                      setCursorPosition(messageInputRef.current.selectionStart || 0);
+                    }
+                  }}
+                  placeholder={aiHelpMode ? "Type your message... (AI Help enabled)" : "Type your message... (Use @ to mention)"}
+                  className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                  disabled={sending || waitingForAI}
+                />
+                {/* Mention Autocomplete */}
+                {showMentions && (
+                  <MentionAutocomplete
+                    text={newMessage}
+                    cursorPosition={cursorPosition}
+                    users={Object.values(userProfiles)}
+                    onSelect={(newText, newPosition) => {
+                      setNewMessage(newText);
+                      setShowMentions(false);
+                      setTimeout(() => {
+                        if (messageInputRef.current) {
+                          messageInputRef.current.focus();
+                          messageInputRef.current.setSelectionRange(newPosition, newPosition);
+                        }
+                      }, 0);
+                    }}
+                  />
                 )}
-              </button>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1">
+                {/* File Upload */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowFileUpload(!showFileUpload)}
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    title="Upload file"
+                  >
+                    <Paperclip size={20} />
+                  </button>
+                  {showFileUpload && (
+                    <div className="absolute bottom-full right-0 mb-2">
+                      <FileUpload
+                        onFileUpload={(file) => {
+                          setAttachedFile(file);
+                          setShowFileUpload(false);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Emoji Picker */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    title="Add emoji"
+                  >
+                    <Smile size={20} />
+                  </button>
+                  {showEmojiPicker && (
+                    <EmojiPicker
+                      onEmojiSelect={(emoji) => {
+                        const cursorPos = messageInputRef.current?.selectionStart || newMessage.length;
+                        const textBefore = newMessage.substring(0, cursorPos);
+                        const textAfter = newMessage.substring(cursorPos);
+                        setNewMessage(textBefore + emoji + textAfter);
+                        setShowEmojiPicker(false);
+                        setTimeout(() => {
+                          if (messageInputRef.current) {
+                            messageInputRef.current.focus();
+                            const newPos = cursorPos + emoji.length;
+                            messageInputRef.current.setSelectionRange(newPos, newPos);
+                          }
+                        }, 0);
+                      }}
+                      onClose={() => setShowEmojiPicker(false)}
+                      position="top"
+                    />
+                  )}
+                </div>
+
+                {/* Send Button */}
+                <button
+                  type="submit"
+                  disabled={sending || waitingForAI || (!newMessage.trim() && !attachedFile)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-1 md:gap-2"
+                >
+                  {waitingForAI ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span className="hidden sm:inline">AI thinking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={18} className="md:w-5 md:h-5" />
+                      <span className="hidden sm:inline">Send</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
             {aiHelpMode && (
               <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 text-center">

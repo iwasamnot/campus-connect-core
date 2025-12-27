@@ -9,12 +9,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned
 - Enhanced AI moderation with machine learning model integration
-- File/image sharing in messages
-- Message threading/replies
-- Typing indicators
 - Two-factor authentication (2FA)
 - Multi-language support
 - Progressive Web App (PWA) features
+- Voice messages
+- Message scheduling
+
+## [2.0.0] - 2024-12-27
+
+### Added
+- **Real-time Typing Indicators**: See when users are typing in real-time
+  - Typing status updates automatically as users type
+  - Visual indicator with animated dots
+  - Works in global chat, private chats, and group chats
+  - Auto-clears after 3 seconds of inactivity
+- **File & Image Sharing**: Upload and share files and images in messages
+  - Support for images (JPG, PNG, GIF, etc.)
+  - Support for documents (PDF, DOC, DOCX)
+  - File size limit: 10MB
+  - Image preview in messages
+  - Clickable file downloads
+  - Firebase Storage integration
+- **Enhanced Emoji Picker**: Professional emoji picker with search and categories
+  - Search functionality
+  - Category navigation (Smileys, Gestures, Objects, Symbols, Flags)
+  - Smooth animations
+  - Easy access from message input
+- **Message Threading/Replies**: Reply to specific messages
+  - Click reply button on any message
+  - Reply preview shows original message context
+  - Visual thread indicators
+  - Reply references stored in Firestore
+- **User Mentions**: @mention users in messages
+  - Type @ to trigger mention autocomplete
+  - Search users by name or email
+  - Keyboard navigation (Arrow keys, Enter, Tab, Escape)
+  - Notifications for mentioned users
+  - Visual mention indicators
+- **Message Pinning**: Pin important messages (Admin only)
+  - Admins can pin/unpin messages
+  - Pinned messages section at top of chat
+  - Shows up to 3 most recent pinned messages
+  - Visual pin indicators
+- **Markdown Formatting**: Rich text formatting in messages
+  - **Bold** text with `**text**` or `__text__`
+  - *Italic* text with `*text*` or `_text_`
+  - `Code` blocks with backticks
+  - [Links](url) with markdown syntax
+  - Automatic line breaks
+- **Browser Notifications**: Desktop notifications for new messages
+  - Notifications when app is in background
+  - Special notifications for @mentions
+  - Click to focus app
+  - Auto-dismiss after 5 seconds
+  - Permission request on first use
+- **Accessibility Improvements**: Enhanced keyboard navigation and ARIA labels
+  - Keyboard navigation for emoji picker
+  - Keyboard navigation for mention autocomplete
+  - ARIA labels on interactive elements
+  - Better focus management
+
+### Changed
+- **Message Input Enhanced**: 
+  - Added file upload button
+  - Added emoji picker button
+  - Added mention autocomplete support
+  - Improved placeholder text
+  - Better visual feedback
+- **Message Display Enhanced**:
+  - Shows file attachments with previews
+  - Shows reply context
+  - Renders markdown formatting
+  - Better visual hierarchy
+- **Performance Optimizations**:
+  - Optimized typing indicator updates
+  - Efficient mention autocomplete filtering
+  - Better state management
+- **UI/UX Improvements**:
+  - Smooth animations for all new features
+  - Better visual feedback
+  - Improved mobile responsiveness
+  - Enhanced empty states
+
+### Fixed
+- Improved message rendering performance
+- Better error handling for file uploads
+- Fixed notification permission handling
+- Improved typing indicator cleanup
 
 ## [1.2.2] - 2024-12-27
 
@@ -247,6 +328,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v2.0.0** (2024-12-27) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
 - **v1.2.2** (2024-12-27) - Smooth animations throughout the app
 - **v1.2.1** (2024-12-27) - Disappearing Messages feature
 - **v1.2.0** (2024-12-27) - Private Chat system

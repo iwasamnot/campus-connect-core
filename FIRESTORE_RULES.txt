@@ -13,16 +13,21 @@ service cloud.firestore {
       // Allow authenticated users to read all messages
       allow read: if request.auth != null;
       
-      // Allow authenticated users to create messages
-      allow create: if request.auth != null;
+      // Allow authenticated users to create messages (with attachments, replies, mentions)
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
       
       // Allow users to update their own messages (for editing)
       // Allow any authenticated user to update readBy field (read receipts)
+      // Allow any authenticated user to update reactions field
+      // Allow admins to pin/unpin messages
       // Allow admins to update any field
       allow update: if request.auth != null && (
         (resource.data.userId == request.auth.uid && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions', 'attachment', 'replyTo', 'replyToText', 'replyToUserName', 'mentions'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])) ||
+        (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pinned', 'pinnedAt'])) ||
         isAdmin()
       );
       
@@ -238,6 +243,15 @@ service cloud.firestore {
         allow delete: if isParticipant() &&
           resource.data.userId == request.auth.uid;
       }
+    }
+    
+    // Typing indicators collection
+    match /typing/{userId} {
+      // Allow users to read typing status
+      allow read: if request.auth != null;
+      // Allow users to update their own typing status
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
