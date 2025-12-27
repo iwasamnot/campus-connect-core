@@ -86,7 +86,7 @@ function App() {
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>
-              {activeView === 'chat' && <div className="page-transition"><ChatArea /></div>}
+              {activeView === 'chat' && <div className="page-transition"><ChatArea setActiveView={setActiveView} /></div>}
               {activeView === 'audit' && <div className="page-transition"><AdminDashboard /></div>}
               {activeView === 'users' && <div className="page-transition"><UsersManagement /></div>}
               {activeView === 'create-user' && <div className="page-transition"><CreateUser /></div>}
@@ -95,7 +95,7 @@ function App() {
             </>
           ) : (
             <>
-              {activeView === 'chat' && <div className="page-transition"><ChatArea /></div>}
+              {activeView === 'chat' && <div className="page-transition"><ChatArea setActiveView={setActiveView} /></div>}
               {activeView === 'ai-help' && <div className="page-transition"><AIHelp /></div>}
               {activeView === 'profile' && <div className="page-transition"><StudentProfile /></div>}
               {activeView === 'groups' && (
@@ -110,6 +110,7 @@ function App() {
                 <div className="page-transition">
                   <GroupChat 
                     group={selectedGroup}
+                    setActiveView={setActiveView}
                     onBack={() => {
                       setActiveView('groups');
                       setSelectedGroup(null);

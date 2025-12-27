@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { X, User, Mail, Phone, Calendar, GraduationCap, MapPin, FileText, Image, Circle } from 'lucide-react';
+import { X, User, Mail, Phone, Calendar, GraduationCap, MapPin, FileText, Image, Circle, MessageCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { isAdminRole } from '../utils/helpers';
 
-const UserProfilePopup = ({ userId, onClose }) => {
+const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
+  const { user, userRole } = useAuth();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -177,6 +180,30 @@ const UserProfilePopup = ({ userId, onClose }) => {
                   )}
                 </div>
               </div>
+
+              {/* Start Private Chat Button */}
+              {onStartPrivateChat && user && userData && user.uid !== userId && (
+                (() => {
+                  const currentUserIsAdmin = isAdminRole(userRole);
+                  const viewedUserIsAdmin = isAdminRole(userData.role);
+                  const canChat = (currentUserIsAdmin && !viewedUserIsAdmin) || (!currentUserIsAdmin && viewedUserIsAdmin);
+                  
+                  return canChat ? (
+                    <div className="flex justify-center pt-2 pb-4 border-b border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() => {
+                          onStartPrivateChat(userId, userData);
+                          onClose();
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:shadow-md"
+                      >
+                        <MessageCircle size={18} />
+                        <span>Start Private Chat</span>
+                      </button>
+                    </div>
+                  ) : null;
+                })()
+              )}
 
               {/* Details */}
               <div className="space-y-4">

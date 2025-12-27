@@ -33,7 +33,7 @@ import notificationService from '../utils/notifications';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
-const ChatArea = () => {
+const ChatArea = ({ setActiveView }) => {
   const { user, userRole } = useAuth();
   const { success, error: showError } = useToast();
   const [messages, setMessages] = useState([]);
@@ -1401,7 +1401,13 @@ const ChatArea = () => {
       {selectedUserId && (
         <UserProfilePopup 
           userId={selectedUserId} 
-          onClose={() => setSelectedUserId(null)} 
+          onClose={() => setSelectedUserId(null)}
+          onStartPrivateChat={(userId, userData) => {
+            if (setActiveView) {
+              sessionStorage.setItem('initialPrivateChatUserId', userId);
+              setActiveView('private-chat');
+            }
+          }}
         />
       )}
     </div>

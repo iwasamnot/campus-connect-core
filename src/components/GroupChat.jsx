@@ -19,7 +19,7 @@ import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
 
-const GroupChat = ({ group, onBack }) => {
+const GroupChat = ({ group, onBack, setActiveView }) => {
   const { user, userRole } = useAuth();
   const { success, error: showError } = useToast();
   const [messages, setMessages] = useState([]);
@@ -520,7 +520,13 @@ const GroupChat = ({ group, onBack }) => {
       {selectedUserId && (
         <UserProfilePopup 
           userId={selectedUserId} 
-          onClose={() => setSelectedUserId(null)} 
+          onClose={() => setSelectedUserId(null)}
+          onStartPrivateChat={(userId, userData) => {
+            if (setActiveView) {
+              sessionStorage.setItem('initialPrivateChatUserId', userId);
+              setActiveView('private-chat');
+            }
+          }}
         />
       )}
     </div>

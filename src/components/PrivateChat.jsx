@@ -330,6 +330,25 @@ const PrivateChat = () => {
     }
   };
 
+  // Auto-select user from sessionStorage (when navigating from profile popup)
+  useEffect(() => {
+    if (!user || availableUsers.length === 0 || !selectChat) return;
+    
+    const initialUserId = sessionStorage.getItem('initialPrivateChatUserId');
+    if (initialUserId) {
+      // Clear it immediately to prevent re-selecting on re-renders
+      sessionStorage.removeItem('initialPrivateChatUserId');
+      
+      // Find the user in availableUsers
+      const userToSelect = availableUsers.find(u => u.id === initialUserId);
+      if (userToSelect) {
+        console.log('PrivateChat: Auto-selecting user from sessionStorage:', userToSelect.id);
+        selectChat(userToSelect);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, availableUsers]);
+
   // Check toxicity (simple word filter)
   const checkToxicity = (text) => {
     const toxicWords = ['bad', 'hate', 'stupid'];
@@ -850,6 +869,13 @@ const PrivateChat = () => {
         <UserProfilePopup
           userId={selectedUserId}
           onClose={() => setSelectedUserId(null)}
+          onStartPrivateChat={(userId, userData) => {
+            // Already in private chat, just select the user
+            const userToSelect = availableUsers.find(u => u.id === userId);
+            if (userToSelect) {
+              selectChat(userToSelect);
+            }
+          }}
         />
       )}
     </div>
