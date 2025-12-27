@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.2] - 2024-12-27
 
 ### Added
+- **Logo.png Integration**: Added logo.png throughout the entire application
+  - Logo component now uses logo.png image file with fallback to text logo
+  - Favicon updated to use logo.png
+  - Loading screen displays logo with smooth pulse animation
+  - Empty states show logo (ChatArea, PrivateChat, GroupChat, Groups)
+  - Error boundary displays logo
+  - Logo copied to public folder for proper asset serving
 - **Smooth Animations Throughout App**: Comprehensive animation system for enhanced user experience
   - Custom Tailwind animations: fade-in, slide-in (all directions), scale-in, bounce-in, shimmer
   - Smooth button hover and active states with scale and shadow effects
