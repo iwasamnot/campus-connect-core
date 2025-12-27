@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
@@ -39,7 +39,13 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deletedMessageIds, setDeletedMessageIds] = useState(new Set()); // Track deleted messages
+  const deletedMessageIdsRef = useRef(new Set()); // Ref to track deleted messages without causing re-renders
   const messagesPerPage = 50;
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    deletedMessageIdsRef.current = deletedMessageIds;
+  }, [deletedMessageIds]);
 
   // Log audit action
   const logAuditAction = async (action, details) => {
@@ -84,29 +90,31 @@ const AdminDashboard = () => {
           
           // Filter out any null or undefined messages (shouldn't happen, but safety check)
           // Also filter out messages we know were deleted (defense in depth)
+          // Use ref to avoid dependency on deletedMessageIds
           const validMessages = messagesData.filter(msg => 
             msg && 
             msg.id && 
-            !deletedMessageIds.has(msg.id) // Exclude deleted messages
+            !deletedMessageIdsRef.current.has(msg.id) // Exclude deleted messages using ref
           );
           
           console.log('AdminDashboard: Received snapshot with', validMessages.length, 'messages');
           console.log('AdminDashboard: Snapshot metadata:', {
             hasPendingWrites: snapshot.metadata.hasPendingWrites,
             fromCache: snapshot.metadata.fromCache,
-            deletedCount: deletedMessageIds.size
+            deletedCount: deletedMessageIdsRef.current.size
           });
           
           // Always update with server snapshots, but filter cache snapshots if we have deleted messages
+          // Use ref to check deleted count without dependency
           if (!snapshot.metadata.fromCache) {
             // Server snapshot - always trust it
             setAllMessages(validMessages);
-          } else if (deletedMessageIds.size === 0) {
+          } else if (deletedMessageIdsRef.current.size === 0) {
             // Cache snapshot but no deleted messages - safe to use
             setAllMessages(validMessages);
           } else {
             // Cache snapshot with deleted messages - filter them out
-            console.log('AdminDashboard: Filtering cache snapshot to exclude', deletedMessageIds.size, 'deleted messages');
+            console.log('AdminDashboard: Filtering cache snapshot to exclude', deletedMessageIdsRef.current.size, 'deleted messages');
             setAllMessages(validMessages);
           }
           setLoading(false);
@@ -134,7 +142,7 @@ const AdminDashboard = () => {
       mounted = false;
       unsubscribe();
     };
-  }, [deletedMessageIds]); // Include deletedMessageIds to filter them out
+  }, []); // Empty dependency array - only set up listener once on mount
 
   // Fetch reports with error handling (limited to prevent quota exhaustion)
   useEffect(() => {
