@@ -208,35 +208,31 @@ service cloud.firestore {
       
       // Private chat messages subcollection
       match /messages/{messageId} {
+        // Helper function to check if user is participant
+        function isParticipant() {
+          return request.auth != null && 
+            exists(/databases/$(database)/documents/privateChats/$(chatId)) &&
+            get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants != null &&
+            request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants;
+        }
+        
         // Allow participants to read messages
-        allow read: if request.auth != null && 
-          exists(/databases/$(database)/documents/privateChats/$(chatId)) &&
-          get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants != null &&
-          request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants;
+        allow read: if isParticipant();
         
         // Allow participants to create messages
-        allow create: if request.auth != null && 
-          exists(/databases/$(database)/documents/privateChats/$(chatId)) &&
-          get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants != null &&
-          request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants &&
+        allow create: if isParticipant() &&
           request.resource.data.userId == request.auth.uid;
         
         // Allow message authors to update their own messages (for editing)
         // Allow any participant to update readBy field (read receipts)
-        allow update: if request.auth != null && 
-          exists(/databases/$(database)/documents/privateChats/$(chatId)) &&
-          get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants != null &&
-          request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants && (
-            (resource.data.userId == request.auth.uid && 
-             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt'])) ||
-            (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']))
-          );
+        allow update: if isParticipant() && (
+          (resource.data.userId == request.auth.uid && 
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt'])) ||
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']))
+        );
         
         // Allow message authors to delete their own messages
-        allow delete: if request.auth != null && 
-          exists(/databases/$(database)/documents/privateChats/$(chatId)) &&
-          get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants != null &&
-          request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants &&
+        allow delete: if isParticipant() &&
           resource.data.userId == request.auth.uid;
       }
     }

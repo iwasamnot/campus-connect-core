@@ -119,6 +119,33 @@ const PrivateChat = () => {
   useEffect(() => {
     if (!selectedChatId || !user) return;
 
+    // Verify chat document exists before querying messages
+    const verifyAndFetchMessages = async () => {
+      try {
+        const chatDoc = await getDoc(doc(db, 'privateChats', selectedChatId));
+        if (!chatDoc.exists()) {
+          console.error('PrivateChat: Chat document does not exist:', selectedChatId);
+          showError('Chat not found. Please try selecting the user again.');
+          return;
+        }
+        
+        const chatData = chatDoc.data();
+        if (!chatData.participants || !chatData.participants.includes(user.uid)) {
+          console.error('PrivateChat: User is not a participant in this chat');
+          showError('You do not have access to this chat.');
+          return;
+        }
+        
+        console.log('PrivateChat: Chat verified, fetching messages');
+      } catch (error) {
+        console.error('PrivateChat: Error verifying chat:', error);
+        showError('Failed to verify chat access.');
+        return;
+      }
+    };
+
+    verifyAndFetchMessages();
+
     const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
@@ -252,16 +279,15 @@ const PrivateChat = () => {
     console.log('PrivateChat: Selecting chat with user:', otherUser.id);
     const chatId = getChatId(user.uid, otherUser.id);
     console.log('PrivateChat: Chat ID:', chatId);
-    setSelectedChatId(chatId);
-    setSelectedUser(otherUser);
-
+    
     // Create chat document if it doesn't exist
     try {
       const chatDoc = await getDoc(doc(db, 'privateChats', chatId));
       if (!chatDoc.exists()) {
         console.log('PrivateChat: Creating new chat document');
+        const participants = [user.uid, otherUser.id].sort();
         await setDoc(doc(db, 'privateChats', chatId), {
-          participants: [user.uid, otherUser.id].sort(),
+          participants: participants,
           createdAt: serverTimestamp(),
           lastMessage: null,
           lastMessageTime: null,
@@ -270,17 +296,27 @@ const PrivateChat = () => {
         });
         setDisappearingMessagesEnabled(false);
         setDisappearingMessagesDuration(24);
-        console.log('PrivateChat: Chat document created successfully');
+        console.log('PrivateChat: Chat document created successfully with participants:', participants);
       } else {
         console.log('PrivateChat: Chat document already exists, loading settings');
         // Load existing chat settings
         const chatData = chatDoc.data();
+        console.log('PrivateChat: Chat data:', chatData);
         setDisappearingMessagesEnabled(chatData.disappearingMessagesEnabled || false);
         setDisappearingMessagesDuration(chatData.disappearingMessagesDuration || 24);
       }
+      
+      // Only set selected chat after document is created/verified
+      setSelectedChatId(chatId);
+      setSelectedUser(otherUser);
     } catch (error) {
       console.error('PrivateChat: Error creating/loading chat:', error);
-      showError('Failed to create chat. Please try again.');
+      console.error('PrivateChat: Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      showError(`Failed to create chat: ${error.message || 'Please try again.'}`);
     }
   };
 
