@@ -52,61 +52,127 @@ const PrivateChat = () => {
     return [userId1, userId2].sort().join('_');
   };
 
-  // Fetch available users (all users except current user)
+  // Fetch users that the current user has chatted with
   useEffect(() => {
     if (!user) {
       console.log('PrivateChat: No user, skipping user fetch');
       return;
     }
 
-    console.log('PrivateChat: Fetching all available users, userRole:', userRole);
-    // Fetch all users - no role filtering
-    const q = query(collection(db, 'users'));
+    console.log('PrivateChat: Fetching users from chat history');
+    
+    // Fetch all private chats where current user is a participant
+    const chatsQuery = query(
+      collection(db, 'privateChats'),
+      where('participants', 'array-contains', user.uid)
+    );
 
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
+    const unsubscribeChats = onSnapshot(chatsQuery,
+      async (chatsSnapshot) => {
+        const userIds = new Set();
+        const chatDataMap = {};
+
+        // Extract all participant IDs from chats (excluding current user)
+        chatsSnapshot.docs.forEach(chatDoc => {
+          const chatData = chatDoc.data();
+          const participants = chatData.participants || [];
+          participants.forEach(participantId => {
+            if (participantId !== user.uid) {
+              userIds.add(participantId);
+              // Store chat data for summary
+              chatDataMap[participantId] = {
+                chatId: chatDoc.id,
+                lastMessage: chatData.lastMessage,
+                lastMessageTime: chatData.lastMessageTime
+              };
+            }
+          });
+        });
+
+        console.log('PrivateChat: Found', userIds.size, 'users from chat history');
+
+        if (userIds.size === 0) {
+          setAvailableUsers([]);
+          setUserNames({});
+          setUserProfiles({});
+          setOnlineUsers({});
+          // Update chat summaries
+          setChatSummaries({});
+          return;
+        }
+
+        // Fetch user data for all participants
         const users = [];
         const names = {};
         const profiles = {};
         const online = {};
+        const summaries = {};
 
-        snapshot.docs.forEach(doc => {
-          const userData = doc.data();
-          // Exclude current user only
-          if (doc.id === user.uid) return;
-          
-          // Show all users regardless of role
-          users.push({
-            id: doc.id,
-            ...userData
-          });
-          // Extract name with fallback priority: name > studentEmail > email > personalEmail > userId
-          names[doc.id] = userData.name || 
-                          userData.studentEmail?.split('@')[0] || 
-                          userData.email?.split('@')[0] || 
-                          userData.personalEmail?.split('@')[0] ||
-                          doc.id.substring(0, 8);
-          profiles[doc.id] = userData;
-          online[doc.id] = {
-            isOnline: userData.isOnline || false,
-            lastSeen: userData.lastSeen || null
-          };
+        await Promise.all(
+          Array.from(userIds).map(async (userId) => {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', userId));
+              if (userDoc.exists()) {
+                const userData = userDoc.data();
+                users.push({
+                  id: userDoc.id,
+                  ...userData
+                });
+                
+                // Extract name with fallback priority
+                names[userDoc.id] = userData.name || 
+                                    userData.studentEmail?.split('@')[0] || 
+                                    userData.email?.split('@')[0] || 
+                                    userData.personalEmail?.split('@')[0] ||
+                                    userDoc.id.substring(0, 8);
+                profiles[userDoc.id] = userData;
+                online[userDoc.id] = {
+                  isOnline: userData.isOnline || false,
+                  lastSeen: userData.lastSeen || null
+                };
+                
+                // Store chat summary
+                if (chatDataMap[userId]) {
+                  summaries[userId] = {
+                    lastMessage: chatDataMap[userId].lastMessage,
+                    lastMessageTime: chatDataMap[userId].lastMessageTime,
+                    hasUnread: false
+                  };
+                }
+              }
+            } catch (error) {
+              console.error(`Error fetching user ${userId}:`, error);
+            }
+          })
+        );
+
+        // Sort users by last message time (most recent first)
+        users.sort((a, b) => {
+          const aTime = summaries[a.id]?.lastMessageTime;
+          const bTime = summaries[b.id]?.lastMessageTime;
+          if (!aTime && !bTime) return 0;
+          if (!aTime) return 1;
+          if (!bTime) return -1;
+          const aDate = aTime.toDate ? aTime.toDate() : new Date(aTime);
+          const bDate = bTime.toDate ? bTime.toDate() : new Date(bTime);
+          return bDate - aDate; // Most recent first
         });
 
-        console.log('PrivateChat: Found', users.length, 'available users');
+        console.log('PrivateChat: Loaded', users.length, 'users from chat history');
         setAvailableUsers(users);
         setUserNames(names);
         setUserProfiles(profiles);
         setOnlineUsers(online);
+        setChatSummaries(summaries);
       },
       (error) => {
-        console.error('PrivateChat: Error fetching available users:', error);
-        showError('Failed to load users. Please refresh the page.');
+        console.error('PrivateChat: Error fetching chat history:', error);
+        showError('Failed to load chat history. Please refresh the page.');
       }
     );
 
-    return () => unsubscribe();
-  }, [user, userRole]);
+    return () => unsubscribeChats();
+  }, [user]);
 
   // Fetch messages for selected chat
   useEffect(() => {
