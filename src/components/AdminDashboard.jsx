@@ -347,8 +347,20 @@ const AdminDashboard = () => {
       // Add to deleted set immediately to prevent it from reappearing
       setDeletedMessageIds(prev => new Set([...prev, messageId]));
       
-      // Delete the message from Firestore
+      // Delete the message from Firestore with source: 'server' to ensure it's actually deleted
       await deleteDoc(messageRef);
+      console.log('AdminDashboard: deleteDoc() completed');
+      
+      // Force a small delay to ensure Firestore processes the deletion
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Immediately verify deletion with getDoc (from server, not cache)
+      const immediateCheck = await getDoc(messageRef);
+      if (immediateCheck.exists()) {
+        console.error('AdminDashboard: Message still exists immediately after deleteDoc!');
+        throw new Error('Deletion failed - message still exists in Firestore');
+      }
+      
       console.log('AdminDashboard: Message deleted from Firestore successfully');
 
       // Optimistically remove message from local state after successful deletion
