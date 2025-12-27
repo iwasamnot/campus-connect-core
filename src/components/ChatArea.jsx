@@ -66,6 +66,8 @@ const ChatArea = ({ setActiveView }) => {
   const [pinnedMessages, setPinnedMessages] = useState([]); // Pinned messages
   const [cursorPosition, setCursorPosition] = useState(0); // Cursor position for mentions
   const [showMentions, setShowMentions] = useState(false); // Show mention autocomplete
+  const [forwardingMessage, setForwardingMessage] = useState(null); // Message to forward
+  const [showForwardModal, setShowForwardModal] = useState(false); // Show forward modal
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
@@ -503,6 +505,19 @@ const ChatArea = ({ setActiveView }) => {
       console.error('Error editing message:', error);
       showError(`Failed to edit message: ${error.message || 'Please try again.'}`);
     }
+  };
+
+  const handleForwardMessage = (messageId) => {
+    if (!preferences.allowMessageForwarding) {
+      showError('Message forwarding is disabled in your settings');
+      return;
+    }
+
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
+
+    setForwardingMessage(message);
+    setShowForwardModal(true);
   };
 
   const handleReaction = async (messageId, emoji) => {
