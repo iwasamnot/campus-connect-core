@@ -75,13 +75,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // Group messages collection
+    // Group messages collection (top-level, if used)
     match /groupMessages/{messageId} {
       // Allow authenticated users to read group messages
       allow read: if request.auth != null;
       
       // Allow authenticated users to create group messages
-      allow create: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
       
       // Allow users to update their own messages (for editing)
       // Allow any authenticated user to update readBy field (read receipts)
@@ -89,7 +90,7 @@ service cloud.firestore {
       // Allow admins to update any field
       allow update: if request.auth != null && (
         (resource.data.userId == request.auth.uid && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'toxicityConfidence', 'toxicityReason', 'toxicityMethod', 'edited', 'editedAt', 'reactions'])) ||
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'toxicityConfidence', 'toxicityReason', 'toxicityMethod', 'edited', 'editedAt', 'reactions', 'attachment', 'replyTo', 'replyToText', 'replyToUserName', 'mentions'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])) ||
         isAdmin()
