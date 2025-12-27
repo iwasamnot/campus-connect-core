@@ -17,7 +17,7 @@ import {
   arrayRemove
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Users, Plus, Search, X, UserPlus, Trash2, Edit2, Check, Loader } from 'lucide-react';
+import { Users, Plus, Search, X, Loader } from 'lucide-react';
 
 const Groups = ({ setActiveView, setSelectedGroup }) => {
   const { user } = useAuth();
@@ -25,13 +25,10 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showJoinModal, setShowJoinModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
-  const [joinGroupCode, setJoinGroupCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [creating, setCreating] = useState(false);
-  const [joining, setJoining] = useState(false);
 
   // Fetch groups user is a member of
   useEffect(() => {
@@ -61,10 +58,6 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
     return () => unsubscribe();
   }, [user]);
 
-  const generateGroupCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
   const handleCreateGroup = async (e) => {
     e.preventDefault();
     if (!newGroupName.trim()) {
@@ -74,15 +67,13 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
     setCreating(true);
     try {
-      const groupCode = generateGroupCode();
       await addDoc(collection(db, 'groups'), {
         name: newGroupName.trim(),
         description: newGroupDescription.trim() || null,
-        code: groupCode,
         createdBy: user.uid,
         createdByEmail: user.email,
         members: [user.uid],
-        admins: [user.uid],
+        admins: [user.uid], // Creator is automatically admin
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -96,51 +87,6 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       showError('Failed to create group. Please try again.');
     } finally {
       setCreating(false);
-    }
-  };
-
-  const handleJoinGroup = async (e) => {
-    e.preventDefault();
-    if (!joinGroupCode.trim()) {
-      showError('Please enter a group code');
-      return;
-    }
-
-    setJoining(true);
-    try {
-      const groupsQuery = query(
-        collection(db, 'groups'),
-        where('code', '==', joinGroupCode.trim().toUpperCase())
-      );
-      
-      const snapshot = await getDocs(groupsQuery);
-      
-      if (snapshot.empty) {
-        showError('Group not found. Please check the code.');
-        return;
-      }
-
-      const groupDoc = snapshot.docs[0];
-      const groupData = groupDoc.data();
-
-      if (groupData.members?.includes(user.uid)) {
-        showError('You are already a member of this group');
-        return;
-      }
-
-      await updateDoc(doc(db, 'groups', groupDoc.id), {
-        members: arrayUnion(user.uid),
-        updatedAt: serverTimestamp()
-      });
-
-      success('Successfully joined the group!');
-      setShowJoinModal(false);
-      setJoinGroupCode('');
-    } catch (error) {
-      console.error('Error joining group:', error);
-      showError('Failed to join group. Please try again.');
-    } finally {
-      setJoining(false);
     }
   };
 
@@ -203,14 +149,6 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Create and join study groups</p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowJoinModal(true)}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
-            >
-              <UserPlus size={18} />
-              <span className="hidden sm:inline">Join Group</span>
-              <span className="sm:hidden">Join</span>
-            </button>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
@@ -292,7 +230,13 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
                   </button>
                 </div>
                 <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                  <span>Code: {group.code}</span>
+                  <span className="flex items-center gap-1">
+                    {group.admins?.includes(user.uid) && (
+                      <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium">
+                        Admin
+                      </span>
+                    )}
+                  </span>
                   <span>{group.members?.length || 0} member(s)</span>
                 </div>
               </div>
@@ -374,69 +318,6 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
         </div>
       )}
 
-      {/* Join Group Modal */}
-      {showJoinModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowJoinModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Join Group</h3>
-              <button
-                onClick={() => setShowJoinModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleJoinGroup} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Group Code *
-                </label>
-                <input
-                  type="text"
-                  value={joinGroupCode}
-                  onChange={(e) => setJoinGroupCode(e.target.value.toUpperCase())}
-                  placeholder="Enter 6-digit group code"
-                  required
-                  maxLength={6}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 text-center text-2xl font-mono tracking-widest"
-                  disabled={joining}
-                />
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  Ask the group creator for the 6-digit code
-                </p>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={joining}
-                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {joining ? (
-                    <>
-                      <Loader className="animate-spin" size={20} />
-                      <span>Joining...</span>
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus size={20} />
-                      <span>Join Group</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowJoinModal(false)}
-                  disabled={joining}
-                  className="px-6 py-3 border-2 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -148,6 +148,12 @@ service cloud.firestore {
         resource.data.members != null && request.auth.uid in resource.data.members
       );
       
+      // Allow group admins to update members (add/remove members)
+      allow update: if request.auth != null && (
+        resource.data.admins != null && request.auth.uid in resource.data.admins &&
+        request.resource.data.diff(resource.data).affectedKeys().hasAny(['members', 'admins', 'updatedAt'])
+      );
+      
       // Allow group admins to delete groups
       allow delete: if request.auth != null && (
         resource.data.admins != null && request.auth.uid in resource.data.admins

@@ -13,10 +13,11 @@ import {
   doc,
   deleteDoc,
   updateDoc,
-  getDoc
+  getDoc,
+  arrayRemove
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
 import { checkToxicity } from '../utils/toxicityChecker';
 
@@ -33,6 +34,8 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   const [userProfiles, setUserProfiles] = useState({});
   const [onlineUsers, setOnlineUsers] = useState({});
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [removingMember, setRemovingMember] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Fetch user names, profiles, and online status
@@ -291,9 +294,32 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
             <div>
               <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">{group.name}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {group.members?.length || 0} member(s) • Code: {group.code}
+                {group.members?.length || 0} member(s)
+                {group.admins?.includes(user?.uid) && (
+                  <span className="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium">
+                    Admin
+                  </span>
+                )}
               </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowMembersModal(true)}
+              className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+              title="View members"
+            >
+              <Users size={20} className="text-indigo-600 dark:text-indigo-400" />
+            </button>
+            {!group.admins?.includes(user?.uid) && (
+              <button
+                onClick={handleLeaveGroup}
+                className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg transition-colors"
+                title="Leave group"
+              >
+                <LogOut size={20} className="text-red-600 dark:text-red-400" />
+              </button>
+            )}
           </div>
         </div>
         {group.description && (
@@ -534,6 +560,113 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
             }
           }}
         />
+      )}
+
+      {/* Members Modal */}
+      {showMembersModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowMembersModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Group Members</h3>
+              <button
+                onClick={() => setShowMembersModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {group.members && group.members.length > 0 ? (
+                <div className="space-y-2">
+                  {group.members.map((memberId) => {
+                    const isAdmin = group.admins?.includes(memberId);
+                    const isCurrentUser = memberId === user?.uid;
+                    const isCurrentUserAdmin = group.admins?.includes(user?.uid);
+                    const canRemove = isCurrentUserAdmin && !isCurrentUser && (isAdmin ? group.admins?.length > 1 : true);
+                    const memberName = userNames[memberId] || 'Unknown User';
+                    const memberProfile = userProfiles[memberId] || {};
+                    const memberOnline = onlineUsers[memberId]?.isOnline || false;
+
+                    return (
+                      <div
+                        key={memberId}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          {memberProfile.profilePicture ? (
+                            <img
+                              src={memberProfile.profilePicture}
+                              alt={memberName}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-2 border-indigo-200 dark:border-indigo-700 ${memberProfile.profilePicture ? 'hidden' : ''}`}>
+                            <Users size={20} className="text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-800 dark:text-white truncate">
+                                {memberName}
+                                {isCurrentUser && ' (You)'}
+                              </p>
+                              {isAdmin && (
+                                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium flex-shrink-0">
+                                  Admin
+                                </span>
+                              )}
+                              {memberOnline && (
+                                <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" title="Online" />
+                              )}
+                            </div>
+                            {memberProfile.email && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {memberProfile.email}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {canRemove && (
+                          <button
+                            onClick={() => handleRemoveMember(memberId)}
+                            disabled={removingMember === memberId}
+                            className="ml-2 p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Remove member"
+                          >
+                            {removingMember === memberId ? (
+                              <Loader className="animate-spin" size={18} />
+                            ) : (
+                              <UserMinus size={18} />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">No members found</p>
+              )}
+            </div>
+            {!group.admins?.includes(user?.uid) && (
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => {
+                    setShowMembersModal(false);
+                    handleLeaveGroup();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  <LogOut size={18} />
+                  <span>Leave Group</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
