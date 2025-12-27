@@ -151,14 +151,34 @@ const PrivateChat = () => {
         
         // Now set up the messages listener
         const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
-        const q = query(messagesRef, orderBy('timestamp', 'asc'));
+        // Use orderBy with a fallback - if timestamp doesn't exist, order by document ID
+        let q;
+        try {
+          q = query(messagesRef, orderBy('timestamp', 'asc'));
+        } catch (error) {
+          console.warn('PrivateChat: Error creating ordered query, using simple query:', error);
+          q = query(messagesRef);
+        }
 
         unsubscribe = onSnapshot(q, 
           (snapshot) => {
-            const messagesData = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
+            console.log('PrivateChat: Received messages snapshot, count:', snapshot.docs.length);
+            
+            const messagesData = snapshot.docs.map(doc => {
+              const data = doc.data();
+              console.log('PrivateChat: Message data:', {
+                id: doc.id,
+                userId: data.userId,
+                text: data.text,
+                displayText: data.displayText,
+                timestamp: data.timestamp,
+                hasTimestamp: !!data.timestamp
+              });
+              return {
+                id: doc.id,
+                ...data
+              };
+            });
 
             // Deduplicate messages by ID and filter expired messages
             const now = new Date();
@@ -179,6 +199,9 @@ const PrivateChat = () => {
               return acc;
             }, []);
 
+            console.log('PrivateChat: Unique messages after deduplication:', uniqueMessages.length);
+            console.log('PrivateChat: Expired messages to delete:', expiredMessageIds.length);
+
             // Delete expired messages asynchronously
             if (expiredMessageIds.length > 0) {
               Promise.all(
@@ -190,13 +213,23 @@ const PrivateChat = () => {
               );
             }
 
-            // Sort by timestamp
+            // Sort by timestamp - handle both Firestore Timestamp and regular Date
             uniqueMessages.sort((a, b) => {
-              const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
-              const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
+              let aTime = 0;
+              let bTime = 0;
+              
+              if (a.timestamp) {
+                aTime = a.timestamp.toDate ? a.timestamp.toDate().getTime() : (a.timestamp.getTime ? a.timestamp.getTime() : new Date(a.timestamp).getTime());
+              }
+              
+              if (b.timestamp) {
+                bTime = b.timestamp.toDate ? b.timestamp.toDate().getTime() : (b.timestamp.getTime ? b.timestamp.getTime() : new Date(b.timestamp).getTime());
+              }
+              
               return aTime - bTime;
             });
 
+            console.log('PrivateChat: Setting messages, final count:', uniqueMessages.length);
             setMessages(uniqueMessages);
 
             // Mark messages as read
@@ -582,7 +615,9 @@ const PrivateChat = () => {
         messageData.expiresAt = expiresAt;
       }
 
-      await addDoc(collection(db, 'privateChats', selectedChatId, 'messages'), messageData);
+      const messageRef = await addDoc(collection(db, 'privateChats', selectedChatId, 'messages'), messageData);
+      console.log('PrivateChat: Message sent successfully, ID:', messageRef.id);
+      console.log('PrivateChat: Message data:', messageData);
 
       // Update chat's last message
       await updateDoc(doc(db, 'privateChats', selectedChatId), {
