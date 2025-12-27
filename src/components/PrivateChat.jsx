@@ -20,6 +20,7 @@ import {
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
+import { checkToxicity } from '../utils/toxicityChecker';
 
 const PrivateChat = () => {
   const { user, userRole } = useAuth();
@@ -625,12 +626,7 @@ const PrivateChat = () => {
     }
   };
 
-  // Check toxicity (simple word filter)
-  const checkToxicity = (text) => {
-    const toxicWords = ['bad', 'hate', 'stupid'];
-    const lowerText = text.toLowerCase();
-    return toxicWords.some(word => lowerText.includes(word));
-  };
+  // Toxicity checking is now handled by the toxicityChecker utility
 
   // Send message
   const sendMessage = async (e) => {
@@ -642,6 +638,11 @@ const PrivateChat = () => {
 
     setSending(true);
     try {
+      // Check toxicity using Gemini AI (with fallback)
+      const toxicityResult = await checkToxicity(newMessage.trim(), true);
+      const isToxic = toxicityResult.isToxic;
+      const displayText = isToxic ? '[REDACTED BY AI]' : newMessage.trim();
+      
       // Calculate expiration time if disappearing messages is enabled
       let expiresAt = null;
       if (disappearingMessagesEnabled) {
@@ -656,6 +657,8 @@ const PrivateChat = () => {
         text: newMessage.trim(),
         displayText: displayText,
         toxic: isToxic,
+        toxicityConfidence: toxicityResult.confidence,
+        toxicityReason: toxicityResult.reason,
         timestamp: serverTimestamp(),
         readBy: {
           [user.uid]: serverTimestamp() // Sender has seen their own message
@@ -772,7 +775,9 @@ const PrivateChat = () => {
     }
     if (!selectedChatId) return;
 
-    const isToxic = checkToxicity(editText.trim());
+    // Check toxicity using Gemini AI (with fallback)
+    const toxicityResult = await checkToxicity(editText.trim(), true);
+    const isToxic = toxicityResult.isToxic;
     const displayText = isToxic ? '[REDACTED BY AI]' : editText.trim();
 
     try {
@@ -780,6 +785,9 @@ const PrivateChat = () => {
         text: editText.trim(),
         displayText: displayText,
         toxic: isToxic,
+        toxicityConfidence: toxicityResult.confidence,
+        toxicityReason: toxicityResult.reason,
+        toxicityMethod: toxicityResult.method,
         edited: true,
         editedAt: serverTimestamp()
       });

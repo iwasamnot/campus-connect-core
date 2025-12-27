@@ -24,7 +24,7 @@ service cloud.firestore {
       // Allow admins to update any field
       allow update: if request.auth != null && (
         (resource.data.userId == request.auth.uid && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions', 'attachment', 'replyTo', 'replyToText', 'replyToUserName', 'mentions'])) ||
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'toxicityConfidence', 'toxicityReason', 'toxicityMethod', 'edited', 'editedAt', 'reactions', 'attachment', 'replyTo', 'replyToText', 'replyToUserName', 'mentions'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])) ||
         (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pinned', 'pinnedAt'])) ||
@@ -87,7 +87,7 @@ service cloud.firestore {
       // Allow admins to update any field
       allow update: if request.auth != null && (
         (resource.data.userId == request.auth.uid && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'toxicityConfidence', 'toxicityReason', 'toxicityMethod', 'edited', 'editedAt', 'reactions'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])) ||
         isAdmin()
@@ -177,7 +177,7 @@ service cloud.firestore {
         get(/databases/$(database)/documents/groups/$(groupId)).data.members != null &&
         request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members && (
           (resource.data.userId == request.auth.uid && 
-           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt', 'reactions'])) ||
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'toxicityConfidence', 'toxicityReason', 'toxicityMethod', 'edited', 'editedAt', 'reactions'])) ||
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])) ||
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']))
         );
@@ -235,7 +235,7 @@ service cloud.firestore {
         // Allow any participant to update readBy field (read receipts)
         allow update: if isParticipant() && (
           (resource.data.userId == request.auth.uid && 
-           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'edited', 'editedAt'])) ||
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'displayText', 'toxic', 'toxicityConfidence', 'toxicityReason', 'toxicityMethod', 'edited', 'editedAt'])) ||
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']))
         );
         

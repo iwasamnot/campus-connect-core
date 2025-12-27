@@ -18,6 +18,7 @@ import {
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
+import { checkToxicity } from '../utils/toxicityChecker';
 
 const GroupChat = ({ group, onBack, setActiveView }) => {
   const { user, userRole } = useAuth();
@@ -138,18 +139,15 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
     return () => unsubscribe();
   }, [group]);
 
-  // AI Moderation Logic
-  const checkToxicity = (text) => {
-    const toxicWords = ['bad', 'hate', 'stupid'];
-    const lowerText = text.toLowerCase();
-    return toxicWords.some(word => lowerText.includes(word));
-  };
+  // Toxicity checking is now handled by the toxicityChecker utility
 
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
-    const isToxic = checkToxicity(newMessage.trim());
+    // Check toxicity using Gemini AI (with fallback)
+    const toxicityResult = await checkToxicity(newMessage.trim(), true);
+    const isToxic = toxicityResult.isToxic;
     const displayText = isToxic ? '[REDACTED BY AI]' : newMessage.trim();
 
     setSending(true);
@@ -161,6 +159,9 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
         text: newMessage.trim(),
         displayText: displayText,
         toxic: isToxic,
+        toxicityConfidence: toxicityResult.confidence,
+        toxicityReason: toxicityResult.reason,
+        toxicityMethod: toxicityResult.method,
         isAI: false,
         timestamp: serverTimestamp(),
         readBy: {
@@ -197,7 +198,9 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       return;
     }
 
-    const isToxic = checkToxicity(editText.trim());
+    // Check toxicity using Gemini AI (with fallback)
+    const toxicityResult = await checkToxicity(editText.trim(), true);
+    const isToxic = toxicityResult.isToxic;
     const displayText = isToxic ? '[REDACTED BY AI]' : editText.trim();
 
     try {
@@ -205,6 +208,9 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
         text: editText.trim(),
         displayText: displayText,
         toxic: isToxic,
+        toxicityConfidence: toxicityResult.confidence,
+        toxicityReason: toxicityResult.reason,
+        toxicityMethod: toxicityResult.method,
         edited: true,
         editedAt: serverTimestamp()
       });

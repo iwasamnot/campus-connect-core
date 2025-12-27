@@ -8,12 +8,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Enhanced AI moderation with machine learning model integration
 - Two-factor authentication (2FA)
 - Multi-language support
 - Progressive Web App (PWA) features
 - Voice messages
 - Message scheduling
+- Advanced analytics dashboard
+
+## [3.0.0] - 2024-12-27
+
+### Added
+- **AI-Powered Toxicity Detection with Gemini**: Advanced toxicity checking using Google Gemini AI
+  - Primary toxicity detection using Gemini AI (`gemini-2.0-flash-exp` model)
+  - Intelligent context-aware toxicity analysis
+  - Returns detailed toxicity metadata: confidence score, reason, detection method, and categories
+  - Comprehensive fallback system with extensive hate words list (100+ words)
+  - Automatic fallback to word filter if Gemini API is unavailable
+  - Toxicity data stored in Firestore for admin review and analytics
+- **Comprehensive Hate Words List**: Expanded toxicity word filter
+  - 100+ toxic words and phrases covering:
+    - Profanity and vulgar language
+    - Hate speech and discriminatory terms
+    - Violence and threatening language
+    - Harassment and cyberbullying terms
+    - Body shaming and mental health slurs
+    - Common misspellings and alternatives
+  - Word boundary matching for accurate detection
+  - Normalized text processing for better matching
+- **Enhanced Toxicity Metadata**: Detailed toxicity information stored with messages
+  - `toxicityConfidence`: Confidence score (0.0-1.0) from AI analysis
+  - `toxicityReason`: Brief explanation of why content was flagged
+  - `toxicityMethod`: Detection method used (gemini, fallback, etc.)
+  - `toxicityCategories`: Array of detected categories (hate_speech, harassment, threats, etc.)
+  - Enables better admin review and analytics
+- **Direct Messages Chat History**: Show only users you've previously chatted with
+  - Automatically fetches users from private chat history
+  - Sorted by most recent conversation first
+  - Shows last message preview and timestamp
+  - More focused and efficient user list
+  - Empty state if no previous chats exist
+  - Still allows adding new users via email search
+- **Toxicity Checker Utility Module**: Centralized toxicity checking system
+  - Reusable `toxicityChecker.js` utility module
+  - Consistent toxicity checking across all chat components
+  - Easy to maintain and update
+  - Supports both AI-based and fallback methods
+
+### Changed
+- **Toxicity Detection System**: Upgraded from simple word filter to AI-powered detection
+  - All chat components (ChatArea, PrivateChat, GroupChat) now use Gemini AI for toxicity checking
+  - More accurate and context-aware toxicity detection
+  - Better handling of edge cases and false positives
+  - Improved performance with async/await pattern
+- **Message Data Structure**: Enhanced message documents with toxicity metadata
+  - Messages now include detailed toxicity information
+  - Better tracking and analytics capabilities
+  - Improved admin review process
+- **Firestore Security Rules**: Updated to support new toxicity fields
+  - Added `toxicityConfidence`, `toxicityReason`, `toxicityMethod` to allowed update fields
+  - Maintains security while enabling toxicity metadata updates
+- **Direct Messages User List**: Changed from showing all users to showing only chat history
+  - More focused and relevant user list
+  - Better user experience with conversation previews
+  - Improved performance by reducing unnecessary user data fetching
+
+### Fixed
+- Improved toxicity detection accuracy with AI-powered analysis
+- Better handling of context in toxicity checking
+- Enhanced fallback system for reliability
+- Fixed Direct Messages showing all users instead of chat history
+- Improved message metadata consistency across all chat types
 
 ## [2.0.1] - 2024-12-27
 
@@ -396,6 +460,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v3.0.0** (2024-12-27) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
 - **v2.0.1** (2024-12-27) - Private chat improvements, email search, message history preview, enhanced settings, and bug fixes
 - **v2.0.0** (2024-12-27) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
 - **v1.2.2** (2024-12-27) - Smooth animations throughout the app

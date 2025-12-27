@@ -30,6 +30,7 @@ import MentionAutocomplete from './MentionAutocomplete';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { parseMarkdown, hasMarkdown } from '../utils/markdown';
 import notificationService from '../utils/notifications';
+import { checkToxicity } from '../utils/toxicityChecker';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -260,18 +261,7 @@ const ChatArea = ({ setActiveView }) => {
     return () => unsubscribe();
   }, [user]);
 
-  // AI Moderation Logic
-  const checkToxicity = (text) => {
-    const toxicWords = ['bad', 'hate', 'stupid'];
-    const lowerText = text.toLowerCase();
-    
-    for (const word of toxicWords) {
-      if (lowerText.includes(word)) {
-        return true;
-      }
-    }
-    return false;
-  };
+  // Toxicity checking is now handled by the toxicityChecker utility
 
   // Call Gemini AI with selected model
   const callGemini = async (userMessage) => {
@@ -306,7 +296,10 @@ const ChatArea = ({ setActiveView }) => {
 
     setSending(true);
     const originalText = newMessage.trim();
-    const isToxic = checkToxicity(originalText);
+    
+    // Check toxicity using Gemini AI (with fallback)
+    const toxicityResult = await checkToxicity(originalText, true);
+    const isToxic = toxicityResult.isToxic;
     const displayText = isToxic ? '[REDACTED BY AI]' : originalText;
 
     // Get user name from cache or fetch it
@@ -355,6 +348,9 @@ const ChatArea = ({ setActiveView }) => {
         text: originalText,
         displayText: displayText,
         toxic: isToxic,
+        toxicityConfidence: toxicityResult.confidence,
+        toxicityReason: toxicityResult.reason,
+        toxicityMethod: toxicityResult.method,
         isAI: false,
         userId: user.uid,
         userName: userName,
@@ -481,7 +477,9 @@ const ChatArea = ({ setActiveView }) => {
       return;
     }
 
-    const isToxic = checkToxicity(editText.trim());
+    // Check toxicity using Gemini AI (with fallback)
+    const toxicityResult = await checkToxicity(editText.trim(), true);
+    const isToxic = toxicityResult.isToxic;
     const displayText = isToxic ? '[REDACTED BY AI]' : editText.trim();
 
     try {
@@ -490,6 +488,9 @@ const ChatArea = ({ setActiveView }) => {
         text: editText.trim(),
         displayText: displayText,
         toxic: isToxic,
+        toxicityConfidence: toxicityResult.confidence,
+        toxicityReason: toxicityResult.reason,
+        toxicityMethod: toxicityResult.method,
         edited: true,
         editedAt: serverTimestamp()
       });
