@@ -631,10 +631,12 @@ const PrivateChat = () => {
   // Send message
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending || !selectedChatId) return;
-
-    const isToxic = checkToxicity(newMessage.trim());
-    const displayText = isToxic ? '[REDACTED BY AI]' : newMessage.trim();
+    if (!newMessage.trim() || sending || !selectedChatId) {
+      if (!selectedChatId) {
+        showError('Please select a chat first.');
+      }
+      return;
+    }
 
     setSending(true);
     try {
@@ -707,6 +709,16 @@ const PrivateChat = () => {
       setNewMessage('');
       success('Message sent!');
     } catch (error) {
+      console.error('PrivateChat: Error sending message:', error);
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => !m.isOptimistic));
+      
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to send messages in this chat.'
+        : error.code === 'not-found'
+        ? 'Chat not found. Please try selecting the user again.'
+        : error.message || 'Failed to send message. Please try again.';
+      showError(errorMessage);
       console.error('Error sending message:', error);
       showError('Failed to send message. Please try again.');
     } finally {
