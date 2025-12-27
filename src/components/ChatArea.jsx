@@ -201,28 +201,41 @@ const ChatArea = ({ setActiveView }) => {
       orderBy('timestamp', 'asc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      // Deduplicate messages by ID to prevent duplicates
-      const uniqueMessages = messagesData.reduce((acc, message) => {
-        if (!acc.find(m => m.id === message.id)) {
-          acc.push(message);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        try {
+          const messagesData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          // Deduplicate messages by ID to prevent duplicates
+          const uniqueMessages = messagesData.reduce((acc, message) => {
+            if (!acc.find(m => m.id === message.id)) {
+              acc.push(message);
+            }
+            return acc;
+          }, []);
+          
+          // Sort by timestamp to ensure correct order
+          uniqueMessages.sort((a, b) => {
+            const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
+            const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
+            return aTime - bTime;
+          });
+          
+          setMessages(uniqueMessages);
+        } catch (error) {
+          console.error('Error processing messages:', error);
+          showError('Error loading messages. Please refresh the page.');
         }
-        return acc;
-      }, []);
-      
-      // Sort by timestamp to ensure correct order
-      uniqueMessages.sort((a, b) => {
-        const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
-        const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
-        return aTime - bTime;
-      });
-      
-      setMessages(uniqueMessages);
+      },
+      (error) => {
+        console.error('Error fetching messages:', error);
+        showError('Failed to load messages. Please check your connection and refresh.');
+      }
+    );
       
       // Mark all messages as read by current user and send notifications
       if (user) {
