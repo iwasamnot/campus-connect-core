@@ -226,6 +226,43 @@ const ChatArea = ({ setActiveView }) => {
           });
           
           setMessages(uniqueMessages);
+          
+          // Mark all messages as read by current user and send notifications
+          if (user) {
+            uniqueMessages.forEach(async (message) => {
+              const readBy = message.readBy || {};
+              if (!readBy[user.uid]) {
+                try {
+                  await updateDoc(doc(db, 'messages', message.id), {
+                    readBy: {
+                      ...readBy,
+                      [user.uid]: serverTimestamp()
+                    }
+                  });
+                  
+                  // Send notification for new messages (not from current user and not AI)
+                  if (message.userId !== user.uid && !message.isAI && !document.hasFocus()) {
+                    const messageUser = userProfiles[message.userId] || {};
+                    await notificationService.showMessage(
+                      message,
+                      messageUser.name || message.userName || 'Someone'
+                    );
+                  }
+                  
+                  // Check if user was mentioned
+                  if (message.mentions && message.mentions.includes(user.uid)) {
+                    const messageUser = userProfiles[message.userId] || {};
+                    await notificationService.showMention(
+                      message,
+                      messageUser.name || message.userName || 'Someone'
+                    );
+                  }
+                } catch (error) {
+                  console.error('Error marking message as read:', error);
+                }
+              }
+            });
+          }
         } catch (error) {
           console.error('Error processing messages:', error);
           showError('Error loading messages. Please refresh the page.');
@@ -236,44 +273,6 @@ const ChatArea = ({ setActiveView }) => {
         showError('Failed to load messages. Please check your connection and refresh.');
       }
     );
-      
-      // Mark all messages as read by current user and send notifications
-      if (user) {
-        messagesData.forEach(async (message) => {
-          const readBy = message.readBy || {};
-          if (!readBy[user.uid]) {
-            try {
-              await updateDoc(doc(db, 'messages', message.id), {
-                readBy: {
-                  ...readBy,
-                  [user.uid]: serverTimestamp()
-                }
-              });
-              
-              // Send notification for new messages (not from current user and not AI)
-              if (message.userId !== user.uid && !message.isAI && !document.hasFocus()) {
-                const messageUser = userProfiles[message.userId] || {};
-                await notificationService.showMessage(
-                  message,
-                  messageUser.name || message.userName || 'Someone'
-                );
-              }
-              
-              // Check if user was mentioned
-              if (message.mentions && message.mentions.includes(user.uid)) {
-                const messageUser = userProfiles[message.userId] || {};
-                await notificationService.showMention(
-                  message,
-                  messageUser.name || message.userName || 'Someone'
-                );
-              }
-            } catch (error) {
-              console.error('Error marking message as read:', error);
-            }
-          }
-        });
-      }
-    });
 
     return () => unsubscribe();
   }, [user]);
