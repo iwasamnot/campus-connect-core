@@ -18,7 +18,7 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
 
 const PrivateChat = () => {
@@ -40,6 +40,10 @@ const PrivateChat = () => {
   const [disappearingMessagesEnabled, setDisappearingMessagesEnabled] = useState(false);
   const [disappearingMessagesDuration, setDisappearingMessagesDuration] = useState(24); // 24 hours or 7 days (168 hours)
   const [showDisappearingSettings, setShowDisappearingSettings] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // Search query for users
+  const [showAddUser, setShowAddUser] = useState(false); // Show add user by email form
+  const [emailToAdd, setEmailToAdd] = useState(''); // Email to search/add
+  const [searchingUser, setSearchingUser] = useState(false); // Loading state for user search
   const messagesEndRef = useRef(null);
 
   // Generate chat ID from two user IDs (sorted to ensure consistency)
@@ -349,6 +353,91 @@ const PrivateChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, availableUsers]);
 
+  // Search for user by email
+  const searchUserByEmail = async (email) => {
+    if (!email || !email.trim()) {
+      showError('Please enter an email address');
+      return;
+    }
+
+    setSearchingUser(true);
+    try {
+      const emailLower = email.trim().toLowerCase();
+      const usersRef = collection(db, 'users');
+      
+      // Search by email, studentEmail, or personalEmail
+      const queries = [
+        query(usersRef, where('email', '==', emailLower)),
+        query(usersRef, where('studentEmail', '==', emailLower)),
+        query(usersRef, where('personalEmail', '==', emailLower))
+      ];
+
+      const results = await Promise.all(queries.map(q => getDocs(q)));
+      const foundUsers = [];
+      
+      results.forEach(snapshot => {
+        snapshot.docs.forEach(doc => {
+          const userData = { id: doc.id, ...doc.data() };
+          // Check if user is already in availableUsers
+          if (!availableUsers.find(u => u.id === doc.id) && doc.id !== user.uid) {
+            // Check if user can chat (student with admin, admin with student)
+            const userIsAdmin = isAdminRole(userData.role);
+            if (isAdminRole(userRole)) {
+              // Admin can only chat with students
+              if (!userIsAdmin) {
+                foundUsers.push(userData);
+              }
+            } else {
+              // Student can only chat with admins
+              if (userIsAdmin) {
+                foundUsers.push(userData);
+              }
+            }
+          }
+        });
+      });
+
+      if (foundUsers.length === 0) {
+        showError('No user found with this email address or user is not available for private chat');
+        setSearchingUser(false);
+        return;
+      }
+
+      // Add found users to availableUsers
+      const newUsers = [...availableUsers];
+      foundUsers.forEach(foundUser => {
+        if (!newUsers.find(u => u.id === foundUser.id)) {
+          newUsers.push(foundUser);
+          setUserNames(prev => ({
+            ...prev,
+            [foundUser.id]: foundUser.name || foundUser.email?.split('@')[0] || foundUser.id.substring(0, 8)
+          }));
+          setUserProfiles(prev => ({
+            ...prev,
+            [foundUser.id]: foundUser
+          }));
+          setOnlineUsers(prev => ({
+            ...prev,
+            [foundUser.id]: {
+              isOnline: foundUser.isOnline || false,
+              lastSeen: foundUser.lastSeen || null
+            }
+          }));
+        }
+      });
+
+      setAvailableUsers(newUsers);
+      setEmailToAdd('');
+      setShowAddUser(false);
+      success(`Found ${foundUsers.length} user(s) and added to your chat list`);
+    } catch (error) {
+      console.error('Error searching for user:', error);
+      showError('Failed to search for user. Please try again.');
+    } finally {
+      setSearchingUser(false);
+    }
+  };
+
   // Check toxicity (simple word filter)
   const checkToxicity = (text) => {
     const toxicWords = ['bad', 'hate', 'stupid'];
@@ -503,30 +592,119 @@ const PrivateChat = () => {
     return date.toLocaleDateString();
   };
 
+  // Filter users based on search query
+  const filteredUsers = availableUsers.filter(otherUser => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const name = (userNames[otherUser.id] || '').toLowerCase();
+    const email = (otherUser.email || otherUser.studentEmail || otherUser.personalEmail || '').toLowerCase();
+    return name.includes(query) || email.includes(query);
+  });
+
   // If no chat selected, show list of available users
   if (!selectedChatId) {
     return (
       <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-            {isAdminRole(userRole) ? 'Private Chat with Students' : 'Private Chat with Admins'}
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Select a user to start a private conversation
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                {isAdminRole(userRole) ? 'Private Chat with Students' : 'Private Chat with Admins'}
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Select a user to start a private conversation
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddUser(!showAddUser)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Add by Email</span>
+            </button>
+          </div>
+
+          {/* Add User by Email Form */}
+          {showAddUser && (
+            <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+              <div className="flex items-center gap-2 mb-2">
+                <Mail size={18} className="text-indigo-600 dark:text-indigo-400" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Search user by email
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={emailToAdd}
+                  onChange={(e) => setEmailToAdd(e.target.value)}
+                  placeholder="Enter email address..."
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      searchUserByEmail(emailToAdd);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => searchUserByEmail(emailToAdd)}
+                  disabled={searchingUser || !emailToAdd.trim()}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {searchingUser ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Search size={18} />
+                  )}
+                  <span className="hidden sm:inline">Search</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddUser(false);
+                    setEmailToAdd('');
+                  }}
+                  className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search users by name or email..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          {availableUsers.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <MessageCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <p className="text-gray-600 dark:text-gray-400">
-                {isAdminRole(userRole) ? 'No students available' : 'No admins available'}
+                {searchQuery.trim() 
+                  ? 'No users found matching your search'
+                  : (isAdminRole(userRole) ? 'No students available' : 'No admins available')}
               </p>
+              {!searchQuery.trim() && (
+                <button
+                  onClick={() => setShowAddUser(true)}
+                  className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                >
+                  Add User by Email
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
-              {availableUsers.map((otherUser) => (
+              {filteredUsers.map((otherUser) => (
                 <button
                   key={otherUser.id}
                   onClick={() => selectChat(otherUser)}

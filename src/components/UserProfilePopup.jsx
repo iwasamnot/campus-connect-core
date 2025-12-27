@@ -183,18 +183,49 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
 
               {/* Start Private Chat Button */}
               {(() => {
-                if (!onStartPrivateChat || !user || !userData || user.uid === userId) return null;
+                // Always show button if onStartPrivateChat is provided, even if conditions aren't met (for debugging)
+                if (!onStartPrivateChat) {
+                  console.log('UserProfilePopup: onStartPrivateChat not provided');
+                  return null;
+                }
+                
+                if (!user) {
+                  console.log('UserProfilePopup: No current user');
+                  return null;
+                }
+                
+                if (!userData) {
+                  console.log('UserProfilePopup: No userData');
+                  return null;
+                }
+                
+                if (user.uid === userId) {
+                  console.log('UserProfilePopup: User viewing own profile');
+                  return null;
+                }
                 
                 const currentUserIsAdmin = isAdminRole(userRole);
                 const viewedUserIsAdmin = isAdminRole(userData.role);
                 const canChat = (currentUserIsAdmin && !viewedUserIsAdmin) || (!currentUserIsAdmin && viewedUserIsAdmin);
                 
-                if (!canChat) return null;
+                console.log('UserProfilePopup: Chat check', {
+                  currentUserIsAdmin,
+                  viewedUserIsAdmin,
+                  canChat,
+                  currentRole: userRole,
+                  viewedRole: userData.role
+                });
+                
+                if (!canChat) {
+                  console.log('UserProfilePopup: Cannot chat - roles incompatible');
+                  return null;
+                }
                 
                 return (
                   <div className="flex justify-center pt-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                     <button
                       onClick={() => {
+                        console.log('UserProfilePopup: Starting private chat with', userId);
                         onStartPrivateChat(userId, userData);
                         onClose();
                       }}
