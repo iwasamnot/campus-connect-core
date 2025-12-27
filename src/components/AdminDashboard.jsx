@@ -347,18 +347,43 @@ const AdminDashboard = () => {
       // Add to deleted set immediately to prevent it from reappearing
       setDeletedMessageIds(prev => new Set([...prev, messageId]));
       
-      // Delete the message from Firestore with source: 'server' to ensure it's actually deleted
-      await deleteDoc(messageRef);
-      console.log('AdminDashboard: deleteDoc() completed');
+      // Delete the message from Firestore
+      try {
+        await deleteDoc(messageRef);
+        console.log('AdminDashboard: deleteDoc() completed without error');
+      } catch (deleteError) {
+        console.error('AdminDashboard: deleteDoc() threw an error:', deleteError);
+        console.error('AdminDashboard: Error code:', deleteError.code);
+        console.error('AdminDashboard: Error message:', deleteError.message);
+        
+        // Remove from deleted set since deletion failed
+        setDeletedMessageIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(messageId);
+          return newSet;
+        });
+        
+        // Re-throw to be caught by outer catch block
+        throw deleteError;
+      }
       
       // Force a small delay to ensure Firestore processes the deletion
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Immediately verify deletion with getDoc (from server, not cache)
       const immediateCheck = await getDoc(messageRef);
       if (immediateCheck.exists()) {
         console.error('AdminDashboard: Message still exists immediately after deleteDoc!');
-        throw new Error('Deletion failed - message still exists in Firestore');
+        console.error('AdminDashboard: This indicates the deletion was rejected by Firestore rules');
+        
+        // Remove from deleted set since deletion failed
+        setDeletedMessageIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(messageId);
+          return newSet;
+        });
+        
+        throw new Error('Deletion failed - message still exists in Firestore. This usually means permission was denied by Firestore rules.');
       }
       
       console.log('AdminDashboard: Message deleted from Firestore successfully');
@@ -452,13 +477,22 @@ const AdminDashboard = () => {
       let errorMessage = 'Failed to delete message. Please try again.';
       
       if (error.code === 'permission-denied') {
-        errorMessage = 'Permission denied. You may not have permission to delete this message. Please check your admin role in Firestore. The user document must have role: "admin" or "admin1".';
+        errorMessage = `Permission denied. Your user document in Firestore (users/${user.uid}) must have role: "admin" or "admin1". Current role: ${userRole || 'not set'}. Please verify your user document in Firestore Console.`;
+        console.error('AdminDashboard: Permission denied details:', {
+          userId: user.uid,
+          userEmail: user.email,
+          userRole: userRole,
+          messageId: messageId,
+          messageUserId: message?.userId
+        });
       } else if (error.code === 'not-found') {
         errorMessage = 'Message not found. It may have already been deleted.';
       } else if (error.code === 'resource-exhausted') {
         errorMessage = 'Firestore quota exceeded. Please try again later or contact support.';
       } else if (error.code === 'unavailable') {
         errorMessage = 'Firestore service is temporarily unavailable. Please try again later.';
+      } else if (error.message && error.message.includes('still exists')) {
+        errorMessage = `Deletion failed: ${error.message}. This usually means Firestore rules denied the deletion. Please check: 1) Your user document has role: "admin" or "admin1", 2) The Firestore rules are published correctly.`;
       } else if (error.message) {
         errorMessage = error.message;
       }
