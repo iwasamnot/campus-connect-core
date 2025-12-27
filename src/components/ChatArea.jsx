@@ -70,7 +70,7 @@ const ChatArea = () => {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-pro',
+        model: 'gemini-2.5-flash',
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
