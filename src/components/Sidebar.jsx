@@ -183,7 +183,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
         )}
       </nav>
 
-      <div className="p-4 border-t border-gray-800 space-y-2 flex-shrink-0 bg-gray-900 dark:bg-gray-900">
+      <div className="p-4 pb-20 md:pb-4 border-t border-gray-800 space-y-2 flex-shrink-0 bg-gray-900 dark:bg-gray-900" style={{ paddingBottom: 'max(5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem))' }}>
         <button
           onClick={toggleDarkMode}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
