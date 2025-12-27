@@ -20,7 +20,6 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
         className="mb-2 object-contain transition-all duration-300 ease-in-out"
         style={{
           width: `${width + 16}px`,
-          height: `${width + 16}px`,
           maxWidth: '100%',
           height: 'auto'
         }}
