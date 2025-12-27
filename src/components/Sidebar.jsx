@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus, UserCircle, X } from 'lucide-react';
+import { MessageSquare, Bot, FileText, LogOut, User, Users, Moon, Sun, UserPlus, UserCircle, X, MessageCircle } from 'lucide-react';
 import Logo from './Logo';
 
 const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
@@ -110,6 +110,17 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
               <UserCircle size={20} />
               <span>Groups</span>
             </button>
+            <button
+              onClick={() => handleNavClick('private-chat')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeView === 'private-chat'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <MessageCircle size={20} />
+              <span>Private Chat</span>
+            </button>
           </>
         ) : (
           <>
@@ -156,6 +167,17 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             >
               <UserPlus size={20} />
               <span>Create User</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('private-chat')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeView === 'private-chat'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <MessageCircle size={20} />
+              <span>Private Chat</span>
             </button>
           </>
         )}
