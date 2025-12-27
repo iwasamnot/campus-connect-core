@@ -719,8 +719,6 @@ const PrivateChat = () => {
         ? 'Chat not found. Please try selecting the user again.'
         : error.message || 'Failed to send message. Please try again.';
       showError(errorMessage);
-      console.error('Error sending message:', error);
-      showError('Failed to send message. Please try again.');
     } finally {
       setSending(false);
     }
