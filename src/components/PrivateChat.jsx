@@ -52,26 +52,16 @@ const PrivateChat = () => {
     return [userId1, userId2].sort().join('_');
   };
 
-  // Fetch available users (admins for students, students for admins)
+  // Fetch available users (all users except current user)
   useEffect(() => {
     if (!user) {
       console.log('PrivateChat: No user, skipping user fetch');
       return;
     }
 
-    console.log('PrivateChat: Fetching available users, userRole:', userRole);
-    let q;
-    if (isAdminRole(userRole)) {
-      // Admin viewing: fetch students
-      q = query(
-        collection(db, 'users'),
-        where('role', '==', 'student')
-      );
-    } else {
-      // Student viewing: fetch admins (both 'admin' and 'admin1')
-      // Firestore doesn't support OR in where, so we'll fetch and filter client-side
-      q = query(collection(db, 'users'));
-    }
+    console.log('PrivateChat: Fetching all available users, userRole:', userRole);
+    // Fetch all users - no role filtering
+    const q = query(collection(db, 'users'));
 
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
@@ -82,17 +72,10 @@ const PrivateChat = () => {
 
         snapshot.docs.forEach(doc => {
           const userData = doc.data();
-          // Exclude current user
+          // Exclude current user only
           if (doc.id === user.uid) return;
           
-          // If student, only show admins (admin or admin1)
-          // If admin, only show students
-          if (isAdminRole(userRole)) {
-            if (userData.role !== 'student') return;
-          } else {
-            if (userData.role !== 'admin' && userData.role !== 'admin1') return;
-          }
-
+          // Show all users regardless of role
           users.push({
             id: doc.id,
             ...userData
@@ -426,6 +409,7 @@ const PrivateChat = () => {
           
           // Allow chat if we have valid userData (let Firestore rules and selectChat handle permissions)
           // Only block if it's clearly the same user
+          // No role checking - allow all users to chat
           if (storedUserData.id === initialUserId && storedUserData.id !== user.uid) {
             // Add user to availableUsers and user caches
             userToSelect = {
@@ -526,22 +510,11 @@ const PrivateChat = () => {
       results.forEach(snapshot => {
         snapshot.docs.forEach(doc => {
           const userData = { id: doc.id, ...doc.data() };
-          // Check if user is already in availableUsers
-          if (!availableUsers.find(u => u.id === doc.id) && doc.id !== user.uid) {
-            // Check if user can chat (student with admin, admin with student)
-            const userIsAdmin = isAdminRole(userData.role);
-            if (isAdminRole(userRole)) {
-              // Admin can only chat with students
-              if (!userIsAdmin) {
-                foundUsers.push(userData);
-              }
-            } else {
-              // Student can only chat with admins
-              if (userIsAdmin) {
-                foundUsers.push(userData);
-              }
+            // Check if user is already in availableUsers
+            if (!availableUsers.find(u => u.id === doc.id) && doc.id !== user.uid) {
+              // Allow all users to chat with each other
+              foundUsers.push(userData);
             }
-          }
         });
       });
 
@@ -787,9 +760,7 @@ const PrivateChat = () => {
                 Direct Messages
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {isAdminRole(userRole) 
-                  ? 'Start a private conversation with a student' 
-                  : 'Start a private conversation with an admin'}
+                Start a private conversation with any user
               </p>
             </div>
             <button
@@ -868,7 +839,7 @@ const PrivateChat = () => {
               <p className="text-gray-600 dark:text-gray-400">
                 {searchQuery.trim() 
                   ? 'No users found matching your search'
-                  : (isAdminRole(userRole) ? 'No students available' : 'No admins available')}
+                  : 'No users available'}
               </p>
               {!searchQuery.trim() && (
                 <button
