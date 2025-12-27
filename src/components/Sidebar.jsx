@@ -45,7 +45,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Mobile Close Button */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
           <Logo size="small" showText={true} />
           <button
             onClick={onClose}
@@ -56,14 +56,14 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
           </button>
         </div>
         
-        <div className="hidden md:block p-6 border-b border-gray-800">
+        <div className="hidden md:block p-6 border-b border-gray-800 flex-shrink-0">
           <Logo size="small" showText={true} className="mb-2" />
           <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
             {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
           </p>
         </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {!isAdminRole(userRole) ? (
           <>
             <button
@@ -183,7 +183,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
         )}
       </nav>
 
-      <div className="p-4 border-t border-gray-800 space-y-2">
+      <div className="p-4 border-t border-gray-800 space-y-2 flex-shrink-0 bg-gray-900 dark:bg-gray-900">
         <button
           onClick={toggleDarkMode}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
