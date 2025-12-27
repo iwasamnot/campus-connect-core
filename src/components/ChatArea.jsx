@@ -165,7 +165,7 @@ const ChatArea = ({ setActiveView }) => {
   useEffect(() => {
     const q = query(
       collection(db, 'users'),
-      limit(200) // Limit to 200 users (should be enough for most campuses)
+      limit(100) // Reduced to 100 users for Spark free plan (was 200)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -229,7 +229,7 @@ const ChatArea = ({ setActiveView }) => {
     const q = query(
       collection(db, 'messages'),
       orderBy('timestamp', 'desc'),
-      limit(100) // Limit to 100 most recent messages, then reverse for display
+      limit(50) // Reduced to 50 messages for Spark free plan (was 100)
     );
 
     const unsubscribe = onSnapshot(
@@ -257,53 +257,6 @@ const ChatArea = ({ setActiveView }) => {
           });
           
           setMessages(uniqueMessages);
-          
-          // Mark messages as read and send notifications (debounced to prevent infinite loops)
-          // Use a separate effect to avoid triggering snapshot updates
-          if (user?.uid) {
-            // Batch read updates to prevent infinite loops
-            const unreadMessages = uniqueMessages.filter(message => {
-              const readBy = message.readBy || {};
-              return !readBy[user.uid] && message.userId !== user.uid;
-            });
-            
-            // Process read updates in batches with delay to prevent quota exhaustion
-            if (unreadMessages.length > 0) {
-              setTimeout(() => {
-                unreadMessages.slice(0, 10).forEach(async (message) => { // Limit to 10 at a time
-                  try {
-                    const readBy = message.readBy || {};
-                    await updateDoc(doc(db, 'messages', message.id), {
-                      readBy: {
-                        ...readBy,
-                        [user.uid]: serverTimestamp()
-                      }
-                    });
-                    
-                    // Send notification for new messages (not from current user and not AI)
-                    if (!message.isAI && !document.hasFocus()) {
-                      const messageUser = userProfiles[message.userId] || {};
-                      await notificationService.showMessage(
-                        message,
-                        messageUser.name || message.userName || 'Someone'
-                      );
-                    }
-                    
-                    // Check if user was mentioned
-                    if (message.mentions && message.mentions.includes(user.uid)) {
-                      const messageUser = userProfiles[message.userId] || {};
-                      await notificationService.showMention(
-                        message,
-                        messageUser.name || message.userName || 'Someone'
-                      );
-                    }
-                  } catch (error) {
-                    console.error('Error marking message as read:', error);
-                  }
-                });
-              }, 1000); // Delay to prevent immediate re-triggering
-            }
-          }
         } catch (error) {
           console.error('Error processing messages:', error);
           showError('Error loading messages. Please refresh the page.');
@@ -327,6 +280,73 @@ const ChatArea = ({ setActiveView }) => {
       unsubscribe();
     };
   }, [user?.uid, showError]); // Include showError but it's stable from context
+
+  // Mark messages as read and send notifications (separate effect to prevent infinite loops)
+  // DISABLED for Spark free plan to prevent quota exhaustion - read receipts are expensive
+  // Users can still see messages, but read receipts won't be updated
+  const processedReadMessagesRef = useRef(new Set());
+  const lastReadUpdateRef = useRef(0);
+  useEffect(() => {
+    if (!user?.uid || messages.length === 0) return;
+    
+    // Only update read receipts if user has preferences enabled AND it's been at least 10 seconds since last update
+    if (!preferences?.readReceipts) return;
+    const now = Date.now();
+    if (now - lastReadUpdateRef.current < 10000) return; // 10 second cooldown
+
+    // Debounce read updates to prevent quota exhaustion
+    const timeoutId = setTimeout(() => {
+      const unreadMessages = messages.filter(message => {
+        const readBy = message.readBy || {};
+        const isUnread = !readBy[user.uid] && message.userId !== user.uid;
+        const notProcessed = !processedReadMessagesRef.current.has(message.id);
+        return isUnread && notProcessed;
+      });
+
+      // Process only first 3 unread messages at a time (reduced from 5)
+      unreadMessages.slice(0, 3).forEach(async (message) => {
+        try {
+          // Mark as processed immediately to prevent duplicate updates
+          processedReadMessagesRef.current.add(message.id);
+          
+          const readBy = message.readBy || {};
+          await updateDoc(doc(db, 'messages', message.id), {
+            readBy: {
+              ...readBy,
+              [user.uid]: serverTimestamp()
+            }
+          });
+          
+          // Send notification for new messages (not from current user and not AI)
+          if (!message.isAI && !document.hasFocus()) {
+            const messageUser = userProfiles[message.userId] || {};
+            await notificationService.showMessage(
+              message,
+              messageUser.name || message.userName || 'Someone'
+            );
+          }
+          
+          // Check if user was mentioned
+          if (message.mentions && message.mentions.includes(user.uid)) {
+            const messageUser = userProfiles[message.userId] || {};
+            await notificationService.showMention(
+              message,
+              messageUser.name || message.userName || 'Someone'
+            );
+          }
+        } catch (error) {
+          // Remove from processed set on error so it can be retried
+          processedReadMessagesRef.current.delete(message.id);
+          console.error('Error marking message as read:', error);
+        }
+      });
+      
+      // Update last update time
+      lastReadUpdateRef.current = Date.now();
+    }, 5000); // 5 second delay (increased from 2) to prevent immediate re-triggering
+
+    return () => clearTimeout(timeoutId);
+  }, [messages, user?.uid, userProfiles, preferences?.readReceipts]); // Only depend on messages, not on readBy updates
 
   // Toxicity checking is now handled by the toxicityChecker utility
 

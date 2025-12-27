@@ -41,7 +41,8 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
     const q = query(
       collection(db, 'groups'),
-      where('members', 'array-contains', user.uid)
+      where('members', 'array-contains', user.uid),
+      limit(50) // Limit to 50 groups to prevent quota exhaustion
     );
 
     const unsubscribe = onSnapshot(

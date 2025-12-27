@@ -23,7 +23,7 @@ const UsersManagement = () => {
   useEffect(() => {
     const q = query(
       collection(db, 'users'),
-      limit(200) // Limit to 200 users
+      limit(100) // Reduced to 100 users for Spark free plan (was 200)
     );
 
     const unsubscribe = onSnapshot(
@@ -54,7 +54,7 @@ const UsersManagement = () => {
           // Try without orderBy if there's an index error (with limit and cleanup)
           const simpleQuery = query(
             collection(db, 'users'),
-            limit(200)
+            limit(100) // Reduced to 100 users for Spark free plan
           );
           const fallbackUnsubscribe = onSnapshot(simpleQuery, (snapshot) => {
             const usersData = snapshot.docs.map(doc => ({

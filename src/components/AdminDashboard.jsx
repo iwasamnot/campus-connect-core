@@ -69,7 +69,7 @@ const AdminDashboard = () => {
     const q = query(
       collection(db, 'messages'),
       orderBy('timestamp', 'desc'),
-      limit(100) // Limit to 100 most recent messages to prevent quota exhaustion
+      limit(50) // Reduced to 50 messages for Spark free plan (was 100)
     );
 
     const unsubscribe = onSnapshot(

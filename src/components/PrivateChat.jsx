@@ -15,7 +15,8 @@ import {
   updateDoc,
   getDoc,
   setDoc,
-  getDocs
+  getDocs,
+  limit
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail } from 'lucide-react';
@@ -203,7 +204,7 @@ const PrivateChat = () => {
         // Now set up the messages listener
         const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
         // Always use orderBy for timestamp - Firestore will handle missing timestamps
-        const q = query(messagesRef, orderBy('timestamp', 'asc'));
+        const q = query(messagesRef, orderBy('timestamp', 'asc'), limit(50)); // Reduced to 50 messages for Spark free plan (was 100)
 
         unsubscribe = onSnapshot(q, 
           (snapshot) => {
@@ -276,25 +277,6 @@ const PrivateChat = () => {
 
             console.log('PrivateChat: Setting messages, final count:', uniqueMessages.length);
             setMessages(uniqueMessages);
-
-            // Mark messages as read
-            messagesData.forEach(async (message) => {
-              if (message.userId !== user.uid) {
-                const readBy = message.readBy || {};
-                if (!readBy[user.uid]) {
-                  try {
-                    await updateDoc(doc(db, 'privateChats', selectedChatId, 'messages', message.id), {
-                      readBy: {
-                        ...readBy,
-                        [user.uid]: serverTimestamp()
-                      }
-                    });
-                  } catch (error) {
-                    console.error('Error marking message as read:', error);
-                  }
-                }
-              }
-            });
           },
           (error) => {
             console.error('PrivateChat: Error fetching messages:', error);
@@ -325,14 +307,62 @@ const PrivateChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Mark messages as read (separate effect to prevent infinite loops)
+  // DISABLED by default for Spark free plan - read receipts are expensive
+  const processedReadMessagesRef = useRef(new Set());
+  const lastReadUpdateRef = useRef(0);
+  useEffect(() => {
+    if (!user?.uid || !selectedChatId || messages.length === 0) return;
+    
+    // Cooldown: only update every 10 seconds
+    const now = Date.now();
+    if (now - lastReadUpdateRef.current < 10000) return;
+
+    // Debounce read updates to prevent quota exhaustion
+    const timeoutId = setTimeout(() => {
+      const unreadMessages = messages.filter(message => {
+        const readBy = message.readBy || {};
+        const isUnread = !readBy[user.uid] && message.userId !== user.uid;
+        const notProcessed = !processedReadMessagesRef.current.has(message.id);
+        return isUnread && notProcessed;
+      });
+
+      // Process only first 3 unread messages at a time (reduced from 5)
+      unreadMessages.slice(0, 3).forEach(async (message) => {
+        try {
+          // Mark as processed immediately to prevent duplicate updates
+          processedReadMessagesRef.current.add(message.id);
+          
+          const readBy = message.readBy || {};
+          await updateDoc(doc(db, 'privateChats', selectedChatId, 'messages', message.id), {
+            readBy: {
+              ...readBy,
+              [user.uid]: serverTimestamp()
+            }
+          });
+        } catch (error) {
+          // Remove from processed set on error so it can be retried
+          processedReadMessagesRef.current.delete(message.id);
+          console.error('Error marking message as read:', error);
+        }
+      });
+      
+      // Update last update time
+      lastReadUpdateRef.current = Date.now();
+    }, 5000); // 5 second delay (increased from 2) to prevent immediate re-triggering
+
+    return () => clearTimeout(timeoutId);
+  }, [messages, user?.uid, selectedChatId]); // Only depend on messages, not on readBy updates
+
   // Cleanup expired messages periodically
   useEffect(() => {
     if (!selectedChatId) return;
 
+    // Cleanup expired messages less frequently to save quota (every 5 minutes instead of 1 minute)
     const cleanupInterval = setInterval(async () => {
       try {
         const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
-        const q = query(messagesRef);
+        const q = query(messagesRef, limit(50)); // Limit query to 50 messages max
         const snapshot = await getDocs(q);
         const now = new Date();
 
@@ -354,7 +384,7 @@ const PrivateChat = () => {
       } catch (error) {
         console.error('Error cleaning up expired messages:', error);
       }
-    }, 60000); // Check every minute
+    }, 300000); // Check every 5 minutes (increased from 1 minute) to save quota
 
     return () => clearInterval(cleanupInterval);
   }, [selectedChatId]);

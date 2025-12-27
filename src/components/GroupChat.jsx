@@ -16,7 +16,8 @@ import {
   getDoc,
   getDocs,
   arrayRemove,
-  arrayUnion
+  arrayUnion,
+  limit
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader } from 'lucide-react';
@@ -134,7 +135,8 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
     const q = query(
       collection(db, 'groupMessages'),
       where('groupId', '==', group.id),
-      orderBy('timestamp', 'asc')
+      orderBy('timestamp', 'asc'),
+      limit(50) // Reduced to 50 messages for Spark free plan (was 100)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -143,29 +145,57 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
         ...doc.data()
       }));
       setMessages(messagesData);
-      
-      // Mark all messages as read by current user
-      if (user) {
-        messagesData.forEach(async (message) => {
-          const readBy = message.readBy || {};
-          if (!readBy[user.uid]) {
-            try {
-              await updateDoc(doc(db, 'groupMessages', message.id), {
-                readBy: {
-                  ...readBy,
-                  [user.uid]: serverTimestamp()
-                }
-              });
-            } catch (error) {
-              console.error('Error marking message as read:', error);
-            }
-          }
-        });
-      }
     });
 
     return () => unsubscribe();
-  }, [group]);
+  }, [group?.id]); // Only depend on group.id to prevent unnecessary re-subscriptions
+
+  // Mark messages as read (separate effect to prevent infinite loops)
+  // DISABLED by default for Spark free plan - read receipts are expensive
+  const processedReadMessagesRef = useRef(new Set());
+  const lastReadUpdateRef = useRef(0);
+  useEffect(() => {
+    if (!user?.uid || !group?.id || messages.length === 0) return;
+    
+    // Cooldown: only update every 10 seconds
+    const now = Date.now();
+    if (now - lastReadUpdateRef.current < 10000) return;
+
+    // Debounce read updates to prevent quota exhaustion
+    const timeoutId = setTimeout(() => {
+      const unreadMessages = messages.filter(message => {
+        const readBy = message.readBy || {};
+        const isUnread = !readBy[user.uid];
+        const notProcessed = !processedReadMessagesRef.current.has(message.id);
+        return isUnread && notProcessed;
+      });
+
+      // Process only first 3 unread messages at a time (reduced from 5)
+      unreadMessages.slice(0, 3).forEach(async (message) => {
+        try {
+          // Mark as processed immediately to prevent duplicate updates
+          processedReadMessagesRef.current.add(message.id);
+          
+          const readBy = message.readBy || {};
+          await updateDoc(doc(db, 'groupMessages', message.id), {
+            readBy: {
+              ...readBy,
+              [user.uid]: serverTimestamp()
+            }
+          });
+        } catch (error) {
+          // Remove from processed set on error so it can be retried
+          processedReadMessagesRef.current.delete(message.id);
+          console.error('Error marking message as read:', error);
+        }
+      });
+      
+      // Update last update time
+      lastReadUpdateRef.current = Date.now();
+    }, 5000); // 5 second delay (increased from 2) to prevent immediate re-triggering
+
+    return () => clearTimeout(timeoutId);
+  }, [messages, user?.uid, group?.id]); // Only depend on messages, not on readBy updates
 
   // Toxicity checking is now handled by the toxicityChecker utility
 
