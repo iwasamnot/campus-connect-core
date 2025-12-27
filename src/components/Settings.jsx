@@ -86,18 +86,31 @@ const Settings = ({ setActiveView }) => {
                   </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {['indigo', 'blue', 'purple', 'pink', 'red', 'orange', 'green', 'teal'].map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => updatePreference('accentColor', color)}
-                      className={`h-10 rounded-lg border-2 transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 ${
-                        preferences.accentColor === color
-                          ? 'border-gray-900 dark:border-white ring-2 ring-offset-2 ring-indigo-500'
-                          : 'border-gray-300 dark:border-gray-600'
-                      } bg-${color}-500`}
-                      title={color.charAt(0).toUpperCase() + color.slice(1)}
-                    />
-                  ))}
+                  {['indigo', 'blue', 'purple', 'pink', 'red', 'orange', 'green', 'teal'].map((color) => {
+                    const colorMap = {
+                      indigo: '#6366f1',
+                      blue: '#3b82f6',
+                      purple: '#8b5cf6',
+                      pink: '#ec4899',
+                      red: '#ef4444',
+                      orange: '#f97316',
+                      green: '#10b981',
+                      teal: '#14b8a6'
+                    };
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => updatePreference('accentColor', color)}
+                        style={{ backgroundColor: colorMap[color] }}
+                        className={`h-10 rounded-lg border-2 transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 ${
+                          preferences.accentColor === color
+                            ? 'border-gray-900 dark:border-white ring-2 ring-offset-2'
+                            : 'border-gray-300 dark:border-gray-600'
+                        }`}
+                        title={color.charAt(0).toUpperCase() + color.slice(1)}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 

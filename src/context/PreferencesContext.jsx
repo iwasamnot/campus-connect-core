@@ -57,6 +57,7 @@ export const PreferencesProvider = ({ children }) => {
     
     // Apply accent color
     const root = document.documentElement;
+    const body = document.body;
     const accentColors = {
       indigo: { light: '#6366f1', dark: '#818cf8' },
       blue: { light: '#3b82f6', dark: '#60a5fa' },
@@ -79,7 +80,22 @@ export const PreferencesProvider = ({ children }) => {
       large: '1.125rem',
       xlarge: '1.25rem'
     };
-    root.style.setProperty('--base-font-size', fontSizes[preferences.fontSize] || fontSizes.medium);
+    const fontSize = fontSizes[preferences.fontSize] || fontSizes.medium;
+    root.style.setProperty('--base-font-size', fontSize);
+    body.style.fontSize = fontSize;
+    
+    // Apply accent color to common Tailwind classes via data attribute
+    root.setAttribute('data-accent-color', preferences.accentColor);
+    
+    console.log('Preferences applied:', {
+      accentColor: preferences.accentColor,
+      fontSize: preferences.fontSize,
+      cssVars: {
+        '--accent-color': colors.light,
+        '--accent-color-dark': colors.dark,
+        '--base-font-size': fontSize
+      }
+    });
   }, [preferences]);
 
   const updatePreference = (key, value) => {

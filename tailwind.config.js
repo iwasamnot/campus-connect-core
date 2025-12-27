@@ -7,6 +7,13 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      colors: {
+        'accent': 'var(--accent-color)',
+        'accent-dark': 'var(--accent-color-dark)',
+      },
+      fontSize: {
+        'base': 'var(--base-font-size)',
+      },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
         'fade-out': 'fadeOut 0.3s ease-in-out',
