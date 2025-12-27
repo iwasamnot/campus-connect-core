@@ -275,7 +275,7 @@ const ChatArea = ({ setActiveView }) => {
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, userProfiles, showError]);
 
   // Toxicity checking is now handled by the toxicityChecker utility
 
