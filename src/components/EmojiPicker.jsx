@@ -32,7 +32,7 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
   return (
     <div
       ref={pickerRef}
-      className={`absolute ${position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-[280px] sm:w-80 max-h-[60vh] sm:max-h-96 flex flex-col animate-scale-in`}
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-[280px] sm:w-80 max-h-[60vh] sm:max-h-96 flex flex-col animate-scale-in"
       style={{
         maxWidth: 'calc(100vw - 2rem)',
         maxHeight: 'min(60vh, 384px)'

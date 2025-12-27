@@ -1349,24 +1349,26 @@ const ChatArea = ({ setActiveView }) => {
                     <Smile size={20} />
                   </button>
                   {showEmojiPicker && (
-                    <EmojiPicker
-                      onEmojiSelect={(emoji) => {
-                        const cursorPos = messageInputRef.current?.selectionStart || newMessage.length;
-                        const textBefore = newMessage.substring(0, cursorPos);
-                        const textAfter = newMessage.substring(cursorPos);
-                        setNewMessage(textBefore + emoji + textAfter);
-                        setShowEmojiPicker(false);
-                        setTimeout(() => {
-                          if (messageInputRef.current) {
-                            messageInputRef.current.focus();
-                            const newPos = cursorPos + emoji.length;
-                            messageInputRef.current.setSelectionRange(newPos, newPos);
-                          }
-                        }, 0);
-                      }}
-                      onClose={() => setShowEmojiPicker(false)}
-                      position="top"
-                    />
+                    <div className="absolute bottom-full right-0 mb-2 z-[100]">
+                      <EmojiPicker
+                        onEmojiSelect={(emoji) => {
+                          const cursorPos = messageInputRef.current?.selectionStart || newMessage.length;
+                          const textBefore = newMessage.substring(0, cursorPos);
+                          const textAfter = newMessage.substring(cursorPos);
+                          setNewMessage(textBefore + emoji + textAfter);
+                          setShowEmojiPicker(false);
+                          setTimeout(() => {
+                            if (messageInputRef.current) {
+                              messageInputRef.current.focus();
+                              const newPos = cursorPos + emoji.length;
+                              messageInputRef.current.setSelectionRange(newPos, newPos);
+                            }
+                          }, 0);
+                        }}
+                        onClose={() => setShowEmojiPicker(false)}
+                        position="top"
+                      />
+                    </div>
                   )}
                 </div>
 

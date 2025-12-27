@@ -182,28 +182,30 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
               </div>
 
               {/* Start Private Chat Button */}
-              {onStartPrivateChat && user && userData && user.uid !== userId && (
-                (() => {
-                  const currentUserIsAdmin = isAdminRole(userRole);
-                  const viewedUserIsAdmin = isAdminRole(userData.role);
-                  const canChat = (currentUserIsAdmin && !viewedUserIsAdmin) || (!currentUserIsAdmin && viewedUserIsAdmin);
-                  
-                  return canChat ? (
-                    <div className="flex justify-center pt-2 pb-4 border-b border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() => {
-                          onStartPrivateChat(userId, userData);
-                          onClose();
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:shadow-md"
-                      >
-                        <MessageCircle size={18} />
-                        <span>Start Private Chat</span>
-                      </button>
-                    </div>
-                  ) : null;
-                })()
-              )}
+              {(() => {
+                if (!onStartPrivateChat || !user || !userData || user.uid === userId) return null;
+                
+                const currentUserIsAdmin = isAdminRole(userRole);
+                const viewedUserIsAdmin = isAdminRole(userData.role);
+                const canChat = (currentUserIsAdmin && !viewedUserIsAdmin) || (!currentUserIsAdmin && viewedUserIsAdmin);
+                
+                if (!canChat) return null;
+                
+                return (
+                  <div className="flex justify-center pt-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => {
+                        onStartPrivateChat(userId, userData);
+                        onClose();
+                      }}
+                      className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:shadow-md font-medium"
+                    >
+                      <MessageCircle size={20} />
+                      <span>Start Private Chat</span>
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* Details */}
               <div className="space-y-4">
