@@ -32,11 +32,15 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
   return (
     <div
       ref={pickerRef}
-      className={`absolute ${position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-80 max-h-96 flex flex-col animate-scale-in`}
+      className={`absolute ${position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-[280px] sm:w-80 max-h-[60vh] sm:max-h-96 flex flex-col animate-scale-in`}
+      style={{
+        maxWidth: 'calc(100vw - 2rem)',
+        maxHeight: 'min(60vh, 384px)'
+      }}
     >
       {/* Header */}
-      <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Emoji</h3>
+      <div className="p-2 sm:p-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+        <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white">Emoji</h3>
         <button
           onClick={onClose}
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
@@ -46,18 +50,18 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
       </div>
 
       {/* Search */}
-      <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <input
           type="text"
           placeholder="Search emojis..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
       {/* Categories */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+      <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto flex-shrink-0">
         {Object.keys(EMOJI_CATEGORIES).map((category) => (
           <button
             key={category}
@@ -65,7 +69,7 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
               setSelectedCategory(category);
               setSearchQuery('');
             }}
-            className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+            className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium whitespace-nowrap transition-colors ${
               selectedCategory === category
                 ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -77,8 +81,8 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
       </div>
 
       {/* Emoji Grid */}
-      <div className="flex-1 overflow-y-auto p-3">
-        <div className="grid grid-cols-8 gap-2">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-3 min-h-0">
+        <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5 sm:gap-2">
           {filteredEmojis.map((emoji, index) => (
             <button
               key={`${emoji}-${index}`}
@@ -86,7 +90,7 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
                 onEmojiSelect(emoji);
                 onClose();
               }}
-              className="text-2xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors transform hover:scale-110 active:scale-95"
+              className="text-xl sm:text-2xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1.5 sm:p-2 transition-colors transform hover:scale-110 active:scale-95"
               aria-label={`Select emoji ${emoji}`}
             >
               {emoji}
