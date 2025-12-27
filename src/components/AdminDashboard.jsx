@@ -20,7 +20,7 @@ import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, C
 import Logo from './Logo';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { success, error: showError } = useToast();
   const [allMessages, setAllMessages] = useState([]);
   const [reports, setReports] = useState([]);
@@ -290,7 +290,7 @@ const AdminDashboard = () => {
         userId: message.userId,
         isAI: message.isAI,
         currentUser: user.uid,
-        userRole: userRole
+        userEmail: user.email
       });
 
       // Delete the message
