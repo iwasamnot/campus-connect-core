@@ -881,81 +881,109 @@ const PrivateChat = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredUsers.map((otherUser) => (
-                <button
-                  key={otherUser.id}
-                  onClick={() => selectChat(otherUser)}
-                  className="w-full flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
-                >
-                  <div className="relative">
-                    {otherUser.profilePicture ? (
-                      <img
-                        src={otherUser.profilePicture}
-                        alt={userNames[otherUser.id] || 'User'}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
-                        {(userNames[otherUser.id] || 'U')[0].toUpperCase()}
+              {filteredUsers.map((otherUser) => {
+                const userProfile = userProfiles[otherUser.id] || otherUser;
+                const profilePicture = userProfile.profilePicture || otherUser.profilePicture;
+                const displayName = userNames[otherUser.id] || 
+                                   userProfile.name || 
+                                   otherUser.name || 
+                                   userProfile.studentEmail?.split('@')[0] || 
+                                   otherUser.studentEmail?.split('@')[0] || 
+                                   userProfile.email?.split('@')[0] || 
+                                   otherUser.email?.split('@')[0] || 
+                                   userProfile.personalEmail?.split('@')[0] ||
+                                   otherUser.personalEmail?.split('@')[0] ||
+                                   `User ${otherUser.id.substring(0, 8)}`;
+                
+                return (
+                  <div
+                    key={otherUser.id}
+                    className="w-full flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedUserId(otherUser.id);
+                      }}
+                      className="relative flex-shrink-0"
+                    >
+                      {profilePicture ? (
+                        <img
+                          src={profilePicture}
+                          alt={displayName}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className={`w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
+                      >
+                        {displayName[0].toUpperCase()}
                       </div>
-                    )}
-                    {onlineUsers[otherUser.id]?.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                        {userNames[otherUser.id] || 
-                         otherUser.name || 
-                         otherUser.studentEmail?.split('@')[0] || 
-                         otherUser.email?.split('@')[0] || 
-                         otherUser.personalEmail?.split('@')[0] ||
-                         `User ${otherUser.id.substring(0, 8)}`}
-                      </h3>
-                      {isAdminRole(otherUser.role) && (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded">
-                          Admin
-                        </span>
+                      {onlineUsers[otherUser.id]?.isOnline && (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
                       )}
-                    </div>
-                    {chatSummaries[otherUser.id]?.lastMessage ? (
-                      <>
-                        <p className="text-sm text-gray-900 dark:text-white truncate font-medium">
-                          {chatSummaries[otherUser.id].lastMessage}
-                        </p>
-                        {chatSummaries[otherUser.id].lastMessageTime && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {(() => {
-                              const time = chatSummaries[otherUser.id].lastMessageTime;
-                              const date = time.toDate ? time.toDate() : new Date(time);
-                              const now = new Date();
-                              const diff = now - date;
-                              const minutes = Math.floor(diff / 60000);
-                              const hours = Math.floor(diff / 3600000);
-                              const days = Math.floor(diff / 86400000);
-                              
-                              if (minutes < 1) return 'Just now';
-                              if (minutes < 60) return `${minutes}m ago`;
-                              if (hours < 24) return `${hours}h ago`;
-                              if (days < 7) return `${days}d ago`;
-                              return date.toLocaleDateString();
-                            })()}
-                          </p>
+                    </button>
+                    <button
+                      onClick={() => selectChat(otherUser)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                          {displayName}
+                        </h3>
+                        {isAdminRole(otherUser.role) && (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded">
+                            Admin
+                          </span>
                         )}
-                      </>
-                    ) : (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        {otherUser.email || otherUser.studentEmail || 'No email'}
-                      </p>
-                    )}
+                      </div>
+                      {chatSummaries[otherUser.id]?.lastMessage ? (
+                        <>
+                          <p className="text-sm text-gray-900 dark:text-white truncate font-medium">
+                            {chatSummaries[otherUser.id].lastMessage}
+                          </p>
+                          {chatSummaries[otherUser.id].lastMessageTime && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {(() => {
+                                const time = chatSummaries[otherUser.id].lastMessageTime;
+                                const date = time.toDate ? time.toDate() : new Date(time);
+                                const now = new Date();
+                                const diff = now - date;
+                                const minutes = Math.floor(diff / 60000);
+                                const hours = Math.floor(diff / 3600000);
+                                const days = Math.floor(diff / 86400000);
+                                
+                                if (minutes < 1) return 'Just now';
+                                if (minutes < 60) return `${minutes}m ago`;
+                                if (hours < 24) return `${hours}h ago`;
+                                if (days < 7) return `${days}d ago`;
+                                return date.toLocaleDateString();
+                              })()}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {otherUser.email || otherUser.studentEmail || 'No email'}
+                        </p>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => selectChat(otherUser)}
+                      className="flex-shrink-0"
+                    >
+                      <User
+                        size={20}
+                        className="text-gray-400"
+                      />
+                    </button>
                   </div>
-                  <User
-                    size={20}
-                    className="text-gray-400 flex-shrink-0"
-                  />
-                </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
