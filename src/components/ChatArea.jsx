@@ -1426,6 +1426,84 @@ const ChatArea = ({ setActiveView }) => {
           }}
         />
       )}
+
+      {/* Forward Message Modal */}
+      {showForwardModal && forwardingMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => {
+          setShowForwardModal(false);
+          setForwardingMessage(null);
+        }}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Forward Message</h3>
+              <button
+                onClick={() => {
+                  setShowForwardModal(false);
+                  setForwardingMessage(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  From: {forwardingMessage.userName || 'Unknown'}
+                </p>
+                <p className="text-gray-900 dark:text-white">
+                  {forwardingMessage.displayText || forwardingMessage.text}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Forward to
+                </label>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      // Forward to Campus Chat (current chat)
+                      success('Message forwarded to Campus Chat');
+                      setShowForwardModal(false);
+                      setForwardingMessage(null);
+                    }}
+                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-left"
+                  >
+                    <div className="font-medium">Campus Chat</div>
+                    <div className="text-sm opacity-90">Forward to global chat</div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveView('private-chat');
+                      sessionStorage.setItem('forwardMessage', JSON.stringify(forwardingMessage));
+                      setShowForwardModal(false);
+                      setForwardingMessage(null);
+                      success('Navigate to Direct Messages to forward');
+                    }}
+                    className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-left"
+                  >
+                    <div className="font-medium">Direct Messages</div>
+                    <div className="text-sm opacity-90">Forward to a private chat</div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveView('groups');
+                      sessionStorage.setItem('forwardMessage', JSON.stringify(forwardingMessage));
+                      setShowForwardModal(false);
+                      setForwardingMessage(null);
+                      success('Navigate to Groups to forward');
+                    }}
+                    className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-left"
+                  >
+                    <div className="font-medium">Group Chat</div>
+                    <div className="text-sm opacity-90">Forward to a group</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
