@@ -15,6 +15,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Message scheduling
 - Advanced analytics dashboard
 
+## [4.0.0] - 2024-12-27
+
+### Added
+- **Advanced Theme Customization**: Complete theme personalization system
+  - 8 accent color options (Indigo, Blue, Purple, Pink, Red, Orange, Green, Teal)
+  - Custom accent colors applied throughout the app
+  - Font size preferences (Small, Medium, Large, X-Large)
+  - Dynamic CSS variables for real-time theme updates
+  - Preferences saved to localStorage
+- **Message Forwarding**: Forward messages to different chats
+  - Forward messages to Campus Chat, Direct Messages, or Group Chats
+  - Forward button on all messages (when enabled)
+  - Forward modal with destination selection
+  - Respects user preferences for forwarding
+- **Enhanced Chat Preferences**: Comprehensive chat customization
+  - Read receipts toggle (show/hide when messages are read)
+  - Typing indicators toggle (show/hide typing status)
+  - Online status toggle (show/hide online status)
+  - Message forwarding toggle (enable/disable forwarding)
+  - Sound effects toggle (enable/disable notification sounds)
+  - Keyboard shortcuts toggle (enable/disable shortcuts)
+  - All preferences saved and synced across sessions
+- **Preferences Context**: New global preferences management system
+  - Centralized preferences storage
+  - Real-time preference updates
+  - Reset to defaults functionality
+  - Persistent storage with localStorage
+- **Keyboard Shortcuts Support**: Keyboard navigation and shortcuts
+  - Enable/disable keyboard shortcuts in settings
+  - Foundation for future keyboard shortcut features
+  - Better accessibility support
+- **Enhanced Settings Page**: Expanded settings with more customization
+  - Appearance section with theme and font controls
+  - Chat Preferences section with granular controls
+  - Reset Settings option to restore defaults
+  - Better organized and categorized settings
+  - Smooth animations and transitions
+
+### Changed
+- **Settings UI**: Completely redesigned settings page
+  - Better organization with clear sections
+  - More intuitive toggle switches
+  - Enhanced visual feedback
+  - Improved mobile responsiveness
+- **Theme System**: Enhanced theme context with customization support
+  - Added PreferencesContext for user preferences
+  - Dynamic CSS variable injection
+  - Better theme persistence
+- **Message Actions**: Enhanced message action buttons
+  - Added forward button to message actions
+  - Better button organization
+  - Improved hover states and animations
+- **Version Number**: Updated to v4.0.0 in About section
+
+### Fixed
+- Improved preference persistence across page reloads
+- Better theme color application throughout the app
+- Enhanced settings page accessibility
+
 ## [3.0.0] - 2024-12-27
 
 ### Added

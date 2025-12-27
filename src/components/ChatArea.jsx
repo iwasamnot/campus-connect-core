@@ -20,7 +20,7 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward } from 'lucide-react';
 import Logo from './Logo';
 import UserProfilePopup from './UserProfilePopup';
 import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
@@ -31,12 +31,14 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 import { parseMarkdown, hasMarkdown } from '../utils/markdown';
 import notificationService from '../utils/notifications';
 import { checkToxicity } from '../utils/toxicityChecker';
+import { usePreferences } from '../context/PreferencesContext';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
 const ChatArea = ({ setActiveView }) => {
   const { user, userRole } = useAuth();
   const { success, error: showError } = useToast();
+  const { preferences } = usePreferences();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -1046,6 +1048,15 @@ const ChatArea = ({ setActiveView }) => {
 
                   {/* Action buttons */}
                   <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                    {preferences.allowMessageForwarding && (
+                      <button
+                        onClick={() => handleForwardMessage(message.id)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
+                        title="Forward message"
+                      >
+                        <Forward size={14} />
+                      </button>
+                    )}
                     {!isAuthor && (
                       <button
                         onClick={() => setReplyingTo(message)}

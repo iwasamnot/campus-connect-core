@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --accent-color: #6366f1;
+  --accent-color-dark: #818cf8;
+  --base-font-size: 1rem;
+}
+
 /* Responsive improvements */
 @media (max-width: 640px) {
   /* Mobile optimizations */
