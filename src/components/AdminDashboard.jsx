@@ -83,7 +83,15 @@ const AdminDashboard = () => {
       },
       (error) => {
         console.error('Error fetching messages:', error);
-        showError('Failed to load messages. Please check your connection and refresh.');
+        let errorMessage = 'Failed to load messages. Please check your connection and refresh.';
+        
+        if (error.code === 'resource-exhausted') {
+          errorMessage = 'Firestore quota exceeded. Please try again later or contact support.';
+        } else if (error.code === 'unavailable') {
+          errorMessage = 'Firestore service is temporarily unavailable. Please try again later.';
+        }
+        
+        showError(errorMessage);
       }
     );
 
@@ -119,6 +127,9 @@ const AdminDashboard = () => {
       },
       (error) => {
         console.error('Error fetching reports:', error);
+        if (error.code === 'resource-exhausted') {
+          console.warn('Firestore quota exceeded. Reports may not load.');
+        }
       }
     );
 
@@ -154,6 +165,9 @@ const AdminDashboard = () => {
       },
       (error) => {
         console.error('Error fetching audit logs:', error);
+        if (error.code === 'resource-exhausted') {
+          console.warn('Firestore quota exceeded. Audit logs may not load.');
+        }
       }
     );
 
@@ -330,11 +344,20 @@ const AdminDashboard = () => {
         message: error.message,
         stack: error.stack
       });
-      const errorMessage = error.code === 'permission-denied'
-        ? 'Permission denied. You may not have permission to delete this message. Please check your admin role in Firestore.'
-        : error.code === 'not-found'
-        ? 'Message not found. It may have already been deleted.'
-        : error.message || 'Failed to delete message. Please try again.';
+      let errorMessage = 'Failed to delete message. Please try again.';
+      
+      if (error.code === 'permission-denied') {
+        errorMessage = 'Permission denied. You may not have permission to delete this message. Please check your admin role in Firestore.';
+      } else if (error.code === 'not-found') {
+        errorMessage = 'Message not found. It may have already been deleted.';
+      } else if (error.code === 'resource-exhausted') {
+        errorMessage = 'Firestore quota exceeded. Please try again later or contact support.';
+      } else if (error.code === 'unavailable') {
+        errorMessage = 'Firestore service is temporarily unavailable. Please try again later.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       showError(errorMessage);
     } finally {
       setDeleting(null);
