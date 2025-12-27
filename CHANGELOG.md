@@ -15,6 +15,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Message scheduling
 - Advanced analytics dashboard
 
+## [4.0.1] - 2024-12-27
+
+### Fixed
+- **Message Deletion**: Fixed admin message deletion not persisting after refresh
+  - Added deletion verification to ensure messages are actually deleted
+  - Improved Firestore rules `isAdmin()` function with null checks
+  - Added detailed error logging for deletion attempts
+  - Better error messages for permission issues
+- **Build Errors**: Fixed build failures in GitHub Actions
+  - Fixed syntax error in ChatArea.jsx useEffect structure
+  - Removed duplicate height key in Logo.jsx
+  - Added missing dependencies to useEffect hooks
+  - Build now succeeds consistently
+- **Error Handling**: Comprehensive error handling improvements across all components
+  - Added specific error messages for permission-denied, not-found, and other error codes
+  - Improved error handling in ChatArea, PrivateChat, GroupChat, Groups, and AdminDashboard
+  - Better user feedback for all error scenarios
+  - Added error logging for debugging
+- **Message Sending**: Fixed issues preventing message sending
+  - Fixed duplicate toxicity check in PrivateChat
+  - Improved error handling in sendMessage functions
+  - Added validation checks before sending messages
+  - Better error messages for send failures
+- **Browse Groups**: Fixed blank screen and missing groups
+  - Shows all groups (not just non-members)
+  - Better loading states with spinner
+  - Shows joined groups with "Open" button
+  - Improved empty states
+  - Better error handling
+- **Accent Color & Font Size**: Fixed settings not applying
+  - Fixed CSS variable application
+  - Added global CSS rules for accent colors
+  - Applied font size to html and body elements
+  - Force CSS recalculation on preference changes
+  - Settings now work correctly
+- **Admin Dashboard**: Performance and reliability improvements
+  - Added useMemo for filtered messages (performance optimization)
+  - Added loading states
+  - Improved error handling for all Firestore queries
+  - Better error messages
+  - Added mounted checks to prevent state updates after unmount
+- **Private Chat**: Fixed duplicate error handling
+  - Removed duplicate showError calls
+  - Improved error messages
+  - Better error handling flow
+
+### Changed
+- **Error Messages**: All error messages now provide specific feedback
+  - Permission-denied errors show helpful messages
+  - Not-found errors indicate what wasn't found
+  - Connection errors provide troubleshooting tips
+- **Firestore Rules**: Improved admin detection
+  - Added exists() check before accessing user document
+  - Added null check for role field
+  - More robust admin permission checking
+
 ## [4.0.0] - 2024-12-27
 
 ### Added

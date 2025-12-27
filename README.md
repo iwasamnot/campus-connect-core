@@ -22,9 +22,16 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ### For Admins
 - **Audit Dashboard**: Review all messages with advanced filtering and sorting
+  - Real-time message monitoring
+  - Advanced search and filter options
+  - Performance optimized with memoization
+  - Comprehensive error handling
 - **Users Management**: View, search, edit, and manage all user accounts
 - **Create Users**: Create new student and admin accounts from the portal
 - **Message Management**: Delete any message and review reported content
+  - Delete any message including AI messages
+  - Deletion verification to ensure persistence
+  - Detailed audit logging
 - **Audit Trail**: Complete log of all administrative actions
 - **Export Functionality**: Export audit logs for analysis
 
@@ -55,9 +62,11 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days
 - **Group Management**: Comprehensive group system
   - Browse and request to join groups
+  - View all groups (including joined groups)
   - Invite users by email
   - Admin approval system
-  - Member management
+  - Member management (add, remove, leave)
+  - Group admin controls
 
 ## Tech Stack
 

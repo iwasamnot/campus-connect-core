@@ -384,7 +384,7 @@ const Settings = ({ setActiveView }) => {
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 dark:text-white">About</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    CampusConnect v4.0.0
+                    CampusConnect v4.0.1
                   </p>
                 </div>
               </div>
