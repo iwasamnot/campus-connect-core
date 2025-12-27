@@ -190,10 +190,21 @@ service cloud.firestore {
     
     // Private chats collection
     match /privateChats/{chatId} {
+      // Helper function to safely check if user is participant (handles non-existent docs)
+      function canReadChat() {
+        // If document doesn't exist, allow read (for checking if chat exists)
+        if (!exists(/databases/$(database)/documents/privateChats/$(chatId))) {
+          return request.auth != null;
+        }
+        // If document exists, check if user is participant
+        let chatData = get(/databases/$(database)/documents/privateChats/$(chatId)).data;
+        return request.auth != null && 
+               chatData.participants != null &&
+               request.auth.uid in chatData.participants;
+      }
+      
       // Allow users to read/create chats they are participants in
-      allow read: if request.auth != null && 
-        resource.data.participants != null &&
-        request.auth.uid in resource.data.participants;
+      allow read: if canReadChat();
       
       allow create: if request.auth != null && 
         request.resource.data.participants != null &&
