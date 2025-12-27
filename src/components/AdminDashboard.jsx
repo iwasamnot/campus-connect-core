@@ -319,6 +319,33 @@ const AdminDashboard = () => {
 
     setDeleting(messageId);
     try {
+      // First, verify the user's role in Firestore directly
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (!userDocSnap.exists()) {
+        showError(`Your user document does not exist in Firestore (users/${user.uid}). Please contact support.`);
+        setDeleting(null);
+        return;
+      }
+      
+      const userData = userDocSnap.data();
+      const firestoreRole = userData.role;
+      
+      console.log('AdminDashboard: User role from Firestore:', {
+        uid: user.uid,
+        email: user.email,
+        roleFromContext: userRole,
+        roleFromFirestore: firestoreRole,
+        isAdmin: firestoreRole === 'admin' || firestoreRole === 'admin1'
+      });
+      
+      if (firestoreRole !== 'admin' && firestoreRole !== 'admin1') {
+        showError(`Permission denied. Your Firestore user document (users/${user.uid}) has role: "${firestoreRole}". It must be "admin" or "admin1" to delete messages. Please update your user document in Firestore Console.`);
+        setDeleting(null);
+        return;
+      }
+      
       const message = allMessages.find(m => m.id === messageId);
       if (!message) {
         showError('Message not found in current view.');
