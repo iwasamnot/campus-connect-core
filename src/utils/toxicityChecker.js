@@ -29,7 +29,88 @@ const TOXIC_WORDS = [
   // Additional profanity variations
   'fck', 'sh1t', 'd4mn', 'h3ll', '4ss', 'b1tch', 'n1gg3r',
   // Common misspellings/alternatives
-  'fuk', 'shyt', 'dam', 'hel', 'as', 'bich', 'nigr', 'niga'
+  'fuk', 'shyt', 'dam', 'hel', 'as', 'bich', 'nigr', 'niga',
+  
+  // Minor insults and derogatory terms
+  'jerk', 'fool', 'clown', 'buffoon', 'imbecile', 'dimwit', 'nincompoop', 'dunce',
+  'twit', 'dolt', 'blockhead', 'numbskull', 'bonehead', 'airhead', 'dummy',
+  'simpleton', 'halfwit', 'nitwit', 'dork', 'nerd', 'geek', 'weirdo', 'freak',
+  'creep', 'weird', 'annoying', 'irritating', 'obnoxious', 'rude', 'mean',
+  'selfish', 'arrogant', 'pompous', 'conceited', 'narcissist', 'egotistical',
+  'lazy', 'slacker', 'slob', 'pig', 'animal', 'beast', 'monster', 'devil',
+  'scum', 'trash', 'garbage', 'filth', 'dirt', 'worm', 'snake', 'rat',
+  'coward', 'weakling', 'wimp', 'pushover', 'doormat', 'spineless',
+  'liar', 'cheat', 'fraud', 'fake', 'phony', 'hypocrite', 'traitor',
+  'snob', 'elitist', 'bigot', 'racist', 'sexist', 'homophobe',
+  'idiot', 'moron', 'imbecile', 'retard', 'dumb', 'stupid', 'foolish',
+  'ugly', 'hideous', 'repulsive', 'disgusting', 'gross', 'nasty',
+  'annoying', 'irritating', 'bothersome', 'pesky', 'pest', 'nuisance',
+  
+  // Hindi toxic words (transliterated)
+  'chutiya', 'chut', 'lund', 'gaand', 'gaandu', 'bhosdike', 'bhenchod', 'behenchod',
+  'madarchod', 'maa ki chut', 'teri maa', 'randi', 'raand', 'kutiya', 'kutta',
+  'harami', 'haramzada', 'sale', 'saale', 'chakke', 'hijra', 'napunsak',
+  'bewakoof', 'pagal', 'paagal', 'chaman', 'chutiye', 'gadha', 'gadhe',
+  'murkh', 'murkha', 'moorkh', 'bakwas', 'bakwaas', 'tatti', 'moot',
+  'lauda', 'laude', 'lund', 'chut', 'gaand', 'gand', 'gandu',
+  
+  // Urdu toxic words (transliterated)
+  'harami', 'haramzada', 'haramkhor', 'kutta', 'kutti', 'kutte', 'kuttiya',
+  'randi', 'raand', 'rand', 'chutiya', 'chut', 'lund', 'lauda', 'laude',
+  'gaand', 'gand', 'gaandu', 'gandu', 'bhenchod', 'behenchod', 'madarchod',
+  'bhosdike', 'bhosdi', 'sale', 'saale', 'chakke', 'hijra', 'napunsak',
+  'bewakoof', 'pagal', 'paagal', 'chaman', 'chutiye', 'gadha', 'gadhe',
+  'murkh', 'murkha', 'moorkh', 'bakwas', 'bakwaas', 'tatti', 'moot',
+  
+  // Punjabi toxic words (transliterated)
+  'chutiya', 'chut', 'lund', 'lauda', 'laude', 'gaand', 'gand', 'gaandu',
+  'bhenchod', 'behenchod', 'madarchod', 'bhosdike', 'bhosdi', 'sale', 'saale',
+  'randi', 'raand', 'kutiya', 'kutta', 'kutte', 'harami', 'haramzada',
+  'chakke', 'hijra', 'napunsak', 'bewakoof', 'pagal', 'paagal', 'chaman',
+  'chutiye', 'gadha', 'gadhe', 'murkh', 'murkha', 'moorkh', 'bakwas',
+  'bakwaas', 'tatti', 'moot', 'chuti', 'lund', 'gaand',
+  
+  // Bengali/Bangladeshi toxic words (transliterated)
+  'choda', 'choda', 'chud', 'chudna', 'lund', 'lauda', 'laude', 'gaand',
+  'gand', 'gaandu', 'gandu', 'bhenchod', 'behenchod', 'madarchod', 'bhosdike',
+  'bhosdi', 'sale', 'saale', 'randi', 'raand', 'kutiya', 'kutta', 'kutte',
+  'harami', 'haramzada', 'chakke', 'hijra', 'napunsak', 'bewakoof', 'pagal',
+  'paagal', 'chaman', 'chutiye', 'gadha', 'gadhe', 'murkh', 'murkha', 'moorkh',
+  'bakwas', 'bakwaas', 'tatti', 'moot', 'chuti', 'lund', 'gaand', 'choda',
+  'chud', 'chudna', 'chudai', 'chudachudi',
+  
+  // Nepali toxic words (transliterated)
+  'chutiya', 'chut', 'lund', 'lauda', 'laude', 'gaand', 'gand', 'gaandu',
+  'gandu', 'bhenchod', 'behenchod', 'madarchod', 'bhosdike', 'bhosdi', 'sale',
+  'saale', 'randi', 'raand', 'kutiya', 'kutta', 'kutte', 'harami', 'haramzada',
+  'chakke', 'hijra', 'napunsak', 'bewakoof', 'pagal', 'paagal', 'chaman', 'chutiye',
+  'gadha', 'gadhe', 'murkh', 'murkha', 'moorkh', 'bakwas', 'bakwaas', 'tatti',
+  'moot', 'chuti', 'lund', 'gaand', 'choda', 'chud', 'chudna', 'chudai',
+  
+  // Persian/Farsi toxic words (transliterated)
+  'kos', 'koss', 'koskesh', 'koskesh', 'kuni', 'kuni', 'konesh', 'konesh',
+  'kos nanat', 'kos nanat', 'kos madaret', 'kos madaret', 'kos khar', 'kos khar',
+  'khar', 'khar', 'ahmak', 'ahmak', 'ahmaq', 'ahmaq', 'nadan', 'nadan',
+  'bi adab', 'bi adab', 'bi sharam', 'bi sharam', 'haramzade', 'haramzade',
+  'haramzadeh', 'haramzadeh', 'koskesh', 'koskesh', 'kuni', 'kuni', 'konesh',
+  'konesh', 'kos nanat', 'kos nanat', 'kos madaret', 'kos madaret', 'kos khar',
+  'kos khar', 'khar', 'khar', 'ahmak', 'ahmak', 'ahmaq', 'ahmaq', 'nadan',
+  'nadan', 'bi adab', 'bi adab', 'bi sharam', 'bi sharam', 'haramzade', 'haramzade',
+  
+  // Common transliterations and variations
+  'chutia', 'chutiya', 'chutiye', 'chut', 'choot', 'chootiya', 'chootiye',
+  'lund', 'laund', 'launda', 'launde', 'lauda', 'laude', 'lauda', 'laude',
+  'gaand', 'gand', 'gaandu', 'gandu', 'gand', 'gaand', 'gandu', 'gaandu',
+  'bhenchod', 'behenchod', 'bhen chod', 'behen chod', 'bhenchod', 'behenchod',
+  'madarchod', 'maa chod', 'maa ki chut', 'teri maa', 'teri maa ki',
+  'bhosdike', 'bhosdi', 'bhosdi ke', 'bhosdi ke', 'bhosdike', 'bhosdi',
+  'sale', 'saale', 'sale', 'saale', 'sale', 'saale',
+  'randi', 'raand', 'rand', 'randi', 'raand', 'rand',
+  'kutiya', 'kutta', 'kutte', 'kutti', 'kuttiya', 'kutta', 'kutte',
+  'harami', 'haramzada', 'haramkhor', 'harami', 'haramzada', 'haramkhor',
+  'chakke', 'hijra', 'napunsak', 'chakke', 'hijra', 'napunsak',
+  'bewakoof', 'pagal', 'paagal', 'chaman', 'chutiye', 'gadha', 'gadhe',
+  'murkh', 'murkha', 'moorkh', 'bakwas', 'bakwaas', 'tatti', 'moot'
 ];
 
 /**
