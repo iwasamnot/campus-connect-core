@@ -182,61 +182,20 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
               </div>
 
               {/* Start Private Chat Button */}
-              {(() => {
-                // Always show button if onStartPrivateChat is provided, even if conditions aren't met (for debugging)
-                if (!onStartPrivateChat) {
-                  console.log('UserProfilePopup: onStartPrivateChat not provided');
-                  return null;
-                }
-                
-                if (!user) {
-                  console.log('UserProfilePopup: No current user');
-                  return null;
-                }
-                
-                if (!userData) {
-                  console.log('UserProfilePopup: No userData');
-                  return null;
-                }
-                
-                if (user.uid === userId) {
-                  console.log('UserProfilePopup: User viewing own profile');
-                  return null;
-                }
-                
-                const currentUserIsAdmin = isAdminRole(userRole);
-                const viewedUserIsAdmin = isAdminRole(userData.role);
-                const canChat = (currentUserIsAdmin && !viewedUserIsAdmin) || (!currentUserIsAdmin && viewedUserIsAdmin);
-                
-                console.log('UserProfilePopup: Chat check', {
-                  currentUserIsAdmin,
-                  viewedUserIsAdmin,
-                  canChat,
-                  currentRole: userRole,
-                  viewedRole: userData.role
-                });
-                
-                if (!canChat) {
-                  console.log('UserProfilePopup: Cannot chat - roles incompatible');
-                  return null;
-                }
-                
-                return (
-                  <div className="flex justify-center pt-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() => {
-                        console.log('UserProfilePopup: Starting private chat with', userId);
-                        onStartPrivateChat(userId, userData);
-                        onClose();
-                      }}
-                      className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:shadow-md font-medium"
-                    >
-                      <MessageCircle size={20} />
-                      <span>Start Private Chat</span>
-                    </button>
-                  </div>
-                );
-              })()}
+              {onStartPrivateChat && user && userData && user.uid !== userId && (
+                <div className="flex justify-center pt-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={() => {
+                      onStartPrivateChat(userId, userData);
+                      onClose();
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:shadow-md font-medium"
+                  >
+                    <MessageCircle size={20} />
+                    <span>Start Private Chat</span>
+                  </button>
+                </div>
+              )}
 
               {/* Details */}
               <div className="space-y-4">
