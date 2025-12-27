@@ -241,8 +241,18 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4">
         {filteredGroups.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <Users className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
+            <div className="text-center animate-fade-in">
+              <img 
+                src="/logo.png" 
+                alt="CampusConnect Logo" 
+                className="w-24 h-24 mx-auto mb-4 opacity-50 object-contain"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const fallback = e.target.nextElementSibling;
+                  if (fallback) fallback.style.display = 'block';
+                }}
+              />
+              <Users className="mx-auto text-gray-400 dark:text-gray-500 mb-4 hidden" size={48} />
               <p className="text-gray-400 dark:text-gray-500 text-lg">
                 {searchTerm ? 'No groups found matching your search' : 'No groups yet. Create or join one!'}
               </p>
