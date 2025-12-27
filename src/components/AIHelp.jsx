@@ -324,7 +324,7 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default model
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-pro'); // Default model
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
