@@ -470,11 +470,15 @@ const ChatArea = ({ setActiveView }) => {
 
     setDeleting(messageId);
     try {
-      await deleteDoc(doc(db, 'messages', messageId));
+      const messageRef = doc(db, 'messages', messageId);
+      await deleteDoc(messageRef);
       success('Message deleted successfully.');
     } catch (error) {
       console.error('Error deleting message:', error);
-      showError('Failed to delete message. Please try again.');
+      const errorMessage = error.code === 'permission-denied' 
+        ? 'Permission denied. You may not have permission to delete this message.'
+        : error.message || 'Failed to delete message. Please try again.';
+      showError(errorMessage);
     } finally {
       setDeleting(null);
     }

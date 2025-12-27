@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
@@ -35,6 +35,7 @@ const AdminDashboard = () => {
   const [showReports, setShowReports] = useState(false);
   const [showAuditLogs, setShowAuditLogs] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const messagesPerPage = 50;
 
   // Log audit action
@@ -52,62 +53,119 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch all messages
+  // Fetch all messages with error handling
   useEffect(() => {
+    let mounted = true;
+    
     const q = query(
       collection(db, 'messages'),
       orderBy('timestamp', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setAllMessages(messagesData);
-    });
+    const unsubscribe = onSnapshot(
+      q, 
+      (snapshot) => {
+        if (!mounted) return;
+        
+        try {
+          const messagesData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setAllMessages(messagesData);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error processing messages:', error);
+          showError('Error loading messages. Please refresh the page.');
+          setLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Error fetching messages:', error);
+        showError('Failed to load messages. Please check your connection and refresh.');
+      }
+    );
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [showError]);
 
-  // Fetch reports
+  // Fetch reports with error handling
   useEffect(() => {
+    let mounted = true;
+    
     const q = query(
       collection(db, 'reports'),
       orderBy('timestamp', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const reportsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setReports(reportsData);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        if (!mounted) return;
+        
+        try {
+          const reportsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setReports(reportsData);
+        } catch (error) {
+          console.error('Error processing reports:', error);
+        }
+      },
+      (error) => {
+        console.error('Error fetching reports:', error);
+      }
+    );
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
-  // Fetch audit logs
+  // Fetch audit logs with error handling
   useEffect(() => {
+    let mounted = true;
+    
     const q = query(
       collection(db, 'auditLogs'),
       orderBy('timestamp', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const logsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setAuditLogs(logsData);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        if (!mounted) return;
+        
+        try {
+          const logsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setAuditLogs(logsData);
+        } catch (error) {
+          console.error('Error processing audit logs:', error);
+        }
+      },
+      (error) => {
+        console.error('Error fetching audit logs:', error);
+      }
+    );
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
-  // Filter and sort messages
-  const getFilteredAndSortedMessages = () => {
+  // Filter and sort messages (memoized for performance)
+  const filteredMessages = useMemo(() => {
+    if (!allMessages || allMessages.length === 0) return [];
+    
     let filtered = [...allMessages];
 
     // Filter by toxic status
@@ -172,9 +230,7 @@ const AdminDashboard = () => {
     });
 
     return filtered;
-  };
-
-  const filteredMessages = getFilteredAndSortedMessages();
+  }, [allMessages, showOnlyToxic, searchQuery, filterUser, filterDate, sortBy, sortOrder]);
   const totalPages = Math.ceil(filteredMessages.length / messagesPerPage);
   const paginatedMessages = filteredMessages.slice(
     (currentPage - 1) * messagesPerPage,
@@ -212,19 +268,27 @@ const AdminDashboard = () => {
     setDeleting(messageId);
     try {
       const message = allMessages.find(m => m.id === messageId);
-      await deleteDoc(doc(db, 'messages', messageId));
+      const messageRef = doc(db, 'messages', messageId);
+      
+      await deleteDoc(messageRef);
 
       await logAuditAction('delete_message', {
         messageId,
         messageText: message?.text,
         userId: message?.userId,
-        userEmail: message?.userEmail
+        userEmail: message?.userEmail,
+        isAI: message?.isAI || message?.userId === 'virtual-senior'
       });
 
       success('Message has been deleted.');
     } catch (error) {
       console.error('Error deleting message:', error);
-      showError('Failed to delete message. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to delete this message.'
+        : error.code === 'not-found'
+        ? 'Message not found. It may have already been deleted.'
+        : error.message || 'Failed to delete message. Please try again.';
+      showError(errorMessage);
     } finally {
       setDeleting(null);
     }
@@ -232,7 +296,8 @@ const AdminDashboard = () => {
 
   const handleResolveReport = async (reportId, status) => {
     try {
-      await updateDoc(doc(db, 'reports', reportId), {
+      const reportRef = doc(db, 'reports', reportId);
+      await updateDoc(reportRef, {
         status,
         resolvedAt: serverTimestamp(),
         resolvedBy: user.uid,
@@ -247,7 +312,10 @@ const AdminDashboard = () => {
       success(`Report ${status === 'resolved' ? 'resolved' : 'dismissed'}.`);
     } catch (error) {
       console.error('Error resolving report:', error);
-      showError('Failed to resolve report. Please try again.');
+      const errorMessage = error.code === 'permission-denied'
+        ? 'Permission denied. You may not have permission to resolve this report.'
+        : error.message || 'Failed to resolve report. Please try again.';
+      showError(errorMessage);
     }
   };
 
@@ -451,7 +519,14 @@ const AdminDashboard = () => {
 
       {/* Table */}
       <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 overflow-x-auto">
-        {paginatedMessages.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+              <p className="text-black dark:text-white opacity-70 text-lg">Loading messages...</p>
+            </div>
+          </div>
+        ) : paginatedMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <AlertTriangle className="mx-auto text-black dark:text-white opacity-50 mb-4" size={48} />
