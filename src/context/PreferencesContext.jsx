@@ -83,9 +83,14 @@ export const PreferencesProvider = ({ children }) => {
     const fontSize = fontSizes[preferences.fontSize] || fontSizes.medium;
     root.style.setProperty('--base-font-size', fontSize);
     body.style.fontSize = fontSize;
+    root.style.fontSize = fontSize;
     
     // Apply accent color to common Tailwind classes via data attribute
     root.setAttribute('data-accent-color', preferences.accentColor);
+    
+    // Force re-render by adding a class that triggers CSS recalculation
+    root.classList.add('preferences-updated');
+    setTimeout(() => root.classList.remove('preferences-updated'), 100);
     
     console.log('Preferences applied:', {
       accentColor: preferences.accentColor,
