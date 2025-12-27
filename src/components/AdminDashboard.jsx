@@ -38,6 +38,7 @@ const AdminDashboard = () => {
   const [showAuditLogs, setShowAuditLogs] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [deletedMessageIds, setDeletedMessageIds] = useState(new Set()); // Track deleted messages
   const messagesPerPage = 50;
 
   // Log audit action
@@ -67,6 +68,9 @@ const AdminDashboard = () => {
 
     const unsubscribe = onSnapshot(
       q, 
+      {
+        includeMetadataChanges: false // Don't include metadata changes to reduce noise
+      },
       (snapshot) => {
         if (!mounted) return;
         
@@ -79,17 +83,30 @@ const AdminDashboard = () => {
           }));
           
           // Filter out any null or undefined messages (shouldn't happen, but safety check)
-          const validMessages = messagesData.filter(msg => msg && msg.id);
+          // Also filter out messages we know were deleted (defense in depth)
+          const validMessages = messagesData.filter(msg => 
+            msg && 
+            msg.id && 
+            !deletedMessageIds.has(msg.id) // Exclude deleted messages
+          );
           
           console.log('AdminDashboard: Received snapshot with', validMessages.length, 'messages');
           console.log('AdminDashboard: Snapshot metadata:', {
             hasPendingWrites: snapshot.metadata.hasPendingWrites,
-            fromCache: snapshot.metadata.fromCache
+            fromCache: snapshot.metadata.fromCache,
+            deletedCount: deletedMessageIds.size
           });
           
-          // Only update if we have valid messages or if snapshot is from server (not cache)
-          // This prevents stale cache from overwriting optimistic deletions
-          if (!snapshot.metadata.fromCache || validMessages.length > 0) {
+          // Always update with server snapshots, but filter cache snapshots if we have deleted messages
+          if (!snapshot.metadata.fromCache) {
+            // Server snapshot - always trust it
+            setAllMessages(validMessages);
+          } else if (deletedMessageIds.size === 0) {
+            // Cache snapshot but no deleted messages - safe to use
+            setAllMessages(validMessages);
+          } else {
+            // Cache snapshot with deleted messages - filter them out
+            console.log('AdminDashboard: Filtering cache snapshot to exclude', deletedMessageIds.size, 'deleted messages');
             setAllMessages(validMessages);
           }
           setLoading(false);
@@ -117,7 +134,7 @@ const AdminDashboard = () => {
       mounted = false;
       unsubscribe();
     };
-  }, []); // Remove showError from dependencies to prevent infinite loops
+  }, [deletedMessageIds]); // Include deletedMessageIds to filter them out
 
   // Fetch reports with error handling (limited to prevent quota exhaustion)
   useEffect(() => {
@@ -327,7 +344,10 @@ const AdminDashboard = () => {
         userEmail: user.email
       });
 
-      // Delete the message from Firestore first
+      // Add to deleted set immediately to prevent it from reappearing
+      setDeletedMessageIds(prev => new Set([...prev, messageId]));
+      
+      // Delete the message from Firestore
       await deleteDoc(messageRef);
       console.log('AdminDashboard: Message deleted from Firestore successfully');
 
@@ -358,6 +378,12 @@ const AdminDashboard = () => {
       
       if (verifySnap && verifySnap.exists()) {
         console.error('AdminDashboard: Message still exists after deletion after', maxRetries, 'retries!');
+        // Remove from deleted set since deletion failed
+        setDeletedMessageIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(messageId);
+          return newSet;
+        });
         // Re-add message to state if deletion failed
         setAllMessages(prev => {
           if (!prev.find(m => m.id === messageId)) {
@@ -365,10 +391,13 @@ const AdminDashboard = () => {
           }
           return prev;
         });
-        showError('Failed to delete message. It may have been recreated or permission was denied. Please refresh the page.');
+        showError('Failed to delete message. It may have been recreated or permission was denied. Please check your admin permissions in Firestore.');
         setDeleting(null);
         return;
       }
+      
+      // Deletion successful - keep it in deleted set permanently (until page refresh)
+      console.log('AdminDashboard: Message deletion confirmed and tracked');
 
       // Log audit action
       try {
@@ -392,10 +421,26 @@ const AdminDashboard = () => {
         message: error.message,
         stack: error.stack
       });
+      
+      // Remove from deleted set since deletion failed
+      setDeletedMessageIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(messageId);
+        return newSet;
+      });
+      
+      // Re-add message to state if it was optimistically removed
+      setAllMessages(prev => {
+        if (!prev.find(m => m.id === messageId)) {
+          return [...prev, message];
+        }
+        return prev;
+      });
+      
       let errorMessage = 'Failed to delete message. Please try again.';
       
       if (error.code === 'permission-denied') {
-        errorMessage = 'Permission denied. You may not have permission to delete this message. Please check your admin role in Firestore.';
+        errorMessage = 'Permission denied. You may not have permission to delete this message. Please check your admin role in Firestore. The user document must have role: "admin" or "admin1".';
       } else if (error.code === 'not-found') {
         errorMessage = 'Message not found. It may have already been deleted.';
       } else if (error.code === 'resource-exhausted') {
