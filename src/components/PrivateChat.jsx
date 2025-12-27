@@ -49,8 +49,12 @@ const PrivateChat = () => {
 
   // Fetch available users (admins for students, students for admins)
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('PrivateChat: No user, skipping user fetch');
+      return;
+    }
 
+    console.log('PrivateChat: Fetching available users, userRole:', userRole);
     let q;
     if (isAdminRole(userRole)) {
       // Admin viewing: fetch students
@@ -64,42 +68,49 @@ const PrivateChat = () => {
       q = query(collection(db, 'users'));
     }
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const users = [];
-      const names = {};
-      const profiles = {};
-      const online = {};
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const users = [];
+        const names = {};
+        const profiles = {};
+        const online = {};
 
-      snapshot.docs.forEach(doc => {
-        const userData = doc.data();
-        // Exclude current user
-        if (doc.id === user.uid) return;
-        
-        // If student, only show admins (admin or admin1)
-        // If admin, only show students
-        if (isAdminRole(userRole)) {
-          if (userData.role !== 'student') return;
-        } else {
-          if (userData.role !== 'admin' && userData.role !== 'admin1') return;
-        }
+        snapshot.docs.forEach(doc => {
+          const userData = doc.data();
+          // Exclude current user
+          if (doc.id === user.uid) return;
+          
+          // If student, only show admins (admin or admin1)
+          // If admin, only show students
+          if (isAdminRole(userRole)) {
+            if (userData.role !== 'student') return;
+          } else {
+            if (userData.role !== 'admin' && userData.role !== 'admin1') return;
+          }
 
-        users.push({
-          id: doc.id,
-          ...userData
+          users.push({
+            id: doc.id,
+            ...userData
+          });
+          names[doc.id] = userData.name || userData.email?.split('@')[0] || doc.id.substring(0, 8);
+          profiles[doc.id] = userData;
+          online[doc.id] = {
+            isOnline: userData.isOnline || false,
+            lastSeen: userData.lastSeen || null
+          };
         });
-        names[doc.id] = userData.name || userData.email?.split('@')[0] || doc.id.substring(0, 8);
-        profiles[doc.id] = userData;
-        online[doc.id] = {
-          isOnline: userData.isOnline || false,
-          lastSeen: userData.lastSeen || null
-        };
-      });
 
-      setAvailableUsers(users);
-      setUserNames(names);
-      setUserProfiles(profiles);
-      setOnlineUsers(online);
-    });
+        console.log('PrivateChat: Found', users.length, 'available users');
+        setAvailableUsers(users);
+        setUserNames(names);
+        setUserProfiles(profiles);
+        setOnlineUsers(online);
+      },
+      (error) => {
+        console.error('PrivateChat: Error fetching available users:', error);
+        showError('Failed to load users. Please refresh the page.');
+      }
+    );
 
     return () => unsubscribe();
   }, [user, userRole]);
@@ -111,70 +122,76 @@ const PrivateChat = () => {
     const messagesRef = collection(db, 'privateChats', selectedChatId, 'messages');
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const messagesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
 
-      // Deduplicate messages by ID and filter expired messages
-      const now = new Date();
-      const expiredMessageIds = [];
-      const uniqueMessages = messagesData.reduce((acc, message) => {
-        if (!acc.find(m => m.id === message.id)) {
-          // Check if message has expired
-          if (message.expiresAt) {
-            const expiresAt = message.expiresAt.toDate ? message.expiresAt.toDate() : new Date(message.expiresAt);
-            if (expiresAt <= now) {
-              // Message has expired, mark for deletion
-              expiredMessageIds.push(message.id);
-              return acc; // Don't add expired message
+        // Deduplicate messages by ID and filter expired messages
+        const now = new Date();
+        const expiredMessageIds = [];
+        const uniqueMessages = messagesData.reduce((acc, message) => {
+          if (!acc.find(m => m.id === message.id)) {
+            // Check if message has expired
+            if (message.expiresAt) {
+              const expiresAt = message.expiresAt.toDate ? message.expiresAt.toDate() : new Date(message.expiresAt);
+              if (expiresAt <= now) {
+                // Message has expired, mark for deletion
+                expiredMessageIds.push(message.id);
+                return acc; // Don't add expired message
+              }
+            }
+            acc.push(message);
+          }
+          return acc;
+        }, []);
+
+        // Delete expired messages asynchronously
+        if (expiredMessageIds.length > 0) {
+          Promise.all(
+            expiredMessageIds.map(messageId =>
+              deleteDoc(doc(db, 'privateChats', selectedChatId, 'messages', messageId)).catch(err => {
+                console.error('Error deleting expired message:', err);
+              })
+            )
+          );
+        }
+
+        // Sort by timestamp
+        uniqueMessages.sort((a, b) => {
+          const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
+          const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
+          return aTime - bTime;
+        });
+
+        setMessages(uniqueMessages);
+
+        // Mark messages as read
+        messagesData.forEach(async (message) => {
+          if (message.userId !== user.uid) {
+            const readBy = message.readBy || {};
+            if (!readBy[user.uid]) {
+              try {
+                await updateDoc(doc(db, 'privateChats', selectedChatId, 'messages', message.id), {
+                  readBy: {
+                    ...readBy,
+                    [user.uid]: serverTimestamp()
+                  }
+                });
+              } catch (error) {
+                console.error('Error marking message as read:', error);
+              }
             }
           }
-          acc.push(message);
-        }
-        return acc;
-      }, []);
-
-      // Delete expired messages asynchronously
-      if (expiredMessageIds.length > 0) {
-        Promise.all(
-          expiredMessageIds.map(messageId =>
-            deleteDoc(doc(db, 'privateChats', selectedChatId, 'messages', messageId)).catch(err => {
-              console.error('Error deleting expired message:', err);
-            })
-          )
-        );
+        });
+      },
+      (error) => {
+        console.error('Error fetching messages:', error);
+        showError('Failed to load messages. Please refresh the page.');
       }
-
-      // Sort by timestamp
-      uniqueMessages.sort((a, b) => {
-        const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
-        const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
-        return aTime - bTime;
-      });
-
-      setMessages(uniqueMessages);
-
-      // Mark messages as read
-      messagesData.forEach(async (message) => {
-        if (message.userId !== user.uid) {
-          const readBy = message.readBy || {};
-          if (!readBy[user.uid]) {
-            try {
-              await updateDoc(doc(db, 'privateChats', selectedChatId, 'messages', message.id), {
-                readBy: {
-                  ...readBy,
-                  [user.uid]: serverTimestamp()
-                }
-              });
-            } catch (error) {
-              console.error('Error marking message as read:', error);
-            }
-          }
-        }
-      });
-    });
+    );
 
     return () => unsubscribe();
   }, [selectedChatId, user]);
@@ -232,7 +249,9 @@ const PrivateChat = () => {
 
   // Select or create a chat with a user
   const selectChat = async (otherUser) => {
+    console.log('PrivateChat: Selecting chat with user:', otherUser.id);
     const chatId = getChatId(user.uid, otherUser.id);
+    console.log('PrivateChat: Chat ID:', chatId);
     setSelectedChatId(chatId);
     setSelectedUser(otherUser);
 
@@ -240,6 +259,7 @@ const PrivateChat = () => {
     try {
       const chatDoc = await getDoc(doc(db, 'privateChats', chatId));
       if (!chatDoc.exists()) {
+        console.log('PrivateChat: Creating new chat document');
         await setDoc(doc(db, 'privateChats', chatId), {
           participants: [user.uid, otherUser.id].sort(),
           createdAt: serverTimestamp(),
@@ -250,14 +270,16 @@ const PrivateChat = () => {
         });
         setDisappearingMessagesEnabled(false);
         setDisappearingMessagesDuration(24);
+        console.log('PrivateChat: Chat document created successfully');
       } else {
+        console.log('PrivateChat: Chat document already exists, loading settings');
         // Load existing chat settings
         const chatData = chatDoc.data();
         setDisappearingMessagesEnabled(chatData.disappearingMessagesEnabled || false);
         setDisappearingMessagesDuration(chatData.disappearingMessagesDuration || 24);
       }
     } catch (error) {
-      console.error('Error creating chat:', error);
+      console.error('PrivateChat: Error creating/loading chat:', error);
       showError('Failed to create chat. Please try again.');
     }
   };
