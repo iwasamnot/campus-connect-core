@@ -19,7 +19,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden animate-fade-in"
           onClick={onClose}
         />
       )}
@@ -39,7 +39,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
           <Logo size="small" showText={true} />
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-800 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
             aria-label="Close menu"
           >
             <X size={24} />
@@ -58,10 +58,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
           <>
             <button
               onClick={() => handleNavClick('chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <MessageSquare size={20} />
@@ -69,10 +69,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('ai-help')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'ai-help'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <Bot size={20} />
@@ -80,10 +80,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('groups')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'groups' || activeView === 'group-chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <UserCircle size={20} />
@@ -91,10 +91,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('private-chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'private-chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <MessageCircle size={20} />
@@ -102,10 +102,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'settings'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <Settings size={20} />
@@ -116,10 +116,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
           <>
             <button
               onClick={() => handleNavClick('chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <MessageSquare size={20} />
@@ -127,10 +127,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('audit')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'audit'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <FileText size={20} />
@@ -138,10 +138,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('users')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'users'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <Users size={20} />
@@ -149,10 +149,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('create-user')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'create-user'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <UserPlus size={20} />
@@ -160,10 +160,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('private-chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'private-chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <MessageCircle size={20} />
@@ -171,10 +171,10 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             </button>
             <button
               onClick={() => handleNavClick('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'settings'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
               }`}
             >
               <Settings size={20} />

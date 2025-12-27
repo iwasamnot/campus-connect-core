@@ -70,7 +70,7 @@ function App() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition-colors"
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 hover:shadow-xl"
           aria-label="Open menu"
         >
           <Menu size={24} />
@@ -78,35 +78,39 @@ function App() {
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>
-              {activeView === 'chat' && <ChatArea />}
-              {activeView === 'audit' && <AdminDashboard />}
-              {activeView === 'users' && <UsersManagement />}
-              {activeView === 'create-user' && <CreateUser />}
-              {activeView === 'private-chat' && <PrivateChat />}
-              {activeView === 'settings' && <Settings setActiveView={setActiveView} />}
+              {activeView === 'chat' && <div className="page-transition"><ChatArea /></div>}
+              {activeView === 'audit' && <div className="page-transition"><AdminDashboard /></div>}
+              {activeView === 'users' && <div className="page-transition"><UsersManagement /></div>}
+              {activeView === 'create-user' && <div className="page-transition"><CreateUser /></div>}
+              {activeView === 'private-chat' && <div className="page-transition"><PrivateChat /></div>}
+              {activeView === 'settings' && <div className="page-transition"><Settings setActiveView={setActiveView} /></div>}
             </>
           ) : (
             <>
-              {activeView === 'chat' && <ChatArea />}
-              {activeView === 'ai-help' && <AIHelp />}
-              {activeView === 'profile' && <StudentProfile />}
+              {activeView === 'chat' && <div className="page-transition"><ChatArea /></div>}
+              {activeView === 'ai-help' && <div className="page-transition"><AIHelp /></div>}
+              {activeView === 'profile' && <div className="page-transition"><StudentProfile /></div>}
               {activeView === 'groups' && (
-                <Groups 
-                  setActiveView={setActiveView} 
-                  setSelectedGroup={setSelectedGroup}
-                />
+                <div className="page-transition">
+                  <Groups 
+                    setActiveView={setActiveView} 
+                    setSelectedGroup={setSelectedGroup}
+                  />
+                </div>
               )}
               {activeView === 'group-chat' && (
-                <GroupChat 
-                  group={selectedGroup}
-                  onBack={() => {
-                    setActiveView('groups');
-                    setSelectedGroup(null);
-                  }}
-                />
+                <div className="page-transition">
+                  <GroupChat 
+                    group={selectedGroup}
+                    onBack={() => {
+                      setActiveView('groups');
+                      setSelectedGroup(null);
+                    }}
+                  />
+                </div>
               )}
-              {activeView === 'private-chat' && <PrivateChat />}
-              {activeView === 'settings' && <Settings setActiveView={setActiveView} />}
+              {activeView === 'private-chat' && <div className="page-transition"><PrivateChat /></div>}
+              {activeView === 'settings' && <div className="page-transition"><Settings setActiveView={setActiveView} /></div>}
             </>
           )}
         </Suspense>
