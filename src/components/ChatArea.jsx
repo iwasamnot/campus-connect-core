@@ -1406,7 +1406,9 @@ const ChatArea = ({ setActiveView }) => {
           onClose={() => setSelectedUserId(null)}
           onStartPrivateChat={(userId, userData) => {
             if (setActiveView) {
+              // Store both userId and userData for PrivateChat to use
               sessionStorage.setItem('initialPrivateChatUserId', userId);
+              sessionStorage.setItem('initialPrivateChatUserData', JSON.stringify(userData));
               setActiveView('private-chat');
             }
           }}

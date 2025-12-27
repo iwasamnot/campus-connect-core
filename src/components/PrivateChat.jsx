@@ -336,22 +336,82 @@ const PrivateChat = () => {
 
   // Auto-select user from sessionStorage (when navigating from profile popup)
   useEffect(() => {
-    if (!user || availableUsers.length === 0 || !selectChat) return;
+    if (!user || !selectChat) return;
     
     const initialUserId = sessionStorage.getItem('initialPrivateChatUserId');
+    const initialUserDataStr = sessionStorage.getItem('initialPrivateChatUserData');
+    
     if (initialUserId) {
-      // Clear it immediately to prevent re-selecting on re-renders
-      sessionStorage.removeItem('initialPrivateChatUserId');
+      // Don't clear immediately - wait until we successfully select
       
-      // Find the user in availableUsers
-      const userToSelect = availableUsers.find(u => u.id === initialUserId);
+      // Try to find user in availableUsers first
+      let userToSelect = availableUsers.find(u => u.id === initialUserId);
+      
+      // If not found in availableUsers, try to use the stored userData
+      if (!userToSelect && initialUserDataStr) {
+        try {
+          const storedUserData = JSON.parse(initialUserDataStr);
+          // Check if user can chat (student with admin, admin with student)
+          const currentUserIsAdmin = isAdminRole(userRole);
+          const storedUserIsAdmin = isAdminRole(storedUserData.role);
+          const canChat = (currentUserIsAdmin && !storedUserIsAdmin) || (!currentUserIsAdmin && storedUserIsAdmin);
+          
+          if (canChat && storedUserData.id === initialUserId) {
+            // Add user to availableUsers and user caches
+            userToSelect = {
+              id: storedUserData.id,
+              ...storedUserData
+            };
+            
+            // Add to availableUsers if not already there
+            setAvailableUsers(prev => {
+              if (!prev.find(u => u.id === userToSelect.id)) {
+                return [...prev, userToSelect];
+              }
+              return prev;
+            });
+            
+            // Update caches
+            setUserNames(prev => ({
+              ...prev,
+              [userToSelect.id]: userToSelect.name || userToSelect.email?.split('@')[0] || userToSelect.id.substring(0, 8)
+            }));
+            setUserProfiles(prev => ({
+              ...prev,
+              [userToSelect.id]: userToSelect
+            }));
+            setOnlineUsers(prev => ({
+              ...prev,
+              [userToSelect.id]: {
+                isOnline: userToSelect.isOnline || false,
+                lastSeen: userToSelect.lastSeen || null
+              }
+            }));
+          }
+        } catch (error) {
+          console.error('PrivateChat: Error parsing stored user data:', error);
+        }
+      }
+      
       if (userToSelect) {
         console.log('PrivateChat: Auto-selecting user from sessionStorage:', userToSelect.id);
+        // Clear sessionStorage after finding the user
+        sessionStorage.removeItem('initialPrivateChatUserId');
+        sessionStorage.removeItem('initialPrivateChatUserData');
+        
+        // Call selectChat directly
         selectChat(userToSelect);
+      } else if (availableUsers.length > 0) {
+        // Only show error if we've loaded users but still can't find this one
+        console.warn('PrivateChat: User not found in availableUsers:', initialUserId);
+        sessionStorage.removeItem('initialPrivateChatUserId');
+        sessionStorage.removeItem('initialPrivateChatUserData');
+        showError('User not available for private chat. Please try adding them by email.');
       }
+      // If availableUsers.length === 0, we're still loading, so wait
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, availableUsers]);
+  }, [user, availableUsers, userRole]);
 
   // Search for user by email
   const searchUserByEmail = async (email) => {
