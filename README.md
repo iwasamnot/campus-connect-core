@@ -31,9 +31,21 @@ A secure, student-only messaging platform for universities with AI-powered conte
 ### Platform Features
 - **AI-Powered Toxicity Detection**: Advanced content moderation using Google Gemini AI
   - Context-aware toxicity analysis with confidence scoring
-  - Comprehensive hate words list (100+ words) as fallback
+  - Comprehensive hate words list (500+ words) as fallback
+  - Multi-language support (English, Hindi, Urdu, Punjabi, Bengali, Nepali, Persian)
   - Detailed toxicity metadata (confidence, reason, categories)
   - Automatic redaction of toxic content
+- **Advanced Customization**: Complete personalization system
+  - 8 accent color themes (Indigo, Blue, Purple, Pink, Red, Orange, Green, Teal)
+  - Font size preferences (Small, Medium, Large, X-Large)
+  - Chat preferences (read receipts, typing indicators, online status)
+  - Message forwarding controls
+  - Sound effects toggle
+  - Keyboard shortcuts support
+- **Message Forwarding**: Forward messages to different chats
+  - Forward to Campus Chat, Direct Messages, or Group Chats
+  - User preference controls
+  - Easy destination selection
 - **Real-time Updates**: Live synchronization using Firebase Firestore
 - **Dark Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
@@ -41,6 +53,11 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Secure**: Role-based access control with Firestore security rules
 - **Direct Messages**: Private messaging between users with chat history
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days
+- **Group Management**: Comprehensive group system
+  - Browse and request to join groups
+  - Invite users by email
+  - Admin approval system
+  - Member management
 
 ## Tech Stack
 
