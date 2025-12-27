@@ -14,7 +14,9 @@ import {
   deleteDoc,
   updateDoc,
   getDoc,
-  arrayRemove
+  getDocs,
+  arrayRemove,
+  arrayUnion
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader } from 'lucide-react';
@@ -35,7 +37,13 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   const [onlineUsers, setOnlineUsers] = useState({});
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showMembersModal, setShowMembersModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showRequestsModal, setShowRequestsModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
   const [removingMember, setRemovingMember] = useState(null);
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [processingRequest, setProcessingRequest] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Fetch user names, profiles, and online status
@@ -304,6 +312,18 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {group.admins?.includes(user?.uid) && joinRequests.length > 0 && (
+              <button
+                onClick={() => setShowRequestsModal(true)}
+                className="relative p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                title="View join requests"
+              >
+                <UserPlus size={20} className="text-indigo-600 dark:text-indigo-400" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {joinRequests.length}
+                </span>
+              </button>
+            )}
             <button
               onClick={() => setShowMembersModal(true)}
               className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
@@ -311,6 +331,15 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
             >
               <Users size={20} className="text-indigo-600 dark:text-indigo-400" />
             </button>
+            {group.admins?.includes(user?.uid) && (
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="p-2 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors"
+                title="Invite by email"
+              >
+                <Mail size={20} className="text-green-600 dark:text-green-400" />
+              </button>
+            )}
             {!group.admins?.includes(user?.uid) && (
               <button
                 onClick={handleLeaveGroup}

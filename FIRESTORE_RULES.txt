@@ -132,10 +132,8 @@ service cloud.firestore {
     
     // Groups collection
     match /groups/{groupId} {
-      // Allow authenticated users to read groups they are members of
-      allow read: if request.auth != null && (
-        resource.data.members != null && request.auth.uid in resource.data.members
-      );
+      // Allow authenticated users to read all groups (for browsing)
+      allow read: if request.auth != null;
       
       // Allow authenticated users to create groups
       allow create: if request.auth != null && 
@@ -148,11 +146,17 @@ service cloud.firestore {
         resource.data.members != null && request.auth.uid in resource.data.members
       );
       
-      // Allow group admins to update members (add/remove members)
+      // Allow group admins to update members (add/remove members, approve/deny requests)
       allow update: if request.auth != null && (
         resource.data.admins != null && request.auth.uid in resource.data.admins &&
-        request.resource.data.diff(resource.data).affectedKeys().hasAny(['members', 'admins', 'updatedAt'])
+        request.resource.data.diff(resource.data).affectedKeys().hasAny(['members', 'admins', 'joinRequests', 'updatedAt'])
       );
+      
+      // Allow any authenticated user to request to join (add themselves to joinRequests)
+      allow update: if request.auth != null && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['joinRequests', 'updatedAt']) &&
+        request.resource.data.joinRequests != null &&
+        request.auth.uid in request.resource.data.joinRequests;
       
       // Allow group admins to delete groups
       allow delete: if request.auth != null && (

@@ -17,18 +17,22 @@ import {
   arrayRemove
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Users, Plus, Search, X, Loader } from 'lucide-react';
+import { Users, Plus, Search, X, Loader, Globe, UserPlus, Mail, CheckCircle, XCircle } from 'lucide-react';
 
 const Groups = ({ setActiveView, setSelectedGroup }) => {
   const { user } = useAuth();
   const { success, error: showError } = useToast();
   const [groups, setGroups] = useState([]);
+  const [allGroups, setAllGroups] = useState([]); // All groups for browsing
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBrowseModal, setShowBrowseModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [browseSearchTerm, setBrowseSearchTerm] = useState('');
   const [creating, setCreating] = useState(false);
+  const [requesting, setRequesting] = useState(null);
 
   // Fetch groups user is a member of
   useEffect(() => {
@@ -57,6 +61,29 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
     return () => unsubscribe();
   }, [user]);
+
+  // Fetch all groups for browsing (when modal is open)
+  useEffect(() => {
+    if (!user || !showBrowseModal) return;
+
+    const q = query(collection(db, 'groups'));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const groupsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setAllGroups(groupsData);
+      },
+      (error) => {
+        console.error('Error fetching all groups:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user, showBrowseModal]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -123,10 +150,60 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
     }
   };
 
+  const handleRequestToJoin = async (groupId) => {
+    if (!user) return;
+
+    setRequesting(groupId);
+    try {
+      const groupRef = doc(db, 'groups', groupId);
+      const groupSnap = await getDoc(groupRef);
+      
+      if (!groupSnap.exists()) {
+        showError('Group not found');
+        return;
+      }
+
+      const groupData = groupSnap.data();
+      
+      // Check if already a member
+      if (groupData.members?.includes(user.uid)) {
+        showError('You are already a member of this group');
+        return;
+      }
+
+      // Check if already requested
+      const joinRequests = groupData.joinRequests || [];
+      if (joinRequests.includes(user.uid)) {
+        showError('You have already requested to join this group');
+        return;
+      }
+
+      // Add join request
+      await updateDoc(groupRef, {
+        joinRequests: arrayUnion(user.uid),
+        updatedAt: serverTimestamp()
+      });
+
+      success('Join request sent! The group admin will review it.');
+    } catch (error) {
+      console.error('Error requesting to join:', error);
+      showError('Failed to send join request. Please try again.');
+    } finally {
+      setRequesting(null);
+    }
+  };
+
   const filteredGroups = groups.filter(group =>
     group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     group.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const filteredBrowseGroups = allGroups.filter(group => {
+    const isMember = group.members?.includes(user?.uid);
+    const matchesSearch = group.name?.toLowerCase().includes(browseSearchTerm.toLowerCase()) ||
+                         group.description?.toLowerCase().includes(browseSearchTerm.toLowerCase());
+    return !isMember && matchesSearch;
+  });
 
   if (loading) {
     return (
@@ -149,6 +226,14 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Create and join study groups</p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowBrowseModal(true)}
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
+            >
+              <Globe size={18} />
+              <span className="hidden sm:inline">Browse Groups</span>
+              <span className="sm:hidden">Browse</span>
+            </button>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
