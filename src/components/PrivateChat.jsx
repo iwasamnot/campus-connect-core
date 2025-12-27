@@ -44,6 +44,7 @@ const PrivateChat = () => {
   const [showAddUser, setShowAddUser] = useState(false); // Show add user by email form
   const [emailToAdd, setEmailToAdd] = useState(''); // Email to search/add
   const [searchingUser, setSearchingUser] = useState(false); // Loading state for user search
+  const [chatSummaries, setChatSummaries] = useState({}); // Store last message for each chat
   const messagesEndRef = useRef(null);
 
   // Generate chat ID from two user IDs (sorted to ensure consistency)
@@ -629,10 +630,23 @@ const PrivateChat = () => {
       console.log('PrivateChat: Message data:', messageData);
 
       // Update chat's last message
+      const lastMessageTime = serverTimestamp();
       await updateDoc(doc(db, 'privateChats', selectedChatId), {
         lastMessage: displayText,
-        lastMessageTime: serverTimestamp()
+        lastMessageTime: lastMessageTime
       });
+
+      // Update local chat summary for immediate UI update
+      if (selectedUser) {
+        setChatSummaries(prev => ({
+          ...prev,
+          [selectedUser.id]: {
+            lastMessage: displayText,
+            lastMessageTime: new Date(),
+            hasUnread: false
+          }
+        }));
+      }
 
       // Remove optimistic message - the real one will come from the listener
       setMessages(prev => prev.filter(m => !m.isOptimistic));
@@ -894,9 +908,36 @@ const PrivateChat = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                      {otherUser.email || otherUser.studentEmail || 'No email'}
-                    </p>
+                    {chatSummaries[otherUser.id]?.lastMessage ? (
+                      <>
+                        <p className="text-sm text-gray-900 dark:text-white truncate font-medium">
+                          {chatSummaries[otherUser.id].lastMessage}
+                        </p>
+                        {chatSummaries[otherUser.id].lastMessageTime && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {(() => {
+                              const time = chatSummaries[otherUser.id].lastMessageTime;
+                              const date = time.toDate ? time.toDate() : new Date(time);
+                              const now = new Date();
+                              const diff = now - date;
+                              const minutes = Math.floor(diff / 60000);
+                              const hours = Math.floor(diff / 3600000);
+                              const days = Math.floor(diff / 86400000);
+                              
+                              if (minutes < 1) return 'Just now';
+                              if (minutes < 60) return `${minutes}m ago`;
+                              if (hours < 24) return `${hours}h ago`;
+                              if (days < 7) return `${days}d ago`;
+                              return date.toLocaleDateString();
+                            })()}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        {otherUser.email || otherUser.studentEmail || 'No email'}
+                      </p>
+                    )}
                   </div>
                   <User
                     size={20}
