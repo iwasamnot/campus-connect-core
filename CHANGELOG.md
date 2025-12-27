@@ -22,19 +22,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Primary toxicity detection using Gemini AI (`gemini-2.0-flash-exp` model)
   - Intelligent context-aware toxicity analysis
   - Returns detailed toxicity metadata: confidence score, reason, detection method, and categories
-  - Comprehensive fallback system with extensive hate words list (100+ words)
+  - Comprehensive fallback system with extensive hate words list (500+ words)
   - Automatic fallback to word filter if Gemini API is unavailable
   - Toxicity data stored in Firestore for admin review and analytics
 - **Comprehensive Hate Words List**: Expanded toxicity word filter
-  - 100+ toxic words and phrases covering:
+  - 500+ toxic words and phrases covering:
     - Profanity and vulgar language
     - Hate speech and discriminatory terms
     - Violence and threatening language
     - Harassment and cyberbullying terms
     - Body shaming and mental health slurs
+    - Minor insults and derogatory terms
+    - **South Asian Languages**: Hindi, Urdu, Punjabi, Bengali/Bangladeshi, Nepali, Persian/Farsi
+      - Comprehensive transliterated toxic words from all major South Asian languages
+      - Common variations and spellings
+      - Cultural context-aware terms
     - Common misspellings and alternatives
   - Word boundary matching for accurate detection
   - Normalized text processing for better matching
+  - Multi-language support for diverse user base
 - **Enhanced Toxicity Metadata**: Detailed toxicity information stored with messages
   - `toxicityConfidence`: Confidence score (0.0-1.0) from AI analysis
   - `toxicityReason`: Brief explanation of why content was flagged
