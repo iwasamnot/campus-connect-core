@@ -47,8 +47,11 @@ const UsersManagement = () => {
       },
       (error) => {
         console.error('Error fetching users:', error);
-        // Try without orderBy if there's an index error
-        const simpleQuery = query(collection(db, 'users'));
+        // Try without orderBy if there's an index error (with limit)
+        const simpleQuery = query(
+          collection(db, 'users'),
+          limit(200)
+        );
         onSnapshot(simpleQuery, (snapshot) => {
           const usersData = snapshot.docs.map(doc => ({
             id: doc.id,

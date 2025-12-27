@@ -134,9 +134,12 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
-  // Fetch all users to get names and profile data
+  // Fetch all users to get names and profile data (limited to prevent quota exhaustion)
   useEffect(() => {
-    const q = query(collection(db, 'users'));
+    const q = query(
+      collection(db, 'users'),
+      limit(200) // Limit to 200 users (should be enough for most campuses)
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const users = {};
