@@ -29,12 +29,18 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Export Functionality**: Export audit logs for analysis
 
 ### Platform Features
-- **AI Moderation**: Automatic detection and redaction of toxic content
+- **AI-Powered Toxicity Detection**: Advanced content moderation using Google Gemini AI
+  - Context-aware toxicity analysis with confidence scoring
+  - Comprehensive hate words list (100+ words) as fallback
+  - Detailed toxicity metadata (confidence, reason, categories)
+  - Automatic redaction of toxic content
 - **Real-time Updates**: Live synchronization using Firebase Firestore
 - **Dark Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Code-Split Bundles**: Optimized performance with lazy-loaded components
 - **Secure**: Role-based access control with Firestore security rules
+- **Direct Messages**: Private messaging between users with chat history
+- **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days
 
 ## Tech Stack
 
@@ -44,7 +50,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Firestore (Database)
   - Authentication (Email/Password)
   - Storage (Profile Pictures)
-- **AI**: OpenAI GPT models (optional) with local knowledge base fallback
+- **AI**: 
+  - Google Gemini AI (for toxicity detection and Virtual Senior responses)
+  - OpenAI GPT models (optional) with local knowledge base fallback
 - **Icons**: Lucide React
 - **Deployment**: Firebase Hosting with automatic CI/CD
 
@@ -165,10 +173,25 @@ service cloud.firestore {
 
 ## AI Moderation
 
-The platform automatically flags messages containing the words: "bad", "hate", or "stupid". Flagged messages are:
-- Displayed as "[REDACTED BY AI]" to users
-- Stored with both original and redacted text
-- Visible in the Admin Dashboard for review
+The platform uses **Google Gemini AI** for intelligent toxicity detection:
+
+### Primary Detection (Gemini AI)
+- Context-aware analysis using `gemini-2.0-flash-exp` model
+- Detects: hate speech, harassment, threats, profanity, bullying, and more
+- Returns confidence scores and detailed reasoning
+- Handles context and edge cases intelligently
+
+### Fallback System
+- Comprehensive hate words list (100+ words) if Gemini is unavailable
+- Covers: profanity, hate speech, violence, harassment, slurs, and more
+- Word boundary matching for accurate detection
+
+### Features
+- Messages flagged as toxic are displayed as "[REDACTED BY AI]" to users
+- Original text stored securely for admin review
+- Detailed toxicity metadata (confidence, reason, method, categories)
+- Visible in Admin Dashboard with full analytics
+- Works across all chat types: Campus Chat, Private Chat, and Group Chat
 
 ## Authentication
 
@@ -218,10 +241,13 @@ For automatic deployment to work, you need to set up GitHub Secrets:
      - Your OpenAI API key if you want ChatGPT features in production
      - Format: `sk-your-key-here`
    
-   - **`VITE_GEMINI_API_KEY`** (Optional):
-     - Your Google Gemini API key if you want Virtual Senior AI responses in Campus Chat
+   - **`VITE_GEMINI_API_KEY`** (Required for AI features):
+     - Your Google Gemini API key for:
+       - AI-powered toxicity detection (primary moderation system)
+       - Virtual Senior AI responses in Campus Chat
      - Format: `AIzaSy...`
      - Get from: https://makersuite.google.com/app/apikey
+     - **Note**: Without this key, toxicity detection falls back to word filter only
 
 ### Using Automatic Deployment
 
