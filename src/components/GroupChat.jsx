@@ -105,6 +105,23 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
     return () => unsubscribe();
   }, [group]);
 
+  // Fetch join requests for group admins
+  useEffect(() => {
+    if (!group?.id || !user) return;
+    if (!group.admins?.includes(user.uid)) return; // Only admins see requests
+
+    const groupRef = doc(db, 'groups', group.id);
+    const unsubscribe = onSnapshot(groupRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const groupData = snapshot.data();
+        const requests = groupData.joinRequests || [];
+        setJoinRequests(requests);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [group, user]);
+
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -276,6 +293,230 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
         timestamp: readBy[uid]
       }))
     };
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    if (!group?.admins?.includes(user?.uid)) {
+      showError('Only group admins can remove members');
+      return;
+    }
+
+    if (memberId === user?.uid) {
+      showError('You cannot remove yourself. Use the leave group option instead.');
+      return;
+    }
+
+    if (group.admins?.includes(memberId) && group.admins?.length === 1) {
+      showError('Cannot remove the last admin. Transfer admin rights first.');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to remove ${userNames[memberId] || 'this member'} from the group?`)) {
+      return;
+    }
+
+    setRemovingMember(memberId);
+    try {
+      const groupRef = doc(db, 'groups', group.id);
+      await updateDoc(groupRef, {
+        members: arrayRemove(memberId),
+        admins: arrayRemove(memberId), // Also remove from admins if they were an admin
+        updatedAt: serverTimestamp()
+      });
+      success(`${userNames[memberId] || 'Member'} has been removed from the group`);
+    } catch (error) {
+      console.error('Error removing member:', error);
+      showError('Failed to remove member. Please try again.');
+    } finally {
+      setRemovingMember(null);
+    }
+  };
+
+  const handleInviteByEmail = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) {
+      showError('Please enter an email address');
+      return;
+    }
+
+    if (!group?.admins?.includes(user?.uid)) {
+      showError('Only group admins can invite members');
+      return;
+    }
+
+    setInviting(true);
+    try {
+      // Search for user by email
+      const usersQuery = query(
+        collection(db, 'users'),
+        where('email', '==', inviteEmail.trim().toLowerCase())
+      );
+      
+      const snapshot = await getDocs(usersQuery);
+      
+      if (snapshot.empty) {
+        // Try other email fields
+        const altQuery = query(
+          collection(db, 'users'),
+          where('studentEmail', '==', inviteEmail.trim().toLowerCase())
+        );
+        const altSnapshot = await getDocs(altQuery);
+        
+        if (altSnapshot.empty) {
+          const personalQuery = query(
+            collection(db, 'users'),
+            where('personalEmail', '==', inviteEmail.trim().toLowerCase())
+          );
+          const personalSnapshot = await getDocs(personalQuery);
+          
+          if (personalSnapshot.empty) {
+            showError('User not found. Please check the email address.');
+            return;
+          }
+          
+          const userDoc = personalSnapshot.docs[0];
+          const userId = userDoc.id;
+          
+          if (group.members?.includes(userId)) {
+            showError('User is already a member of this group');
+            return;
+          }
+
+          await updateDoc(doc(db, 'groups', group.id), {
+            members: arrayUnion(userId),
+            joinRequests: arrayRemove(userId), // Remove from requests if they had one
+            updatedAt: serverTimestamp()
+          });
+          
+          success('User invited successfully!');
+          setInviteEmail('');
+          setShowInviteModal(false);
+          return;
+        }
+        
+        const userDoc = altSnapshot.docs[0];
+        const userId = userDoc.id;
+        
+        if (group.members?.includes(userId)) {
+          showError('User is already a member of this group');
+          return;
+        }
+
+        await updateDoc(doc(db, 'groups', group.id), {
+          members: arrayUnion(userId),
+          joinRequests: arrayRemove(userId),
+          updatedAt: serverTimestamp()
+        });
+        
+        success('User invited successfully!');
+        setInviteEmail('');
+        setShowInviteModal(false);
+        return;
+      }
+
+      const userDoc = snapshot.docs[0];
+      const userId = userDoc.id;
+      
+      if (group.members?.includes(userId)) {
+        showError('User is already a member of this group');
+        return;
+      }
+
+      await updateDoc(doc(db, 'groups', group.id), {
+        members: arrayUnion(userId),
+        joinRequests: arrayRemove(userId), // Remove from requests if they had one
+        updatedAt: serverTimestamp()
+      });
+      
+      success('User invited successfully!');
+      setInviteEmail('');
+      setShowInviteModal(false);
+    } catch (error) {
+      console.error('Error inviting user:', error);
+      showError('Failed to invite user. Please try again.');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleApproveRequest = async (userId) => {
+    if (!group?.admins?.includes(user?.uid)) {
+      showError('Only group admins can approve requests');
+      return;
+    }
+
+    setProcessingRequest(userId);
+    try {
+      await updateDoc(doc(db, 'groups', group.id), {
+        members: arrayUnion(userId),
+        joinRequests: arrayRemove(userId),
+        updatedAt: serverTimestamp()
+      });
+      success('Join request approved!');
+    } catch (error) {
+      console.error('Error approving request:', error);
+      showError('Failed to approve request. Please try again.');
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const handleDenyRequest = async (userId) => {
+    if (!group?.admins?.includes(user?.uid)) {
+      showError('Only group admins can deny requests');
+      return;
+    }
+
+    setProcessingRequest(userId);
+    try {
+      await updateDoc(doc(db, 'groups', group.id), {
+        joinRequests: arrayRemove(userId),
+        updatedAt: serverTimestamp()
+      });
+      success('Join request denied');
+    } catch (error) {
+      console.error('Error denying request:', error);
+      showError('Failed to deny request. Please try again.');
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!confirm(`Are you sure you want to leave "${group.name}"?`)) {
+      return;
+    }
+
+    try {
+      const groupRef = doc(db, 'groups', group.id);
+      const groupSnap = await getDoc(groupRef);
+      
+      if (!groupSnap.exists()) {
+        showError('Group not found');
+        return;
+      }
+
+      const groupData = groupSnap.data();
+      
+      // If user is the only admin, delete the group
+      if (groupData.admins?.length === 1 && groupData.admins[0] === user.uid) {
+        await deleteDoc(groupRef);
+        success('Group deleted successfully');
+        onBack();
+      } else {
+        // Remove from members and admins
+        await updateDoc(groupRef, {
+          members: arrayRemove(user.uid),
+          admins: arrayRemove(user.uid),
+          updatedAt: serverTimestamp()
+        });
+        success('Left group successfully');
+        onBack();
+      }
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      showError('Failed to leave group. Please try again.');
+    }
   };
 
   if (!group) {
