@@ -14,6 +14,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
@@ -50,6 +51,13 @@ const Login = () => {
         // Check email confirmation
         if (email !== confirmEmail) {
           setError('Email addresses do not match. Please confirm your email.');
+          setLoading(false);
+          return;
+        }
+        
+        // Check password confirmation
+        if (password !== confirmPassword) {
+          setError('Passwords do not match. Please confirm your password.');
           setLoading(false);
           return;
         }
@@ -171,6 +179,7 @@ const Login = () => {
               setMode('login');
               setError(null);
               setConfirmEmail('');
+              setConfirmPassword('');
               setEmailVerificationSent(false);
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
@@ -186,6 +195,7 @@ const Login = () => {
               setMode('register');
               setError(null);
               setConfirmEmail('');
+              setConfirmPassword('');
               setEmailVerificationSent(false);
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
@@ -309,6 +319,7 @@ const Login = () => {
             {mode !== 'reset' && (
               <div>
                 <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                  <Lock className="inline mr-2" size={16} />
                   Password
                 </label>
                 <div className="relative">
@@ -324,6 +335,37 @@ const Login = () => {
                     disabled={loading}
                   />
                 </div>
+              </div>
+            )}
+
+            {mode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                  <Lock className="inline mr-2" size={16} />
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm your password"
+                    required
+                    minLength={6}
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                      confirmPassword && password !== confirmPassword
+                        ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-600 focus:border-indigo-600'
+                    }`}
+                    disabled={loading}
+                  />
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1 ml-1">
+                    Passwords do not match
+                  </p>
+                )}
               </div>
             )}
 
