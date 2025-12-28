@@ -235,55 +235,6 @@ const ChatArea = ({ setActiveView }) => {
       clearInterval(intervalId);
     };
   }, []);
-      const users = {};
-      const names = {};
-      const profiles = {};
-      
-      snapshot.docs.forEach(doc => {
-        const userData = doc.data();
-        
-        // Determine the display name with proper fallback
-        let displayName = 'Unknown';
-        if (userData.name && userData.name.trim()) {
-          displayName = userData.name.trim();
-        } else if (userData.email) {
-          displayName = userData.email.split('@')[0];
-        } else {
-          displayName = `User ${doc.id.substring(0, 8)}`;
-        }
-        
-        // Store user data with online status
-        users[doc.id] = {
-          isOnline: userData.isOnline === true || userData.isOnline === 'true',
-          lastSeen: userData.lastSeen || null,
-          ...userData
-        };
-        
-        // Store display name
-        names[doc.id] = displayName;
-        
-        // Store full profile data
-        profiles[doc.id] = {
-          ...userData,
-          name: displayName // Ensure name is always set
-        };
-      });
-      
-      setOnlineUsers(users);
-      setUserNames(names);
-      setUserProfiles(profiles);
-      
-      console.log('ChatArea - Loaded users:', { 
-        count: snapshot.docs.length, 
-        names: names,
-        userIds: Object.keys(names)
-      });
-    }, (error) => {
-      console.error('ChatArea - Error fetching users:', error);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
