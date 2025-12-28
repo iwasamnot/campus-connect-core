@@ -287,7 +287,7 @@ Be strict but fair. Consider context. False positives are better than false nega
     // Check if it's a quota/rate limit error (429)
     if (error.message && (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate limit'))) {
       geminiQuotaExceeded = true;
-      quotaExceededUntil = now + GEMINI_COOLDOWN;
+      quotaExceededUntil = Date.now() + GEMINI_COOLDOWN;
       console.warn('Gemini quota exceeded, will use fallback for next', GEMINI_COOLDOWN / 1000, 'seconds');
     }
     
