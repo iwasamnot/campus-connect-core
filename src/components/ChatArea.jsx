@@ -70,6 +70,7 @@ const ChatArea = ({ setActiveView }) => {
   const [showForwardModal, setShowForwardModal] = useState(false); // Show forward modal
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
+  const mountedRef = useRef(true);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
   
   // Typing indicator (for global chat, chatId can be 'global')
@@ -226,6 +227,7 @@ const ChatArea = ({ setActiveView }) => {
 
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
   useEffect(() => {
+    mountedRef.current = true;
     const q = query(
       collection(db, 'messages'),
       orderBy('timestamp', 'desc'),
@@ -263,7 +265,7 @@ const ChatArea = ({ setActiveView }) => {
         }
       },
       (error) => {
-        if (!mounted) return;
+        if (!mountedRef.current) return;
         console.error('Error fetching messages:', error);
         if (error.code === 'resource-exhausted') {
           showError('Firestore quota exceeded. Please try again later.');
@@ -276,7 +278,7 @@ const ChatArea = ({ setActiveView }) => {
     );
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       unsubscribe();
     };
   }, [user?.uid, showError]); // Include showError but it's stable from context
