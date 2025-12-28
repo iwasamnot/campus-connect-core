@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole } from '../utils/helpers';
+import { isAdminRole, isUserOnline } from '../utils/helpers';
 import { 
   collection, 
   addDoc, 
@@ -195,8 +195,9 @@ const ChatArea = ({ setActiveView }) => {
           }
           
           // Store user data with online status
+          // Use helper function to check if user is actually online (validates both flag and recent lastSeen)
           users[doc.id] = {
-            isOnline: userData.isOnline === true || userData.isOnline === 'true',
+            isOnline: isUserOnline(userData),
             lastSeen: userData.lastSeen || null,
             ...userData
           };
@@ -1016,7 +1017,7 @@ const ChatArea = ({ setActiveView }) => {
                         onClick={() => setSelectedUserId(message.userId)}
                         className="text-sm font-semibold opacity-90 hover:underline cursor-pointer"
                         title={
-                          onlineUsers[message.userId]?.isOnline
+                          isUserOnline(onlineUsers[message.userId])
                             ? 'Online'
                             : onlineUsers[message.userId]?.lastSeen
                             ? `Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`
@@ -1037,7 +1038,7 @@ const ChatArea = ({ setActiveView }) => {
                           return cachedName || messageName || profileName || emailName || 'Unknown';
                         })()}
                       </button>
-                      {onlineUsers[message.userId]?.isOnline ? (
+                      {isUserOnline(onlineUsers[message.userId]) ? (
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
                       ) : onlineUsers[message.userId]?.lastSeen ? (
                         <div className="w-2 h-2 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`} />

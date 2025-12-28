@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole } from '../utils/helpers';
+import { isAdminRole, isUserOnline } from '../utils/helpers';
 import { 
   collection, 
   addDoc, 
@@ -723,7 +723,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                         onClick={() => setSelectedUserId(message.userId)}
                         className="text-xs font-medium opacity-90 hover:underline cursor-pointer"
                         title={
-                          onlineUsers[message.userId]?.isOnline
+                          isUserOnline(onlineUsers[message.userId])
                             ? 'Online'
                             : onlineUsers[message.userId]?.lastSeen
                             ? `Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`
@@ -732,7 +732,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                       >
                         {userNames[message.userId] || message.userEmail?.split('@')[0] || 'Unknown'}
                       </button>
-                      {onlineUsers[message.userId]?.isOnline ? (
+                      {isUserOnline(onlineUsers[message.userId]) ? (
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
                       ) : onlineUsers[message.userId]?.lastSeen ? (
                         <div className="w-2 h-2 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`} />
@@ -911,7 +911,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                     const canRemove = isCurrentUserAdmin && !isCurrentUser && (isAdmin ? group.admins?.length > 1 : true);
                     const memberName = userNames[memberId] || 'Unknown User';
                     const memberProfile = userProfiles[memberId] || {};
-                    const memberOnline = onlineUsers[memberId]?.isOnline || false;
+                    const memberOnline = isUserOnline(onlineUsers[memberId]) || false;
 
                     return (
                       <div

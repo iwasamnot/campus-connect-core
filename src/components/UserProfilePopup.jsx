@@ -3,7 +3,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { X, User, Mail, Phone, Calendar, GraduationCap, MapPin, FileText, Image, Circle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isAdminRole } from '../utils/helpers';
+import { isAdminRole, isUserOnline } from '../utils/helpers';
 
 const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
   const { user, userRole } = useAuth();
@@ -145,7 +145,7 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
                   <h4 className="text-2xl font-bold text-gray-800 dark:text-white">
                     {userData.name}
                   </h4>
-                  {userData.isOnline === true ? (
+                  {isUserOnline(userData) ? (
                     <div className="w-3 h-3 bg-green-500 rounded-full" title="Online" />
                   ) : userData.lastSeen ? (
                     <div className="w-3 h-3 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(userData.lastSeen)}`} />
@@ -162,7 +162,7 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
                 </span>
                 {/* Online Status / Last Seen */}
                 <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  {userData.isOnline === true ? (
+                  {isUserOnline(userData) ? (
                     <span className="flex items-center justify-center gap-1">
                       <Circle size={8} className="fill-green-500 text-green-500" />
                       Online

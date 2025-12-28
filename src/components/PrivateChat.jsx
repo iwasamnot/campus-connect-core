@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole } from '../utils/helpers';
+import { isAdminRole, isUserOnline } from '../utils/helpers';
 import { 
   collection, 
   addDoc, 
@@ -1008,7 +1008,7 @@ const PrivateChat = () => {
                       >
                         {displayName[0].toUpperCase()}
                       </div>
-                      {onlineUsers[otherUser.id]?.isOnline && (
+                      {isUserOnline(onlineUsers[otherUser.id]) && (
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
                       )}
                     </button>
@@ -1128,7 +1128,7 @@ const PrivateChat = () => {
                   >
                     {displayName[0].toUpperCase()}
                   </div>
-                  {onlineUsers[selectedUser.id]?.isOnline && (
+                  {isUserOnline(onlineUsers[selectedUser.id]) && (
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
                   )}
                 </>
@@ -1156,7 +1156,7 @@ const PrivateChat = () => {
                 })()}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                {onlineUsers[selectedUser.id]?.isOnline ? 'Online' : 
+                {isUserOnline(onlineUsers[selectedUser.id]) ? 'Online' : 
                  onlineUsers[selectedUser.id]?.lastSeen ? 
                  `Last seen ${formatTime(onlineUsers[selectedUser.id].lastSeen)}` : 
                  'Offline'}
