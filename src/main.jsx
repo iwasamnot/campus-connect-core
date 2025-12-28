@@ -11,8 +11,8 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <ThemeProvider>
+    <ThemeProvider>
+      <ErrorBoundary>
         <PreferencesProvider>
           <AuthProvider>
             <PresenceProvider>
@@ -22,8 +22,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             </PresenceProvider>
           </AuthProvider>
         </PreferencesProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </ThemeProvider>
   </React.StrictMode>,
 )
 
