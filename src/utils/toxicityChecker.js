@@ -1,5 +1,13 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
+// Rate limiting and caching for Gemini API
+const toxicityCache = new Map(); // Cache results to avoid repeated API calls
+const lastGeminiCall = { time: 0, count: 0 }; // Track API calls for rate limiting
+const GEMINI_RATE_LIMIT = 15; // Max 15 calls per minute (free tier limit)
+const GEMINI_COOLDOWN = 60000; // 1 minute cooldown after quota error
+let geminiQuotaExceeded = false;
+let quotaExceededUntil = 0;
+
 // Comprehensive hate words list (fallback if Gemini is unavailable)
 const TOXIC_WORDS = [
   // Profanity
@@ -135,25 +143,67 @@ export const checkToxicityFallback = (text) => {
 };
 
 /**
- * Check toxicity using Gemini AI
+ * Check toxicity using Gemini AI with rate limiting and caching
  */
 export const checkToxicityWithGemini = async (text) => {
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return { isToxic: false, confidence: 0, reason: null };
   }
 
+  // Check cache first
+  const cacheKey = text.toLowerCase().trim();
+  if (toxicityCache.has(cacheKey)) {
+    return toxicityCache.get(cacheKey);
+  }
+
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
   if (!apiKey || apiKey === '') {
     console.warn('Gemini API key not configured, using fallback toxicity check');
-    return { 
+    const result = { 
       isToxic: checkToxicityFallback(text), 
       confidence: 0.5, 
       reason: 'Fallback word filter',
       method: 'fallback'
     };
+    toxicityCache.set(cacheKey, result);
+    return result;
+  }
+
+  // Check if quota was exceeded recently
+  const now = Date.now();
+  if (geminiQuotaExceeded && now < quotaExceededUntil) {
+    console.warn('Gemini quota exceeded, using fallback. Will retry after cooldown.');
+    const result = {
+      isToxic: checkToxicityFallback(text),
+      confidence: 0.5,
+      reason: 'Gemini quota exceeded, using fallback',
+      method: 'fallback'
+    };
+    toxicityCache.set(cacheKey, result);
+    return result;
+  }
+
+  // Rate limiting: Check if we've exceeded the limit
+  if (now - lastGeminiCall.time < 60000) { // Within 1 minute
+    if (lastGeminiCall.count >= GEMINI_RATE_LIMIT) {
+      console.warn('Gemini rate limit reached, using fallback');
+      const result = {
+        isToxic: checkToxicityFallback(text),
+        confidence: 0.5,
+        reason: 'Rate limit reached, using fallback',
+        method: 'fallback'
+      };
+      toxicityCache.set(cacheKey, result);
+      return result;
+    }
+  } else {
+    // Reset counter after 1 minute
+    lastGeminiCall.time = now;
+    lastGeminiCall.count = 0;
   }
 
   try {
+    lastGeminiCall.count++;
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash-exp',
@@ -233,40 +283,76 @@ Be strict but fair. Consider context. False positives are better than false nega
     };
   } catch (error) {
     console.error('Error checking toxicity with Gemini:', error);
+    
+    // Check if it's a quota/rate limit error (429)
+    if (error.message && (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate limit'))) {
+      geminiQuotaExceeded = true;
+      quotaExceededUntil = now + GEMINI_COOLDOWN;
+      console.warn('Gemini quota exceeded, will use fallback for next', GEMINI_COOLDOWN / 1000, 'seconds');
+    }
+    
     // Fallback to word filter
-    return {
+    const result = {
       isToxic: checkToxicityFallback(text),
       confidence: 0.5,
       reason: 'Error checking with AI, using fallback',
       method: 'fallback'
     };
+    toxicityCache.set(cacheKey, result);
+    return result;
   }
 };
 
 /**
  * Main toxicity check function - tries Gemini first, falls back to word filter
+ * Now with automatic fallback when quota is exceeded
  */
 export const checkToxicity = async (text, useGemini = true) => {
   if (!text || typeof text !== 'string') {
     return { isToxic: false, confidence: 0, reason: null, method: 'none' };
   }
 
-  // If Gemini is enabled and API key is available, use it
-  if (useGemini) {
+  // Check cache first (works for both Gemini and fallback results)
+  const cacheKey = text.toLowerCase().trim();
+  if (toxicityCache.has(cacheKey)) {
+    return toxicityCache.get(cacheKey);
+  }
+
+  // If Gemini is enabled and quota hasn't been exceeded, try it
+  if (useGemini && !geminiQuotaExceeded) {
     try {
       const result = await checkToxicityWithGemini(text);
+      // Cache the result (already cached in checkToxicityWithGemini, but ensure it's here too)
+      if (!toxicityCache.has(cacheKey)) {
+        toxicityCache.set(cacheKey, result);
+      }
       return result;
     } catch (error) {
       console.error('Error in Gemini toxicity check:', error);
+      // Continue to fallback below
     }
   }
 
-  // Fallback to word filter
-  return {
+  // Fallback to word filter (always reliable, no API calls)
+  const result = {
     isToxic: checkToxicityFallback(text),
     confidence: 0.5,
     reason: 'Word filter',
     method: 'fallback'
   };
+  toxicityCache.set(cacheKey, result);
+  return result;
 };
+
+// Clear cache periodically to prevent memory issues (keep last 1000 entries)
+setInterval(() => {
+  if (toxicityCache.size > 1000) {
+    const entries = Array.from(toxicityCache.entries());
+    toxicityCache.clear();
+    // Keep most recent 500 entries
+    entries.slice(-500).forEach(([key, value]) => {
+      toxicityCache.set(key, value);
+    });
+  }
+}, 5 * 60 * 1000); // Every 5 minutes
 
