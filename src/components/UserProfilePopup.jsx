@@ -23,8 +23,8 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
           id: userDoc.id,
           // Normalize name with proper fallback
           name: (data.name && data.name.trim()) ? data.name.trim() : (data.email ? data.email.split('@')[0] : `User ${userId.substring(0, 8)}`),
-          // Normalize isOnline to boolean
-          isOnline: data.isOnline === true || data.isOnline === 'true',
+          // Use helper to check if actually online (validates both flag and recent lastSeen)
+          isOnline: isUserOnline(data),
           // Preserve lastSeen or set to null
           lastSeen: data.lastSeen || null,
           // Preserve email
