@@ -50,14 +50,14 @@ export const PresenceProvider = ({ children }) => {
     // Set user as online immediately
     setOnline();
 
-    // Update lastSeen periodically (every 30 seconds)
+    // Update lastSeen periodically (every 2 minutes to reduce writes)
     intervalId = setInterval(() => {
       setDoc(userRef, {
         lastSeen: serverTimestamp()
       }, { merge: true }).catch((error) => {
         console.error('Error updating lastSeen:', error);
       });
-    }, 30000);
+    }, 120000); // 2 minutes instead of 30 seconds
 
     // Set user as offline when component unmounts or user changes
     return () => {

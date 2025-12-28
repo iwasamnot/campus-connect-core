@@ -16,7 +16,8 @@ export const PreferencesProvider = ({ children }) => {
       return {
         accentColor: 'indigo',
         fontSize: 'medium',
-        showReadReceipts: true,
+        readReceipts: false, // DISABLED by default to save Firebase reads/writes
+        showReadReceipts: false, // Legacy key for compatibility
         showTypingIndicators: true,
         showOnlineStatus: true,
         allowMessageForwarding: true,
@@ -40,7 +41,8 @@ export const PreferencesProvider = ({ children }) => {
     return {
       accentColor: 'indigo',
       fontSize: 'medium',
-      showReadReceipts: true,
+      readReceipts: false, // DISABLED by default to save Firebase reads/writes
+      showReadReceipts: false, // Legacy key for compatibility
       showTypingIndicators: true,
       showOnlineStatus: true,
       allowMessageForwarding: true,
@@ -114,7 +116,8 @@ export const PreferencesProvider = ({ children }) => {
     const defaultPrefs = {
       accentColor: 'indigo',
       fontSize: 'medium',
-      showReadReceipts: true,
+      readReceipts: false, // DISABLED by default to save Firebase reads/writes
+      showReadReceipts: false, // Legacy key for compatibility
       showTypingIndicators: true,
       showOnlineStatus: true,
       allowMessageForwarding: true,

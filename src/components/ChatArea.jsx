@@ -163,13 +163,78 @@ const ChatArea = ({ setActiveView }) => {
   };
 
   // Fetch all users to get names and profile data (limited to prevent quota exhaustion)
+  // Using one-time read instead of real-time listener to reduce reads
   useEffect(() => {
-    const q = query(
-      collection(db, 'users'),
-      limit(100) // Reduced to 100 users for Spark free plan (was 200)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    let mounted = true;
+    
+    const fetchUsers = async () => {
+      try {
+        const q = query(
+          collection(db, 'users'),
+          limit(50) // Further reduced to 50 users to save reads
+        );
+        
+        const snapshot = await getDocs(q);
+        if (!mounted) return;
+        
+        const users = {};
+        const names = {};
+        const profiles = {};
+        
+        snapshot.docs.forEach(doc => {
+          const userData = doc.data();
+          
+          // Determine the display name with proper fallback
+          let displayName = 'Unknown';
+          if (userData.name && userData.name.trim()) {
+            displayName = userData.name.trim();
+          } else if (userData.email) {
+            displayName = userData.email.split('@')[0];
+          } else {
+            displayName = `User ${doc.id.substring(0, 8)}`;
+          }
+          
+          // Store user data with online status
+          users[doc.id] = {
+            isOnline: userData.isOnline === true || userData.isOnline === 'true',
+            lastSeen: userData.lastSeen || null,
+            ...userData
+          };
+          
+          // Store display name
+          names[doc.id] = displayName;
+          
+          // Store full profile data
+          profiles[doc.id] = {
+            ...userData,
+            name: displayName // Ensure name is always set
+          };
+        });
+        
+        setOnlineUsers(users);
+        setUserNames(names);
+        setUserProfiles(profiles);
+        
+        console.log('ChatArea - Loaded users:', { 
+          count: snapshot.docs.length, 
+          names: names,
+          userIds: Object.keys(names)
+        });
+      } catch (error) {
+        console.error('ChatArea - Error fetching users:', error);
+      }
+    };
+    
+    fetchUsers();
+    
+    // Refresh users every 5 minutes instead of real-time
+    const intervalId = setInterval(fetchUsers, 5 * 60 * 1000);
+    
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
+  }, []);
       const users = {};
       const names = {};
       const profiles = {};
@@ -284,17 +349,19 @@ const ChatArea = ({ setActiveView }) => {
   }, [user?.uid, showError]); // Include showError but it's stable from context
 
   // Mark messages as read and send notifications (separate effect to prevent infinite loops)
-  // DISABLED for Spark free plan to prevent quota exhaustion - read receipts are expensive
-  // Users can still see messages, but read receipts won't be updated
+  // OPTIMIZED: Read receipts are expensive - only update if explicitly enabled AND with longer delays
   const processedReadMessagesRef = useRef(new Set());
   const lastReadUpdateRef = useRef(0);
   useEffect(() => {
     if (!user?.uid || messages.length === 0) return;
     
-    // Only update read receipts if user has preferences enabled AND it's been at least 10 seconds since last update
+    // DISABLED by default - read receipts cause too many writes/reads
+    // Only enable if user explicitly enables it in settings
     if (!preferences?.readReceipts) return;
+    
     const now = Date.now();
-    if (now - lastReadUpdateRef.current < 10000) return; // 10 second cooldown
+    // Increased cooldown to 30 seconds to drastically reduce writes
+    if (now - lastReadUpdateRef.current < 30000) return;
 
     // Debounce read updates to prevent quota exhaustion
     const timeoutId = setTimeout(() => {
@@ -305,8 +372,8 @@ const ChatArea = ({ setActiveView }) => {
         return isUnread && notProcessed;
       });
 
-      // Process only first 3 unread messages at a time (reduced from 5)
-      unreadMessages.slice(0, 3).forEach(async (message) => {
+      // Process only 1 message at a time (reduced from 3) to minimize writes
+      unreadMessages.slice(0, 1).forEach(async (message) => {
         try {
           // Mark as processed immediately to prevent duplicate updates
           processedReadMessagesRef.current.add(message.id);
@@ -345,7 +412,7 @@ const ChatArea = ({ setActiveView }) => {
       
       // Update last update time
       lastReadUpdateRef.current = Date.now();
-    }, 5000); // 5 second delay (increased from 2) to prevent immediate re-triggering
+    }, 10000); // 10 second delay (increased from 5) to prevent immediate re-triggering
 
     return () => clearTimeout(timeoutId);
   }, [messages, user?.uid, userProfiles, preferences?.readReceipts]); // Only depend on messages, not on readBy updates
