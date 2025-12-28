@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User } from 'lucide-react';
+import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle } from 'lucide-react';
 import Logo from './Logo';
 
 const Login = () => {
-  const { register, login, resetPassword } = useAuth();
+  const { register, login, resetPassword, resendVerificationEmail } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const { success, error: showError } = useToast();
   const [mode, setMode] = useState('login'); // 'login' or 'register' or 'reset'
@@ -16,6 +16,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   // Validate student email format: must start with "s20" and contain "@sistc"
   const validateStudentEmail = (email) => {
@@ -58,6 +60,9 @@ const Login = () => {
           return;
         }
         await register(name.trim(), email, password, 'student');
+        // Show success message about email verification
+        setEmailVerificationSent(true);
+        success('Registration successful! Please check your email to verify your account before logging in.');
       } else {
         // Validate email format for login as well
         if (!validateStudentEmail(email)) {
@@ -84,6 +89,9 @@ const Login = () => {
         errorMessage = 'Password is too weak.';
       } else if (err.code === 'auth/network-request-failed') {
         errorMessage = 'Network error. Please check your internet connection.';
+      } else if (err.code === 'auth/email-not-verified') {
+        errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification email.';
+        setEmailVerificationSent(true);
       }
       setError(errorMessage);
       showError(errorMessage);
@@ -163,6 +171,7 @@ const Login = () => {
               setMode('login');
               setError(null);
               setConfirmEmail('');
+              setEmailVerificationSent(false);
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
@@ -177,6 +186,7 @@ const Login = () => {
               setMode('register');
               setError(null);
               setConfirmEmail('');
+              setEmailVerificationSent(false);
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
@@ -189,8 +199,41 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
-            {error}
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm flex items-start gap-2">
+            <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+            <div className="flex-1">{error}</div>
+          </div>
+        )}
+
+        {emailVerificationSent && (
+          <div className="mb-4 p-4 bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm">
+            <div className="flex items-start gap-2 mb-2">
+              <CheckCircle size={18} className="mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold">Verification Email Sent!</p>
+                <p className="mt-1">Please check your email inbox and click the verification link to activate your account.</p>
+              </div>
+            </div>
+            {mode === 'login' && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setResendingVerification(true);
+                  try {
+                    await resendVerificationEmail();
+                    success('Verification email resent! Please check your inbox.');
+                  } catch (err) {
+                    showError('Failed to resend verification email. Please try again.');
+                  } finally {
+                    setResendingVerification(false);
+                  }
+                }}
+                disabled={resendingVerification}
+                className="mt-2 text-sm text-indigo-700 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 hover:underline font-medium disabled:opacity-50"
+              >
+                {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
+              </button>
+            )}
           </div>
         )}
 
@@ -226,17 +269,12 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={mode === 'register' ? 's20xxxxx@sistc.edu.in' : 'Enter your email'}
+                  placeholder="Enter Your Email"
                   required
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all"
                   disabled={loading}
                 />
               </div>
-              {mode === 'register' && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-1">
-                  Must start with "s20" and contain "@sistc"
-                </p>
-              )}
             </div>
             {mode === 'register' && (
               <div>
@@ -338,11 +376,6 @@ const Login = () => {
             : "Don't have an account? Switch to Register mode."}
         </p>
         
-        {mode === 'register' && (
-          <p className="text-center text-xs text-black dark:text-white opacity-60 mt-2">
-            Only students with valid SISTC email addresses (starting with "s20" and containing "@sistc") can register.
-          </p>
-        )}
       </div>
     </div>
   );

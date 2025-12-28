@@ -5,7 +5,8 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendEmailVerification
 } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -109,12 +110,16 @@ export const AuthProvider = ({ children }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
       
+      // Send email verification
+      await sendEmailVerification(newUser);
+      
       // Store user data in Firestore
       await setDoc(doc(db, 'users', newUser.uid), {
         name: name,
         email: email,
         studentEmail: email, // Set registration email as default student email
         role: role,
+        emailVerified: false,
         createdAt: new Date().toISOString()
       });
 
@@ -131,6 +136,30 @@ export const AuthProvider = ({ children }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const loggedInUser = userCredential.user;
+      
+      // Reload user to get latest emailVerified status
+      await loggedInUser.reload();
+      
+      // Check if email is verified
+      if (!loggedInUser.emailVerified) {
+        // Update Firestore emailVerified status
+        await setDoc(doc(db, 'users', loggedInUser.uid), {
+          emailVerified: false
+        }, { merge: true });
+        
+        // Sign out the user since email is not verified
+        await firebaseSignOut(auth);
+        
+        // Throw error to prompt user to verify email
+        const error = new Error('EMAIL_NOT_VERIFIED');
+        error.code = 'auth/email-not-verified';
+        throw error;
+      }
+      
+      // Update emailVerified status in Firestore
+      await setDoc(doc(db, 'users', loggedInUser.uid), {
+        emailVerified: true
+      }, { merge: true });
       
       // Fetch user role from Firestore
       const userDoc = await getDoc(doc(db, 'users', loggedInUser.uid));
@@ -151,6 +180,7 @@ export const AuthProvider = ({ children }) => {
         await setDoc(doc(db, 'users', loggedInUser.uid), {
           email: loggedInUser.email,
           role: 'student',
+          emailVerified: loggedInUser.emailVerified,
           createdAt: new Date().toISOString()
         });
         setUserRole('student');
@@ -173,6 +203,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resendVerificationEmail = async () => {
+    try {
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+      await sendEmailVerification(user);
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     userRole,
@@ -182,6 +224,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signOut,
     resetPassword,
+    resendVerificationEmail,
     loading
   };
 

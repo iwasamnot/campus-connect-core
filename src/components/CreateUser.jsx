@@ -166,7 +166,7 @@ const CreateUser = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder={formData.role === 'student' ? 's20xxxxx@sistc.edu.in' : 'user@example.com'}
+                placeholder="Enter Your Email"
                 required
                 className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${
                   darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-100 border-gray-300 text-gray-900'
@@ -174,11 +174,6 @@ const CreateUser = () => {
                 disabled={loading}
               />
             </div>
-            {formData.role === 'student' && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Must start with "s20" and contain "@sistc"
-              </p>
-            )}
           </div>
 
           {/* Password */}
