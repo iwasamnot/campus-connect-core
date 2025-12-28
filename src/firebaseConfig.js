@@ -3,7 +3,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Firebase configuration from environment variables
+// Firebase configuration from environment variables with fallback
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDcsJKYKFvL-nGQtk7iLfW9mTfCZ0kc0qQ",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "campus-connect-sistc.firebaseapp.com",
@@ -14,8 +14,19 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-NRYYQRSBJD"
 };
 
+// Validate Firebase config
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error('Firebase configuration is missing required fields');
+}
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+  throw error;
+}
 
 // Initialize Firebase services
 export const auth = getAuth(app);

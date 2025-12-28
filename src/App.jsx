@@ -4,18 +4,49 @@ import Sidebar from './components/Sidebar';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Menu } from 'lucide-react';
+import ErrorBoundary from './components/ErrorBoundary';
 
-// Code-split large components for better performance
-const ChatArea = lazy(() => import('./components/ChatArea'));
-const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
-const StudentProfile = lazy(() => import('./components/StudentProfile'));
-const UsersManagement = lazy(() => import('./components/UsersManagement'));
-const CreateUser = lazy(() => import('./components/CreateUser'));
-const AIHelp = lazy(() => import('./components/AIHelp'));
-const Groups = lazy(() => import('./components/Groups'));
-const GroupChat = lazy(() => import('./components/GroupChat'));
-const PrivateChat = lazy(() => import('./components/PrivateChat'));
-const Settings = lazy(() => import('./components/Settings'));
+// Code-split large components for better performance with error handling
+const ChatArea = lazy(() => import('./components/ChatArea').catch(err => {
+  console.error('Error loading ChatArea:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Chat Area. Please refresh the page.</div> };
+}));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard').catch(err => {
+  console.error('Error loading AdminDashboard:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Admin Dashboard. Please refresh the page.</div> };
+}));
+const StudentProfile = lazy(() => import('./components/StudentProfile').catch(err => {
+  console.error('Error loading StudentProfile:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Student Profile. Please refresh the page.</div> };
+}));
+const UsersManagement = lazy(() => import('./components/UsersManagement').catch(err => {
+  console.error('Error loading UsersManagement:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Users Management. Please refresh the page.</div> };
+}));
+const CreateUser = lazy(() => import('./components/CreateUser').catch(err => {
+  console.error('Error loading CreateUser:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Create User. Please refresh the page.</div> };
+}));
+const AIHelp = lazy(() => import('./components/AIHelp').catch(err => {
+  console.error('Error loading AIHelp:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading AI Help. Please refresh the page.</div> };
+}));
+const Groups = lazy(() => import('./components/Groups').catch(err => {
+  console.error('Error loading Groups:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Groups. Please refresh the page.</div> };
+}));
+const GroupChat = lazy(() => import('./components/GroupChat').catch(err => {
+  console.error('Error loading GroupChat:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Group Chat. Please refresh the page.</div> };
+}));
+const PrivateChat = lazy(() => import('./components/PrivateChat').catch(err => {
+  console.error('Error loading PrivateChat:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Private Chat. Please refresh the page.</div> };
+}));
+const Settings = lazy(() => import('./components/Settings').catch(err => {
+  console.error('Error loading Settings:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Settings. Please refresh the page.</div> };
+}));
 
 // Loading component for lazy-loaded routes
 const LoadingSpinner = () => (
@@ -86,40 +117,44 @@ function App() {
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>
-              {activeView === 'chat' && <div className="page-transition"><ChatArea setActiveView={setActiveView} /></div>}
-              {activeView === 'audit' && <div className="page-transition"><AdminDashboard /></div>}
-              {activeView === 'users' && <div className="page-transition"><UsersManagement /></div>}
-              {activeView === 'create-user' && <div className="page-transition"><CreateUser /></div>}
-              {activeView === 'private-chat' && <div className="page-transition"><PrivateChat /></div>}
-              {activeView === 'settings' && <div className="page-transition"><Settings setActiveView={setActiveView} /></div>}
+              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'audit' && <ErrorBoundary><div className="page-transition"><AdminDashboard /></div></ErrorBoundary>}
+              {activeView === 'users' && <ErrorBoundary><div className="page-transition"><UsersManagement /></div></ErrorBoundary>}
+              {activeView === 'create-user' && <ErrorBoundary><div className="page-transition"><CreateUser /></div></ErrorBoundary>}
+              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
+              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
             </>
           ) : (
             <>
-              {activeView === 'chat' && <div className="page-transition"><ChatArea setActiveView={setActiveView} /></div>}
-              {activeView === 'ai-help' && <div className="page-transition"><AIHelp /></div>}
-              {activeView === 'profile' && <div className="page-transition"><StudentProfile /></div>}
+              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'ai-help' && <ErrorBoundary><div className="page-transition"><AIHelp /></div></ErrorBoundary>}
+              {activeView === 'profile' && <ErrorBoundary><div className="page-transition"><StudentProfile /></div></ErrorBoundary>}
               {activeView === 'groups' && (
-                <div className="page-transition">
-                  <Groups 
-                    setActiveView={setActiveView} 
-                    setSelectedGroup={setSelectedGroup}
-                  />
-                </div>
+                <ErrorBoundary>
+                  <div className="page-transition">
+                    <Groups 
+                      setActiveView={setActiveView} 
+                      setSelectedGroup={setSelectedGroup}
+                    />
+                  </div>
+                </ErrorBoundary>
               )}
               {activeView === 'group-chat' && (
-                <div className="page-transition">
-                  <GroupChat 
-                    group={selectedGroup}
-                    setActiveView={setActiveView}
-                    onBack={() => {
-                      setActiveView('groups');
-                      setSelectedGroup(null);
-                    }}
-                  />
-                </div>
+                <ErrorBoundary>
+                  <div className="page-transition">
+                    <GroupChat 
+                      group={selectedGroup}
+                      setActiveView={setActiveView}
+                      onBack={() => {
+                        setActiveView('groups');
+                        setSelectedGroup(null);
+                      }}
+                    />
+                  </div>
+                </ErrorBoundary>
               )}
-              {activeView === 'private-chat' && <div className="page-transition"><PrivateChat /></div>}
-              {activeView === 'settings' && <div className="page-transition"><Settings setActiveView={setActiveView} /></div>}
+              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
+              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
             </>
           )}
         </Suspense>
