@@ -12,9 +12,17 @@ const Login = () => {
   const [mode, setMode] = useState('login'); // 'login' or 'register' or 'reset'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Validate student email format: must start with "s20" and contain "@sistc"
+  const validateStudentEmail = (email) => {
+    if (!email) return false;
+    const emailLower = email.toLowerCase();
+    return emailLower.startsWith('s20') && emailLower.includes('@sistc');
+  };
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
@@ -23,12 +31,27 @@ const Login = () => {
     
     try {
       if (mode === 'register') {
-        // Only allow student registration
+        // Only allow student registration with valid email format
         if (!name.trim()) {
           setError('Please enter your full name.');
           setLoading(false);
           return;
         }
+        
+        // Validate email format
+        if (!validateStudentEmail(email)) {
+          setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in). Only students can register.');
+          setLoading(false);
+          return;
+        }
+        
+        // Check email confirmation
+        if (email !== confirmEmail) {
+          setError('Email addresses do not match. Please confirm your email.');
+          setLoading(false);
+          return;
+        }
+        
         if (password.length < 6) {
           setError('Password must be at least 6 characters long.');
           setLoading(false);
@@ -36,6 +59,12 @@ const Login = () => {
         }
         await register(name.trim(), email, password, 'student');
       } else {
+        // Validate email format for login as well
+        if (!validateStudentEmail(email)) {
+          setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in). Only students can access this platform.');
+          setLoading(false);
+          return;
+        }
         await login(email, password);
       }
     } catch (err) {
@@ -69,6 +98,13 @@ const Login = () => {
     if (!email) {
       setError('Please enter your email address.');
       showError('Please enter your email address.');
+      return;
+    }
+
+    // Validate email format for password reset
+    if (!validateStudentEmail(email)) {
+      setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in).');
+      showError('Email must start with "s20" and contain "@sistc".');
       return;
     }
 
@@ -126,6 +162,7 @@ const Login = () => {
             onClick={() => {
               setMode('login');
               setError(null);
+              setConfirmEmail('');
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'login'
@@ -139,6 +176,7 @@ const Login = () => {
             onClick={() => {
               setMode('register');
               setError(null);
+              setConfirmEmail('');
             }}
             className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
               mode === 'register'
@@ -179,6 +217,7 @@ const Login = () => {
             )}
             <div>
               <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <Mail className="inline mr-2" size={16} />
                 Email
               </label>
               <div className="relative">
@@ -187,13 +226,47 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={mode === 'register' ? 's20xxxxx@sistc.edu.in' : 'Enter your email'}
                   required
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all"
                   disabled={loading}
                 />
               </div>
+              {mode === 'register' && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-1">
+                  Must start with "s20" and contain "@sistc"
+                </p>
+              )}
             </div>
+            {mode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                  <Mail className="inline mr-2" size={16} />
+                  Confirm Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
+                  <input
+                    type="email"
+                    value={confirmEmail}
+                    onChange={(e) => setConfirmEmail(e.target.value)}
+                    placeholder="Confirm your email"
+                    required
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                      confirmEmail && email !== confirmEmail
+                        ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-600 focus:border-indigo-600'
+                    }`}
+                    disabled={loading}
+                  />
+                </div>
+                {confirmEmail && email !== confirmEmail && (
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1 ml-1">
+                    Email addresses do not match
+                  </p>
+                )}
+              </div>
+            )}
 
             {mode !== 'reset' && (
               <div>
@@ -267,7 +340,7 @@ const Login = () => {
         
         {mode === 'register' && (
           <p className="text-center text-xs text-black dark:text-white opacity-60 mt-2">
-            Your registration email will be set as your student email
+            Only students with valid SISTC email addresses (starting with "s20" and containing "@sistc") can register.
           </p>
         )}
       </div>
