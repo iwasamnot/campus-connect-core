@@ -1263,17 +1263,19 @@ const ChatArea = ({ setActiveView }) => {
                   {message.attachment && (
                     <div className="mb-2">
                       {message.attachment.type?.startsWith('image/') ? (
-                        <div
+                        <button
+                          type="button"
                           onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
-                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
+                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 active:opacity-75 transition-opacity cursor-pointer touch-action-manipulation w-full text-left p-0"
+                          aria-label="View image"
                         >
                           <img
                             src={message.attachment.url}
                             alt={message.attachment.name}
-                            className="max-w-full max-h-64 object-contain"
+                            className="max-w-full max-h-64 object-contain pointer-events-none"
                             loading="lazy"
                           />
-                        </div>
+                        </button>
                       ) : (
                         <a
                           href={message.attachment.url}
@@ -1303,8 +1305,8 @@ const ChatArea = ({ setActiveView }) => {
                     />
                   )}
 
-                  {/* Action buttons */}
-                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  {/* Action buttons - always visible on touch, hover on desktop */}
+                  <div className="absolute -top-2 -right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-1 touch-action-none">
                     <button
                       onClick={async () => {
                         try {
