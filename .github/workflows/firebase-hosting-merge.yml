@@ -41,8 +41,15 @@ jobs:
       
       - name: Setup Firebase Service Account
         run: |
+          mkdir -p $HOME/.config
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC }}' > $HOME/firebase-service-account.json
           chmod 600 $HOME/firebase-service-account.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json" >> $GITHUB_ENV
+      
+      - name: Authenticate Firebase CLI
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
+          firebase use campus-connect-sistc --non-interactive || firebase projects:list
       
       - name: Deploy Firestore Rules
         run: firebase deploy --only firestore:rules --project campus-connect-sistc --non-interactive
