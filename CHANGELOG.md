@@ -639,9 +639,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **v4.0.3** (2025-12-31) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
 - **v4.0.2** (2025-12-31) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
-- **v4.0.1** (2024-12-27) - Message deletion fixes, build error fixes, comprehensive error handling improvements
-- **v4.0.0** (2024-12-27) - Advanced theme customization, message forwarding, enhanced chat preferences, keyboard shortcuts
-- **v3.0.0** (2024-12-27) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
+- **v4.0.1** (2025-12-31) - Message deletion fixes, build error fixes, comprehensive error handling improvements
+- **v4.0.0** (2025-12-31) - Advanced theme customization, message forwarding, enhanced chat preferences, keyboard shortcuts
+- **v3.0.0** (2025-12-31) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
 - **v2.0.1** (2024-12-27) - Private chat improvements, email search, message history preview, enhanced settings, and bug fixes
 - **v2.0.0** (2024-12-27) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
 - **v1.2.2** (2024-12-27) - Smooth animations throughout the app
