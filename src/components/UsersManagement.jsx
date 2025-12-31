@@ -287,7 +287,7 @@ const UsersManagement = () => {
       </div>
 
       {/* Users Table */}
-      <div className="flex-1 overflow-auto px-3 sm:px-6 py-4">
+      <div className="flex-1 overflow-auto overscroll-contain touch-pan-y px-3 sm:px-6 py-4">
         {filteredUsers.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -300,7 +300,7 @@ const UsersManagement = () => {
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto smooth-scroll">
+            <div className="hidden lg:block overflow-x-auto smooth-scroll overscroll-contain touch-pan-x">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
                 <tr>

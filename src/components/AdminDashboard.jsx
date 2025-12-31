@@ -762,7 +762,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 overflow-x-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 overflow-x-auto">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
