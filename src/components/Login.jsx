@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle } from 'lucide-react';
 import Logo from './Logo';
+import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
+import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
+import { handleError } from '../utils/errorHandler';
+import { keyboard } from '../utils/accessibility';
 
 const Login = () => {
   const { register, login, resetPassword, resendVerificationEmail } = useAuth();
@@ -34,30 +38,41 @@ const Login = () => {
     return emailLower.startsWith('admin') && emailLower.includes('@campusconnect');
   };
 
-  const handleEmailAuth = async (e) => {
+  const handleEmailAuth = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     
     try {
       if (mode === 'register') {
-        // Only allow student registration with valid email format
-        if (!name.trim()) {
-          setError('Please enter your full name.');
+        // Sanitize and validate name
+        const sanitizedName = sanitizeText(name);
+        const nameValidation = validateName(sanitizedName);
+        if (!nameValidation.isValid) {
+          setError(nameValidation.errors[0]);
           setLoading(false);
           return;
         }
         
-        // Validate email format
-        if (!validateStudentEmail(email)) {
+        // Sanitize and validate email
+        const sanitizedEmail = sanitizeEmail(email);
+        if (!validateStudentEmail(sanitizedEmail)) {
           setError('Invalid email address. Only students with valid email addresses can register.');
           setLoading(false);
           return;
         }
         
         // Check email confirmation
-        if (email !== confirmEmail) {
+        if (sanitizedEmail !== sanitizeEmail(confirmEmail)) {
           setError('Email addresses do not match. Please confirm your email.');
+          setLoading(false);
+          return;
+        }
+        
+        // Validate password
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+          setError(passwordValidation.errors[0]);
           setLoading(false);
           return;
         }
@@ -69,35 +84,27 @@ const Login = () => {
           return;
         }
         
-        if (password.length < 6) {
-          setError('Password must be at least 6 characters long.');
-          setLoading(false);
-          return;
-        }
-        await register(name.trim(), email, password, 'student');
-        // Show success message about email verification
+        await register(sanitizedName, sanitizedEmail, password, 'student');
         setEmailVerificationSent(true);
         success('Registration successful! Please check your email to verify your account before logging in.');
       } else {
-        // Validate email format for login - allow both student and admin emails
-        const isStudentEmail = validateStudentEmail(email);
-        const isAdminEmail = validateAdminEmail(email);
+        // Sanitize email
+        const sanitizedEmail = sanitizeEmail(email);
+        const isStudentEmail = validateStudentEmail(sanitizedEmail);
+        const isAdminEmail = validateAdminEmail(sanitizedEmail);
         
         if (!isStudentEmail && !isAdminEmail) {
           setError('Invalid email address. Please use a valid student or admin email.');
           setLoading(false);
           return;
         }
-        await login(email, password);
+        await login(sanitizedEmail, password);
       }
     } catch (err) {
-      let errorMessage = 'An error occurred. Please try again.';
-      if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already registered. Please login instead.';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address.';
-      } else if (err.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email. Please create an account first.';
+      const { message } = handleError(err, 'Login/Register', (errorMessage) => {
+        setError(errorMessage);
+      });
+      setError(message);
         // Check if it's an admin email format
         if (validateAdminEmail(email)) {
           errorMessage += ' Admin account needs to be created in Firebase Console. See ADMIN_SETUP.md for instructions.';
