@@ -254,7 +254,9 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
           paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `1rem`,
           paddingLeft: `calc(1.5rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(1.5rem + env(safe-area-inset-right, 0px))`
+          paddingRight: `calc(1.5rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 10
         }}
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

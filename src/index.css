@@ -406,6 +406,40 @@ input, textarea, [contenteditable] {
     position: relative;
     z-index: 10;
   }
+  
+  /* Ensure headers and titles are always visible */
+  header,
+  [class*="Header"],
+  h1, h2, h3, h4, h5, h6 {
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* Ensure sidebar content is visible */
+  nav,
+  .sidebar nav {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Fix for PWA viewport issues */
+  @media (display-mode: standalone) {
+    /* PWA specific fixes */
+    body {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    
+    /* Ensure headers are visible in PWA */
+    header,
+    [class*="Header"],
+    .bg-white.border-b,
+    .dark\\:bg-gray-800.border-b {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+  }
 
   /* Fix for iOS Safari - use fill-available but don't add padding */
   @supports (-webkit-touch-callout: none) {

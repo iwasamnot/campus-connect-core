@@ -856,14 +856,16 @@ const ChatArea = ({ setActiveView }) => {
           paddingBottom: `0.75rem`,
           paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
           paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
-          marginTop: '0'
+          marginTop: '0',
+          position: 'relative',
+          zIndex: 10
         }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             <Logo size="small" showText={false} />
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">Campus Chat</h2>
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">Campus Chat</h2>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Connect with your campus community</p>
             </div>
           </div>

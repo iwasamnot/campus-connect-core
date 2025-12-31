@@ -1086,7 +1086,9 @@ const PrivateChat = () => {
           paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `1rem`,
           paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 10
         }}
       >
         <div className="flex items-center gap-4">

@@ -655,7 +655,9 @@ Be concise, friendly, and professional. Format your responses with markdown for 
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
           paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 10
         }}
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">

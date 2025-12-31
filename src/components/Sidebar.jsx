@@ -37,11 +37,13 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        height: 'calc(100vh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))'
+        maxHeight: '100dvh',
+        height: '100dvh'
       }}
       >
-        {/* Mobile Close Button */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
+        {/* Mobile Header - Always visible on mobile */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0"
+             style={{ paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))` }}>
           <Logo size="small" showText={true} />
           <button
             onClick={onClose}
@@ -52,7 +54,9 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
           </button>
         </div>
         
-        <div className="hidden md:block p-6 border-b border-gray-800 flex-shrink-0">
+        {/* Desktop Header - Always visible on desktop */}
+        <div className="hidden md:block p-6 border-b border-gray-800 flex-shrink-0"
+             style={{ paddingTop: `calc(1.5rem + env(safe-area-inset-top, 0px))` }}>
           <Logo size="small" showText={true} className="mb-2" />
           <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
             {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
