@@ -170,14 +170,14 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen h-[100dvh] overflow-hidden">
+    <div className="flex h-screen h-[100dvh] overflow-hidden w-full">
       <Sidebar 
         activeView={activeView} 
         setActiveView={setActiveView}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      <div className="flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden relative w-full">
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(true)}
