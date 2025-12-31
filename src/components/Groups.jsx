@@ -286,7 +286,15 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 5
+        }}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <input
@@ -300,7 +308,14 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       </div>
 
       {/* Groups List */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4">
+      <div 
+        className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch"
+        style={{
+          paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`,
+          paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`
+        }}
+      >
         {filteredGroups.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center animate-fade-in">
@@ -371,8 +386,17 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
       {/* Create Group Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
+          style={{
+            paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
+            paddingBottom: `calc(1rem + env(safe-area-inset-bottom, 0px))`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          }}
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">Create New Group</h3>
               <button
@@ -444,8 +468,23 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
       {/* Browse Groups Modal */}
       {showBrowseModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowBrowseModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
+          style={{
+            paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
+            paddingBottom: `calc(1rem + env(safe-area-inset-bottom, 0px))`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          }}
+          onClick={() => setShowBrowseModal(false)}
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full flex flex-col"
+            style={{
+              maxHeight: `calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2rem)`
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">Browse Groups</h3>
               <button
@@ -471,7 +510,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             </div>
 
             {/* Groups List */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4 overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch">
               {allGroups.length === 0 ? (
                 <div className="text-center py-8">
                   <Loader className="animate-spin mx-auto text-indigo-600 dark:text-indigo-400 mb-4" size={48} />
