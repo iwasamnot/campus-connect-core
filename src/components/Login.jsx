@@ -24,19 +24,14 @@ const Login = () => {
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
 
-  // Validate student email format: must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
-  const validateStudentEmail = (email) => {
-    if (!email) return false;
-    const emailLower = email.toLowerCase().trim(); // Trim whitespace
-    return emailLower.startsWith('s20') && (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
-  };
+  // Memoized validation functions using imported utilities
+  const validateStudentEmail = useCallback((email) => {
+    return isValidStudentEmail(email);
+  }, []);
 
-  // Validate admin email format: must start with "admin" and contain "@campusconnect"
-  const validateAdminEmail = (email) => {
-    if (!email) return false;
-    const emailLower = email.toLowerCase().trim(); // Trim whitespace
-    return emailLower.startsWith('admin') && emailLower.includes('@campusconnect');
-  };
+  const validateAdminEmail = useCallback((email) => {
+    return isValidAdminEmail(email);
+  }, []);
 
   const handleEmailAuth = useCallback(async (e) => {
     e.preventDefault();
