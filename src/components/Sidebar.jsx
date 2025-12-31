@@ -33,7 +33,13 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
         z-50
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
+      `}
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        height: 'calc(100vh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))'
+      }}
+      >
         {/* Mobile Close Button */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
           <Logo size="small" showText={true} />

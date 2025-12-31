@@ -182,6 +182,10 @@ function App() {
         <button
           onClick={() => setSidebarOpen(true)}
           className="md:hidden fixed top-4 left-4 z-30 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 hover:shadow-xl"
+          style={{
+            top: `calc(1rem + env(safe-area-inset-top, 0px))`,
+            left: `calc(1rem + env(safe-area-inset-left, 0px))`
+          }}
           aria-label="Open menu"
         >
           <Menu size={24} />
