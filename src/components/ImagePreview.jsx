@@ -162,7 +162,7 @@ const ImagePreview = ({ imageUrl, imageName, onClose }) => {
       }}
       style={{
         paddingTop: `env(safe-area-inset-top, 0px)`,
-        paddingBottom: `env(safe-area-inset-bottom, 0px) * 0.5`,
+        paddingBottom: `calc(env(safe-area-inset-bottom, 0px) * 0.5)`,
         paddingLeft: `env(safe-area-inset-left, 0px)`,
         paddingRight: `env(safe-area-inset-right, 0px)`
       }}
