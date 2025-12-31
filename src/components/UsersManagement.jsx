@@ -5,7 +5,7 @@ import { db, storage } from '../firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { isAdminRole } from '../utils/helpers';
-import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText, Upload, CheckCircle, XCircle, Shield } from 'lucide-react';
+import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText, Upload, CheckCircle, XCircle, Shield, MoreVertical } from 'lucide-react';
 
 const UsersManagement = () => {
   const { user: currentUser } = useAuth();
@@ -19,6 +19,7 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [verifying, setVerifying] = useState(null);
+  const [openActionMenu, setOpenActionMenu] = useState(null);
 
   // Fetch all users (limited to prevent quota exhaustion)
   useEffect(() => {
@@ -257,11 +258,11 @@ const UsersManagement = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Users Management</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Users Management</h2>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               Manage, edit, and delete user accounts
             </p>
           </div>
@@ -269,18 +270,18 @@ const UsersManagement = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4">
         <input
           type="text"
           placeholder="Search by email, phone, or user ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
         />
       </div>
 
       {/* Users Table */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-auto px-3 sm:px-6 py-4">
         {filteredUsers.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -292,34 +293,36 @@ const UsersManagement = () => {
           </div>
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto smooth-scroll">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
                     User ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Login Email
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                     Student Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
                     Personal Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Phone Number
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                    Phone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Created At
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                    Created
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Email Verified
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Verified
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider sticky right-0 bg-gray-50 dark:bg-gray-700">
                     Actions
                   </th>
                 </tr>
@@ -327,10 +330,10 @@ const UsersManagement = () => {
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700 dark:text-gray-300">
-                      {user.id.substring(0, 12)}...
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-mono text-gray-700 dark:text-gray-300 hidden md:table-cell">
+                      {user.id.substring(0, 8)}...
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                         isAdminRole(user.role)
                           ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
@@ -339,78 +342,73 @@ const UsersManagement = () => {
                         {user.role || 'N/A'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      <div className="flex items-center gap-1">
-                        <Mail size={14} className="text-gray-400 dark:text-gray-500" />
-                        {user.email || 'N/A'}
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                      <div className="flex items-center gap-1 max-w-[200px] sm:max-w-none truncate">
+                        <Mail size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                        <span className="truncate">{user.email || 'N/A'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">
                       {user.studentEmail ? (
-                        <div className="flex items-center gap-1">
-                          <Mail size={14} className="text-gray-400 dark:text-gray-500" />
-                          {user.studentEmail}
+                        <div className="flex items-center gap-1 max-w-[200px] truncate">
+                          <Mail size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                          <span className="truncate">{user.studentEmail}</span>
                         </div>
                       ) : (
                         <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden xl:table-cell">
                       {user.personalEmail ? (
-                        <div className="flex items-center gap-1">
-                          <Mail size={14} className="text-gray-400 dark:text-gray-500" />
-                          {user.personalEmail}
+                        <div className="flex items-center gap-1 max-w-[200px] truncate">
+                          <Mail size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                          <span className="truncate">{user.personalEmail}</span>
                         </div>
                       ) : (
                         <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden xl:table-cell">
                       {user.phoneNumber ? (
                         <div className="flex items-center gap-1">
-                          <Phone size={14} className="text-gray-400 dark:text-gray-500" />
+                          <Phone size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
                           {user.phoneNumber}
                         </div>
                       ) : (
                         <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
                       <div className="flex items-center gap-1">
-                        <Calendar size={14} className="text-gray-400 dark:text-gray-500" />
-                        {formatDate(user.createdAt)}
+                        <Calendar size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                        <span className="truncate">{formatDate(user.createdAt)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                         {user.role === 'admin' ? (
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                            <Shield size={12} />
-                            Auto
+                          <span className="flex items-center gap-1 px-1.5 sm:px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            <Shield size={10} className="sm:w-3 sm:h-3" />
+                            <span className="hidden sm:inline">Auto</span>
                           </span>
                         ) : (
                           <>
-                            <span className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${
+                            <span className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 text-xs font-semibold rounded-full ${
                               user.emailVerified
                                 ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                                 : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                             }`}>
                               {user.emailVerified ? (
-                                <>
-                                  <CheckCircle size={12} />
-                                  Verified
-                                </>
+                                <CheckCircle size={10} className="sm:w-3 sm:h-3" />
                               ) : (
-                                <>
-                                  <XCircle size={12} />
-                                  Not Verified
-                                </>
+                                <XCircle size={10} className="sm:w-3 sm:h-3" />
                               )}
+                              <span className="hidden sm:inline">{user.emailVerified ? 'Verified' : 'Not Verified'}</span>
                             </span>
                             <button
                               onClick={() => handleVerifyEmail(user.id, user.email, user.emailVerified)}
                               disabled={verifying === user.id}
-                              className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                 user.emailVerified
                                   ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
                                   : 'bg-green-600 hover:bg-green-700 text-white'
@@ -420,36 +418,31 @@ const UsersManagement = () => {
                               {verifying === user.id ? (
                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                               ) : user.emailVerified ? (
-                                <>
-                                  <XCircle size={12} />
-                                  Unverify
-                                </>
+                                <XCircle size={10} className="sm:w-3 sm:h-3" />
                               ) : (
-                                <>
-                                  <CheckCircle size={12} />
-                                  Verify
-                                </>
+                                <CheckCircle size={10} className="sm:w-3 sm:h-3" />
                               )}
+                              <span className="hidden sm:inline">{user.emailVerified ? 'Unverify' : 'Verify'}</span>
                             </button>
                           </>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm sticky right-0 bg-white dark:bg-gray-800 z-10">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <button
                           onClick={() => handleEditUser(user)}
                           disabled={user.id === currentUser?.uid}
-                          className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                          className="flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 sm:py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs min-w-[60px] sm:min-w-auto"
                           title={user.id === currentUser?.uid ? 'Cannot edit your own account' : 'Edit user profile'}
                         >
-                          <Edit2 size={14} />
-                          <span>Edit</span>
+                          <Edit2 size={14} className="sm:w-3.5 sm:h-3.5" />
+                          <span className="hidden sm:inline">Edit</span>
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.id, user.email)}
                           disabled={deleting === user.id || isAdminRole(user.role) || user.id === currentUser?.uid}
-                          className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                          className="flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 sm:py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs min-w-[60px] sm:min-w-auto"
                           title={
                             user.id === currentUser?.uid 
                               ? 'Cannot delete your own account' 
@@ -458,8 +451,8 @@ const UsersManagement = () => {
                               : 'Delete user'
                           }
                         >
-                          <Trash2 size={14} />
-                          <span>Delete</span>
+                          <Trash2 size={14} className="sm:w-3.5 sm:h-3.5" />
+                          <span className="hidden sm:inline">Delete</span>
                         </button>
                       </div>
                     </td>
@@ -467,15 +460,127 @@ const UsersManagement = () => {
                 ))}
               </tbody>
             </table>
+            </div>
+
+            {/* Mobile/Tablet Card View */}
+            <div className="lg:hidden space-y-3 p-4">
+              {filteredUsers.map((user) => (
+                <div key={user.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          isAdminRole(user.role)
+                            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
+                            : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
+                        }`}>
+                          {user.role || 'N/A'}
+                        </span>
+                        {user.role === 'admin' ? (
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            <Shield size={12} />
+                            Auto Verified
+                          </span>
+                        ) : (
+                          <span className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${
+                            user.emailVerified
+                              ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                              : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                          }`}>
+                            {user.emailVerified ? (
+                              <>
+                                <CheckCircle size={12} />
+                                Verified
+                              </>
+                            ) : (
+                              <>
+                                <XCircle size={12} />
+                                Not Verified
+                              </>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <Mail size={14} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                          <span className="truncate">{user.email || 'N/A'}</span>
+                        </div>
+                        {user.studentEmail && (
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-xs">
+                            <Mail size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                            <span className="truncate">Student: {user.studentEmail}</span>
+                          </div>
+                        )}
+                        {user.phoneNumber && (
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-xs">
+                            <Phone size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                            {user.phoneNumber}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs">
+                          <Calendar size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                          {formatDate(user.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    {user.role !== 'admin' && (
+                      <button
+                        onClick={() => handleVerifyEmail(user.id, user.email, user.emailVerified)}
+                        disabled={verifying === user.id}
+                        className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 min-w-[100px] justify-center ${
+                          user.emailVerified
+                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                        }`}
+                      >
+                        {verifying === user.id ? (
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                        ) : user.emailVerified ? (
+                          <>
+                            <XCircle size={14} />
+                            Unverify
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle size={14} />
+                            Verify
+                          </>
+                        )}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleEditUser(user)}
+                      disabled={user.id === currentUser?.uid}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs flex-1 min-w-[100px] justify-center"
+                    >
+                      <Edit2 size={14} />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id, user.email)}
+                      disabled={deleting === user.id || isAdminRole(user.role) || user.id === currentUser?.uid}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs flex-1 min-w-[100px] justify-center"
+                    >
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       {/* Info Banner */}
-      <div className="bg-indigo-50 dark:bg-indigo-900/20 border-t border-indigo-200 dark:border-indigo-800 px-6 py-3">
-        <div className="flex items-center gap-2 text-sm text-indigo-800 dark:text-indigo-300">
-          <AlertCircle size={16} />
-          <span>Total Users: {users.length} | Showing: {filteredUsers.length}</span>
+      <div className="bg-indigo-50 dark:bg-indigo-900/20 border-t border-indigo-200 dark:border-indigo-800 px-4 sm:px-6 py-2 sm:py-3">
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-indigo-800 dark:text-indigo-300">
+          <AlertCircle size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
+          <span className="truncate">Total: {users.length} | Showing: {filteredUsers.length}</span>
         </div>
       </div>
 
