@@ -339,8 +339,6 @@ input, textarea, [contenteditable] {
   .fixed.w-full {
     width: 100vw !important;
     max-width: 100vw !important;
-    padding-top: var(--safe-area-inset-top);
-    padding-bottom: var(--safe-area-inset-bottom);
   }
 
   /* Fixed elements respect safe areas - but don't add padding to all fixed elements */
@@ -363,31 +361,23 @@ input, textarea, [contenteditable] {
     padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
   }
 
-  /* Fix for iOS Safari */
+  /* Fix for iOS Safari - use fill-available but don't add padding */
   @supports (-webkit-touch-callout: none) {
     html {
       height: -webkit-fill-available;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
     }
     
     body {
       min-height: -webkit-fill-available;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
     }
     
     #root {
       min-height: -webkit-fill-available;
       height: -webkit-fill-available;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
     }
     
     .h-screen {
       height: -webkit-fill-available;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
     }
   }
 }
