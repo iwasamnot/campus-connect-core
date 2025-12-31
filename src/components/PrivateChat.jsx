@@ -1148,7 +1148,7 @@ const PrivateChat = () => {
                     <img
                       src={profilePicture}
                       alt={displayName}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
@@ -1156,12 +1156,12 @@ const PrivateChat = () => {
                     />
                   ) : null}
                   <div 
-                    className={`w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm md:text-base font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
                   >
                     {displayName[0].toUpperCase()}
                   </div>
                   {isUserOnline(onlineUsers[selectedUser.id]) && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
                   )}
                 </>
               );
@@ -1172,7 +1172,7 @@ const PrivateChat = () => {
               onClick={() => setSelectedUserId(selectedUser.id)}
               className="text-left w-full"
             >
-              <h2 className="font-semibold text-gray-900 dark:text-white truncate">
+              <h2 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white truncate">
                 {(() => {
                   const userProfile = userProfiles[selectedUser.id] || selectedUser;
                   return userNames[selectedUser.id] || 
@@ -1187,7 +1187,7 @@ const PrivateChat = () => {
                          `User ${selectedUser.id.substring(0, 8)}`;
                 })()}
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {isUserOnline(onlineUsers[selectedUser.id]) ? 'Online' : 
                  onlineUsers[selectedUser.id]?.lastSeen ? 
                  `Last seen ${formatTime(onlineUsers[selectedUser.id].lastSeen)}` : 
