@@ -139,6 +139,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   useEffect(() => {
     if (!group?.id) return;
 
+    let unsubscribe = null;
+    let fallbackUnsubscribe = null;
+    let useFallback = false;
+
     // Try the indexed query first
     const q = query(
       collection(db, 'groupMessages'),
@@ -147,7 +151,43 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       limit(50) // Reduced to 50 messages for Spark free plan (was 100)
     );
 
-    const unsubscribe = onSnapshot(
+    // Fallback query function
+    const setupFallbackQuery = () => {
+      if (useFallback) return; // Prevent multiple fallback setups
+      useFallback = true;
+      
+      console.warn('GroupChat: Using fallback query (index building or missing).');
+      const fallbackQuery = query(
+        collection(db, 'groupMessages'),
+        where('groupId', '==', group.id),
+        limit(100) // Get more messages since we'll filter client-side
+      );
+      
+      fallbackUnsubscribe = onSnapshot(
+        fallbackQuery,
+        (snapshot) => {
+          const messagesData = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }))
+            .filter(msg => msg.timestamp) // Only messages with timestamps
+            .sort((a, b) => {
+              const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
+              const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
+              return aTime - bTime;
+            })
+            .slice(0, 50); // Limit to 50 most recent
+          setMessages(messagesData);
+        },
+        (fallbackError) => {
+          console.error('GroupChat: Fallback query also failed:', fallbackError);
+          showError('Failed to load messages. Please refresh the page.');
+        }
+      );
+    };
+
+    unsubscribe = onSnapshot(
       q,
       (snapshot) => {
         const messagesData = snapshot.docs.map(doc => ({
@@ -159,38 +199,18 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       (error) => {
         console.error('GroupChat: Error fetching messages:', error);
         if (error.code === 'failed-precondition') {
-          console.warn('GroupChat: Firestore index missing. Using fallback query.');
-          // Fallback: query without orderBy and sort client-side
-          const fallbackQuery = query(
-            collection(db, 'groupMessages'),
-            where('groupId', '==', group.id),
-            limit(100) // Get more messages since we'll filter client-side
-          );
-          
-          const fallbackUnsubscribe = onSnapshot(fallbackQuery, (snapshot) => {
-            const messagesData = snapshot.docs
-              .map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }))
-              .filter(msg => msg.timestamp) // Only messages with timestamps
-              .sort((a, b) => {
-                const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
-                const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
-                return aTime - bTime;
-              })
-              .slice(0, 50); // Limit to 50 most recent
-            setMessages(messagesData);
-          });
-          
-          return () => fallbackUnsubscribe();
+          // Index is missing or still building - use fallback
+          setupFallbackQuery();
         } else {
           showError('Failed to load messages. Please refresh the page.');
         }
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+      if (fallbackUnsubscribe) fallbackUnsubscribe();
+    };
   }, [group?.id, showError]); // Include showError in dependencies
 
   // Mark messages as read (separate effect to prevent infinite loops)
