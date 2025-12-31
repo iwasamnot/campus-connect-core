@@ -77,15 +77,15 @@
 }
 
 .dark.theme-minimal {
-  --minimal-border: 1px solid rgba(255, 255, 255, 0.06);
-  --minimal-border-dark: 1px solid rgba(255, 255, 255, 0.1);
+  --minimal-border: 1px solid rgba(255, 255, 255, 0.08);
+  --minimal-border-dark: 1px solid rgba(255, 255, 255, 0.12);
   --minimal-shadow: none;
   --minimal-shadow-lg: none;
-  --minimal-accent: #e2e8f0; /* slate-200 - lighter for dark mode */
-  --minimal-accent-hover: #f1f5f9; /* slate-100 */
+  --minimal-accent: #cbd5e1; /* slate-300 - good contrast */
+  --minimal-accent-hover: #e2e8f0; /* slate-200 */
   --minimal-bg: #0f172a; /* slate-900 */
   --minimal-bg-secondary: #1e293b; /* slate-800 */
-  --minimal-text: #f8fafc; /* slate-50 - brighter text */
+  --minimal-text: #f8fafc; /* slate-50 - bright text */
   --minimal-text-secondary: #94a3b8; /* slate-400 */
 }
 
@@ -216,12 +216,14 @@
 }
 
 /* Minimal theme - cleaner backgrounds */
-.theme-minimal .bg-white {
+.theme-minimal .bg-white,
+.theme-minimal .bg-gray-50 {
   background-color: var(--minimal-bg) !important;
 }
 
 .dark.theme-minimal .bg-gray-800,
-.dark.theme-minimal .bg-gray-900 {
+.dark.theme-minimal .bg-gray-900,
+.dark.theme-minimal .bg-white {
   background-color: var(--minimal-bg) !important;
 }
 
@@ -229,12 +231,35 @@
   background-color: var(--minimal-bg-secondary) !important;
 }
 
-.dark.theme-minimal .bg-gray-900 {
+.dark.theme-minimal .bg-gray-900,
+.dark.theme-minimal .bg-gray-950 {
   background-color: var(--minimal-bg) !important;
 }
 
-.dark.theme-minimal .bg-gray-800 {
+.dark.theme-minimal .bg-gray-800,
+.dark.theme-minimal .bg-gray-700 {
   background-color: var(--minimal-bg-secondary) !important;
+}
+
+/* Minimal theme - text colors */
+.dark.theme-minimal .text-white,
+.dark.theme-minimal .text-gray-100,
+.dark.theme-minimal .text-gray-50 {
+  color: var(--minimal-text) !important;
+}
+
+.dark.theme-minimal .text-gray-400,
+.dark.theme-minimal .text-gray-500 {
+  color: var(--minimal-text-secondary) !important;
+}
+
+.theme-minimal .text-gray-900 {
+  color: var(--minimal-text) !important;
+}
+
+.theme-minimal .text-gray-600,
+.theme-minimal .text-gray-500 {
+  color: var(--minimal-text-secondary) !important;
 }
 
 /* Responsive improvements */
@@ -406,12 +431,29 @@ input:focus, textarea:focus, select:focus {
   background: #475569;
 }
 
+.theme-minimal ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+.dark.theme-minimal ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+
+.theme-minimal ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark.theme-minimal ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 * {
@@ -428,10 +470,19 @@ html {
   width: 100%;
   overscroll-behavior: none;
   background-color: #ffffff;
+  transition: background-color 0.1s ease;
 }
 
 .dark html {
   background-color: #111827;
+}
+
+.theme-minimal html {
+  background-color: var(--minimal-bg);
+}
+
+.dark.theme-minimal html {
+  background-color: var(--minimal-bg);
 }
 
 body {
@@ -440,7 +491,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.1s ease, color 0.1s ease;
   font-size: var(--base-font-size);
   height: 100%;
   width: 100%;
@@ -453,6 +504,14 @@ body {
 
 .dark body {
   background-color: #111827;
+}
+
+.theme-minimal body {
+  background-color: var(--minimal-bg);
+}
+
+.dark.theme-minimal body {
+  background-color: var(--minimal-bg);
 }
 
 /* Allow text selection in inputs and textareas */
@@ -471,10 +530,19 @@ input, textarea, [contenteditable] {
   overflow: hidden;
   position: relative;
   background-color: #ffffff;
+  transition: background-color 0.1s ease;
 }
 
 .dark #root {
   background-color: #111827;
+}
+
+.theme-minimal #root {
+  background-color: var(--minimal-bg);
+}
+
+.dark.theme-minimal #root {
+  background-color: var(--minimal-bg);
 }
 
 /* Ensure dark mode works */
