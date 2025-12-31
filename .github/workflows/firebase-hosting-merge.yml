@@ -49,7 +49,7 @@ jobs:
         continue-on-error: true
       
       - name: Deploy Storage Rules
-        run: firebase deploy --only storage:rules --project campus-connect-sistc --non-interactive || echo "Storage rules deployment failed - Storage may not be enabled. See ENABLE_STORAGE.md for setup instructions."
+        run: firebase deploy --only storage --project campus-connect-sistc --non-interactive || echo "Storage rules deployment failed - Storage may not be enabled. See ENABLE_STORAGE.md for setup instructions."
         continue-on-error: true
       
       - name: Deploy to Firebase Hosting
