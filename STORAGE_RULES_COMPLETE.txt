@@ -1,0 +1,123 @@
+# Complete Firebase Storage Rules
+
+Copy and paste these rules into your `storage.rules` file:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role != null &&
+        (firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin1');
+    }
+    
+    // Messages folder - STRICT LIMITS to stay within free tier
+    match /messages/{fileName} {
+      // Allow authenticated users to read any message file
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 5MB per file (reduced from 10MB to save storage)
+      // Free tier: 5GB total storage, 1GB/day downloads, 20,000 operations/day
+      allow write: if isAuthenticated() && 
+        request.resource.size < 5 * 1024 * 1024; // 5MB max
+      
+      // Allow admins to delete files
+      allow delete: if isAdmin();
+    }
+    
+    // Profile pictures folder - STRICT LIMITS
+    match /profile-pictures/{userId}/{fileName} {
+      // Allow authenticated users to read any profile picture
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 2MB for profile pictures (reduced from 5MB)
+      // Users should compress images before uploading
+      allow write: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.size < 2 * 1024 * 1024; // 2MB max
+      
+      // Allow users to delete their own profile picture, or admins to delete any
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+    
+    // Group files folder - STRICT LIMITS
+    match /group-files/{groupId}/{fileName} {
+      // Allow authenticated users to read group files
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 5MB per file (reduced from 10MB)
+      allow write: if isAuthenticated() && 
+        request.resource.size < 5 * 1024 * 1024; // 5MB max
+      
+      // Allow admins to delete group files
+      allow delete: if isAdmin();
+    }
+    
+    // Private chat files folder - STRICT LIMITS
+    match /private-chat-files/{chatId}/{fileName} {
+      // Allow authenticated users to read private chat files
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 5MB per file (reduced from 10MB)
+      allow write: if isAuthenticated() && 
+        request.resource.size < 5 * 1024 * 1024; // 5MB max
+      
+      // Allow admins to delete private chat files
+      allow delete: if isAdmin();
+    }
+  }
+}
+```
+
+## How to Deploy These Rules
+
+### Method 1: Automatic (GitHub Actions)
+- Rules are automatically deployed when you push to GitHub
+- Just commit and push - GitHub Actions will deploy them
+
+### Method 2: Manual Deployment
+1. Save the rules above to `storage.rules` file
+2. Run: `firebase deploy --only storage:rules --project campus-connect-sistc`
+
+### Method 3: Firebase Console
+1. Go to [Firebase Console Storage](https://console.firebase.google.com/project/campus-connect-sistc/storage)
+2. Click on **Rules** tab
+3. Paste the rules above
+4. Click **Publish**
+
+## Rules Summary
+
+### File Size Limits:
+- **Messages**: 5MB max
+- **Profile Pictures**: 2MB max  
+- **Group Files**: 5MB max
+- **Private Chat Files**: 5MB max
+
+### Permissions:
+- **Read**: All authenticated users can read files
+- **Write**: Authenticated users can upload (within size limits)
+- **Delete**: 
+  - Users can delete their own profile pictures
+  - Admins can delete any file
+
+### Security:
+- All operations require authentication
+- Users can only upload to their own profile picture folder
+- Admin check uses Firestore to verify role
+
+## Testing Rules
+
+After deploying, test by:
+1. Try uploading a file > 5MB - should be rejected
+2. Try uploading a profile picture > 2MB - should be rejected
+3. Try uploading a valid file < 5MB - should work
+4. Try uploading without authentication - should be rejected
+

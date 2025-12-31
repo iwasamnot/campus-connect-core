@@ -37,9 +37,9 @@ This won't stop charges automatically, but you'll know immediately:
 
 ## Method 2: Budget Actions (Automatic Disable)
 
-This will automatically disable billing when $1 is reached:
+**Note**: The "Add Action" option may not be available in all Google Cloud Console interfaces. If you don't see it, use Method 3 or 4 instead.
 
-### Setup Steps:
+### If "Add Action" is Available:
 
 1. Create budget (follow Method 1 above)
 2. After creating, click **Edit** on your budget
@@ -52,6 +52,13 @@ This will automatically disable billing when $1 is reached:
 **Result**: When you hit $1, billing will be automatically disabled for the project.
 
 **⚠️ Warning**: This will disable ALL paid services, not just Storage. Your app may stop working if it relies on paid features.
+
+### If "Add Action" is NOT Available:
+
+The Actions feature may not be enabled for your account. In this case:
+- Use **Method 3** (Manual Monitoring) - Check daily when you get alerts
+- Use **Method 4** (Close Billing Account) - Nuclear option if needed
+- Set up multiple email alerts (50%, 75%, 90%, 100%) so you know immediately
 
 ## Method 3: Manual Cutoff (Safest)
 
@@ -94,25 +101,34 @@ This completely disables billing and all paid services:
 
 ## Recommended Setup (Best Protection)
 
-Combine multiple methods for maximum protection:
+Since "Add Action" may not be available, use this approach:
 
-### Step 1: Set Up Budget Alerts
+### Step 1: Set Up Budget Alerts (MOST IMPORTANT)
 - Create $1 budget with alerts at 50%, 75%, 90%, 100%
 - Get email notifications immediately
+- Check email daily when you get alerts
 
-### Step 2: Set Up Budget Action
-- Add action to disable billing at 100% ($1)
-- Automatic protection if you miss the alerts
+### Step 2: Set Up Multiple Email Alerts
+- Add alerts at: 25%, 50%, 75%, 90%, 95%, 100%
+- More alerts = more chances to catch it early
+- Use different email addresses if possible
 
-### Step 3: Daily Monitoring
-- Check usage daily when you get alerts
-- Delete files if needed
+### Step 3: Daily Monitoring (When Alerted)
+- When you get an alert, immediately check usage
+- Go to: https://console.firebase.google.com/project/campus-connect-sistc/settings/usage
+- Delete old files if needed
 - Take action before hitting $1
 
-### Step 4: Emergency Plan
-- If you hit $1, immediately close billing account
-- Or manually disable Storage
+### Step 4: Emergency Plan (If You Hit $1)
+- **Immediately** go to: https://console.cloud.google.com/billing
+- Click **Close billing account** (stops all charges)
+- Or disable Storage: https://console.firebase.google.com/project/campus-connect-sistc/storage
 - Prevent further charges
+
+### Step 5: Manual Check Routine
+- Check usage **daily** if you're getting alerts
+- Check usage **weekly** if no alerts
+- Bookmark the usage page for quick access
 
 ## What Happens at Each Threshold
 
