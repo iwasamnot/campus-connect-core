@@ -104,29 +104,20 @@ const Login = () => {
       const { message } = handleError(err, 'Login/Register', (errorMessage) => {
         setError(errorMessage);
       });
-      setError(message);
-        // Check if it's an admin email format
+      
+      // Special handling for email verification
+      if (err.code === 'auth/email-not-verified' || err.code === 'EMAIL_NOT_VERIFIED') {
         if (validateAdminEmail(email)) {
-          errorMessage += ' Admin account needs to be created in Firebase Console. See ADMIN_SETUP.md for instructions.';
-        }
-      } else if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password.';
-      } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'Password is too weak.';
-      } else if (err.code === 'auth/network-request-failed') {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else if (err.code === 'auth/email-not-verified') {
-        // Don't show email verification error for admin emails
-        if (validateAdminEmail(email)) {
-          errorMessage = 'Admin login error. Please contact support if this issue persists.';
+          setError('Admin login error. Please contact support if this issue persists.');
         } else {
-          errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification email.';
+          setError('Please verify your email address before logging in. Check your inbox for the verification email.');
           setEmailVerificationSent(true);
         }
+      } else {
+        setError(message);
       }
-      setError(errorMessage);
-      showError(errorMessage);
-      console.error('Login error:', err);
+      
+      showError(message);
     } finally {
       setLoading(false);
     }

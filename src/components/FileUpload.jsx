@@ -1,7 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Upload, X, Image, File, Loader } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebaseConfig';
+import { sanitizeFileName } from '../utils/sanitize';
+import { validateFile } from '../utils/validation';
+import { handleError } from '../utils/errorHandler';
 
 // STRICT LIMITS to stay within Firebase free tier (5GB storage, 1GB/day downloads)
 // Max file size: 5MB (reduced from 10MB to conserve storage)
@@ -11,32 +14,20 @@ const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handleFileSelect = async (e) => {
+  const handleFileSelect = useCallback(async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // STRICT VALIDATION: File size limit to stay within free tier
-    if (file.size > maxSize) {
-      setError(`File size exceeds ${(maxSize / (1024 * 1024)).toFixed(0)}MB limit. Please compress or use a smaller file.`);
+    // Validate file using utility
+    const validation = validateFile(file, maxSize, allowedTypes);
+    if (!validation.isValid) {
+      setError(validation.errors[0]);
       return;
     }
     
     // Additional check: Warn if file is very large (close to limit)
     if (file.size > maxSize * 0.9) {
       console.warn('File is close to size limit:', file.size, 'bytes');
-    }
-
-    // Validate file type
-    const isValidType = allowedTypes.some(type => {
-      if (type.endsWith('/*')) {
-        return file.type.startsWith(type.slice(0, -1));
-      }
-      return file.type === type;
-    });
-
-    if (!isValidType) {
-      setError('File type not allowed');
-      return;
     }
 
     setError(null);
@@ -56,7 +47,7 @@ const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['
 
       // Upload to Firebase Storage
       const timestamp = Date.now();
-      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const sanitizedFileName = sanitizeFileName(file.name);
       const fileName = `${timestamp}_${sanitizedFileName}`;
       const storageRef = ref(storage, `messages/${fileName}`);
       
@@ -85,26 +76,14 @@ const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['
         fileInputRef.current.value = '';
       }
     } catch (err) {
-      console.error('Error uploading file:', err);
-      console.error('Error code:', err.code);
-      console.error('Error message:', err.message);
-      
-      let errorMessage = 'Failed to upload file. Please try again.';
-      if (err.code === 'storage/unauthorized') {
-        errorMessage = 'You do not have permission to upload files. Please contact support.';
-      } else if (err.code === 'storage/canceled') {
-        errorMessage = 'Upload was canceled.';
-      } else if (err.code === 'storage/unknown') {
-        errorMessage = 'An unknown error occurred. Please check your connection and try again.';
-      } else if (err.message) {
-        errorMessage = `Upload failed: ${err.message}`;
-      }
-      
-      setError(errorMessage);
+      const { message } = handleError(err, 'FileUpload', (errorMessage) => {
+        setError(errorMessage);
+      });
+      setError(message);
     } finally {
       setUploading(false);
     }
-  };
+  }, [maxSize, allowedTypes, onFileUpload]);
 
   return (
     <div className="relative">
@@ -140,6 +119,7 @@ const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['
           <img src={preview} alt="Preview" className="max-w-xs max-h-48 rounded" />
           <button
             onClick={() => setPreview(null)}
+            aria-label="Remove preview"
             className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
           >
             <X size={14} />
