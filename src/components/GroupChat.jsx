@@ -921,7 +921,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       <div 
         className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
         style={{
-          paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px) + 0.25rem)`,
+          paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
           paddingTop: `0.75rem`,
           paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
           paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`

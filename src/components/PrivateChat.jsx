@@ -1444,7 +1444,7 @@ const PrivateChat = () => {
       <div 
         className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 md:p-6"
         style={{
-          paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px) + 0.25rem)`,
+          paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
           paddingTop: `1rem`,
           paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
           paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
