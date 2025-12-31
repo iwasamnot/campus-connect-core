@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { db } from '../firebaseConfig';
 import { Image as ImageIcon, X, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import { SkeletonLoader } from './SkeletonLoader';
+import ImagePreview from './ImagePreview';
 
 const ImageGallery = memo(() => {
   const { user } = useAuth();
