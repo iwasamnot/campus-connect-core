@@ -140,8 +140,19 @@ export const AuthProvider = ({ children }) => {
       // Reload user to get latest emailVerified status
       await loggedInUser.reload();
       
-      // Check if email is verified
-      if (!loggedInUser.emailVerified) {
+      // Fetch user role from Firestore first to check if user is admin
+      const userDoc = await getDoc(doc(db, 'users', loggedInUser.uid));
+      let userRole = 'student';
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.role) {
+          userRole = userData.role;
+        }
+      }
+      
+      // Check if email is verified (skip for admin accounts)
+      if (!loggedInUser.emailVerified && userRole !== 'admin') {
         // Update Firestore emailVerified status
         await setDoc(doc(db, 'users', loggedInUser.uid), {
           emailVerified: false
@@ -158,11 +169,10 @@ export const AuthProvider = ({ children }) => {
       
       // Update emailVerified status in Firestore
       await setDoc(doc(db, 'users', loggedInUser.uid), {
-        emailVerified: true
+        emailVerified: loggedInUser.emailVerified || userRole === 'admin' // Admins are considered verified
       }, { merge: true });
       
-      // Fetch user role from Firestore
-      const userDoc = await getDoc(doc(db, 'users', loggedInUser.uid));
+      // Set user role
       if (userDoc.exists()) {
         const userData = userDoc.data();
         if (userData.role) {

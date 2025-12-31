@@ -20,11 +20,18 @@ const Login = () => {
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
 
-  // Validate student email format: must start with "s20" and contain "@sistc"
+  // Validate student email format: must start with "s20" and contain "@sistc.edu.au"
   const validateStudentEmail = (email) => {
     if (!email) return false;
-    const emailLower = email.toLowerCase();
-    return emailLower.startsWith('s20') && emailLower.includes('@sistc');
+    const emailLower = email.toLowerCase().trim(); // Trim whitespace
+    return emailLower.startsWith('s20') && emailLower.includes('@sistc.edu.au');
+  };
+
+  // Validate admin email format: must start with "admin" and contain "@campusconnect"
+  const validateAdminEmail = (email) => {
+    if (!email) return false;
+    const emailLower = email.toLowerCase().trim(); // Trim whitespace
+    return emailLower.startsWith('admin') && emailLower.includes('@campusconnect');
   };
 
   const handleEmailAuth = async (e) => {
@@ -43,7 +50,7 @@ const Login = () => {
         
         // Validate email format
         if (!validateStudentEmail(email)) {
-          setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in). Only students can register.');
+          setError('Email must start with "s20" and contain "@sistc.edu.au" (e.g., s20xxxxx@sistc.edu.au). Only students can register.');
           setLoading(false);
           return;
         }
@@ -72,9 +79,15 @@ const Login = () => {
         setEmailVerificationSent(true);
         success('Registration successful! Please check your email to verify your account before logging in.');
       } else {
-        // Validate email format for login as well
-        if (!validateStudentEmail(email)) {
-          setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in). Only students can access this platform.');
+        // Validate email format for login - allow both student and admin emails
+        const isStudentEmail = validateStudentEmail(email);
+        const isAdminEmail = validateAdminEmail(email);
+        
+        // Debug logging
+        console.log('Login attempt:', { email, isStudentEmail, isAdminEmail });
+        
+        if (!isStudentEmail && !isAdminEmail) {
+          setError('Email must be either:\n- Student: start with "s20" and contain "@sistc.edu.au" (e.g., s20xxxxx@sistc.edu.au)\n- Admin: start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)');
           setLoading(false);
           return;
         }
@@ -88,7 +101,8 @@ const Login = () => {
         errorMessage = 'Invalid email address.';
       } else if (err.code === 'auth/user-not-found') {
         errorMessage = 'No account found with this email. Please create an account first.';
-        if (email === 'admin@admin.com') {
+        // Check if it's an admin email format
+        if (validateAdminEmail(email)) {
           errorMessage += ' Admin account needs to be created in Firebase Console. See ADMIN_SETUP.md for instructions.';
         }
       } else if (err.code === 'auth/wrong-password') {
@@ -117,10 +131,13 @@ const Login = () => {
       return;
     }
 
-    // Validate email format for password reset
-    if (!validateStudentEmail(email)) {
-      setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in).');
-      showError('Email must start with "s20" and contain "@sistc".');
+    // Validate email format for password reset - allow both student and admin emails
+    const isStudentEmail = validateStudentEmail(email);
+    const isAdminEmail = validateAdminEmail(email);
+    
+    if (!isStudentEmail && !isAdminEmail) {
+      setError('Email must be either:\n- Student: start with "s20" and contain "@sistc.edu.au" (e.g., s20xxxxx@sistc.edu.au)\n- Admin: start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)');
+      showError('Invalid email format. Must be a valid student or admin email.');
       return;
     }
 
