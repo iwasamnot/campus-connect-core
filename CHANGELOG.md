@@ -773,6 +773,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v4.1.1** (2025-12-31) - Fixed file upload functionality with Firebase Storage security rules and improved error handling
 - **v4.1.0** (2025-12-31) - Major user-side update: Activity Dashboard, Message Scheduler, Saved Messages, Image Gallery, virtual scrolling, enhanced optimizations
 - **v4.0.4** (2025-12-31) - Admin analytics dashboard, advanced search, keyboard shortcuts, message drafts, export chat history, performance optimizations
 - **v4.0.3** (2025-12-31) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
