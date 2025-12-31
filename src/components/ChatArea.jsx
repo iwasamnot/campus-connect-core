@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark } from 'lucide-react';
+import ImagePreview from './ImagePreview';
 import Logo from './Logo';
 import UserProfilePopup from './UserProfilePopup';
 import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
@@ -74,6 +75,7 @@ const ChatArea = ({ setActiveView }) => {
   const [showMentions, setShowMentions] = useState(false); // Show mention autocomplete
   const [forwardingMessage, setForwardingMessage] = useState(null); // Message to forward
   const [showForwardModal, setShowForwardModal] = useState(false); // Show forward modal
+  const [previewImage, setPreviewImage] = useState(null); // Image preview state { url, name }
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
@@ -1251,18 +1253,16 @@ const ChatArea = ({ setActiveView }) => {
                   {message.attachment && (
                     <div className="mb-2">
                       {message.attachment.type?.startsWith('image/') ? (
-                        <a
-                          href={message.attachment.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity"
+                        <div
+                          onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
+                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
                         >
                           <img
                             src={message.attachment.url}
                             alt={message.attachment.name}
                             className="max-w-full max-h-64 object-contain"
                           />
-                        </a>
+                        </div>
                       ) : (
                         <a
                           href={message.attachment.url}
