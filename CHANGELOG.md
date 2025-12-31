@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Message scheduling
 - Advanced analytics dashboard
 
-## [4.0.3] - 2024-12-27
+## [4.0.3] - 2025-12-31
 
 ### Added
 - **Extended Email Domain Support**: Added support for `@sistc.nsw.edu.au` email domain
@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved email format detection for user document creation
 - Better handling of email validation edge cases
 
-## [4.0.2] - 2024-12-27
+## [4.0.2] - 2025-12-31
 
 ### Fixed
 - **Admin Login Validation**: Fixed admin email validation blocking admin login
@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Separate validation for student vs admin email formats
   - Better error handling for admin account creation
 
-## [4.0.1] - 2024-12-27
+## [4.0.1] - 2025-12-31
 
 ### Fixed
 - **Message Deletion**: Fixed admin message deletion not persisting after refresh
@@ -127,7 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added null check for role field
   - More robust admin permission checking
 
-## [4.0.0] - 2024-12-27
+## [4.0.0] - 2025-12-31
 
 ### Added
 - **Advanced Theme Customization**: Complete theme personalization system
@@ -637,8 +637,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-- **v4.0.3** (2024-12-27) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
-- **v4.0.2** (2024-12-27) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
+- **v4.0.3** (2025-12-31) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
+- **v4.0.2** (2025-12-31) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
 - **v4.0.1** (2024-12-27) - Message deletion fixes, build error fixes, comprehensive error handling improvements
 - **v4.0.0** (2024-12-27) - Advanced theme customization, message forwarding, enhanced chat preferences, keyboard shortcuts
 - **v3.0.0** (2024-12-27) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
