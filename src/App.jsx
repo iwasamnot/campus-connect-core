@@ -170,7 +170,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen h-[100dvh] overflow-hidden w-full">
+    <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900">
       <Sidebar 
         activeView={activeView} 
         setActiveView={setActiveView}
