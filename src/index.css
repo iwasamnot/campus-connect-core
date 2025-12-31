@@ -343,17 +343,24 @@ input, textarea, [contenteditable] {
     padding-bottom: var(--safe-area-inset-bottom);
   }
 
-  /* Fixed elements respect safe areas */
-  .fixed {
-    padding-top: var(--safe-area-inset-top);
-    padding-left: var(--safe-area-inset-left);
-    padding-right: var(--safe-area-inset-right);
-  }
+  /* Fixed elements respect safe areas - but don't add padding to all fixed elements */
+  /* Only add padding where needed, not globally */
 
-  /* Top bar spacing for safe area */
-  .top-4,
-  .top-0 {
-    top: calc(0.5rem + var(--safe-area-inset-top));
+  /* Top bar spacing for safe area - ensure buttons are touchable */
+  .fixed.top-4 {
+    top: calc(1rem + env(safe-area-inset-top, 0px)) !important;
+  }
+  
+  .fixed.top-0 {
+    top: env(safe-area-inset-top, 0px) !important;
+  }
+  
+  /* Headers with safe area - add padding to top headers */
+  header,
+  [class*="Header"],
+  .bg-white.border-b:first-child,
+  .dark\\:bg-gray-800.border-b:first-child {
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
   }
 
   /* Fix for iOS Safari */
