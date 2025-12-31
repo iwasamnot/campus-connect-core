@@ -61,6 +61,131 @@
   --base-font-size: 1rem;
 }
 
+/* Minimal Theme Styles */
+.theme-minimal {
+  --minimal-radius: 0.25rem; /* 4px - subtle rounded corners */
+  --minimal-border: 1px solid rgba(0, 0, 0, 0.08);
+  --minimal-border-dark: 1px solid rgba(255, 255, 255, 0.1);
+  --minimal-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --minimal-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --minimal-accent: #475569; /* slate-600 */
+  --minimal-accent-hover: #334155; /* slate-700 */
+  --minimal-bg: #ffffff;
+  --minimal-bg-secondary: #f8fafc; /* slate-50 */
+  --minimal-text: #0f172a; /* slate-900 */
+  --minimal-text-secondary: #64748b; /* slate-500 */
+}
+
+.dark.theme-minimal {
+  --minimal-border: 1px solid rgba(255, 255, 255, 0.08);
+  --minimal-border-dark: 1px solid rgba(255, 255, 255, 0.12);
+  --minimal-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --minimal-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --minimal-accent: #cbd5e1; /* slate-300 */
+  --minimal-accent-hover: #e2e8f0; /* slate-200 */
+  --minimal-bg: #0f172a; /* slate-900 */
+  --minimal-bg-secondary: #1e293b; /* slate-800 */
+  --minimal-text: #f1f5f9; /* slate-100 */
+  --minimal-text-secondary: #94a3b8; /* slate-400 */
+}
+
+/* Minimal theme - reduce border radius throughout */
+.theme-minimal .rounded-lg,
+.theme-minimal .rounded-xl,
+.theme-minimal .rounded-2xl {
+  border-radius: var(--minimal-radius) !important;
+}
+
+.theme-minimal .rounded-full {
+  border-radius: 9999px !important; /* Keep full for buttons/toggles */
+}
+
+/* Minimal theme - cleaner borders */
+.theme-minimal .border-gray-200,
+.theme-minimal .border-gray-300 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark.theme-minimal .border-gray-700,
+.dark.theme-minimal .border-gray-600 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Minimal theme - subtler shadows */
+.theme-minimal .shadow-lg,
+.theme-minimal .shadow-xl,
+.theme-minimal .shadow-2xl {
+  box-shadow: var(--minimal-shadow-lg) !important;
+}
+
+.theme-minimal .shadow,
+.theme-minimal .shadow-md {
+  box-shadow: var(--minimal-shadow) !important;
+}
+
+/* Minimal theme - replace colorful accents with neutral grays */
+.theme-minimal .bg-indigo-600,
+.theme-minimal .bg-indigo-700,
+.theme-minimal .bg-blue-600,
+.theme-minimal .bg-purple-600,
+.theme-minimal .bg-pink-600 {
+  background-color: var(--minimal-accent) !important;
+}
+
+.theme-minimal .hover\:bg-indigo-700:hover,
+.theme-minimal .hover\:bg-blue-700:hover {
+  background-color: var(--minimal-accent-hover) !important;
+}
+
+.theme-minimal .text-indigo-600,
+.theme-minimal .text-indigo-400,
+.theme-minimal .text-blue-600,
+.theme-minimal .text-purple-600 {
+  color: var(--minimal-accent) !important;
+}
+
+.theme-minimal .border-indigo-600,
+.theme-minimal .border-indigo-400,
+.theme-minimal .border-blue-600 {
+  border-color: var(--minimal-accent) !important;
+}
+
+.theme-minimal .bg-indigo-50,
+.theme-minimal .bg-blue-50,
+.theme-minimal .bg-purple-50 {
+  background-color: var(--minimal-bg-secondary) !important;
+}
+
+.dark.theme-minimal .bg-indigo-900\/20,
+.dark.theme-minimal .bg-indigo-900\/30 {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+}
+
+.theme-minimal .text-indigo-700,
+.theme-minimal .text-indigo-300 {
+  color: var(--minimal-text) !important;
+}
+
+.dark.theme-minimal .text-indigo-300 {
+  color: var(--minimal-accent) !important;
+}
+
+/* Minimal theme - reduce hover scale effects */
+.theme-minimal button:hover,
+.theme-minimal .hover\:scale-110:hover {
+  transform: scale(1) !important;
+}
+
+.theme-minimal .hover\:scale-105:hover {
+  transform: scale(1.02) !important;
+}
+
+/* Minimal theme - cleaner card hover */
+.theme-minimal .card-hover:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: var(--minimal-shadow-lg) !important;
+}
+
 /* Responsive improvements */
 @media (max-width: 640px) {
   .mobile-hidden {

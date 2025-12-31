@@ -22,6 +22,14 @@ export const ThemeProvider = ({ children }) => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
+  const [themeStyle, setThemeStyle] = useState(() => {
+    // Check localStorage for theme style preference
+    if (typeof window === 'undefined') return 'fun';
+    
+    const saved = localStorage.getItem('themeStyle');
+    return saved || 'fun';
+  });
+
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
@@ -35,17 +43,30 @@ export const ThemeProvider = ({ children }) => {
       body.classList.remove('dark');
     }
     
+    // Apply theme style class
+    root.classList.remove('theme-fun', 'theme-minimal');
+    root.classList.add(`theme-${themeStyle}`);
+    body.classList.remove('theme-fun', 'theme-minimal');
+    body.classList.add(`theme-${themeStyle}`);
+    
     // Save to localStorage
     localStorage.setItem('darkMode', darkMode.toString());
-  }, [darkMode]);
+    localStorage.setItem('themeStyle', themeStyle);
+  }, [darkMode, themeStyle]);
 
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
   };
 
+  const changeThemeStyle = (style) => {
+    setThemeStyle(style);
+  };
+
   const value = {
     darkMode,
-    toggleDarkMode
+    themeStyle,
+    toggleDarkMode,
+    changeThemeStyle
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

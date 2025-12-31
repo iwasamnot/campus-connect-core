@@ -2,11 +2,11 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { isAdminRole } from '../utils/helpers';
-import { Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw } from 'lucide-react';
+import { Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw, Sparkles, Minus } from 'lucide-react';
 
 const Settings = ({ setActiveView }) => {
   const { userRole, signOut } = useAuth();
-  const { darkMode, toggleDarkMode } = useTheme();
+  const { darkMode, toggleDarkMode, themeStyle, changeThemeStyle } = useTheme();
   const { preferences, updatePreference, resetPreferences } = usePreferences();
 
   const handleSignOut = async () => {
@@ -84,7 +84,51 @@ const Settings = ({ setActiveView }) => {
                 </button>
               </div>
 
-              {/* Accent Color */}
+              {/* Theme Style */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <Sparkles className="text-indigo-600 dark:text-indigo-400" size={20} />
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">Theme Style</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Choose between fun or minimalist design
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => changeThemeStyle('fun')}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-300 ease-in-out ${
+                      themeStyle === 'fun'
+                        ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Sparkles size={20} />
+                      <span className="font-medium">Fun</span>
+                      <span className="text-xs opacity-75">Colorful & Playful</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => changeThemeStyle('minimal')}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all duration-300 ease-in-out ${
+                      themeStyle === 'minimal'
+                        ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Minus size={20} />
+                      <span className="font-medium">Minimal</span>
+                      <span className="text-xs opacity-75">Sleek & Modern</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Accent Color - only show for fun theme */}
+              {themeStyle === 'fun' && (
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-3 mb-3">
                   <Palette className="text-indigo-600 dark:text-indigo-400" size={20} />
@@ -123,6 +167,7 @@ const Settings = ({ setActiveView }) => {
                   })}
                 </div>
               </div>
+              )}
 
               {/* Font Size */}
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
