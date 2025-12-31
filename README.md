@@ -168,8 +168,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - **Create a Firestore database**:
      - Go to Firestore Database → Create database
      - Start in test mode (you'll update rules later)
-   - **Enable Firebase Storage** (Required for file uploads):
+   - **Enable Firebase Storage** (Required for file uploads - **100% FREE, no billing required**):
      - Go to Storage → Get Started
+     - **Choose "Spark plan" (free tier)** - No credit card needed!
      - Choose a location and enable
      - See `ENABLE_STORAGE.md` for detailed instructions
    - **Update Firestore security rules** from `firestore.rules`
