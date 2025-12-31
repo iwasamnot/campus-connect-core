@@ -57,17 +57,56 @@ All limits are enforced at multiple levels:
 2. View your usage and costs
 3. Set up billing alerts (recommended)
 
-### Set Up Billing Alerts
+### Set Up Billing Alerts & Spending Limits
 
-**Highly Recommended!** Set up alerts to avoid unexpected charges:
+**CRITICAL!** Set up alerts and limits to prevent unexpected charges:
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/billing)
-2. Select your project
-3. Go to **Budgets & alerts**
-4. Create a budget:
-   - Set limit to **$1** (or $0 if you want to be notified of any charges)
-   - Get email alerts when approaching limit
-   - This way you'll know if you're about to exceed free tier
+#### Option 1: Budget Alerts (Recommended First Step)
+
+1. Go to [Google Cloud Console Billing](https://console.cloud.google.com/billing)
+2. Select your billing account
+3. Click **Budgets & alerts** in the left menu
+4. Click **Create Budget**
+5. Configure:
+   - **Budget name**: "Firebase Storage $1 Limit"
+   - **Budget amount**: **$1.00**
+   - **Budget period**: Monthly
+   - **Budget scope**: Select your project `campus-connect-sistc`
+   - **Alert threshold**: 
+     - 50% ($0.50) - Email alert
+     - 90% ($0.90) - Email alert
+     - 100% ($1.00) - Email alert
+6. Click **Create**
+7. You'll get email alerts at 50%, 90%, and 100% of $1
+
+#### Option 2: Set Spending Limit (Automatic Cutoff)
+
+**Important**: Google Cloud doesn't have a hard "cutoff" at $1, but you can:
+
+1. **Disable Billing** (Nuclear Option):
+   - Go to [Billing Settings](https://console.cloud.google.com/billing)
+   - Click on your billing account
+   - Click **Close billing account** (this disables all paid services)
+   - **Warning**: This will disable Storage and other paid services immediately
+
+2. **Set Budget with Actions** (Better Option):
+   - In the budget you created above, you can add **Actions**
+   - Go to your budget → **Edit**
+   - Scroll to **Actions**
+   - Add action: **Disable billing for project**
+   - This will automatically disable billing when budget is exceeded
+   - **Note**: This may disable all paid services, not just Storage
+
+#### Option 3: Manual Monitoring (Safest)
+
+Since automatic cutoff can be disruptive, the safest approach is:
+
+1. Set up budget alerts (Option 1)
+2. Check usage daily when you get alerts
+3. Manually disable Storage if needed:
+   - Go to [Firebase Console Storage](https://console.firebase.google.com/project/campus-connect-sistc/storage)
+   - Delete files if approaching limit
+   - Or disable Storage temporarily if needed
 
 ## Best Practices to Stay Within Free Tier
 
