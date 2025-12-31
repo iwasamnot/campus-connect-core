@@ -12,7 +12,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-language support
 - Voice messages
 - Message scheduling
-- Advanced analytics dashboard
+
+## [4.0.4] - 2025-12-31
+
+### Added
+- **Admin Analytics Dashboard**: Comprehensive analytics and insights for administrators
+  - Real-time statistics (messages, users, reports, audit actions)
+  - Daily message activity charts
+  - Top active users leaderboard
+  - Time range filtering (7d, 30d, 90d, all time)
+  - Export analytics data as JSON
+  - Visual charts and graphs for data visualization
+- **Advanced Search**: Powerful search functionality with multiple filters
+  - Full-text search across messages
+  - Filter by user, date range, file attachments, reactions, and pinned status
+  - Click to navigate to message in chat
+  - Real-time search results with debouncing
+  - Keyboard shortcut: Ctrl/Cmd + K
+- **Keyboard Shortcuts**: Comprehensive keyboard navigation
+  - Ctrl/Cmd + K: Open advanced search
+  - Ctrl/Cmd + /: Show keyboard shortcuts modal
+  - Ctrl/Cmd + Enter: Send message
+  - Ctrl/Cmd + B: Toggle sidebar (mobile)
+  - Ctrl/Cmd + D: Toggle dark mode
+  - ↑: Edit last message
+  - Tab: Autocomplete mentions
+  - Esc: Close modals/dialogs
+- **Message Drafts**: Auto-save message drafts
+  - Automatically saves drafts as you type
+  - Restores drafts when returning to chat
+  - Per-chat draft storage
+  - Auto-clear on message send
+- **Export Chat History**: Export messages in multiple formats
+  - Export as JSON (full data with metadata)
+  - Export as CSV (spreadsheet-friendly)
+  - Export as TXT (plain text format)
+  - Includes all message data (text, user, timestamp, reactions, files, etc.)
+- **Skeleton Loaders**: Improved loading states
+  - Message skeleton loaders
+  - Table skeleton loaders
+  - Card skeleton loaders
+  - Better UX during data fetching
+
+### Changed
+- **Performance Optimizations**: Enhanced application performance
+  - Added debouncing for search inputs
+  - Implemented React.memo optimizations
+  - Optimized Firebase queries
+  - Improved component rendering efficiency
+  - Better memory management
+- **Search UI**: Replaced simple search with advanced search modal
+  - More intuitive search interface
+  - Better filter organization
+  - Improved search result display
+- **Sidebar Navigation**: Added Analytics link for admins
+  - New Analytics menu item in admin sidebar
+  - Easy access to analytics dashboard
+
+### Fixed
+- Improved message scrolling and navigation
+- Better handling of large message lists
+- Enhanced error handling in search functionality
 
 ## [4.0.3] - 2025-12-31
 
@@ -637,6 +697,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v4.0.4** (2025-12-31) - Admin analytics dashboard, advanced search, keyboard shortcuts, message drafts, export chat history, performance optimizations
 - **v4.0.3** (2025-12-31) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
 - **v4.0.2** (2025-12-31) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
 - **v4.0.1** (2025-12-27) - Message deletion fixes, build error fixes, comprehensive error handling improvements

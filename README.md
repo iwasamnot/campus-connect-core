@@ -32,6 +32,13 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Advanced search and filter options
   - Performance optimized with memoization
   - Comprehensive error handling
+- **Analytics Dashboard**: Comprehensive platform analytics and insights
+  - Real-time statistics (messages, users, reports, audit actions)
+  - Daily message activity visualization
+  - Top active users leaderboard
+  - Time range filtering (7d, 30d, 90d, all time)
+  - Export analytics data
+  - Visual charts and graphs
 - **Users Management**: View, search, edit, and manage all user accounts
   - **Email Verification Controls**: Verify/unverify student emails
   - Visual verification status indicators
@@ -43,7 +50,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Deletion verification to ensure persistence
   - Detailed audit logging
 - **Audit Trail**: Complete log of all administrative actions
-- **Export Functionality**: Export audit logs for analysis
+- **Export Functionality**: Export audit logs and chat history for analysis
 
 ### Platform Features
 - **AI-Powered Toxicity Detection**: Advanced content moderation using Google Gemini AI
@@ -52,6 +59,26 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Multi-language support (English, Hindi, Urdu, Punjabi, Bengali, Nepali, Persian)
   - Detailed toxicity metadata (confidence, reason, categories)
   - Automatic redaction of toxic content
+- **Advanced Search**: Powerful search with multiple filters
+  - Full-text search across messages
+  - Filter by user, date range, file attachments, reactions, pinned status
+  - Click to navigate to message
+  - Keyboard shortcut: Ctrl/Cmd + K
+- **Keyboard Shortcuts**: Comprehensive keyboard navigation
+  - Ctrl/Cmd + K: Open advanced search
+  - Ctrl/Cmd + /: Show keyboard shortcuts
+  - Ctrl/Cmd + Enter: Send message
+  - ↑: Edit last message
+  - Tab: Autocomplete mentions
+  - Esc: Close modals
+- **Message Drafts**: Auto-save drafts as you type
+  - Automatically saves drafts
+  - Restores when returning to chat
+  - Per-chat draft storage
+- **Export Chat History**: Export messages in multiple formats
+  - JSON (full data with metadata)
+  - CSV (spreadsheet-friendly)
+  - TXT (plain text)
 - **Advanced Customization**: Complete personalization system
   - 8 accent color themes (Indigo, Blue, Purple, Pink, Red, Orange, Green, Teal)
   - Font size preferences (Small, Medium, Large, X-Large)
@@ -70,6 +97,11 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Dark Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Code-Split Bundles**: Optimized performance with lazy-loaded components
+- **Performance Optimizations**: Enhanced application performance
+  - Debounced search inputs
+  - React.memo optimizations
+  - Optimized Firebase queries
+  - Skeleton loaders for better UX
 - **Secure**: Role-based access control with Firestore security rules
 - **Direct Messages**: Private messaging between users with chat history
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days

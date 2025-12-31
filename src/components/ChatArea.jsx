@@ -20,13 +20,16 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard } from 'lucide-react';
 import Logo from './Logo';
 import UserProfilePopup from './UserProfilePopup';
 import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
 import EmojiPicker from './EmojiPicker';
 import FileUpload from './FileUpload';
 import MentionAutocomplete from './MentionAutocomplete';
+import AdvancedSearch from './AdvancedSearch';
+import { saveDraft, getDraft, clearDraft } from '../utils/drafts';
+import { exportMessagesToJSON, exportMessagesToCSV, exportMessagesToTXT } from '../utils/export';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { parseMarkdown, hasMarkdown } from '../utils/markdown';
 import notificationService from '../utils/notifications';
@@ -47,6 +50,8 @@ const ChatArea = ({ setActiveView }) => {
   const [editText, setEditText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [lastMessageTime, setLastMessageTime] = useState(0);
   const [reporting, setReporting] = useState(null);
   const [reportReason, setReportReason] = useState('');
@@ -72,9 +77,59 @@ const ChatArea = ({ setActiveView }) => {
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
+  const CHAT_ID = 'global'; // For drafts
   
   // Typing indicator (for global chat, chatId can be 'global')
   const typingUsers = useTypingIndicator('global', 'global');
+  
+  // Load draft on mount
+  useEffect(() => {
+    const draft = getDraft(CHAT_ID);
+    if (draft) {
+      setNewMessage(draft);
+    }
+  }, []);
+  
+  // Save draft on message change (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      saveDraft(CHAT_ID, newMessage);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [newMessage]);
+  
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + K for advanced search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowAdvancedSearch(true);
+      }
+      // Ctrl/Cmd + Enter to send
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !sending) {
+        e.preventDefault();
+        if (newMessage.trim()) {
+          handleSendMessage(e);
+        }
+      }
+      // Up arrow to edit last message
+      if (e.key === 'ArrowUp' && !newMessage.trim() && messageInputRef.current === document.activeElement) {
+        const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
+        if (userMessages.length > 0) {
+          const lastMessage = userMessages[userMessages.length - 1];
+          if (!lastMessage.edited) {
+            e.preventDefault();
+            setEditing(lastMessage.id);
+            setEditText(lastMessage.text);
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [newMessage, sending, messages, user]);
   
   // Fetch pinned messages (with proper index: pinned ASC, pinnedAt DESC)
   useEffect(() => {
@@ -510,6 +565,7 @@ const ChatArea = ({ setActiveView }) => {
       }
 
       setNewMessage('');
+      clearDraft(CHAT_ID);
       setAttachedFile(null);
       setReplyingTo(null);
       setLastMessageTime(now);
@@ -741,13 +797,7 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
-  const filteredMessages = searchQuery
-    ? messages.filter(msg => 
-        (msg.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         msg.displayText?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         msg.userName?.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : messages;
+  const filteredMessages = messages; // Advanced search handles filtering
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
@@ -875,43 +925,61 @@ const ChatArea = ({ setActiveView }) => {
                 AI Help ON
               </span>
             )}
-            <button
-              onClick={() => setShowSearch(!showSearch)}
-              className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
-              title="Search messages"
-            >
-              <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
-            </button>
+            <div className="relative flex items-center gap-2">
+              <button
+                onClick={() => setShowAdvancedSearch(true)}
+                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                title="Advanced Search (Ctrl/Cmd + K)"
+              >
+                <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                  title="Export chat history"
+                >
+                  <Download size={20} className="text-indigo-600 dark:text-indigo-400" />
+                </button>
+                {showExportMenu && (
+                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[180px]">
+                    <button
+                      onClick={() => {
+                        exportMessagesToJSON(messages, 'campus-chat-history');
+                        setShowExportMenu(false);
+                        success('Chat history exported as JSON');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Export as JSON
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportMessagesToCSV(messages, 'campus-chat-history');
+                        setShowExportMenu(false);
+                        success('Chat history exported as CSV');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Export as CSV
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportMessagesToTXT(messages, 'campus-chat-history');
+                        setShowExportMenu(false);
+                        success('Chat history exported as TXT');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Export as TXT
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         
-        {showSearch && (
-          <div className="mt-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search messages..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-600"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-            {searchQuery && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Found {filteredMessages.length} message(s)
-              </p>
-            )}
-          </div>
-        )}
       </div>
 
           {/* Pinned Messages Section */}
@@ -974,6 +1042,7 @@ const ChatArea = ({ setActiveView }) => {
 
             return (
               <div
+                id={`message-${message.id}`}
                 key={message.id}
                 className={`flex items-start gap-2 ${
                   isAuthor ? 'justify-end' : 'justify-start'
@@ -1665,6 +1734,30 @@ const ChatArea = ({ setActiveView }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Advanced Search Modal */}
+      {showAdvancedSearch && (
+        <AdvancedSearch
+          messages={messages}
+          users={Object.values(userProfiles).map(profile => ({
+            id: profile.id || Object.keys(userProfiles).find(key => userProfiles[key] === profile),
+            name: profile.name || profile.email?.split('@')[0] || 'Unknown',
+            email: profile.email
+          }))}
+          onSelectMessage={(message) => {
+            // Scroll to message
+            const messageElement = document.getElementById(`message-${message.id}`);
+            if (messageElement) {
+              messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              messageElement.classList.add('ring-2', 'ring-indigo-500', 'ring-opacity-75');
+              setTimeout(() => {
+                messageElement.classList.remove('ring-2', 'ring-indigo-500', 'ring-opacity-75');
+              }, 2000);
+            }
+          }}
+          onClose={() => setShowAdvancedSearch(false)}
+        />
       )}
     </div>
   );

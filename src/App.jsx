@@ -47,6 +47,14 @@ const Settings = lazy(() => import('./components/Settings').catch(err => {
   console.error('Error loading Settings:', err);
   return { default: () => <div className="p-4 text-red-600">Error loading Settings. Please refresh the page.</div> };
 }));
+const AdminAnalytics = lazy(() => import('./components/AdminAnalytics').catch(err => {
+  console.error('Error loading AdminAnalytics:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Admin Analytics. Please refresh the page.</div> };
+}));
+const KeyboardShortcuts = lazy(() => import('./components/KeyboardShortcuts').catch(err => {
+  console.error('Error loading KeyboardShortcuts:', err);
+  return { default: () => null };
+}));
 
 // Loading component for lazy-loaded routes
 const LoadingSpinner = () => (
@@ -119,10 +127,12 @@ function App() {
             <>
               {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
               {activeView === 'audit' && <ErrorBoundary><div className="page-transition"><AdminDashboard /></div></ErrorBoundary>}
+              {activeView === 'analytics' && <ErrorBoundary><div className="page-transition"><AdminAnalytics /></div></ErrorBoundary>}
               {activeView === 'users' && <ErrorBoundary><div className="page-transition"><UsersManagement /></div></ErrorBoundary>}
               {activeView === 'create-user' && <ErrorBoundary><div className="page-transition"><CreateUser /></div></ErrorBoundary>}
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              <KeyboardShortcuts />
             </>
           ) : (
             <>
@@ -155,6 +165,7 @@ function App() {
               )}
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              <KeyboardShortcuts />
             </>
           )}
         </Suspense>
