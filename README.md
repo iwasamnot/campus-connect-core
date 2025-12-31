@@ -30,7 +30,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - File and image sharing
   - Emoji picker
   - Image preview with zoom and pan
-- **AI Help Assistant**: Intelligent AI assistant powered by ChatGPT with local SISTC knowledge base
+- **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash with local SISTC knowledge base
 - **My Profile**: Comprehensive profile management with:
   - Profile picture upload
   - Personal information (name, bio, course, year of study, date of birth, address)
@@ -181,13 +181,13 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Custom design tokens
 - **Backend**: Firebase 12.7
   - Firestore (Database)
+  - Firebase Hosting
   - Authentication (Email/Password)
   - Storage (Files, Images, Profile Pictures)
     - Secure file uploads with size limits (10MB for messages, 5MB for profile pictures)
     - Firebase Storage security rules for authenticated access
 - **AI**: 
-  - Google Gemini AI (for toxicity detection and Virtual Senior responses)
-  - OpenAI GPT models (optional) with local knowledge base fallback
+  - Google Gemini 2.5 Flash (for toxicity detection, AI Help Assistant, and Virtual Senior responses)
 - **Icons**: Lucide React
 - **Deployment**: Firebase Hosting with automatic CI/CD
 
@@ -229,15 +229,13 @@ A secure, student-only messaging platform for universities with AI-powered conte
      VITE_FIREBASE_APP_ID=your-app-id
      VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
      ```
-   - Add your AI API keys (Optional):
+   - Add your AI API key:
      ```
-     VITE_OPENAI_API_KEY=sk-your-openai-api-key-here
      VITE_GEMINI_API_KEY=your-gemini-api-key-here
      ```
-   - **OpenAI API Key**: Get from https://platform.openai.com/api-keys (for AI Help Assistant)
-   - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for Virtual Senior in Campus Chat)
+   - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for AI Help Assistant, Virtual Senior, and toxicity detection)
    - **Important**: Restart the dev server after adding environment variables
-   - If no API keys are provided, the AI will use the local knowledge base
+   - If no API key is provided, the AI will use the local knowledge base
    - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)
 
 4. **Run Development Server**
@@ -245,7 +243,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
    npm run dev
    ```
    
-   **Note**: If you added an OpenAI API key, make sure to restart the dev server for it to take effect.
+   **Note**: If you added a Gemini API key, make sure to restart the dev server for it to take effect.
 
 4. **Build for Production**
    ```bash
@@ -368,7 +366,7 @@ service cloud.firestore {
 The platform uses **Google Gemini AI** for intelligent toxicity detection:
 
 ### Primary Detection (Gemini AI)
-- Context-aware analysis using `gemini-2.0-flash-exp` model
+- Context-aware analysis using `gemini-2.5-flash` model
 - Detects: hate speech, harassment, threats, profanity, bullying, and more
 - Returns confidence scores and detailed reasoning
 - Handles context and edge cases intelligently
@@ -497,20 +495,16 @@ For automatic deployment to work, you need to set up GitHub Secrets:
        - **Storage Admin** (required for Storage rules)
      - See `GITHUB_ACTIONS_SETUP.md` for detailed setup instructions
    
-   #### AI API Keys (Optional)
-   
-   - **`VITE_OPENAI_API_KEY`** (Optional):
-     - Your OpenAI API key if you want ChatGPT features in production
-     - Format: `sk-your-key-here`
-     - Get from: https://platform.openai.com/api-keys
+   #### AI API Key (Required for AI features)
    
    - **`VITE_GEMINI_API_KEY`** (Required for AI features):
      - Your Google Gemini API key for:
        - AI-powered toxicity detection (primary moderation system)
+       - AI Help Assistant responses
        - Virtual Senior AI responses in Campus Chat
      - Format: `AIzaSy...`
      - Get from: https://makersuite.google.com/app/apikey
-     - **Note**: Without this key, toxicity detection falls back to word filter only
+     - **Note**: Without this key, toxicity detection falls back to word filter only, and AI features will use local knowledge base
 
 ### Using Automatic Deployment
 
