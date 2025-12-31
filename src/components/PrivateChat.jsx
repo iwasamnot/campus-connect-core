@@ -1106,15 +1106,16 @@ const PrivateChat = () => {
 
   // Show chat interface
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen h-[100dvh] flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
         style={{
-          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
           paddingBottom: `0.75rem`,
-          paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          marginTop: '0',
           position: 'relative',
           zIndex: 10
         }}
