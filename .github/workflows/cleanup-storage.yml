@@ -32,9 +32,9 @@ jobs:
       - name: Install Firebase Admin SDK
         run: npm install firebase-admin --save
       
-      - name: Run cleanup script
+      - name: Create cleanup script
         run: |
-          node -e "
+          cat > cleanup.js << 'EOF'
           const admin = require('firebase-admin');
           admin.initializeApp({
             credential: admin.credential.applicationDefault(),
@@ -52,10 +52,15 @@ jobs:
           async function cleanup() {
             const folders = ['messages/', 'profile-pictures/', 'group-files/', 'private-chat-files/'];
             
+            console.log('Starting cleanup of files older than 24 hours...');
+            console.log(`Current time: ${new Date(now).toISOString()}`);
+            console.log(`Deleting files created before: ${new Date(twentyFourHoursAgo).toISOString()}`);
+            
             for (const folder of folders) {
               try {
+                console.log(`\nChecking ${folder}...`);
                 const [files] = await bucket.getFiles({ prefix: folder });
-                console.log(\`Checking \${folder}: \${files.length} files\`);
+                console.log(`Found ${files.length} files in ${folder}`);
                 
                 for (const file of files) {
                   try {
@@ -65,23 +70,27 @@ jobs:
                     if (created < twentyFourHoursAgo) {
                       await file.delete();
                       deletedCount++;
-                      console.log(\`Deleted: \${file.name}\`);
+                      console.log(`  ✓ Deleted: ${file.name}`);
                     }
                   } catch (error) {
                     errorCount++;
-                    console.error(\`Error: \${file.name} - \${error.message}\`);
+                    console.error(`  ✗ Error: ${file.name} - ${error.message}`);
                   }
                 }
               } catch (error) {
-                console.error(\`Error checking \${folder}:\`, error);
+                console.error(`Error checking ${folder}:`, error.message);
               }
             }
             
-            console.log(\`Cleanup complete. Deleted: \${deletedCount}, Errors: \${errorCount}\`);
+            console.log(`\n✅ Cleanup complete! Deleted: ${deletedCount}, Errors: ${errorCount}`);
           }
           
-          cleanup().then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); });
-          "
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC }}
+          cleanup().then(() => process.exit(0)).catch(err => {
+            console.error('Fatal error:', err);
+            process.exit(1);
+          });
+          EOF
+      
+      - name: Run cleanup script
+        run: node cleanup.js
 
