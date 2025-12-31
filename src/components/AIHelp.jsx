@@ -667,7 +667,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
+                <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
                 <Sparkles className="text-indigo-500 hidden sm:block" size={20} />
                 {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' && (
                   <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full">

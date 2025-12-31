@@ -617,7 +617,7 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-2 md:gap-3">
             <Logo size="small" showText={false} />
             <div>
-              <h2 className="text-lg md:text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
               <p className="text-xs md:text-sm text-black dark:text-white opacity-70">
                 Manage messages, reports, and audit logs
               </p>
