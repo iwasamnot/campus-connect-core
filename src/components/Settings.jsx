@@ -20,7 +20,15 @@ const Settings = ({ setActiveView }) => {
   return (
       <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 animate-fade-in">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6 animate-slide-in-down">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6 animate-slide-in-down"
+        style={{
+          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `1rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+        }}
+      >
         <div className="flex items-center gap-3">
           <SettingsIcon className="text-indigo-600 dark:text-indigo-400 transition-all duration-300 ease-in-out transform hover:rotate-90" size={28} />
           <div>

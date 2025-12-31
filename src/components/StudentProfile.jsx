@@ -207,7 +207,15 @@ const StudentProfile = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `0.75rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+        }}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">My Profile</h2>
