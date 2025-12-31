@@ -87,6 +87,7 @@ const CreateUser = () => {
       await setDoc(doc(db, 'users', newUser.uid), {
         email: formData.email,
         role: formData.role,
+        emailVerified: formData.role === 'admin' ? true : false, // Admins are automatically verified
         createdAt: new Date().toISOString(),
         createdBy: currentUser.uid, // Track who created this user
         createdByEmail: currentUser.email

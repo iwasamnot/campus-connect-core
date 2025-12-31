@@ -112,8 +112,13 @@ const Login = () => {
       } else if (err.code === 'auth/network-request-failed') {
         errorMessage = 'Network error. Please check your internet connection.';
       } else if (err.code === 'auth/email-not-verified') {
-        errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification email.';
-        setEmailVerificationSent(true);
+        // Don't show email verification error for admin emails
+        if (validateAdminEmail(email)) {
+          errorMessage = 'Admin login error. Please contact support if this issue persists.';
+        } else {
+          errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification email.';
+          setEmailVerificationSent(true);
+        }
       }
       setError(errorMessage);
       showError(errorMessage);
