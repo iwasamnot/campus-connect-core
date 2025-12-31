@@ -1540,7 +1540,7 @@ const ChatArea = ({ setActiveView }) => {
                   ref={messageInputRef}
                   type="text"
                   id="chat-message-input"
-                  name="message"
+                  name="chat-message"
                   value={newMessage}
                   onChange={async (e) => {
                     setNewMessage(e.target.value);
