@@ -927,23 +927,100 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
           paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
         }}
       >
-        <form onSubmit={sendMessage} className="flex gap-2 md:gap-3">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-            disabled={sending}
-          />
-          <button
-            type="submit"
-            disabled={sending || !newMessage.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
-          >
-            <Send size={18} className="md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Send</span>
-          </button>
+        {/* File Preview */}
+        {attachedFile && (
+          <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {attachedFile.type?.startsWith('image/') ? (
+                <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              ) : (
+                <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {attachedFile.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {(attachedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAttachedFile(null)}
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+            >
+              <X size={16} className="text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+              disabled={sending}
+            />
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
+            {/* File Upload */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowFileUpload(!showFileUpload)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Upload file"
+              >
+                <Paperclip size={20} />
+              </button>
+              {showFileUpload && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <FileUpload
+                    onFileUpload={(file) => {
+                      setAttachedFile(file);
+                      setShowFileUpload(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Emoji Picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Add emoji"
+              >
+                <Smile size={20} />
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                      setNewMessage(prev => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={sending || (!newMessage.trim() && !attachedFile)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
+            >
+              <Send size={18} className="md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Send</span>
+            </button>
+          </div>
         </form>
       </div>
 

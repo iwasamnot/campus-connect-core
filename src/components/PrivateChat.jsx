@@ -1102,26 +1102,27 @@ const PrivateChat = () => {
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6"
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
         style={{
-          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
-          paddingBottom: `1rem`,
-          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `0.75rem`,
+          paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`,
           position: 'relative',
           zIndex: 10
         }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => {
               setSelectedChatId(null);
               setSelectedUser(null);
               setMessages([]);
             }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+            aria-label="Back"
           >
-            <ArrowLeft size={20} className="text-gray-600 dark:text-gray-400" />
+            <ArrowLeft size={18} className="md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
           </button>
           <button
             onClick={() => setSelectedUserId(selectedUser.id)}
@@ -1195,7 +1196,7 @@ const PrivateChat = () => {
             </button>
           </div>
           {/* Disappearing Messages Settings Button */}
-          <div className="relative disappearing-settings-container">
+          <div className="relative disappearing-settings-container flex-shrink-0">
             <button
               onClick={() => setShowDisappearingSettings(!showDisappearingSettings)}
               className={`p-2 rounded-lg transition-colors ${
@@ -1204,8 +1205,9 @@ const PrivateChat = () => {
                   : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
               }`}
               title="Disappearing Messages Settings"
+              aria-label="Disappearing Messages Settings"
             >
-              <Clock size={20} />
+              <Clock size={18} className="md:w-5 md:h-5" />
             </button>
             
             {/* Disappearing Messages Settings Dropdown */}
