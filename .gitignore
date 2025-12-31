@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Capacitor
+ios/App/Pods/
+ios/App/Podfile.lock
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+android/local.properties
+*.jks
+*.keystore
+
 # Environment variables
 .env
 .env.local
