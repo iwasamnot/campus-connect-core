@@ -71,7 +71,7 @@ const PWAInstallPrompt = () => {
     <div 
       className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up"
       style={{
-        bottom: `calc(1rem + env(safe-area-inset-bottom, 0px))`,
+        bottom: `calc(0.5rem + env(safe-area-inset-bottom, 0px) * 0.5)`,
         left: `calc(1rem + env(safe-area-inset-left, 0px))`,
         right: `calc(1rem + env(safe-area-inset-right, 0px))`
       }}

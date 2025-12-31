@@ -1467,7 +1467,14 @@ const ChatArea = ({ setActiveView }) => {
           )}
 
           {/* Message Input */}
-          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4">
+          <div 
+            className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+            style={{
+              paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px) + 0.25rem)`,
+              paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+              paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
+            }}
+          >
             {/* Reply Preview */}
             {replyingTo && (
               <div className="mb-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between animate-slide-in-down">

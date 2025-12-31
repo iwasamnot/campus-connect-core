@@ -162,7 +162,7 @@ const ImagePreview = ({ imageUrl, imageName, onClose }) => {
       }}
       style={{
         paddingTop: `env(safe-area-inset-top, 0px)`,
-        paddingBottom: `env(safe-area-inset-bottom, 0px)`,
+        paddingBottom: `env(safe-area-inset-bottom, 0px) * 0.5`,
         paddingLeft: `env(safe-area-inset-left, 0px)`,
         paddingRight: `env(safe-area-inset-right, 0px)`
       }}
@@ -245,7 +245,7 @@ const ImagePreview = ({ imageUrl, imageName, onClose }) => {
         <div
           className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-white/10 text-white rounded-lg backdrop-blur-sm text-sm"
           style={{
-            bottom: `calc(1rem + env(safe-area-inset-bottom, 0px))`
+            bottom: `calc(0.5rem + env(safe-area-inset-bottom, 0px) * 0.5)`
           }}
           onClick={(e) => e.stopPropagation()}
         >

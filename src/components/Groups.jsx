@@ -348,7 +348,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
         style={{
           paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
           paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`,
-          paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`
+          paddingBottom: `calc(0.5rem + env(safe-area-inset-bottom, 0px) * 0.5)`
         }}
       >
         {filteredGroups.length === 0 ? (
@@ -425,7 +425,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
           style={{
             paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
-            paddingBottom: `calc(1rem + env(safe-area-inset-bottom, 0px))`,
+            paddingBottom: `calc(0.5rem + env(safe-area-inset-bottom, 0px) * 0.5)`,
             paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
             paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
           }}
@@ -507,7 +507,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
           style={{
             paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
-            paddingBottom: `calc(1rem + env(safe-area-inset-bottom, 0px))`,
+            paddingBottom: `calc(0.5rem + env(safe-area-inset-bottom, 0px) * 0.5)`,
             paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
             paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
           }}
