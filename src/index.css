@@ -353,12 +353,19 @@ input, textarea, [contenteditable] {
     top: env(safe-area-inset-top, 0px) !important;
   }
   
-  /* Headers with safe area - add padding to top headers */
+  /* Headers with safe area - ensure they're below status bar */
   header,
   [class*="Header"],
   .bg-white.border-b:first-child,
   .dark\\:bg-gray-800.border-b:first-child {
-    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem) !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Input areas with safe area - ensure they're above home indicator */
+  .border-t.bg-white,
+  .border-t.dark\\:bg-gray-800 {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
   }
 
   /* Fix for iOS Safari - use fill-available but don't add padding */
