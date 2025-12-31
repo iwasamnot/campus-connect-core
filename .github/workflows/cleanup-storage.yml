@@ -1,0 +1,87 @@
+# GitHub Actions workflow to automatically delete files older than 24 hours
+# Runs daily at midnight UTC
+
+name: Cleanup Old Storage Files
+
+on:
+  schedule:
+    # Run daily at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Setup Firebase Service Account
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC }}
+      
+      - name: Install Firebase Admin SDK
+        run: npm install firebase-admin --save
+      
+      - name: Run cleanup script
+        run: |
+          node -e "
+          const admin = require('firebase-admin');
+          admin.initializeApp({
+            credential: admin.credential.applicationDefault(),
+            storageBucket: 'campus-connect-sistc.firebasestorage.app'
+          });
+          
+          const storage = admin.storage();
+          const bucket = storage.bucket();
+          const now = Date.now();
+          const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
+          
+          let deletedCount = 0;
+          let errorCount = 0;
+          
+          async function cleanup() {
+            const folders = ['messages/', 'profile-pictures/', 'group-files/', 'private-chat-files/'];
+            
+            for (const folder of folders) {
+              try {
+                const [files] = await bucket.getFiles({ prefix: folder });
+                console.log(\`Checking \${folder}: \${files.length} files\`);
+                
+                for (const file of files) {
+                  try {
+                    const [metadata] = await file.getMetadata();
+                    const created = new Date(metadata.timeCreated).getTime();
+                    
+                    if (created < twentyFourHoursAgo) {
+                      await file.delete();
+                      deletedCount++;
+                      console.log(\`Deleted: \${file.name}\`);
+                    }
+                  } catch (error) {
+                    errorCount++;
+                    console.error(\`Error: \${file.name} - \${error.message}\`);
+                  }
+                }
+              } catch (error) {
+                console.error(\`Error checking \${folder}:\`, error);
+              }
+            }
+            
+            console.log(\`Cleanup complete. Deleted: \${deletedCount}, Errors: \${errorCount}\`);
+          }
+          
+          cleanup().then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); });
+          "
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC }}
+

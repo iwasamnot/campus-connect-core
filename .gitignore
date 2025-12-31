@@ -7,6 +7,14 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Service account keys (NEVER commit these!)
+serviceAccountKey.json
+*-service-account.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
 node_modules
 dist
 dist-ssr
