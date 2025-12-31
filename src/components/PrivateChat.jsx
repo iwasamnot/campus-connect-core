@@ -1258,48 +1258,49 @@ const PrivateChat = () => {
                  'Offline'}
               </p>
             </button>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
-                  const displayName = userNames[selectedUser.id] || 
-                                   selectedUser.name || 
-                                   userProfile.studentEmail?.split('@')[0] || 
-                                   selectedUser.email?.split('@')[0] ||
-                                   `User ${selectedUser.id.substring(0, 8)}`;
-                  startCall({ 
-                    id: selectedUser.id, 
-                    name: displayName, 
-                    email: selectedUser.email || selectedUser.studentEmail 
-                  }, 'voice');
-                }}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title="Voice call"
-                aria-label="Voice call"
-              >
-                <Phone size={18} className="text-indigo-600 dark:text-indigo-400" />
-              </button>
-              <button
-                onClick={() => {
-                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
-                  const displayName = userNames[selectedUser.id] || 
-                                   selectedUser.name || 
-                                   userProfile.studentEmail?.split('@')[0] || 
-                                   selectedUser.email?.split('@')[0] ||
-                                   `User ${selectedUser.id.substring(0, 8)}`;
-                  startCall({ 
-                    id: selectedUser.id, 
-                    name: displayName, 
-                    email: selectedUser.email || selectedUser.studentEmail 
-                  }, 'video');
-                }}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title="Video call"
-                aria-label="Video call"
-              >
-                <Video size={18} className="text-indigo-600 dark:text-indigo-400" />
-              </button>
-            </div>
+          </div>
+          {/* Call Buttons */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => {
+                const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                const displayName = userNames[selectedUser.id] || 
+                                 selectedUser.name || 
+                                 userProfile.studentEmail?.split('@')[0] || 
+                                 selectedUser.email?.split('@')[0] ||
+                                 `User ${selectedUser.id.substring(0, 8)}`;
+                startCall({ 
+                  id: selectedUser.id, 
+                  name: displayName, 
+                  email: selectedUser.email || selectedUser.studentEmail 
+                }, 'voice');
+              }}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="Voice call"
+              aria-label="Voice call"
+            >
+              <Phone size={18} className="text-indigo-600 dark:text-indigo-400" />
+            </button>
+            <button
+              onClick={() => {
+                const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                const displayName = userNames[selectedUser.id] || 
+                                 selectedUser.name || 
+                                 userProfile.studentEmail?.split('@')[0] || 
+                                 selectedUser.email?.split('@')[0] ||
+                                 `User ${selectedUser.id.substring(0, 8)}`;
+                startCall({ 
+                  id: selectedUser.id, 
+                  name: displayName, 
+                  email: selectedUser.email || selectedUser.studentEmail 
+                }, 'video');
+              }}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="Video call"
+              aria-label="Video call"
+            >
+              <Video size={18} className="text-indigo-600 dark:text-indigo-400" />
+            </button>
           </div>
           {/* Disappearing Messages Settings Button */}
           <div className="relative disappearing-settings-container flex-shrink-0">
