@@ -121,7 +121,7 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mode, name, email, confirmEmail, password, confirmPassword, register, login, success, showError, validateStudentEmail, validateAdminEmail]);
 
   const handlePasswordReset = async (e) => {
     e.preventDefault();
