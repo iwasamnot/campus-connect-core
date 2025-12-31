@@ -35,7 +35,7 @@ const Settings = ({ setActiveView }) => {
       </div>
 
       {/* Settings Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Appearance Section */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 card-hover animate-fade-in">

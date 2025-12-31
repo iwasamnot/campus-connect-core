@@ -226,7 +226,7 @@ const StudentProfile = () => {
       </div>
 
           {/* Profile Form */}
-          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-8">
+          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-8">
             <div className="max-w-2xl mx-auto">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-8">
             {error && (

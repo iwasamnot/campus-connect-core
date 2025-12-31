@@ -692,7 +692,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}

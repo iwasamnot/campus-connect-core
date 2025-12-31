@@ -654,7 +654,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full animate-fade-in">
             <img 
@@ -901,7 +901,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                 <X size={24} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-6 py-4">
               {group.members && group.members.length > 0 ? (
                 <div className="space-y-2">
                   {group.members.map((memberId) => {

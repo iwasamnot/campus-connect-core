@@ -946,7 +946,7 @@ const PrivateChat = () => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6">
           {filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <MessageCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
