@@ -2,14 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
-import { AI_CONFIG } from '../config/aiConfig';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 // Debug: Log API key status (remove in production)
 if (import.meta.env.DEV) {
   console.log('AI Config Status:', {
-    hasOpenAI: !!AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '',
-    openaiLength: AI_CONFIG.openaiApiKey?.length || 0,
     hasGemini: !!(import.meta.env.VITE_GEMINI_API_KEY?.trim()),
     geminiLength: import.meta.env.VITE_GEMINI_API_KEY?.trim()?.length || 0,
     geminiKeyPreview: import.meta.env.VITE_GEMINI_API_KEY?.trim() ? import.meta.env.VITE_GEMINI_API_KEY.trim().substring(0, 10) + '...' : 'not set'
@@ -365,7 +362,29 @@ const AIHelp = () => {
             threshold: HarmBlockThreshold.BLOCK_NONE,
           },
         ],
-        systemInstruction: 'You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). You provide accurate, helpful information about SISTC courses, campuses, applications, and student services. Be concise, friendly, and professional. Format your responses with markdown for better readability.',
+        systemInstruction: `You are an intelligent, knowledgeable, and empathetic AI assistant for Sydney International School of Technology and Commerce (SISTC). Your role is to provide comprehensive, accurate, and helpful information to students, prospective students, and visitors.
+
+**Your Capabilities:**
+- Provide detailed information about SISTC courses, programs, campuses, and student services
+- Answer questions about applications, admissions, fees, and requirements
+- Offer guidance on student life, support services, and resources
+- Help with general academic and university-related questions
+- Maintain context from conversation history to provide coherent, relevant responses
+
+**Your Approach:**
+- Be thorough but concise - provide complete information without unnecessary verbosity
+- Use a friendly, professional, and approachable tone
+- Structure your responses clearly with headings, lists, and formatting when helpful
+- If asked about SISTC-specific information, prioritize accuracy and reference the knowledge base provided
+- For general questions, use your knowledge while maintaining relevance to the educational context
+- Show empathy and understanding when addressing student concerns or questions
+- If you don't know something, be honest and suggest where they might find the information
+
+**Response Format:**
+- Use markdown formatting (headings, lists, bold, italic) for better readability
+- Break down complex topics into clear sections
+- Use bullet points or numbered lists for step-by-step information
+- Include relevant details, examples, or practical advice when appropriate`,
       });
       return model;
     } catch (error) {
@@ -374,8 +393,8 @@ const AIHelp = () => {
     }
   };
 
-  // Call Gemini AI
-  const callGemini = async (question, localContext) => {
+  // Call Gemini AI with conversation history
+  const callGemini = async (question, localContext, conversationHistory = []) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     if (!apiKey || apiKey === '') {
       console.warn('AIHelp: Gemini API key not found in callGemini');
@@ -389,21 +408,49 @@ const AIHelp = () => {
     }
 
     try {
-      const prompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
-You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
+      // Build conversation history for context
+      const historyContext = conversationHistory.length > 0 
+        ? `\n\n**Conversation History:**\n${conversationHistory.slice(-6).map((msg, idx) => {
+            if (msg.type === 'user') {
+              return `User: ${msg.content}`;
+            } else {
+              return `Assistant: ${msg.content.substring(0, 200)}...`;
+            }
+          }).join('\n\n')}\n\n`
+        : '';
 
-Use the following local knowledge base information as reference:
-${localContext ? `\n${localContext}\n` : ''}
+      const prompt = `**Context Information:**
 
-If the question is about SISTC specifically, prioritize and use the knowledge base information provided above.
-For general questions or if the knowledge base doesn't have the answer, use your general knowledge.
-Be concise, friendly, and professional. Format your responses with markdown for better readability.
+Use the following SISTC knowledge base information as your primary reference for SISTC-specific questions:
+${localContext ? `\n${localContext}\n` : '\nNo specific knowledge base context available. Use your general knowledge about universities and student services.\n'}
 
-Question: ${question}`;
+${historyContext}
+
+**Current Question:**
+${question}
+
+**Instructions:**
+- If the question is about SISTC specifically, prioritize the knowledge base information provided above
+- Maintain continuity with the conversation history if relevant
+- For general questions or if the knowledge base doesn't fully cover the topic, supplement with your knowledge
+- Provide comprehensive, well-structured answers that are thorough yet concise
+- Use markdown formatting for better readability
+- Be helpful, empathetic, and professional in your responses`;
 
       console.log('AIHelp: Calling Gemini with model:', selectedGeminiModel);
       console.log('AIHelp: Question length:', question.length);
-      const result = await model.generateContent(prompt);
+      console.log('AIHelp: Conversation history length:', conversationHistory.length);
+      
+      const result = await model.generateContent({
+        contents: [
+          ...conversationHistory.slice(-6).filter(msg => msg.type === 'user' || msg.type === 'bot').map(msg => ({
+            role: msg.type === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.type === 'user' ? msg.content : msg.content }]
+          })),
+          { role: 'user', parts: [{ text: prompt }] }
+        ],
+      });
+      
       const response = await result.response;
       const text = response.text();
       console.log('AIHelp: Gemini response received, length:', text?.length || 0);
@@ -431,80 +478,41 @@ Question: ${question}`;
   }, [messages]);
 
 
-  // Hybrid AI: Try Gemini first, then ChatGPT, then fallback to local knowledge base
+  // Intelligent AI: Use Gemini with conversation history, fallback to local knowledge base
   const getHybridAIResponse = async (question) => {
     // Always get local knowledge base answer first for context
     const localAnswer = ai.current.processQuestion(question);
     
-    // Priority 1: Try Gemini if API key is available
+    // Build conversation history from messages (excluding the system message)
+    const conversationHistory = messages
+      .filter(msg => msg.id !== 1) // Exclude the initial greeting
+      .slice(-10) // Keep last 10 messages for context
+      .map(msg => ({
+        type: msg.type === 'bot' ? 'bot' : 'user',
+        content: msg.content
+      }));
+    
+    // Try Gemini if API key is available
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     console.log('AIHelp: Checking Gemini API key...', {
       hasKey: !!geminiApiKey,
       keyLength: geminiApiKey?.length || 0,
-      keyPreview: geminiApiKey ? geminiApiKey.substring(0, 10) + '...' : 'not set'
+      keyPreview: geminiApiKey ? geminiApiKey.substring(0, 10) + '...' : 'not set',
+      historyLength: conversationHistory.length
     });
     
     if (geminiApiKey && geminiApiKey !== '') {
       console.log('AIHelp: Attempting to use Gemini AI with model:', selectedGeminiModel);
-      const geminiAnswer = await callGemini(question, localAnswer);
+      const geminiAnswer = await callGemini(question, localAnswer, conversationHistory);
       if (geminiAnswer && geminiAnswer.trim() !== '') {
         console.log('AIHelp: ✅ Gemini AI response received successfully, length:', geminiAnswer.length);
-        console.log('AIHelp: ✅ Using Gemini response (not falling back)');
-        return geminiAnswer; // Return Gemini answer if successful
+        console.log('AIHelp: ✅ Using Gemini response');
+        return geminiAnswer;
       } else {
-        console.warn('AIHelp: ⚠️ Gemini returned empty or null response, falling back to ChatGPT or local...');
+        console.warn('AIHelp: ⚠️ Gemini returned empty or null response, falling back to local knowledge base...');
       }
     } else {
-      console.log('AIHelp: ⚠️ Gemini API key not found, skipping Gemini and trying ChatGPT or local...');
-    }
-    
-    // Priority 2: Try ChatGPT if API key is available
-    if (AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') {
-      try {
-        const systemPrompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
-You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
-
-Use the following local knowledge base information as reference:
-${localAnswer ? `\n${localAnswer}\n` : ''}
-
-If the question is about SISTC specifically, prioritize and use the knowledge base information provided above.
-For general questions or if the knowledge base doesn't have the answer, use your general knowledge.
-Be concise, friendly, and professional. Format your responses with markdown for better readability.`;
-
-        const messages = [
-          { role: 'system', content: systemPrompt },
-          ...ai.current.context.slice(-3).map(ctx => ({
-            role: 'user',
-            content: ctx.question
-          })),
-          { role: 'user', content: question }
-        ];
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${AI_CONFIG.openaiApiKey}`
-          },
-          body: JSON.stringify({
-            model: AI_CONFIG.model || 'gpt-4o-mini',
-            messages: messages,
-            temperature: AI_CONFIG.temperature,
-            max_tokens: AI_CONFIG.maxTokens
-          })
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const chatGPTAnswer = data.choices[0]?.message?.content || null;
-          if (chatGPTAnswer) {
-            return chatGPTAnswer; // Return ChatGPT answer if successful
-          }
-        }
-      } catch (error) {
-        console.error('OpenAI API error:', error);
-        // Fall through to local answer
-      }
+      console.log('AIHelp: ⚠️ Gemini API key not found, using local knowledge base...');
     }
     
     // Fallback to local knowledge base answer
