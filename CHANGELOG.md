@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.1.1] - 2025-12-31
 
+### Added
+- **Comprehensive Firestore Security Rules**: Updated rules to include all collections
+  - Added rules for `savedMessages` collection (user-owned saved messages)
+  - Added rules for `scheduledMessages` collection (user-owned scheduled messages)
+  - Enhanced rules for all existing collections
+  - Complete coverage for all platform features
+
 ### Fixed
 - **File Upload Functionality**: Fixed file and image upload issues
   - Added Firebase Storage security rules to allow authenticated users to upload files
@@ -30,6 +37,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Firebase Configuration**: Added storage rules configuration to firebase.json
 - **FileUpload Component**: Enhanced with better error handling and debugging
+- **Firestore Rules**: Comprehensive update to cover all collections and features
+  - Users collection: Profile management and admin controls
+  - Messages collection: Full CRUD with reactions, replies, mentions, attachments
+  - Group Messages: Group chat functionality
+  - Private Chats: Private messaging with subcollections
+  - Groups: Group management and join requests
+  - Reports: User reporting system
+  - Audit Logs: Admin audit trail
+  - Typing Indicators: Real-time typing status
+  - Pinned Messages: Message pinning
+  - Saved Messages: User bookmarks
+  - Scheduled Messages: Message scheduling
 
 ## [4.1.0] - 2025-12-31
 

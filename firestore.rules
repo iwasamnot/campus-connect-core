@@ -270,5 +270,45 @@ service cloud.firestore {
         isAdmin()
       );
     }
+
+    // Saved messages collection
+    match /savedMessages/{savedMessageId} {
+      // Allow users to read their own saved messages
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow authenticated users to create saved messages for themselves
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to update their own saved messages
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow users to delete their own saved messages
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Scheduled messages collection
+    match /scheduledMessages/{scheduledMessageId} {
+      // Allow users to read their own scheduled messages
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow authenticated users to create scheduled messages for themselves
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to update their own scheduled messages
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow users to delete their own scheduled messages, or admins to delete any
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
   }
 }

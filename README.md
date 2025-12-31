@@ -277,8 +277,29 @@ service cloud.firestore {
     
     // Audit logs collection
     match /auditLogs/{logId} {
-      allow read, create, update, delete: if isAdmin();
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if false; // Audit logs should never be updated
+      allow delete: if isAdmin();
     }
+
+    // Saved messages collection
+    match /savedMessages/{savedMessageId} {
+      allow read, create, update, delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Scheduled messages collection
+    match /scheduledMessages/{scheduledMessageId} {
+      allow read, create, update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Groups, Private Chats, Group Messages, Typing Indicators, Pinned Messages
+    // (Full rules available in firestore.rules file)
   }
 }
 ```
