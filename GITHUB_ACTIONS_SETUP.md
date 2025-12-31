@@ -53,13 +53,17 @@ gcloud projects add-iam-policy-binding campus-connect-sistc \
 
 ## Getting Service Account JSON
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project: `campus-connect-sistc`
-3. Go to **Project Settings** → **Service Accounts**
-4. Click **Generate new private key**
-5. Download the JSON file
-6. Copy the entire JSON content
-7. Add it to GitHub Secrets as `FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC`
+**You don't need Cloud Console access for this!** Use Firebase Console:
+
+1. Go to [Firebase Console](https://console.firebase.google.com/project/campus-connect-sistc)
+   - Direct link: https://console.firebase.google.com/project/campus-connect-sistc/settings/serviceaccounts/adminsdk
+2. You should see **Service Accounts** section
+3. Click **Generate new private key**
+4. A JSON file will download automatically
+5. Open the JSON file and copy the entire content
+6. Add it to GitHub Secrets as `FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC`
+
+**Note**: If you can't see Service Accounts, make sure you're logged in with the account that owns the project or has admin access.
 
 ## GitHub Secrets Required
 
