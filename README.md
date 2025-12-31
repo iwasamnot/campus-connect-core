@@ -452,7 +452,6 @@ For automatic deployment to work, you need to set up GitHub Secrets:
 1. Go to your GitHub repository → **Settings** → **Secrets and variables** → **Actions**
 2. Add the following secrets:
 
-<<<<<<< HEAD
    #### Firebase Configuration (Required)
    
    - **`VITE_FIREBASE_API_KEY`**: 
