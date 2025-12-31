@@ -361,6 +361,8 @@ The platform supports email/password authentication with role-based access:
 
 ## User Roles
 
+See `ROLES_SETUP_GUIDE.md` for comprehensive role setup instructions.
+
 - **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
   - Email format: `s20xxxxx@sistc.edu.au` or `s20xxxxx@sistc.nsw.edu.au`
   - Email verification required (can be verified by admin)

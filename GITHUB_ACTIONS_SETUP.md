@@ -7,28 +7,46 @@ This guide explains how to set up GitHub Actions for automatic deployment to Fir
 The Firebase service account used in GitHub Actions needs the following IAM roles:
 
 ### Minimum Required Roles:
-1. **Firebase Admin** - For deploying Firestore rules, Storage rules, and Hosting
-2. **Service Usage Admin** - For enabling Firebase APIs (if not already enabled)
-3. **Storage Admin** - For deploying Storage rules
+1. **Firebase Admin** (`roles/firebase.admin`) - For deploying Firestore rules, Storage rules, and Hosting
+2. **Service Usage Admin** (`roles/serviceusage.serviceUsageAdmin`) - For enabling Firebase APIs (if not already enabled)
+3. **Storage Admin** (`roles/storage.admin`) - For deploying Storage rules
 
 ### Recommended Roles (for full functionality):
 - **Firebase Admin**
 - **Service Usage Admin**
 - **Storage Admin**
-- **Firestore Admin**
+- **Firestore Admin** (optional, included in Firebase Admin)
 
 ## Setting Up Service Account Permissions
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Select your project: `campus-connect-sistc`
-3. Navigate to **IAM & Admin** → **IAM**
-4. Find your service account (or create one if needed)
-5. Click **Edit** (pencil icon)
-6. Add the following roles:
-   - **Firebase Admin**
-   - **Service Usage Admin**
-   - **Storage Admin**
-7. Click **Save**
+### Method 1: Using Firebase Console (Easiest)
+
+1. Go to [Firebase Console Service Accounts](https://console.firebase.google.com/project/campus-connect-sistc/settings/serviceaccounts/adminsdk)
+2. You'll see your service account email listed
+3. Copy the email address
+4. Click on the email or go to: https://console.cloud.google.com/iam-admin/iam?project=campus-connect-sistc
+5. Find your service account in the list
+6. Click **Edit** (pencil icon)
+7. Click **Add Another Role**
+8. Add these roles one by one:
+   - `Firebase Admin` (or search for `roles/firebase.admin`)
+   - `Service Usage Admin` (or search for `roles/serviceusage.serviceUsageAdmin`)
+   - `Storage Admin` (or search for `roles/storage.admin`)
+9. Click **Save**
+
+### Method 2: Direct IAM Link
+
+1. Go directly to: https://console.cloud.google.com/iam-admin/iam?project=campus-connect-sistc
+2. Find your service account (usually ends with `@appspot.gserviceaccount.com`)
+3. Click **Edit** (pencil icon)
+4. Add the three roles mentioned above
+5. Click **Save**
+
+### Method 3: Using gcloud CLI
+
+See `ROLES_SETUP_GUIDE.md` for gcloud CLI commands.
+
+**Note**: See `ROLES_SETUP_GUIDE.md` for detailed step-by-step instructions with screenshots guidance.
 
 ## Alternative: Use Firebase CLI to Grant Permissions
 
