@@ -6,6 +6,26 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ### For Students
 - **Campus Chat**: Real-time global chat with AI-powered content moderation
+- **Activity Dashboard**: Comprehensive activity feed and insights
+  - Recent messages and mentions
+  - Activity statistics (messages today, this week, active groups)
+  - Real-time activity updates
+  - Filter by messages, mentions, or all activity
+- **Message Scheduler**: Schedule messages for future delivery
+  - Schedule messages to be sent at specific times
+  - Support for Campus Chat, Private Chat, and Group Chat
+  - View and manage all scheduled messages
+  - Delete scheduled messages before sending
+- **Saved Messages**: Bookmark and save important messages
+  - Save any message with one click
+  - Search through saved messages
+  - View saved messages with original context
+  - Quick access to important information
+- **Image Gallery**: Browse all shared images
+  - View all images shared in chats
+  - Filter by all images, my images, or recent
+  - Full-screen image viewer with download option
+  - Image metadata (author, date, filename)
 - **Groups**: Create and join study groups with group chat functionality
 - **AI Help Assistant**: Intelligent AI assistant powered by ChatGPT with local SISTC knowledge base
 - **My Profile**: Comprehensive profile management with:
@@ -20,6 +40,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Search messages
   - Reply to messages
   - Forward messages to other chats
+  - Save/bookmark messages
   - Pin messages (admin only)
   - File and image sharing
   - Markdown formatting support

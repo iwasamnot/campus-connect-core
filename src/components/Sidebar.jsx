@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3 } from 'lucide-react';
+import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon } from 'lucide-react';
 import Logo from './Logo';
 
 const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
@@ -99,6 +99,50 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             >
               <MessageCircle size={20} />
               <span>Private Chat</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('activity')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'activity'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Activity size={20} />
+              <span>Activity</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('scheduler')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'scheduler'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Calendar size={20} />
+              <span>Scheduler</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('saved')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'saved'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Bookmark size={20} />
+              <span>Saved</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('gallery')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'gallery'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <ImageIcon size={20} />
+              <span>Gallery</span>
             </button>
             <button
               onClick={() => handleNavClick('settings')}

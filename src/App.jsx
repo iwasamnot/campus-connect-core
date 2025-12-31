@@ -55,6 +55,22 @@ const KeyboardShortcuts = lazy(() => import('./components/KeyboardShortcuts').ca
   console.error('Error loading KeyboardShortcuts:', err);
   return { default: () => null };
 }));
+const ActivityDashboard = lazy(() => import('./components/ActivityDashboard').catch(err => {
+  console.error('Error loading ActivityDashboard:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Activity Dashboard. Please refresh the page.</div> };
+}));
+const MessageScheduler = lazy(() => import('./components/MessageScheduler').catch(err => {
+  console.error('Error loading MessageScheduler:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Message Scheduler. Please refresh the page.</div> };
+}));
+const SavedMessages = lazy(() => import('./components/SavedMessages').catch(err => {
+  console.error('Error loading SavedMessages:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Saved Messages. Please refresh the page.</div> };
+}));
+const ImageGallery = lazy(() => import('./components/ImageGallery').catch(err => {
+  console.error('Error loading ImageGallery:', err);
+  return { default: () => <div className="p-4 text-red-600">Error loading Image Gallery. Please refresh the page.</div> };
+}));
 
 // Loading component for lazy-loaded routes
 const LoadingSpinner = () => (
@@ -164,6 +180,10 @@ function App() {
                 </ErrorBoundary>
               )}
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
+              {activeView === 'activity' && <ErrorBoundary><div className="page-transition"><ActivityDashboard /></div></ErrorBoundary>}
+              {activeView === 'scheduler' && <ErrorBoundary><div className="page-transition"><MessageScheduler /></div></ErrorBoundary>}
+              {activeView === 'saved' && <ErrorBoundary><div className="page-transition"><SavedMessages /></div></ErrorBoundary>}
+              {activeView === 'gallery' && <ErrorBoundary><div className="page-transition"><ImageGallery /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />
             </>

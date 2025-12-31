@@ -20,7 +20,7 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark } from 'lucide-react';
 import Logo from './Logo';
 import UserProfilePopup from './UserProfilePopup';
 import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
@@ -30,6 +30,7 @@ import MentionAutocomplete from './MentionAutocomplete';
 import AdvancedSearch from './AdvancedSearch';
 import { saveDraft, getDraft, clearDraft } from '../utils/drafts';
 import { exportMessagesToJSON, exportMessagesToCSV, exportMessagesToTXT } from '../utils/export';
+import { saveMessage } from '../utils/saveMessage';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { parseMarkdown, hasMarkdown } from '../utils/markdown';
 import notificationService from '../utils/notifications';
@@ -1279,6 +1280,24 @@ const ChatArea = ({ setActiveView }) => {
 
                   {/* Action buttons */}
                   <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await saveMessage(user.uid, { ...message, chatType: 'global' });
+                          success('Message saved!');
+                        } catch (error) {
+                          if (error.message === 'Message already saved') {
+                            showError('Message already saved');
+                          } else {
+                            showError('Failed to save message');
+                          }
+                        }
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
+                      title="Save message"
+                    >
+                      <Bookmark size={14} />
+                    </button>
                     {preferences.allowMessageForwarding && (
                       <button
                         onClick={() => handleForwardMessage(message.id)}

@@ -11,7 +11,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Two-factor authentication (2FA)
 - Multi-language support
 - Voice messages
-- Message scheduling
+
+## [4.1.0] - 2025-12-31
+
+### Added
+- **Activity Dashboard**: Comprehensive activity feed for students
+  - Recent messages and mentions
+  - Activity statistics (messages today, this week, active groups)
+  - Real-time activity updates
+  - Filter by messages, mentions, or all activity
+  - Quick access to recent platform activity
+- **Message Scheduler**: Schedule messages to be sent at specific times
+  - Schedule messages for future delivery
+  - Support for Campus Chat, Private Chat, and Group Chat
+  - View and manage all scheduled messages
+  - Automatic message sending at scheduled time
+  - Delete scheduled messages before they're sent
+- **Saved Messages**: Bookmark and save important messages
+  - Save any message with one click
+  - Search through saved messages
+  - View saved messages with original context
+  - Remove saved messages when no longer needed
+  - Quick access to important information
+- **Image Gallery**: Browse all shared images
+  - View all images shared in chats
+  - Filter by all images, my images, or recent
+  - Full-screen image viewer with download option
+  - Image metadata (author, date, filename)
+  - Lazy loading for better performance
+- **Virtual Scrolling**: Performance optimization for long message lists
+  - Only renders visible messages + overscan
+  - Significantly improves performance with large message lists
+  - Smooth scrolling experience
+  - Reduced memory usage
+- **Enhanced Component Optimization**: React.memo, useMemo, useCallback
+  - All new components optimized with React.memo
+  - Memoized expensive calculations
+  - Optimized re-renders
+  - Better overall performance
+
+### Changed
+- **Sidebar Navigation**: Added new menu items for students
+  - Activity Dashboard
+  - Message Scheduler
+  - Saved Messages
+  - Image Gallery
+- **ChatArea**: Added save message button
+  - Quick save/bookmark button on all messages
+  - Visual feedback on save action
+- **Performance**: Further optimized all components
+  - Virtual scrolling for long lists
+  - Memoized components
+  - Optimized Firebase queries
+  - Better caching strategies
+
+### Fixed
+- Improved date formatting in Activity Dashboard
+- Better error handling in new features
+- Fixed image gallery query optimization
 
 ## [4.0.4] - 2025-12-31
 
@@ -697,6 +754,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v4.1.0** (2025-12-31) - Major user-side update: Activity Dashboard, Message Scheduler, Saved Messages, Image Gallery, virtual scrolling, enhanced optimizations
 - **v4.0.4** (2025-12-31) - Admin analytics dashboard, advanced search, keyboard shortcuts, message drafts, export chat history, performance optimizations
 - **v4.0.3** (2025-12-31) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
 - **v4.0.2** (2025-12-31) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
