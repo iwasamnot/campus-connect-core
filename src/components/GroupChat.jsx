@@ -139,6 +139,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   useEffect(() => {
     if (!group?.id) return;
 
+    // Try the indexed query first
     const q = query(
       collection(db, 'groupMessages'),
       where('groupId', '==', group.id),
@@ -146,16 +147,51 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       limit(50) // Reduced to 50 messages for Spark free plan (was 100)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setMessages(messagesData);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const messagesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMessages(messagesData);
+      },
+      (error) => {
+        console.error('GroupChat: Error fetching messages:', error);
+        if (error.code === 'failed-precondition') {
+          console.warn('GroupChat: Firestore index missing. Using fallback query.');
+          // Fallback: query without orderBy and sort client-side
+          const fallbackQuery = query(
+            collection(db, 'groupMessages'),
+            where('groupId', '==', group.id),
+            limit(100) // Get more messages since we'll filter client-side
+          );
+          
+          const fallbackUnsubscribe = onSnapshot(fallbackQuery, (snapshot) => {
+            const messagesData = snapshot.docs
+              .map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }))
+              .filter(msg => msg.timestamp) // Only messages with timestamps
+              .sort((a, b) => {
+                const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
+                const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
+                return aTime - bTime;
+              })
+              .slice(0, 50); // Limit to 50 most recent
+            setMessages(messagesData);
+          });
+          
+          return () => fallbackUnsubscribe();
+        } else {
+          showError('Failed to load messages. Please refresh the page.');
+        }
+      }
+    );
 
     return () => unsubscribe();
-  }, [group?.id]); // Only depend on group.id to prevent unnecessary re-subscriptions
+  }, [group?.id, showError]); // Include showError in dependencies
 
   // Mark messages as read (separate effect to prevent infinite loops)
   // DISABLED by default for Spark free plan - read receipts are expensive
@@ -229,8 +265,22 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
     }
 
     // Check toxicity using Gemini AI (with fallback) - only if there's text
+    // Wrap in try-catch to ensure it never blocks message sending
     const textToCheck = newMessage.trim() || '';
-    const toxicityResult = textToCheck ? await checkToxicity(textToCheck, true) : { isToxic: false, confidence: 0, reason: '', method: 'none' };
+    let toxicityResult = { isToxic: false, confidence: 0, reason: '', method: 'none' };
+    try {
+      toxicityResult = textToCheck ? await checkToxicity(textToCheck, true) : toxicityResult;
+    } catch (error) {
+      console.warn('GroupChat: Toxicity check failed, allowing message anyway:', error);
+      // Use fallback - allow message to send
+      if (textToCheck) {
+        try {
+          toxicityResult = await checkToxicity(textToCheck, false); // Force fallback
+        } catch (fallbackError) {
+          console.warn('GroupChat: Even fallback failed, sending message without toxicity check');
+        }
+      }
+    }
     const isToxic = toxicityResult.isToxic;
     const displayText = isToxic ? '[REDACTED BY AI]' : textToCheck;
 
