@@ -41,36 +41,20 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
     setLoading(true);
     
-    // Try query with where clause, but fallback to simple query if index is missing
-    let q;
-    try {
-      q = query(
-        collection(db, 'groups'),
-        where('members', 'array-contains', user.uid),
-        limit(50) // Limit to 50 groups to prevent quota exhaustion
-      );
-    } catch (error) {
-      console.warn('Error creating query with where clause, using simple query:', error);
-      // Fallback: fetch all groups and filter client-side
-      q = query(
-        collection(db, 'groups'),
-        limit(50)
-      );
-    }
+    // Use query with where clause for members
+    const q = query(
+      collection(db, 'groups'),
+      where('members', 'array-contains', user.uid),
+      limit(50) // Limit to 50 groups to prevent quota exhaustion
+    );
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const allGroupsData = snapshot.docs.map(doc => ({
+        const groupsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        
-        // If using fallback query, filter client-side
-        const groupsData = q._queryConstraints?.some(c => c.type === 'where') 
-          ? allGroupsData 
-          : allGroupsData.filter(group => group.members?.includes(user.uid));
-        
         setGroups(groupsData);
         setLoading(false);
       },
@@ -79,6 +63,26 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
         // Show user-friendly error message
         if (error.code === 'failed-precondition') {
           showError('Groups index is missing. Please create a Firestore index for groups.members or contact support.');
+          // Fallback: try fetching all groups and filter client-side
+          const fallbackQ = query(collection(db, 'groups'), limit(50));
+          const fallbackUnsubscribe = onSnapshot(
+            fallbackQ,
+            (fallbackSnapshot) => {
+              const allGroups = fallbackSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              const filteredGroups = allGroups.filter(group => group.members?.includes(user.uid));
+              setGroups(filteredGroups);
+              setLoading(false);
+            },
+            (fallbackError) => {
+              console.error('Error with fallback query:', fallbackError);
+              showError('Failed to load groups. Please try again.');
+              setLoading(false);
+            }
+          );
+          return () => fallbackUnsubscribe();
         } else if (error.code === 'permission-denied') {
           showError('Permission denied. You may not have permission to view groups.');
         } else {
