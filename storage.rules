@@ -1,0 +1,71 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role != null &&
+        (firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin1');
+    }
+    
+    // Messages folder - allow authenticated users to upload and read
+    match /messages/{fileName} {
+      // Allow authenticated users to read any message file
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to upload files (max 10MB)
+      allow write: if isAuthenticated() && 
+        request.resource.size < 10 * 1024 * 1024;
+      
+      // Allow admins to delete files
+      allow delete: if isAdmin();
+    }
+    
+    // Profile pictures folder - allow users to upload their own profile picture
+    match /profile-pictures/{userId}/{fileName} {
+      // Allow authenticated users to read any profile picture
+      allow read: if isAuthenticated();
+      
+      // Allow users to upload their own profile picture (max 5MB)
+      allow write: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.size < 5 * 1024 * 1024;
+      
+      // Allow users to delete their own profile picture, or admins to delete any
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+    
+    // Group files folder - allow authenticated users to upload and read
+    match /group-files/{groupId}/{fileName} {
+      // Allow authenticated users to read group files
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to upload files to groups (max 10MB)
+      allow write: if isAuthenticated() && 
+        request.resource.size < 10 * 1024 * 1024;
+      
+      // Allow admins to delete group files
+      allow delete: if isAdmin();
+    }
+    
+    // Private chat files folder - allow authenticated users to upload and read
+    match /private-chat-files/{chatId}/{fileName} {
+      // Allow authenticated users to read private chat files
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to upload files to private chats (max 10MB)
+      allow write: if isAuthenticated() && 
+        request.resource.size < 10 * 1024 * 1024;
+      
+      // Allow admins to delete private chat files
+      allow delete: if isAdmin();
+    }
+  }
+}
+

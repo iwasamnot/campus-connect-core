@@ -37,9 +37,11 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
 
     try {
       // Create preview for images
+      let imagePreview = null;
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
+          imagePreview = reader.result;
           setPreview(reader.result);
         };
         reader.readAsDataURL(file);
@@ -47,11 +49,19 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
 
       // Upload to Firebase Storage
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `messages/${timestamp}_${file.name}`);
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `${timestamp}_${sanitizedFileName}`;
+      const storageRef = ref(storage, `messages/${fileName}`);
+      
+      console.log('Uploading file to:', `messages/${fileName}`);
+      console.log('File size:', file.size, 'bytes');
+      console.log('File type:', file.type);
       
       await uploadBytes(storageRef, file);
+      console.log('File uploaded successfully');
+      
       const downloadURL = await getDownloadURL(storageRef);
+      console.log('Download URL obtained:', downloadURL);
 
       // Callback with file info
       onFileUpload({
@@ -59,7 +69,7 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
         name: file.name,
         type: file.type,
         size: file.size,
-        preview: preview
+        preview: file.type.startsWith('image/') ? downloadURL : null
       });
 
       // Reset
@@ -69,7 +79,21 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
       }
     } catch (err) {
       console.error('Error uploading file:', err);
-      setError('Failed to upload file. Please try again.');
+      console.error('Error code:', err.code);
+      console.error('Error message:', err.message);
+      
+      let errorMessage = 'Failed to upload file. Please try again.';
+      if (err.code === 'storage/unauthorized') {
+        errorMessage = 'You do not have permission to upload files. Please contact support.';
+      } else if (err.code === 'storage/canceled') {
+        errorMessage = 'Upload was canceled.';
+      } else if (err.code === 'storage/unknown') {
+        errorMessage = 'An unknown error occurred. Please check your connection and try again.';
+      } else if (err.message) {
+        errorMessage = `Upload failed: ${err.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setUploading(false);
     }

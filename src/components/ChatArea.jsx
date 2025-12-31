@@ -543,6 +543,9 @@ const ChatArea = ({ setActiveView }) => {
           type: attachedFile.type,
           size: attachedFile.size
         };
+        // Also add legacy fields for compatibility
+        messageData.fileUrl = attachedFile.url;
+        messageData.fileName = attachedFile.name;
       }
 
       // Add mentions
