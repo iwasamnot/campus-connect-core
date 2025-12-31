@@ -1,6 +1,7 @@
 import { useAuth } from './context/AuthContext';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
+import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
 // Removed Menu import - using swipe gesture instead
@@ -184,7 +185,9 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900 md:flex-row">
+    <>
+      <CallModal />
+      <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900 md:flex-row">
       {/* Skip to main content link for accessibility */}
       <a href="#main-content" className="skip-to-main">
         Skip to main content
@@ -271,6 +274,7 @@ function App() {
         </Suspense>
       </div>
     </div>
+    </>
   );
 }
 

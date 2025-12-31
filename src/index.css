@@ -703,15 +703,46 @@ input, textarea, [contenteditable] {
     touch-action: manipulation;
   }
   
-  /* Disable hover states on touch devices */
+  /* Completely disable ALL hover states on touch devices - override any hover styles */
   button:hover,
-  a:hover {
+  a:hover,
+  div:hover,
+  .hover\:bg-gray-100:hover,
+  .hover\:bg-gray-200:hover,
+  .hover\:bg-gray-50:hover,
+  .hover\:bg-gray-700:hover,
+  .hover\:bg-gray-600:hover,
+  .hover\:bg-indigo-100:hover,
+  .hover\:bg-indigo-700:hover,
+  .hover\:bg-blue-700:hover,
+  .hover\:bg-green-700:hover,
+  .hover\:bg-red-700:hover,
+  .hover\:bg-purple-700:hover,
+  .hover\:bg-orange-700:hover,
+  .hover\:bg-yellow-700:hover,
+  .hover\:opacity-70:hover,
+  .hover\:opacity-100:hover,
+  .hover\:opacity-90:hover,
+  .hover\:scale-110:hover,
+  .hover\:scale-105:hover,
+  .hover\:scale-\[1\.02\]:hover,
+  .hover\:underline:hover,
+  .hover\:border-indigo-400:hover,
+  .card-hover:hover,
+  .group:hover .group-hover\:opacity-100 {
+    background-color: revert !important;
+    color: revert !important;
+    border-color: revert !important;
+    opacity: revert !important;
     transform: none !important;
+    box-shadow: revert !important;
+    text-decoration: revert !important;
   }
   
   /* Show action buttons always on touch devices */
   .opacity-0.group-hover\:opacity-100,
-  .md\:opacity-0.md\:group-hover\:opacity-100 {
+  .md\:opacity-0.md\:group-hover\:opacity-100,
+  .group-hover\:opacity-100 {
     opacity: 1 !important;
   }
 
@@ -785,6 +816,20 @@ input, textarea, [contenteditable] {
   .sidebar nav {
     position: relative;
     z-index: 1;
+  }
+  
+  /* Additional PWA hover fixes - disable all hover effects in standalone mode */
+  @media (display-mode: standalone) {
+    button:hover,
+    a:hover,
+    div:hover {
+      background-color: revert !important;
+      color: revert !important;
+      border-color: revert !important;
+      opacity: revert !important;
+      transform: none !important;
+      box-shadow: revert !important;
+    }
   }
   
   /* Fix for PWA viewport issues */

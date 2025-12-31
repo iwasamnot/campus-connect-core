@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { PresenceProvider } from './context/PresenceContext.jsx'
 import { PreferencesProvider } from './context/PreferencesContext.jsx'
+import { CallProvider } from './context/CallContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 // Register service worker for PWA
@@ -29,7 +30,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <AuthProvider>
             <PresenceProvider>
               <ToastProvider>
-                <App />
+                <CallProvider>
+                  <App />
+                </CallProvider>
               </ToastProvider>
             </PresenceProvider>
           </AuthProvider>

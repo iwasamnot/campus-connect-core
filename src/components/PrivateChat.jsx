@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useCall } from '../context/CallContext';
 import { isAdminRole, isUserOnline } from '../utils/helpers';
 import { 
   collection, 
@@ -19,7 +20,7 @@ import {
   limit
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail, Paperclip, Smile, File, Image as ImageIcon } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail, Paperclip, Smile, File, Image as ImageIcon, Phone, Video } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
 import FileUpload from './FileUpload';
 import EmojiPicker from './EmojiPicker';
@@ -29,6 +30,7 @@ import { checkToxicity } from '../utils/toxicityChecker';
 const PrivateChat = () => {
   const { user, userRole } = useAuth();
   const { success, error: showError } = useToast();
+  const { startCall } = useCall();
   const [availableUsers, setAvailableUsers] = useState([]); // List of admins (for students) or students (for admins)
   const [selectedChatId, setSelectedChatId] = useState(null); // Current chat ID
   const [selectedUser, setSelectedUser] = useState(null); // The other user in the chat
@@ -1256,6 +1258,48 @@ const PrivateChat = () => {
                  'Offline'}
               </p>
             </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                  const displayName = userNames[selectedUser.id] || 
+                                   selectedUser.name || 
+                                   userProfile.studentEmail?.split('@')[0] || 
+                                   selectedUser.email?.split('@')[0] ||
+                                   `User ${selectedUser.id.substring(0, 8)}`;
+                  startCall({ 
+                    id: selectedUser.id, 
+                    name: displayName, 
+                    email: selectedUser.email || selectedUser.studentEmail 
+                  }, 'voice');
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Voice call"
+                aria-label="Voice call"
+              >
+                <Phone size={18} className="text-indigo-600 dark:text-indigo-400" />
+              </button>
+              <button
+                onClick={() => {
+                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                  const displayName = userNames[selectedUser.id] || 
+                                   selectedUser.name || 
+                                   userProfile.studentEmail?.split('@')[0] || 
+                                   selectedUser.email?.split('@')[0] ||
+                                   `User ${selectedUser.id.substring(0, 8)}`;
+                  startCall({ 
+                    id: selectedUser.id, 
+                    name: displayName, 
+                    email: selectedUser.email || selectedUser.studentEmail 
+                  }, 'video');
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Video call"
+                aria-label="Video call"
+              >
+                <Video size={18} className="text-indigo-600 dark:text-indigo-400" />
+              </button>
+            </div>
           </div>
           {/* Disappearing Messages Settings Button */}
           <div className="relative disappearing-settings-container flex-shrink-0">

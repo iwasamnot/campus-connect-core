@@ -11,6 +11,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Optimized Performance**: Minimal theme optimized for ultra-fast transitions and animations
 
 ### For Students
+- **Voice & Video Calling**: Make voice and video calls directly from private chats (powered by ZEGOCLOUD)
 - **Campus Chat**: Real-time global chat with AI-powered content moderation
 - **Activity Dashboard**: Comprehensive activity feed and insights
   - Recent messages and mentions
@@ -239,7 +240,16 @@ A secure, student-only messaging platform for universities with AI-powered conte
      ```
      VITE_GEMINI_API_KEY=your-gemini-api-key-here
      ```
+   - Add your ZEGOCLOUD credentials (optional, for voice/video calling):
+     ```
+     VITE_ZEGOCLOUD_APP_ID=your-zegocloud-app-id
+     VITE_ZEGOCLOUD_SERVER_SECRET=your-zegocloud-server-secret
+     ```
    - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for AI Help Assistant, Virtual Senior, and toxicity detection)
+   - **ZEGOCLOUD Credentials**: Get from https://console.zegocloud.com (for voice and video calling features)
+     - App ID: Found in Project Configuration → Basic Information
+     - Server Secret: Found in Project Configuration → Basic Configurations → ServerSecret
+     - **Note**: For production, implement server-side token generation for security
    - **Important**: Restart the dev server after adding environment variables
    - If no API key is provided, the AI will use the local knowledge base
    - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)

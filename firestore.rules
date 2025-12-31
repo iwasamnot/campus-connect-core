@@ -112,19 +112,28 @@ service cloud.firestore {
     // Private chats collection
     match /privateChats/{chatId} {
       // Allow authenticated users to read chats they're part of
-      allow read: if isAuthenticated() && 
-        request.auth.uid in resource.data.participants;
+      // Also allow reading non-existent documents (for checking if chat exists before creating)
+      allow read: if isAuthenticated() && (
+        !exists(/databases/$(database)/documents/privateChats/$(chatId)) ||
+        (resource.data.participants != null &&
+         request.auth.uid in resource.data.participants)
+      );
       
       // Allow authenticated users to create chats they're part of
       allow create: if isAuthenticated() && 
+        request.resource.data.participants != null &&
         request.auth.uid in request.resource.data.participants;
       
-      // Allow participants to update chats
+      // Allow participants to update chats (for lastMessage, lastMessageTime, disappearing messages settings)
       allow update: if isAuthenticated() && 
-        request.auth.uid in resource.data.participants;
+        resource.data.participants != null &&
+        request.auth.uid in resource.data.participants &&
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage', 'lastMessageTime', 'disappearingMessagesEnabled', 'disappearingMessagesDuration']) ||
+         isAdmin());
       
       // Allow participants to delete chats
       allow delete: if isAuthenticated() && 
+        resource.data.participants != null &&
         request.auth.uid in resource.data.participants;
 
       // Private chat messages subcollection
