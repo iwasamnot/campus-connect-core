@@ -392,6 +392,7 @@ const StudentProfile = () => {
                           <input
                             type="file"
                             id="profile-picture-upload"
+                            name="profile-picture-upload"
                             accept="image/*"
                             onChange={async (e) => {
                               const file = e.target.files[0];

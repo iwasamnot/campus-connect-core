@@ -729,6 +729,7 @@ const UsersManagement = () => {
                       <input
                         type="file"
                         id="edit-user-picture-upload"
+                        name="profile-picture-upload"
                         accept="image/*"
                         onChange={async (e) => {
                           const file = e.target.files[0];

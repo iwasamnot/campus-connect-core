@@ -707,8 +707,10 @@ const AdminDashboard = () => {
 
         {/* Sort Controls */}
         <div className="flex items-center gap-4 mt-4">
-          <label className="text-sm text-black dark:text-white">Sort by:</label>
+          <label htmlFor="admin-sort-by" className="text-sm text-black dark:text-white">Sort by:</label>
           <select
+            id="admin-sort-by"
+            name="sort-by"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
