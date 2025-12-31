@@ -25,7 +25,14 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == userId;
       
       // Allow users to update their own profile, or admins to update any user
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // IMPORTANT: Users CANNOT update their own emailVerified field - only admins can
+      allow update: if isAuthenticated() && (
+        // User updating their own profile (but not emailVerified)
+        (request.auth.uid == userId && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified', 'role'])) ||
+        // Admin updating any user (can update emailVerified and role)
+        isAdmin()
+      );
       
       // Only admins can delete users
       allow delete: if isAdmin();

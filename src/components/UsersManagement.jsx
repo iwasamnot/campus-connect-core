@@ -219,8 +219,13 @@ const UsersManagement = () => {
     const newStatus = !currentStatus;
     setVerifying(userId);
     try {
+      // Add adminVerified flag to track that this was manually verified by admin
+      // This helps prevent automatic reverting
       await updateDoc(doc(db, 'users', userId), {
         emailVerified: newStatus,
+        adminVerified: newStatus ? true : null, // Track if admin verified (null if unverified)
+        adminVerifiedAt: newStatus ? new Date().toISOString() : null,
+        adminVerifiedBy: newStatus ? currentUser.uid : null,
         updatedAt: new Date().toISOString(),
         updatedBy: currentUser.uid,
         updatedByEmail: currentUser.email
@@ -230,7 +235,8 @@ const UsersManagement = () => {
         userId,
         userEmail,
         verified: newStatus,
-        verifiedBy: currentUser.email
+        verifiedBy: currentUser.email,
+        adminVerified: newStatus
       });
 
       success(`Email ${newStatus ? 'verified' : 'unverified'} successfully.`);

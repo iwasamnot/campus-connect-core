@@ -161,9 +161,11 @@ export const AuthProvider = ({ children }) => {
       
       // Get current Firestore emailVerified status (may have been manually set by admin)
       let firestoreEmailVerified = false;
+      let adminVerified = false; // Track if admin manually verified
       if (userDoc.exists()) {
         const userData = userDoc.data();
         firestoreEmailVerified = userData.emailVerified === true; // Preserve admin-verified status
+        adminVerified = userData.adminVerified === true; // Check if admin manually verified
       }
       
       // Check if email is verified (skip for admin accounts)
@@ -188,18 +190,36 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Update emailVerified status in Firestore
-      // IMPORTANT: Preserve admin-verified status - only update if not already set or if user is admin
-      // Don't overwrite Firestore emailVerified if it's true (admin verified) unless user is admin
-      const shouldUpdateEmailVerified = isAdmin 
-        ? true // Admins are always verified
-        : (!firestoreEmailVerified && loggedInUser.emailVerified); // Only update if not already verified in Firestore and Firebase Auth says verified
+      // CRITICAL: NEVER overwrite emailVerified if admin manually verified it
+      // Only update if:
+      // 1. User is admin (always verified)
+      // 2. NOT admin-verified AND Firebase Auth says verified (user verified via email)
+      // 3. NOT admin-verified AND email not verified (set to false)
       
-      if (shouldUpdateEmailVerified) {
+      if (isAdmin) {
+        // Admins are always verified - update to true
         await setDoc(doc(db, 'users', loggedInUser.uid), {
-          emailVerified: isAdmin ? true : loggedInUser.emailVerified
+          emailVerified: true
         }, { merge: true });
+      } else if (adminVerified || firestoreEmailVerified === true) {
+        // Email is admin-verified or already verified in Firestore - DO NOT OVERWRITE
+        // This preserves admin verification - never change it
+        console.log('Preserving admin-verified email status for user:', loggedInUser.uid, 'adminVerified:', adminVerified);
+        // Do nothing - preserve the existing verified status
+      } else if (loggedInUser.emailVerified) {
+        // User verified via Firebase Auth email - update Firestore (only if not admin-verified)
+        await setDoc(doc(db, 'users', loggedInUser.uid), {
+          emailVerified: true
+        }, { merge: true });
+      } else {
+        // Email not verified - only update if not already verified
+        // Don't overwrite if it's already true
+        if (firestoreEmailVerified !== true) {
+          await setDoc(doc(db, 'users', loggedInUser.uid), {
+            emailVerified: false
+          }, { merge: true });
+        }
       }
-      // If firestoreEmailVerified is already true (admin verified), preserve it - don't overwrite
       
       // Set user role
       if (userDoc.exists()) {
