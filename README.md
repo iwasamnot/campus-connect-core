@@ -159,11 +159,14 @@ A secure, student-only messaging platform for universities with AI-powered conte
    ```
 
 2. **Configure Firebase**
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - **Find your project**: Your project ID is `campus-connect-sistc`
+     - Direct link: https://console.firebase.google.com/project/campus-connect-sistc
+     - See `FIND_MY_PROJECT.md` for detailed instructions if you can't find it
+   - **If project doesn't exist**: Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
    - Enable Authentication:
      - **Email/Password**: Go to Authentication → Sign-in method → Enable Email/Password
    - Create a Firestore database
-   - Update Firestore security rules from `FIRESTORE_RULES.txt`
+   - Update Firestore security rules from `firestore.rules`
    - Get your Firebase configuration values from Firebase Console → Project Settings → General → Your apps
 
 3. **Configure Environment Variables**
