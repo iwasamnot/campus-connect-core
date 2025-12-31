@@ -104,7 +104,6 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - Enable Authentication:
      - **Email/Password**: Go to Authentication → Sign-in method → Enable Email/Password
    - Create a Firestore database
-<<<<<<< HEAD
    - Update Firestore security rules from `FIRESTORE_RULES.txt`
    - Get your Firebase configuration values from Firebase Console → Project Settings → General → Your apps
 
@@ -121,28 +120,15 @@ A secure, student-only messaging platform for universities with AI-powered conte
      VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
      ```
    - Add your AI API keys (Optional):
-=======
-   - Copy your Firebase config to `src/firebaseConfig.js`
-   - Update Firestore security rules from `FIRESTORE_RULES.txt`
-
-3. **Configure API Keys (Optional - for AI Features)**
-   - Create a `.env` file in the root directory (`CampusConnect/.env`)
-   - Add your API keys:
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
      ```
      VITE_OPENAI_API_KEY=sk-your-openai-api-key-here
      VITE_GEMINI_API_KEY=your-gemini-api-key-here
      ```
    - **OpenAI API Key**: Get from https://platform.openai.com/api-keys (for AI Help Assistant)
    - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for Virtual Senior in Campus Chat)
-<<<<<<< HEAD
    - **Important**: Restart the dev server after adding environment variables
    - If no API keys are provided, the AI will use the local knowledge base
    - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)
-=======
-   - **Important**: Restart the dev server after adding API keys
-   - If no API keys are provided, the AI will use the local knowledge base
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
 
 4. **Run Development Server**
    ```bash
@@ -177,22 +163,6 @@ VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 Get these values from Firebase Console → Project Settings → General → Your apps → Web app config.
 
 **Note**: The app includes fallback values for backward compatibility, but it's recommended to use environment variables.
-
-=======
-Replace the placeholder values in `src/firebaseConfig.js` with your actual Firebase configuration:
-
-```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-```
-
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
 ## Firestore Rules
 
 Make sure to set up proper Firestore security rules. See `FIRESTORE_RULES.txt` for the complete, up-to-date rules.
@@ -279,21 +249,33 @@ The platform uses **Google Gemini AI** for intelligent toxicity detection:
 
 ## Authentication
 
-The platform supports two authentication methods:
+The platform supports email/password authentication with role-based access:
 
-1. **Email/Password Registration & Login**
-   - Users can register with email and password
-   - Choose role (Student or Admin) during registration
-   - Role is stored in Firestore `users` collection
+1. **Student Registration & Login**
+   - Students can register with email and password
+   - **Email Format**: Must start with "s20" and contain "@sistc.edu.au" (e.g., s2012345@sistc.edu.au)
+   - Email verification required before login
+   - Role automatically set to "student" during registration
 
-2. **Anonymous Quick Login** (Optional)
-   - Quick access without registration
-   - Role selected at login time
+2. **Admin Login**
+   - Admin accounts must be created manually in Firebase Console
+   - **Email Format**: Must start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)
+   - Email verification bypassed for admin accounts
+   - See `ADMIN_SETUP.md` for detailed admin account setup instructions
+
+3. **Password Reset**
+   - Available for both student and admin accounts
+   - Email format validation applies to password reset requests
 
 ## User Roles
 
 - **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
+  - Email format: `s20xxxxx@sistc.edu.au`
+  - Email verification required
 - **Admin**: Can access Audit Logs, Users Management, and Create User functionality
+  - Email format: `admin*@campusconnect.com` (e.g., admin1@campusconnect.com)
+  - Email verification bypassed
+  - Must be created in Firebase Console (see `ADMIN_SETUP.md`)
 
 ## Automatic Deployment
 
@@ -349,25 +331,17 @@ For automatic deployment to work, you need to set up GitHub Secrets:
    
    #### Firebase Service Account (Required for Deployment)
    
-=======
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
    - **`FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC`**: 
      - Get this from Firebase Console → Project Settings → Service Accounts
      - Click "Generate new private key"
      - Copy the entire JSON content and paste it as the secret value
    
-<<<<<<< HEAD
    #### AI API Keys (Optional)
    
    - **`VITE_OPENAI_API_KEY`** (Optional):
      - Your OpenAI API key if you want ChatGPT features in production
      - Format: `sk-your-key-here`
      - Get from: https://platform.openai.com/api-keys
-=======
-   - **`VITE_OPENAI_API_KEY`** (Optional):
-     - Your OpenAI API key if you want ChatGPT features in production
-     - Format: `sk-your-key-here`
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
    
    - **`VITE_GEMINI_API_KEY`** (Required for AI features):
      - Your Google Gemini API key for:

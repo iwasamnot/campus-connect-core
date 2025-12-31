@@ -15,6 +15,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Message scheduling
 - Advanced analytics dashboard
 
+## [4.0.2] - 2024-12-27
+
+### Fixed
+- **Admin Login Validation**: Fixed admin email validation blocking admin login
+  - Added `validateAdminEmail()` function to check for admin email format
+  - Admin emails must start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)
+  - Login validation now accepts both student and admin email formats
+  - Password reset validation updated to support admin emails
+  - Improved error messages with clear format requirements for both student and admin emails
+- **Email Verification Bypass for Admins**: Admin accounts can now login without email verification
+  - Admin accounts bypass email verification requirement in AuthContext
+  - Admins are automatically considered verified
+  - Better handling of admin role detection before email verification check
+- **Email Domain Update**: Updated student email domain from @sistc.edu.in to @sistc.edu.au
+  - All validation functions updated to check for "@sistc.edu.au"
+  - All error messages updated with new domain format
+  - Updated in Login.jsx, CreateUser.jsx, and all related components
+
+### Changed
+- **Email Validation**: Enhanced email validation with whitespace trimming
+  - Both student and admin email validation now trims whitespace
+  - More robust validation handling edge cases
+  - Added debug logging for login attempts
+- **Error Messages**: Improved error messages for better user guidance
+  - Clear format requirements shown in error messages
+  - Separate validation for student vs admin email formats
+  - Better error handling for admin account creation
+
 ## [4.0.1] - 2024-12-27
 
 ### Fixed
@@ -581,6 +609,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v4.0.2** (2024-12-27) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
+- **v4.0.1** (2024-12-27) - Message deletion fixes, build error fixes, comprehensive error handling improvements
+- **v4.0.0** (2024-12-27) - Advanced theme customization, message forwarding, enhanced chat preferences, keyboard shortcuts
 - **v3.0.0** (2024-12-27) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
 - **v2.0.1** (2024-12-27) - Private chat improvements, email search, message history preview, enhanced settings, and bug fixes
 - **v2.0.0** (2024-12-27) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
