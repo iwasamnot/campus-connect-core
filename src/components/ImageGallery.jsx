@@ -16,30 +16,89 @@ const ImageGallery = memo(() => {
   useEffect(() => {
     if (!user?.uid) return;
 
-    const q = query(
-      collection(db, 'messages'),
-      orderBy('timestamp', 'desc'),
-      limit(100)
-    );
+    setLoading(true);
+
+    // Try query with orderBy, but fallback to simple query if index is missing
+    let q;
+    try {
+      q = query(
+        collection(db, 'messages'),
+        orderBy('timestamp', 'desc'),
+        limit(200) // Increased limit to get more images
+      );
+    } catch (error) {
+      console.warn('Error creating query with orderBy, using simple query:', error);
+      q = query(
+        collection(db, 'messages'),
+        limit(200)
+      );
+    }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const imageMessages = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data
+          };
+        })
         .filter(msg => {
-          const fileType = msg.fileName?.toLowerCase() || '';
-          const fileUrl = msg.fileUrl || '';
-          return fileType.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
-                 fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
-                 msg.attachment?.type?.startsWith('image/');
+          // Check multiple possible image fields
+          const hasFileUrl = msg.fileUrl && typeof msg.fileUrl === 'string';
+          const hasAttachment = msg.attachment && msg.attachment.url;
+          const hasPreview = msg.preview && typeof msg.preview === 'string';
+          
+          // Check file name extensions
+          const fileName = msg.fileName?.toLowerCase() || msg.attachment?.name?.toLowerCase() || '';
+          const fileUrl = (msg.fileUrl || msg.attachment?.url || msg.preview || '').toLowerCase();
+          
+          // Check if it's an image by extension or MIME type
+          const isImageByExtension = fileName.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i) || 
+                                     fileUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i);
+          const isImageByType = msg.attachment?.type?.startsWith('image/') || 
+                               msg.fileType?.startsWith('image/');
+          
+          // Must have a URL and be identified as an image
+          return (hasFileUrl || hasAttachment || hasPreview) && (isImageByExtension || isImageByType);
+        })
+        .sort((a, b) => {
+          // Sort by timestamp if available
+          const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
+          const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
+          return bTime - aTime;
         });
 
+      console.log(`ImageGallery: Found ${imageMessages.length} images out of ${snapshot.docs.length} messages`);
       setImages(imageMessages);
       setLoading(false);
     }, (error) => {
       console.error('Error fetching images:', error);
+      if (error.code === 'failed-precondition') {
+        console.warn('Firestore index missing. Please create index for messages collection with timestamp field.');
+        // Try without orderBy
+        const simpleQuery = query(collection(db, 'messages'), limit(200));
+        const fallbackUnsubscribe = onSnapshot(simpleQuery, (snapshot) => {
+          const imageMessages = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(msg => {
+              const hasFileUrl = msg.fileUrl || msg.attachment?.url || msg.preview;
+              const fileName = (msg.fileName || msg.attachment?.name || '').toLowerCase();
+              const fileUrl = (msg.fileUrl || msg.attachment?.url || msg.preview || '').toLowerCase();
+              return hasFileUrl && (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
+                                    fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+                                    msg.attachment?.type?.startsWith('image/'));
+            })
+            .sort((a, b) => {
+              const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
+              const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
+              return bTime - aTime;
+            });
+          setImages(imageMessages);
+          setLoading(false);
+        });
+        return () => fallbackUnsubscribe();
+      }
       setLoading(false);
     });
 
@@ -117,8 +176,12 @@ const ImageGallery = memo(() => {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredImages.map((img) => {
-            const imageUrl = img.fileUrl || img.attachment?.url;
-            if (!imageUrl) return null;
+            // Try multiple possible image URL fields
+            const imageUrl = img.fileUrl || img.attachment?.url || img.preview;
+            if (!imageUrl) {
+              console.warn('ImageGallery: No image URL found for message:', img.id);
+              return null;
+            }
 
             return (
               <div
@@ -161,25 +224,31 @@ const ImageGallery = memo(() => {
               <X className="w-6 h-6" />
             </button>
             <img
-              src={selectedImage.fileUrl || selectedImage.attachment?.url}
-              alt={selectedImage.fileName || 'Image'}
+              src={selectedImage.fileUrl || selectedImage.attachment?.url || selectedImage.preview}
+              alt={selectedImage.fileName || selectedImage.attachment?.name || 'Image'}
               className="max-w-full max-h-[90vh] mx-auto object-contain rounded-lg"
+              onError={(e) => {
+                console.error('Error loading image:', selectedImage);
+                e.target.src = '/placeholder-image.png'; // Fallback image
+              }}
             />
             <div className="absolute bottom-4 left-4 right-4 bg-black/50 rounded-lg p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold">{selectedImage.userName || 'Unknown'}</p>
                   <p className="text-sm opacity-75">{formatDate(selectedImage.timestamp)}</p>
-                  {selectedImage.fileName && (
-                    <p className="text-sm opacity-75 mt-1">{selectedImage.fileName}</p>
+                  {(selectedImage.fileName || selectedImage.attachment?.name) && (
+                    <p className="text-sm opacity-75 mt-1">
+                      {selectedImage.fileName || selectedImage.attachment?.name}
+                    </p>
                   )}
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDownload(
-                      selectedImage.fileUrl || selectedImage.attachment?.url,
-                      selectedImage.fileName || 'image'
+                      selectedImage.fileUrl || selectedImage.attachment?.url || selectedImage.preview,
+                      selectedImage.fileName || selectedImage.attachment?.name || 'image'
                     );
                   }}
                   className="p-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
