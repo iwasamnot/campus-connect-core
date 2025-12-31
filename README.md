@@ -142,7 +142,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Backend**: Firebase 12.7
   - Firestore (Database)
   - Authentication (Email/Password)
-  - Storage (Profile Pictures)
+  - Storage (Files, Images, Profile Pictures)
+    - Secure file uploads with size limits (10MB for messages, 5MB for profile pictures)
+    - Firebase Storage security rules for authenticated access
 - **AI**: 
   - Google Gemini AI (for toxicity detection and Virtual Senior responses)
   - OpenAI GPT models (optional) with local knowledge base fallback
