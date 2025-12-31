@@ -438,6 +438,11 @@ For automatic deployment to work, you need to set up GitHub Secrets:
      - Get this from Firebase Console → Project Settings → Service Accounts
      - Click "Generate new private key"
      - Copy the entire JSON content and paste it as the secret value
+     - **Important**: The service account needs these IAM roles:
+       - **Firebase Admin** (required)
+       - **Service Usage Admin** (required for enabling APIs)
+       - **Storage Admin** (required for Storage rules)
+     - See `GITHUB_ACTIONS_SETUP.md` for detailed setup instructions
    
    #### AI API Keys (Optional)
    

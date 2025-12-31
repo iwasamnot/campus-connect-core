@@ -46,9 +46,11 @@ jobs:
       
       - name: Deploy Firestore Rules
         run: firebase deploy --only firestore:rules --project campus-connect-sistc --non-interactive
+        continue-on-error: true
       
       - name: Deploy Storage Rules
         run: firebase deploy --only storage:rules --project campus-connect-sistc --non-interactive
+        continue-on-error: true
       
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
