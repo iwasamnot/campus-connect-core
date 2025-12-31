@@ -144,6 +144,20 @@ function App() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hasSetDefaultView, setHasSetDefaultView] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Track window size for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      // Close sidebar when switching from mobile to desktop
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Set default view based on user role (only on initial load)
   useEffect(() => {
@@ -170,7 +184,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900">
+    <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900 md:flex-row">
       {/* Skip to main content link for accessibility */}
       <a href="#main-content" className="skip-to-main">
         Skip to main content
@@ -185,20 +199,21 @@ function App() {
         id="main-content" 
         className="flex-1 overflow-hidden relative w-full"
         onTouchStart={(e) => {
-          // Swipe from left edge to open menu
-          if (window.innerWidth < 768 && !sidebarOpen && e.touches[0].clientX < 20) {
+          // Swipe from left edge to open menu (only on mobile, when sidebar is closed)
+          if (isMobile && !sidebarOpen && e.touches[0].clientX < 30) {
             setSidebarOpen(true);
           }
         }}
       >
         {/* Swipe indicator on mobile - subtle hint */}
-        {!sidebarOpen && window.innerWidth < 768 && (
+        {!sidebarOpen && isMobile && (
           <div 
-            className="fixed left-0 top-1/2 -translate-y-1/2 z-20 w-1 h-16 bg-indigo-600/30 rounded-r-full md:hidden"
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-20 w-1 h-20 bg-indigo-600/20 dark:bg-indigo-400/20 rounded-r-full transition-opacity duration-300"
             style={{
               left: '0px',
-              animation: 'pulse 2s infinite'
+              animation: 'pulse 3s infinite'
             }}
+            aria-hidden="true"
           />
         )}
         <Suspense fallback={<LoadingSpinner />}>
