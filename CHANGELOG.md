@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Firebase Configuration**: Added storage rules configuration to firebase.json
 - **FileUpload Component**: Enhanced with better error handling and debugging
+- **GitHub Actions**: Updated workflows to properly deploy Firestore and Storage rules
+  - Fixed Firebase CLI authentication for rules deployment
+  - Added proper service account setup
+  - Fixed PR preview channelId issue
 - **Firestore Rules**: Comprehensive update to cover all collections and features
   - Users collection: Profile management and admin controls
   - Messages collection: Full CRUD with reactions, replies, mentions, attachments
