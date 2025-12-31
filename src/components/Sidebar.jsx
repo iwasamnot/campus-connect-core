@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
 import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon } from 'lucide-react';
 import Logo from './Logo';
 
-const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
+const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
   const { userRole } = useAuth();
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -12,13 +12,13 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
   // Minimum swipe distance
   const minSwipeDistance = 50;
 
-  const handleNavClick = (view) => {
+  const handleNavClick = useCallback((view) => {
     setActiveView(view);
     // Close sidebar on mobile after navigation
     if (window.innerWidth < 768) {
       onClose();
     }
-  };
+  }, [setActiveView, onClose]);
 
   // Handle touch events for swipe to close
   const onTouchStart = (e) => {
@@ -283,6 +283,8 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
     </div>
     </>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;

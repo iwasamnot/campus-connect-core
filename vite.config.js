@@ -152,11 +152,24 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Split vendor chunks
-          'react-vendor': ['react', 'react-dom'],
-          'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-          'ui-vendor': ['lucide-react'],
+        manualChunks: (id) => {
+          // Split vendor chunks more aggressively
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('firebase')) {
+              return 'firebase-vendor';
+            }
+            if (id.includes('lucide-react')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('@google/generative-ai')) {
+              return 'gemini-vendor';
+            }
+            // Other node_modules
+            return 'vendor';
+          }
         },
         // Ensure chunk names are stable
         chunkFileNames: 'assets/[name]-[hash].js',
@@ -164,9 +177,18 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    chunkSizeWarningLimit: 600, // Increase warning limit slightly since we're code-splitting
-    // Source maps for better error debugging
-    sourcemap: false
+    chunkSizeWarningLimit: 600,
+    // Disable source maps for production to reduce bundle size
+    sourcemap: false,
+    // Minify more aggressively
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug']
+      }
+    }
   }
 })
 

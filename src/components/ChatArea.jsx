@@ -301,33 +301,39 @@ const ChatArea = ({ setActiveView }) => {
   }, [messages]);
 
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
-  useEffect(() => {
-    mountedRef.current = true;
-    const q = query(
+  // Optimized: Memoize query to prevent recreation
+  const messagesQuery = useMemo(() => {
+    return query(
       collection(db, 'messages'),
       orderBy('timestamp', 'desc'),
-      limit(50) // Reduced to 50 messages for Spark free plan (was 100)
+      limit(30) // Reduced to 30 messages for better performance
     );
+  }, []);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    
     const unsubscribe = onSnapshot(
-      q,
+      messagesQuery,
       (snapshot) => {
+        if (!mountedRef.current) return;
+        
         try {
           const messagesData = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
           }));
           
-          // Deduplicate messages by ID to prevent duplicates
-          const uniqueMessages = messagesData.reduce((acc, message) => {
-            if (!acc.find(m => m.id === message.id)) {
-              acc.push(message);
+          // Deduplicate messages by ID to prevent duplicates (use Map for O(1) lookup)
+          const messageMap = new Map();
+          messagesData.forEach(message => {
+            if (!messageMap.has(message.id)) {
+              messageMap.set(message.id, message);
             }
-            return acc;
-          }, []);
+          });
           
-          // Sort by timestamp to ensure correct order
-          uniqueMessages.sort((a, b) => {
+          // Convert to array and sort by timestamp
+          const uniqueMessages = Array.from(messageMap.values()).sort((a, b) => {
             const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
             const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
             return aTime - bTime;
@@ -356,7 +362,7 @@ const ChatArea = ({ setActiveView }) => {
       mountedRef.current = false;
       unsubscribe();
     };
-  }, [user?.uid, showError]); // Include showError but it's stable from context
+  }, [messagesQuery, showError]); // Use memoized query
 
   // Mark messages as read and send notifications (separate effect to prevent infinite loops)
   // OPTIMIZED: Read receipts are expensive - only update if explicitly enabled AND with longer delays
@@ -1076,6 +1082,7 @@ const ChatArea = ({ setActiveView }) => {
                         src={profilePicture} 
                         alt={userNames[message.userId] || 'User'} 
                         className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                        loading="lazy"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextSibling.style.display = 'flex';
@@ -1261,6 +1268,7 @@ const ChatArea = ({ setActiveView }) => {
                             src={message.attachment.url}
                             alt={message.attachment.name}
                             className="max-w-full max-h-64 object-contain"
+                            loading="lazy"
                           />
                         </div>
                       ) : (
