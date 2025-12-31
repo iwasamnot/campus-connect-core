@@ -220,7 +220,7 @@ const StudentProfile = () => {
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">My Profile</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white">My Profile</h2>
             <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Manage your contact information</p>
           </div>
           {!editing && (

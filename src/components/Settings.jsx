@@ -34,7 +34,7 @@ const Settings = ({ setActiveView }) => {
         <div className="flex items-center gap-3">
           <SettingsIcon className="text-indigo-600 dark:text-indigo-400 transition-all duration-300 ease-in-out transform hover:rotate-90" size={28} />
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
               Settings
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
