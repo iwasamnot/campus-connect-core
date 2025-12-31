@@ -378,9 +378,11 @@ const StudentProfile = () => {
                               const file = e.target.files[0];
                               if (!file) return;
                               
-                              if (file.size > 5 * 1024 * 1024) {
-                                setError('Image size must be less than 5MB');
-                                showError('Image size must be less than 5MB');
+                              // STRICT LIMIT: 2MB max for profile pictures (to stay within free tier)
+                              const maxProfileSize = 2 * 1024 * 1024; // 2MB
+                              if (file.size > maxProfileSize) {
+                                setError(`Image size must be less than 2MB. Please compress the image before uploading.`);
+                                showError(`Image size must be less than 2MB. Please compress the image before uploading.`);
                                 return;
                               }
 

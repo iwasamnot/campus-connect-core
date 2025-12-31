@@ -3,7 +3,9 @@ import { Upload, X, Image, File, Loader } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebaseConfig';
 
-const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] }) => {
+// STRICT LIMITS to stay within Firebase free tier (5GB storage, 1GB/day downloads)
+// Max file size: 5MB (reduced from 10MB to conserve storage)
+const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] }) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
@@ -13,10 +15,15 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file size
+    // STRICT VALIDATION: File size limit to stay within free tier
     if (file.size > maxSize) {
-      setError(`File size exceeds ${maxSize / (1024 * 1024)}MB limit`);
+      setError(`File size exceeds ${(maxSize / (1024 * 1024)).toFixed(0)}MB limit. Please compress or use a smaller file.`);
       return;
+    }
+    
+    // Additional check: Warn if file is very large (close to limit)
+    if (file.size > maxSize * 0.9) {
+      console.warn('File is close to size limit:', file.size, 'bytes');
     }
 
     // Validate file type
