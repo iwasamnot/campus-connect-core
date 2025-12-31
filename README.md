@@ -117,12 +117,25 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Browser Notifications**: Desktop notifications for new messages and mentions
 - **Dark Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
+  - Optimized mobile UI with safe area insets for all devices
+  - Touch-friendly interface with proper button sizes
+  - Full-screen sidebar on mobile with overlay
+  - Proper viewport handling for iOS Safari
+- **Progressive Web App (PWA)**: Install as a native app
+  - Service worker with intelligent caching
+  - Offline support with Firebase caching strategies
+  - Install prompt for easy app installation
+  - Works on iOS, Android, and desktop
 - **Code-Split Bundles**: Optimized performance with lazy-loaded components
+  - Retry logic for failed component loads
+  - Error boundaries with graceful recovery
+  - Exponential backoff for import retries
 - **Performance Optimizations**: Enhanced application performance
   - Debounced search inputs
   - React.memo optimizations
   - Optimized Firebase queries
   - Skeleton loaders for better UX
+  - Virtual scrolling for long lists
 - **Secure**: Role-based access control with Firestore security rules
 - **Direct Messages**: Private messaging between users with chat history
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days

@@ -12,6 +12,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-language support
 - Voice messages
 
+## [4.2.0] - 2026-01-01
+
+### Added
+- **Comprehensive Mobile UI/UX Optimization**: Complete mobile interface overhaul
+  - Safe area insets for all devices (iPhone notches, Android navigation bars)
+  - Proper header positioning below status bars
+  - Input areas positioned above home indicators
+  - Touch-friendly button sizes (minimum 44px)
+  - Optimized viewport handling for iOS Safari
+  - Full-screen sidebar on mobile devices
+  - Proper scroll container management
+- **Progressive Web App (PWA) Enhancements**: Complete PWA optimization
+  - Service worker with intelligent caching strategies
+  - Firebase-specific caching (Hosting, Storage, Firestore)
+  - PWA install prompt with user-friendly interface
+  - Enhanced manifest with comprehensive icon sizes
+  - iOS Safari PWA support improvements
+  - Cache clearing utility for troubleshooting
+- **Advanced Error Handling**: Robust error recovery system
+  - Lazy loading with retry logic and exponential backoff
+  - Error boundaries with "Try Again" functionality
+  - Improved error messages and user feedback
+  - Graceful degradation for failed component loads
+  - Service worker cache management on errors
+
+### Changed
+- **Mobile Interface**: Complete mobile experience redesign
+  - Removed excessive global locking that prevented scrolling
+  - Applied safe area insets only to specific elements
+  - Optimized touch interactions and scroll behavior
+  - Fixed black bar at bottom with proper background colors
+  - Fixed untouchable top bar with proper safe area handling
+  - Improved sidebar behavior on mobile (full-screen overlay)
+- **Header Positioning**: All headers now respect device safe areas
+  - Headers positioned correctly below status bars
+  - Consistent safe area padding across all pages
+  - Fixed headers in: ChatArea, AdminDashboard, UsersManagement, Settings, StudentProfile, Groups, GroupChat, PrivateChat, AIHelp
+- **Input Area Positioning**: All input areas respect device safe areas
+  - Input bars positioned above home indicators
+  - Consistent safe area padding for bottom elements
+  - Fixed input areas in: ChatArea, GroupChat, PrivateChat, AIHelp
+- **CSS Architecture**: Simplified and optimized global styles
+  - Removed conflicting CSS rules
+  - Targeted safe area application
+  - Better z-index management
+  - Improved scroll container handling
+- **Performance**: Enhanced lazy loading and code splitting
+  - Retry mechanism for failed imports
+  - Exponential backoff for retries
+  - Better error recovery
+  - Optimized bundle sizes
+
+### Fixed
+- **Top Bar Touchability**: Fixed untouchable top bar on mobile devices
+  - Removed global padding that pushed content down
+  - Applied safe area insets directly to fixed elements
+  - Mobile menu button now properly positioned and touchable
+- **Bottom Spacing**: Fixed weird spacing at bottom of screen
+  - Proper safe area padding for input areas
+  - Fixed black bar at bottom with background colors
+  - Input areas now accessible above home indicators
+- **Header Visibility**: Fixed headers being covered by status bars
+  - Headers now properly positioned below system UI
+  - Consistent spacing across all devices
+  - Proper safe area handling for all screen sizes
+- **Mobile Scrolling**: Fixed locked interface issues
+  - Removed excessive position: fixed and overflow: hidden
+  - Proper scroll container management
+  - Sidebar body lock only when sidebar is open
+  - Smooth scrolling experience restored
+- **iOS Safari Issues**: Fixed viewport and safe area problems
+  - Proper height calculation with -webkit-fill-available
+  - Background colors for full screen coverage
+  - Safe area insets properly applied
+  - Fixed pull-to-refresh interference
+
 ## [4.1.1] - 2025-12-31
 
 ### Added
@@ -55,7 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Saved Messages: User bookmarks
   - Scheduled Messages: Message scheduling
 
-## [4.1.0] - 2025-12-31
+## [4.1.0] - 2025-12-30
 
 ### Added
 - **Activity Dashboard**: Comprehensive activity feed for students
@@ -113,7 +189,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better error handling in new features
 - Fixed image gallery query optimization
 
-## [4.0.4] - 2025-12-31
+## [4.0.4] - 2025-12-29
 
 ### Added
 - **Admin Analytics Dashboard**: Comprehensive analytics and insights for administrators
@@ -174,7 +250,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better handling of large message lists
 - Enhanced error handling in search functionality
 
-## [4.0.3] - 2025-12-31
+## [4.0.3] - 2025-12-28
 
 ### Added
 - **Extended Email Domain Support**: Added support for `@sistc.nsw.edu.au` email domain
@@ -203,7 +279,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved email format detection for user document creation
 - Better handling of email validation edge cases
 
-## [4.0.2] - 2025-12-31
+## [4.0.2] - 2025-12-28
 
 ### Fixed
 - **Admin Login Validation**: Fixed admin email validation blocking admin login
@@ -346,7 +422,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better theme color application throughout the app
 - Enhanced settings page accessibility
 
-## [3.0.0] - 2024-12-27
+## [3.0.0] - 2025-12-26
 
 ### Added
 - **AI-Powered Toxicity Detection with Gemini**: Advanced toxicity checking using Google Gemini AI
@@ -416,7 +492,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Direct Messages showing all users instead of chat history
 - Improved message metadata consistency across all chat types
 
-## [2.0.1] - 2024-12-27
+## [2.0.1] - 2025-12-25
 
 ### Added
 - **Private Chat from User Popup**: Start private chat directly from user profile popup
@@ -484,7 +560,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved message state management
   - Better synchronization with Firestore
 
-## [2.0.0] - 2024-12-27
+## [2.0.0] - 2025-12-24
 
 ### Added
 - **Real-time Typing Indicators**: See when users are typing in real-time
@@ -566,7 +642,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed notification permission handling
 - Improved typing indicator cleanup
 
-## [1.2.2] - 2024-12-27
+## [1.2.2] - 2025-12-23
 
 ### Added
 - **Logo.png Integration**: Added logo.png throughout the entire application
@@ -610,7 +686,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed mobile sidebar buttons being hidden by browser UI (Chrome tab bar)
 - Fixed private chat creation permissions in Firestore rules
 
-## [1.2.1] - 2024-12-27
+## [1.2.1] - 2025-12-22
 
 ### Added
 - **Disappearing Messages**: Private chat messages can now be set to automatically disappear after 24 hours or 7 days
@@ -628,7 +704,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed private chat message loading issues
 - Improved chat document creation and verification flow
 
-## [1.2.0] - 2024-12-27
+## [1.2.0] - 2025-12-21
 
 ### Added
 - **Private Chat System**: Direct messaging between students and admins
@@ -650,7 +726,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Firestore rules for private chat message access
 - Improved error handling for chat creation and message loading
 
-## [1.1.0] - 2024-12-26
+## [1.1.0] - 2025-12-20
 
 ### Added
 - **Google Gemini AI Integration**: 
@@ -674,7 +750,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Gemini model name from `gemini-pro` to `gemini-1.5-flash` for better compatibility
 - Improved API key validation and error messages
 
-## [1.0.2] - 2024-12-26
+## [1.0.2] - 2025-12-19
 
 ### Added
 - **Mobile Responsiveness**: Complete mobile optimization across all components
@@ -695,7 +771,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed duplicate logo/header in sidebar
 - Improved mobile user experience across all views
 
-## [1.0.1] - 2024-12-26
+## [1.0.1] - 2025-12-18
 
 ### Added
 - **Groups Feature**: Study group creation and management
