@@ -57,38 +57,45 @@ const ErrorFallback = ({ componentName, onRetry }) => {
   );
 };
 
-// Retry function for failed imports
+// Retry function for failed imports with exponential backoff
 const retryImport = (importFn, retries = 3, delay = 1000) => {
   return new Promise((resolve, reject) => {
-    const attempt = (remaining) => {
+    const attempt = (remaining, currentDelay) => {
       importFn()
-        .then(resolve)
+        .then((module) => {
+          console.log('Import successful');
+          resolve(module);
+        })
         .catch((error) => {
+          console.error(`Import failed (${retries - remaining + 1}/${retries}):`, error);
           if (remaining > 0) {
-            console.warn(`Import failed, retrying... (${retries - remaining + 1}/${retries})`);
-            setTimeout(() => attempt(remaining - 1), delay);
+            const nextDelay = currentDelay * 1.5; // Exponential backoff
+            console.warn(`Retrying in ${nextDelay}ms...`);
+            setTimeout(() => attempt(remaining - 1, nextDelay), currentDelay);
           } else {
             console.error('Import failed after all retries:', error);
             reject(error);
           }
         });
     };
-    attempt(retries);
+    attempt(retries, delay);
   });
 };
 
 // Code-split large components for better performance with improved error handling
 const createLazyComponent = (importFn, componentName) => {
-  return lazy(() => 
-    retryImport(importFn, 3, 1000)
-      .catch(err => {
-        console.error(`Error loading ${componentName} after retries:`, err);
-        // Return a component that shows error but allows retry
-        return { 
-          default: () => <ErrorFallback componentName={componentName} />
-        };
-      })
-  );
+  return lazy(async () => {
+    try {
+      return await retryImport(importFn, 3, 1000);
+    } catch (err) {
+      console.error(`Error loading ${componentName} after retries:`, err);
+      // Return a component that shows error but allows retry
+      // IMPORTANT: Must return a module-like object with default export
+      return { 
+        default: () => <ErrorFallback componentName={componentName} />
+      };
+    }
+  });
 };
 
 const ChatArea = createLazyComponent(() => import('./components/ChatArea'), 'Chat Area');
