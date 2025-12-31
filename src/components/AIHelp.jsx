@@ -536,7 +536,7 @@ ${question}
     setLoading(true);
 
     try {
-      // Use hybrid model: Gemini first, then ChatGPT, then local knowledge base
+      // Use intelligent AI: Gemini with conversation history, fallback to local knowledge base
       console.log('AIHelp: Getting AI response for question:', question);
       const answer = await getHybridAIResponse(question);
 
@@ -677,15 +677,15 @@ ${question}
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
                 <Sparkles className="text-indigo-500 hidden sm:block" size={20} />
-                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' && (
+                {import.meta.env.VITE_GEMINI_API_KEY?.trim() && (
                   <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full">
-                    ChatGPT
+                    Gemini AI
                   </span>
                 )}
               </div>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== ''
-                  ? 'Hybrid AI: Powered by ChatGPT enhanced with SISTC knowledge base'
+                {import.meta.env.VITE_GEMINI_API_KEY?.trim()
+                  ? 'Intelligent AI: Powered by Google Gemini enhanced with SISTC knowledge base'
                   : 'Intelligent answers about SISTC courses, campuses, and more'}
               </p>
             </div>
@@ -796,18 +796,10 @@ ${question}
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
           {(() => {
             const hasGemini = !!(import.meta.env.VITE_GEMINI_API_KEY?.trim());
-            const hasOpenAI = AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '';
             if (hasGemini) {
               return (
                 <>
-                  Hybrid AI: Gemini ({geminiModels.find(m => m.value === selectedGeminiModel)?.label}) + SISTC Knowledge Base • 
-                  <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
-                </>
-              );
-            } else if (hasOpenAI) {
-              return (
-                <>
-                  Hybrid AI: ChatGPT + SISTC Knowledge Base • 
+                  Intelligent AI: Google Gemini 2.5 Flash + SISTC Knowledge Base • 
                   <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
                 </>
               );
