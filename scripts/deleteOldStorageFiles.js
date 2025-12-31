@@ -46,13 +46,18 @@ async function deleteOldFiles() {
           const [metadata] = await file.getMetadata();
           const created = new Date(metadata.timeCreated).getTime();
           
-          // Delete if file is older than 24 hours
-          if (created < twentyFourHoursAgo) {
+          const fileSize = parseInt(metadata.size || 0);
+          const fiveMB = 5 * 1024 * 1024; // 5MB in bytes
+          
+          // Delete only files that are BOTH older than 24 hours AND larger than 5MB
+          if (created < twentyFourHoursAgo && fileSize > fiveMB) {
             await file.delete();
             deletedCount++;
-            console.log(`  ✓ Deleted: ${file.name} (created: ${new Date(created).toISOString()})`);
+            console.log(`  ✓ Deleted: ${file.name} (${(fileSize / 1024 / 1024).toFixed(2)}MB, created: ${new Date(created).toISOString()})`);
+          } else if (created < twentyFourHoursAgo) {
+            console.log(`  - Keeping: ${file.name} (${(fileSize / 1024 / 1024).toFixed(2)}MB - too small, created: ${new Date(created).toISOString()})`);
           } else {
-            console.log(`  - Keeping: ${file.name} (created: ${new Date(created).toISOString()})`);
+            console.log(`  - Keeping: ${file.name} (${(fileSize / 1024 / 1024).toFixed(2)}MB - too recent, created: ${new Date(created).toISOString()})`);
           }
         } catch (error) {
           errorCount++;

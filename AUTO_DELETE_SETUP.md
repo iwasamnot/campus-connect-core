@@ -115,7 +115,11 @@ Then run: `npm run cleanup-storage`
 
 ## What Gets Deleted?
 
-Files older than 24 hours in these folders:
+Files that meet BOTH criteria:
+1. **Older than 24 hours** AND
+2. **Larger than 5MB**
+
+In these folders:
 - `messages/` - Campus chat files
 - `profile-pictures/` - User profile pictures
 - `group-files/` - Group chat files
@@ -123,9 +127,16 @@ Files older than 24 hours in these folders:
 
 ## What Stays?
 
-- Files uploaded within the last 24 hours
-- Files that are actively being used
-- Recent uploads
+- **Small files (< 5MB)** - Kept forever (they don't use much storage)
+- **Recent files (< 24 hours)** - Kept regardless of size
+- **Files that are actively being used**
+
+### Why This Strategy?
+
+- Small files don't consume much storage (keep them)
+- Large files consume more storage (delete old ones)
+- Recent files might still be in use (keep them)
+- This maximizes storage efficiency while keeping useful files
 
 ## Monitoring
 
@@ -145,7 +156,9 @@ Files older than 24 hours in these folders:
    - Check console output
    - Or check Firestore `auditLogs` collection
 
-## Adjusting the Time Period
+## Adjusting the Settings
+
+### Change Time Period (24 hours):
 
 To change from 24 hours to a different period:
 
@@ -165,6 +178,28 @@ const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000); // Change 24 to your des
 Edit `scripts/deleteOldStorageFiles.js`:
 ```javascript
 const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000); // Change 24 to your desired hours
+```
+
+### Change Size Limit (5MB):
+
+To change the minimum file size for deletion:
+
+**GitHub Actions**:
+Edit `.github/workflows/cleanup-storage.yml`:
+```javascript
+const fiveMB = 5 * 1024 * 1024; // Change 5 to your desired MB
+```
+
+**Cloud Function**:
+Edit `functions/deleteOldFiles.js`:
+```javascript
+const fiveMB = 5 * 1024 * 1024; // Change 5 to your desired MB
+```
+
+**Manual Script**:
+Edit `scripts/deleteOldStorageFiles.js`:
+```javascript
+const fiveMB = 5 * 1024 * 1024; // Change 5 to your desired MB
 ```
 
 ## Excluding Profile Pictures

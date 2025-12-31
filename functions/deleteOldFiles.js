@@ -40,13 +40,15 @@ exports.deleteOldFiles = functions.pubsub
         for (const file of files) {
           const metadata = await file.getMetadata();
           const created = new Date(metadata[0].timeCreated).getTime();
+          const fileSize = parseInt(metadata[0].size || 0);
+          const fiveMB = 5 * 1024 * 1024; // 5MB in bytes
           
-          // Delete if file is older than 24 hours
-          if (created < twentyFourHoursAgo) {
+          // Delete only files that are BOTH older than 24 hours AND larger than 5MB
+          if (created < twentyFourHoursAgo && fileSize > fiveMB) {
             try {
               await file.delete();
               deletedCount++;
-              console.log(`Deleted: ${file.name} (created: ${new Date(created).toISOString()})`);
+              console.log(`Deleted: ${file.name} (${(fileSize / 1024 / 1024).toFixed(2)}MB, created: ${new Date(created).toISOString()})`);
             } catch (error) {
               errorCount++;
               console.error(`Error deleting ${file.name}:`, error);

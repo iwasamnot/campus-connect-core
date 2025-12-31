@@ -66,11 +66,16 @@ jobs:
                   try {
                     const [metadata] = await file.getMetadata();
                     const created = new Date(metadata.timeCreated).getTime();
+                    const fileSize = parseInt(metadata.size || 0);
+                    const fiveMB = 5 * 1024 * 1024; // 5MB in bytes
                     
-                    if (created < twentyFourHoursAgo) {
+                    // Delete only files that are BOTH older than 24 hours AND larger than 5MB
+                    if (created < twentyFourHoursAgo && fileSize > fiveMB) {
                       await file.delete();
                       deletedCount++;
-                      console.log(`  ✓ Deleted: ${file.name}`);
+                      console.log(`  ✓ Deleted: ${file.name} (${(fileSize / 1024 / 1024).toFixed(2)}MB, created: ${new Date(created).toISOString()})`);
+                    } else if (created < twentyFourHoursAgo) {
+                      console.log(`  - Keeping: ${file.name} (${(fileSize / 1024 / 1024).toFixed(2)}MB - too small to delete)`);
                     }
                   } catch (error) {
                     errorCount++;
