@@ -68,7 +68,14 @@ const PWAInstallPrompt = () => {
   if (!showPrompt || !deferredPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
+    <div 
+      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up"
+      style={{
+        bottom: `calc(1rem + env(safe-area-inset-bottom, 0px))`,
+        left: `calc(1rem + env(safe-area-inset-left, 0px))`,
+        right: `calc(1rem + env(safe-area-inset-right, 0px))`
+      }}
+    >
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 flex items-center gap-4">
         <div className="flex-shrink-0">
           <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
