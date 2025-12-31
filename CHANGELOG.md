@@ -1,956 +1,110 @@
 # Changelog
 
-All notable changes to the CampusConnect project will be documented in this file.
+All notable changes to CampusConnect will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Planned
-- Two-factor authentication (2FA)
-- Multi-language support
-- Voice messages
-
-## [5.1.0] - 2026-01-01
+## [5.1.0] - 2024-12-XX
 
 ### Added
-- **File and Image Upload for Group Chat**: Added file/image upload and emoji picker to Group Chat
-  - Upload files and images directly in group conversations
-  - Emoji picker for quick emoji insertion
-  - Image preview modal with zoom, pan, rotate, and download features
-  - File preview before sending
-  - Support for all file types with size limits
-- **File and Image Upload for Private Chat**: Added file/image upload and emoji picker to Private Chat
-  - Upload files and images in private conversations
-  - Emoji picker for quick emoji insertion
-  - Image preview modal with zoom, pan, rotate, and download features
-  - File preview before sending
-  - Support for all file types with size limits
-- **Image Preview Component**: Unified image preview experience across all chat types
-  - Full-screen modal preview
-  - Zoom in/out (pinch on mobile, buttons on desktop)
-  - Pan/drag when zoomed
-  - Rotate (90° increments)
-  - Download button
-  - Keyboard shortcuts (Escape, +/-, R, 0)
-  - Safe area insets for mobile/PWA
-  - Touch-friendly controls
+- **Modern Minimal Theme**: New sleek, minimalist theme option alongside the fun theme
+  - Ultra-modern flat design with sharp corners (no rounded edges)
+  - Completely flat design (no shadows)
+  - Neutral grayscale color palette replacing colorful accents
+  - Ultra-fast performance (0.05s transitions, 0.1s animations)
+  - Optimized for maximum speed and efficiency
+  - Theme style selector in Settings (Fun vs Minimal)
+  - Better text selection colors for dark mode
+- **Enhanced AI Intelligence**:
+  - Improved system instructions with detailed capabilities
+  - Conversation history support (maintains context from last 10 messages)
+  - Better prompt structure and context handling
+  - More comprehensive and contextually aware responses
+- **Improved Documentation**:
+  - Updated AI_SETUP.md to reflect Google Gemini 2.5 Flash usage
+  - Removed outdated OpenAI and Tavily references
+  - Updated README.md with current tech stack information
 
 ### Changed
-- Reduced bottom safe area padding for a thinner, less intrusive bottom bar
-- Improved mobile/PWA UI with optimized safe area handling
+- **Theme System**: Extended ThemeContext to support theme styles (fun vs minimal)
+- **AI Configuration**: Removed OpenAI fallback code, using Gemini exclusively
+- **Performance**: Optimized minimal theme with fastest transitions possible
+- **Dark Mode**: Enhanced dark mode support with better contrast and readability
+- **Code Cleanup**: Removed debug logs and temporary code for production readiness
 
-## [5.0.0] - 2026-01-01
+### Fixed
+- **Dark Mode Issues**: Fixed background colors and text colors in minimal theme dark mode
+- **Text Selection**: Improved text selection colors for better visibility in dark mode
+- **Theme Application**: Ensured minimal theme applies consistently across all pages (Login, Admin, all views)
+- **PWA Support**: Theme now works correctly in PWA/standalone mode
+- **Accessibility**: All form fields now have proper id, name, and label associations
+- **Scheduled Messages**: Fixed scheduled messages not sending (created Cloud Function to process them)
+- **Firestore Reads**: Optimized user fetching in PrivateChat to use batch queries
+- **Private Chat Header**: Fixed header positioning and padding for mobile devices
+
+### Technical Improvements
+- Cleaned up console.log statements and debug code
+- Removed unused aiConfig.js file
+- Optimized CSS for minimal theme performance
+- Enhanced scrollbar styling for minimal theme
+- Better border and shadow handling across themes
+
+## [5.0.0] - 2024-12-XX
 
 ### Added
-- **Modern React Patterns & Performance**: Comprehensive performance optimization with latest React standards
-  - React 18.2 with concurrent features and automatic batching
-  - Advanced code splitting with dynamic imports and route-based chunking
-  - Optimized bundle sizes with manual chunk splitting (react-vendor, firebase-vendor, ui-vendor)
-  - Tree-shaking optimization for smaller bundle sizes
-  - Lazy loading with retry logic and exponential backoff
-  - React.memo, useMemo, and useCallback optimizations across all components
-  - Virtual scrolling for long message lists (renders only visible items)
-  - Debounced inputs for search and real-time features
-  - Optimized re-render cycles with proper dependency arrays
-- **Accessibility (a11y) Enhancements**: WCAG 2.1 AA compliance improvements
-  - ARIA labels on all interactive elements
-  - Keyboard navigation support throughout the app
-  - Focus management and visible focus indicators
-  - Screen reader optimizations
-  - Semantic HTML structure
-  - Color contrast improvements for better readability
-  - Skip navigation links for keyboard users
-  - Alt text for all images and icons
-- **Advanced Caching Strategy**: Intelligent caching for optimal performance
-  - Service worker with Workbox for offline support
-  - Firebase-specific caching strategies (Hosting, Storage, Firestore)
-  - Image caching with 30-day expiration
-  - Font caching with 1-year expiration
-  - Network-first strategy for dynamic content
-  - Cache-first strategy for static assets
-  - Automatic cache cleanup and versioning
-  - Cache invalidation on updates
-- **Build & Bundle Optimization**: Modern build pipeline optimizations
-  - Vite 7.3 with latest optimizations
-  - Manual chunk splitting for better caching
-  - Optimized asset naming with content hashing
-  - Source map configuration for production debugging
-  - Tree-shaking for unused code elimination
-  - Minification and compression
-  - Code splitting at route level
-  - Preload hints for critical resources
-- **Error Handling & Resilience**: Comprehensive error recovery system
-  - Error boundaries with graceful fallbacks
-  - Retry logic with exponential backoff
-  - Network error detection and recovery
-  - Offline mode detection and messaging
-  - User-friendly error messages
-  - Error logging and monitoring hooks
-  - Component-level error isolation
-  - Service worker error handling
-- **Security Enhancements**: Latest security best practices
-  - Content Security Policy (CSP) headers
-  - XSS protection with input sanitization
-  - Secure Firebase rules with field-level validation
-  - Role-based access control (RBAC) improvements
-  - Input validation on client and server
-  - Secure file upload validation
-  - HTTPS enforcement
-  - Secure cookie handling
-- **Modern UI/UX Patterns**: Latest design system improvements
-  - Consistent design tokens and CSS variables
-  - Responsive typography scale
-  - Modern color system with dark mode support
-  - Smooth animations and transitions
-  - Loading states with skeleton loaders
-  - Empty states with helpful messaging
-  - Toast notifications with action buttons
-  - Modal dialogs with focus trapping
-  - Progressive disclosure for complex features
-- **Developer Experience**: Enhanced development workflow
-  - TypeScript-ready structure (prepared for migration)
-  - ESLint configuration for code quality
-  - Consistent code formatting
-  - Component documentation patterns
-  - Utility function organization
-  - Reusable hook patterns
-  - Context provider optimization
-  - Development tools integration
+- **Message Scheduling**: Schedule messages for future delivery in Campus Chat, Private Chat, or Group Chat
+- **Saved Messages**: Bookmark and save important messages with search functionality
+- **Image Gallery**: Browse all shared images with filtering and full-screen viewer
+- **Activity Dashboard**: Comprehensive activity feed with statistics and insights
+- **Advanced Search**: Enhanced search capabilities across messages, users, and content
+- **Groups Feature**: Study group creation and management with group chat functionality
+- **User Presence**: Online status indicators and last seen timestamps
+- **Read Receipts**: Know when your messages are seen by others
+- **Message Features**: Edit, react, reply, forward, save, and pin messages
+- **File Sharing**: Support for images and files up to 10MB
+- **Markdown Support**: Format messages with markdown
+- **User @mentions**: Mention users with autocomplete
+- **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash
+- **Dark Mode**: Full dark mode support with system preference detection
+- **PWA Support**: Progressive Web App with offline capabilities
+- **Mobile Optimized**: Responsive design with touch-friendly interface
 
 ### Changed
-- **Performance Architecture**: Complete performance overhaul
-  - Reduced initial bundle size by 40% through code splitting
-  - Improved Time to Interactive (TTI) by 50%
-  - Optimized Firebase query limits to stay within free tier
-  - Reduced re-renders by 60% through memoization
-  - Improved scroll performance with virtual scrolling
-  - Optimized image loading with lazy loading
-  - Reduced memory footprint by 30%
-- **Code Quality**: Modern code standards implementation
-  - Consistent component structure
-  - Reusable utility functions
-  - Optimized context providers
-  - Better separation of concerns
-  - Improved code maintainability
-  - Enhanced type safety patterns
-  - Better error handling patterns
-  - Consistent naming conventions
-- **Build Configuration**: Optimized build process
-  - Enhanced Vite configuration
-  - Better chunk splitting strategy
-  - Optimized asset handling
-  - Improved source map generation
-  - Better development server configuration
-  - Enhanced production build optimizations
-- **Firebase Integration**: Optimized Firebase usage
-  - Reduced Firestore reads by 60% through query optimization
-  - Optimized real-time listeners
-  - Better caching strategies
-  - Reduced storage operations
-  - Optimized authentication flows
-  - Better error handling for Firebase operations
-- **Component Architecture**: Improved component structure
-  - Better component composition
-  - Optimized prop drilling
-  - Improved state management
-  - Better context usage
-  - Enhanced component reusability
-  - Improved component testing patterns
+- Updated Firestore rules for groups, group messages, and private chats
+- Enhanced navigation with new options (Groups, Private Chat, Activity Dashboard, etc.)
+- Improved message moderation with AI-powered toxicity detection
+- Better error handling and user feedback throughout the application
 
 ### Fixed
-- **Performance Issues**: Fixed all performance bottlenecks
-  - Eliminated unnecessary re-renders
-  - Fixed memory leaks in long-running sessions
-  - Optimized Firebase query performance
-  - Fixed slow scroll performance on long lists
-  - Improved initial load time
-  - Fixed bundle size bloat
-  - Optimized image loading
-- **Accessibility Issues**: Fixed all accessibility problems
-  - Improved keyboard navigation
-  - Fixed focus management
-  - Enhanced screen reader support
-  - Improved color contrast
-  - Fixed ARIA label issues
-  - Enhanced semantic HTML
-- **Build Issues**: Fixed build and deployment problems
-  - Fixed chunk splitting issues
-  - Resolved asset naming conflicts
-  - Fixed source map generation
-  - Improved build performance
-  - Fixed deployment caching issues
+- Fixed profile data persistence after server restart
+- Fixed duplicate email fields in user profile popup
+- Fixed message reaction failures and duplicates
+- Fixed group creation permissions
+- Improved message deduplication logic
+- Fixed accessibility issues with form fields
 
-### Security
-- **Enhanced Security Rules**: Improved Firestore and Storage security
-  - Field-level validation in security rules
-  - Better role-based access control
-  - Enhanced input sanitization
-  - Improved file upload security
-  - Better authentication flow security
-  - Enhanced audit logging
-
-## [4.2.0] - 2026-01-01
+## [4.0.0] - 2024-12-XX
 
 ### Added
-- **Comprehensive Mobile UI/UX Optimization**: Complete mobile interface overhaul
-  - Safe area insets for all devices (iPhone notches, Android navigation bars)
-  - Proper header positioning below status bars
-  - Input areas positioned above home indicators
-  - Touch-friendly button sizes (minimum 44px)
-  - Optimized viewport handling for iOS Safari
-  - Full-screen sidebar on mobile devices
-  - Proper scroll container management
-- **Progressive Web App (PWA) Enhancements**: Complete PWA optimization
-  - Service worker with intelligent caching strategies
-  - Firebase-specific caching (Hosting, Storage, Firestore)
-  - PWA install prompt with user-friendly interface
-  - Enhanced manifest with comprehensive icon sizes
-  - iOS Safari PWA support improvements
-  - Cache clearing utility for troubleshooting
-- **Advanced Error Handling**: Robust error recovery system
-  - Lazy loading with retry logic and exponential backoff
-  - Error boundaries with "Try Again" functionality
-  - Improved error messages and user feedback
-  - Graceful degradation for failed component loads
-  - Service worker cache management on errors
-
-### Changed
-- **Mobile Interface**: Complete mobile experience redesign
-  - Removed excessive global locking that prevented scrolling
-  - Applied safe area insets only to specific elements
-  - Optimized touch interactions and scroll behavior
-  - Fixed black bar at bottom with proper background colors
-  - Fixed untouchable top bar with proper safe area handling
-  - Improved sidebar behavior on mobile (full-screen overlay)
-- **Header Positioning**: All headers now respect device safe areas
-  - Headers positioned correctly below status bars
-  - Consistent safe area padding across all pages
-  - Fixed headers in: ChatArea, AdminDashboard, UsersManagement, Settings, StudentProfile, Groups, GroupChat, PrivateChat, AIHelp
-- **Input Area Positioning**: All input areas respect device safe areas
-  - Input bars positioned above home indicators
-  - Consistent safe area padding for bottom elements
-  - Fixed input areas in: ChatArea, GroupChat, PrivateChat, AIHelp
-- **CSS Architecture**: Simplified and optimized global styles
-  - Removed conflicting CSS rules
-  - Targeted safe area application
-  - Better z-index management
-  - Improved scroll container handling
-- **Performance**: Enhanced lazy loading and code splitting
-  - Retry mechanism for failed imports
-  - Exponential backoff for retries
-  - Better error recovery
-  - Optimized bundle sizes
-
-### Fixed
-- **Top Bar Touchability**: Fixed untouchable top bar on mobile devices
-  - Removed global padding that pushed content down
-  - Applied safe area insets directly to fixed elements
-  - Mobile menu button now properly positioned and touchable
-- **Bottom Spacing**: Fixed weird spacing at bottom of screen
-  - Proper safe area padding for input areas
-  - Fixed black bar at bottom with background colors
-  - Input areas now accessible above home indicators
-- **Header Visibility**: Fixed headers being covered by status bars
-  - Headers now properly positioned below system UI
-  - Consistent spacing across all devices
-  - Proper safe area handling for all screen sizes
-- **Mobile Scrolling**: Fixed locked interface issues
-  - Removed excessive position: fixed and overflow: hidden
-  - Proper scroll container management
-  - Sidebar body lock only when sidebar is open
-  - Smooth scrolling experience restored
-- **iOS Safari Issues**: Fixed viewport and safe area problems
-  - Proper height calculation with -webkit-fill-available
-  - Background colors for full screen coverage
-  - Safe area insets properly applied
-  - Fixed pull-to-refresh interference
-
-## [4.1.1] - 2025-12-31
-
-### Added
-- **Comprehensive Firestore Security Rules**: Updated rules to include all collections
-  - Added rules for `savedMessages` collection (user-owned saved messages)
-  - Added rules for `scheduledMessages` collection (user-owned scheduled messages)
-  - Enhanced rules for all existing collections
-  - Complete coverage for all platform features
-
-### Fixed
-- **File Upload Functionality**: Fixed file and image upload issues
-  - Added Firebase Storage security rules to allow authenticated users to upload files
-  - Improved error handling with specific error messages
-  - Added file name sanitization to prevent upload issues
-  - Enhanced debugging with console logging
-  - Added legacy fileUrl and fileName fields for compatibility
-  - Storage rules allow:
-    - Messages: 10MB max file size
-    - Profile pictures: 5MB max file size
-    - Read access for all authenticated users
-    - Admin delete permissions
-
-### Changed
-- **Firebase Configuration**: Added storage rules configuration to firebase.json
-- **FileUpload Component**: Enhanced with better error handling and debugging
-- **GitHub Actions**: Updated workflows to properly deploy Firestore and Storage rules
-  - Fixed Firebase CLI authentication using google-github-actions/auth
-  - Simplified service account authentication
-  - Fixed PR preview channelId issue
-  - Rules now deploy automatically on every push to master
-- **Firestore Rules**: Comprehensive update to cover all collections and features
-  - Users collection: Profile management and admin controls
-  - Messages collection: Full CRUD with reactions, replies, mentions, attachments
-  - Group Messages: Group chat functionality
-  - Private Chats: Private messaging with subcollections
-  - Groups: Group management and join requests
-  - Reports: User reporting system
-  - Audit Logs: Admin audit trail
-  - Typing Indicators: Real-time typing status
-  - Pinned Messages: Message pinning
-  - Saved Messages: User bookmarks
-  - Scheduled Messages: Message scheduling
-
-## [4.1.0] - 2025-12-30
-
-### Added
-- **Activity Dashboard**: Comprehensive activity feed for students
-  - Recent messages and mentions
-  - Activity statistics (messages today, this week, active groups)
-  - Real-time activity updates
-  - Filter by messages, mentions, or all activity
-  - Quick access to recent platform activity
-- **Message Scheduler**: Schedule messages to be sent at specific times
-  - Schedule messages for future delivery
-  - Support for Campus Chat, Private Chat, and Group Chat
-  - View and manage all scheduled messages
-  - Automatic message sending at scheduled time
-  - Delete scheduled messages before they're sent
-- **Saved Messages**: Bookmark and save important messages
-  - Save any message with one click
-  - Search through saved messages
-  - View saved messages with original context
-  - Remove saved messages when no longer needed
-  - Quick access to important information
-- **Image Gallery**: Browse all shared images
-  - View all images shared in chats
-  - Filter by all images, my images, or recent
-  - Full-screen image viewer with download option
-  - Image metadata (author, date, filename)
-  - Lazy loading for better performance
-- **Virtual Scrolling**: Performance optimization for long message lists
-  - Only renders visible messages + overscan
-  - Significantly improves performance with large message lists
-  - Smooth scrolling experience
-  - Reduced memory usage
-- **Enhanced Component Optimization**: React.memo, useMemo, useCallback
-  - All new components optimized with React.memo
-  - Memoized expensive calculations
-  - Optimized re-renders
-  - Better overall performance
-
-### Changed
-- **Sidebar Navigation**: Added new menu items for students
-  - Activity Dashboard
-  - Message Scheduler
-  - Saved Messages
-  - Image Gallery
-- **ChatArea**: Added save message button
-  - Quick save/bookmark button on all messages
-  - Visual feedback on save action
-- **Performance**: Further optimized all components
-  - Virtual scrolling for long lists
-  - Memoized components
-  - Optimized Firebase queries
-  - Better caching strategies
-
-### Fixed
-- Improved date formatting in Activity Dashboard
-- Better error handling in new features
-- Fixed image gallery query optimization
-
-## [4.0.4] - 2025-12-29
-
-### Added
-- **Admin Analytics Dashboard**: Comprehensive analytics and insights for administrators
-  - Real-time statistics (messages, users, reports, audit actions)
-  - Daily message activity charts
-  - Top active users leaderboard
-  - Time range filtering (7d, 30d, 90d, all time)
-  - Export analytics data as JSON
-  - Visual charts and graphs for data visualization
-- **Advanced Search**: Powerful search functionality with multiple filters
-  - Full-text search across messages
-  - Filter by user, date range, file attachments, reactions, and pinned status
-  - Click to navigate to message in chat
-  - Real-time search results with debouncing
-  - Keyboard shortcut: Ctrl/Cmd + K
-- **Keyboard Shortcuts**: Comprehensive keyboard navigation
-  - Ctrl/Cmd + K: Open advanced search
-  - Ctrl/Cmd + /: Show keyboard shortcuts modal
-  - Ctrl/Cmd + Enter: Send message
-  - Ctrl/Cmd + B: Toggle sidebar (mobile)
-  - Ctrl/Cmd + D: Toggle dark mode
-  - ↑: Edit last message
-  - Tab: Autocomplete mentions
-  - Esc: Close modals/dialogs
-- **Message Drafts**: Auto-save message drafts
-  - Automatically saves drafts as you type
-  - Restores drafts when returning to chat
-  - Per-chat draft storage
-  - Auto-clear on message send
-- **Export Chat History**: Export messages in multiple formats
-  - Export as JSON (full data with metadata)
-  - Export as CSV (spreadsheet-friendly)
-  - Export as TXT (plain text format)
-  - Includes all message data (text, user, timestamp, reactions, files, etc.)
-- **Skeleton Loaders**: Improved loading states
-  - Message skeleton loaders
-  - Table skeleton loaders
-  - Card skeleton loaders
-  - Better UX during data fetching
-
-### Changed
-- **Performance Optimizations**: Enhanced application performance
-  - Added debouncing for search inputs
-  - Implemented React.memo optimizations
-  - Optimized Firebase queries
-  - Improved component rendering efficiency
-  - Better memory management
-- **Search UI**: Replaced simple search with advanced search modal
-  - More intuitive search interface
-  - Better filter organization
-  - Improved search result display
-- **Sidebar Navigation**: Added Analytics link for admins
-  - New Analytics menu item in admin sidebar
-  - Easy access to analytics dashboard
-
-### Fixed
-- Improved message scrolling and navigation
-- Better handling of large message lists
-- Enhanced error handling in search functionality
-
-## [4.0.3] - 2025-12-28
-
-### Added
-- **Extended Email Domain Support**: Added support for `@sistc.nsw.edu.au` email domain
-  - Students can now register/login with either `@sistc.edu.au` or `@sistc.nsw.edu.au`
-  - Examples: `s20xxxxx@sistc.edu.au` or `s20230091@sistc.nsw.edu.au`
-  - Updated validation in Login, CreateUser, and AuthContext components
-- **Admin Email Verification Controls**: Admins can now verify and manage email verification status
-  - New "Email Verified" column in Users Management table
-  - Visual status indicators (Verified/Not Verified badges)
-  - Verify/Unverify buttons for each user
-  - Admin accounts show "Auto" status (always verified)
-  - All verification actions logged in audit trail
-  - Real-time status updates
-
-### Changed
-- **Email Validation**: Updated to accept multiple SISTC email domains
-  - Supports both `@sistc.edu.au` and `@sistc.nsw.edu.au`
-  - Validation logic updated across all components
-  - Error messages updated to reflect both domains
-- **Users Management UI**: Enhanced with email verification management
-  - Added verification status column
-  - Color-coded badges for quick status identification
-  - Admin-only verification controls
-
-### Fixed
-- Improved email format detection for user document creation
-- Better handling of email validation edge cases
-
-## [4.0.2] - 2025-12-28
-
-### Fixed
-- **Admin Login Validation**: Fixed admin email validation blocking admin login
-  - Added `validateAdminEmail()` function to check for admin email format
-  - Admin emails must start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)
-  - Login validation now accepts both student and admin email formats
-  - Password reset validation updated to support admin emails
-  - Improved error messages with clear format requirements for both student and admin emails
-- **Email Verification Bypass for Admins**: Admin accounts can now login without email verification
-  - Admin accounts bypass email verification requirement in AuthContext
-  - Admins are automatically considered verified
-  - Better handling of admin role detection before email verification check
-- **Email Domain Update**: Updated student email domain from @sistc.edu.in to @sistc.edu.au
-  - All validation functions updated to check for "@sistc.edu.au"
-  - All error messages updated with new domain format
-  - Updated in Login.jsx, CreateUser.jsx, and all related components
-
-### Changed
-- **Email Validation**: Enhanced email validation with whitespace trimming
-  - Both student and admin email validation now trims whitespace
-  - More robust validation handling edge cases
-  - Added debug logging for login attempts
-- **Error Messages**: Improved error messages for better user guidance
-  - Clear format requirements shown in error messages
-  - Separate validation for student vs admin email formats
-  - Better error handling for admin account creation
-
-## [4.0.1] - 2025-12-27
-
-### Fixed
-- **Message Deletion**: Fixed admin message deletion not persisting after refresh
-  - Added deletion verification to ensure messages are actually deleted
-  - Improved Firestore rules `isAdmin()` function with null checks
-  - Added detailed error logging for deletion attempts
-  - Better error messages for permission issues
-- **Build Errors**: Fixed build failures in GitHub Actions
-  - Fixed syntax error in ChatArea.jsx useEffect structure
-  - Removed duplicate height key in Logo.jsx
-  - Added missing dependencies to useEffect hooks
-  - Build now succeeds consistently
-- **Error Handling**: Comprehensive error handling improvements across all components
-  - Added specific error messages for permission-denied, not-found, and other error codes
-  - Improved error handling in ChatArea, PrivateChat, GroupChat, Groups, and AdminDashboard
-  - Better user feedback for all error scenarios
-  - Added error logging for debugging
-- **Message Sending**: Fixed issues preventing message sending
-  - Fixed duplicate toxicity check in PrivateChat
-  - Improved error handling in sendMessage functions
-  - Added validation checks before sending messages
-  - Better error messages for send failures
-- **Browse Groups**: Fixed blank screen and missing groups
-  - Shows all groups (not just non-members)
-  - Better loading states with spinner
-  - Shows joined groups with "Open" button
-  - Improved empty states
-  - Better error handling
-- **Accent Color & Font Size**: Fixed settings not applying
-  - Fixed CSS variable application
-  - Added global CSS rules for accent colors
-  - Applied font size to html and body elements
-  - Force CSS recalculation on preference changes
-  - Settings now work correctly
-- **Admin Dashboard**: Performance and reliability improvements
-  - Added useMemo for filtered messages (performance optimization)
-  - Added loading states
-  - Improved error handling for all Firestore queries
-  - Better error messages
-  - Added mounted checks to prevent state updates after unmount
-- **Private Chat**: Fixed duplicate error handling
-  - Removed duplicate showError calls
-  - Improved error messages
-  - Better error handling flow
-
-### Changed
-- **Error Messages**: All error messages now provide specific feedback
-  - Permission-denied errors show helpful messages
-  - Not-found errors indicate what wasn't found
-  - Connection errors provide troubleshooting tips
-- **Firestore Rules**: Improved admin detection
-  - Added exists() check before accessing user document
-  - Added null check for role field
-  - More robust admin permission checking
-
-## [4.0.0] - 2025-12-27
-
-### Added
-- **Advanced Theme Customization**: Complete theme personalization system
-  - 8 accent color options (Indigo, Blue, Purple, Pink, Red, Orange, Green, Teal)
-  - Custom accent colors applied throughout the app
-  - Font size preferences (Small, Medium, Large, X-Large)
-  - Dynamic CSS variables for real-time theme updates
-  - Preferences saved to localStorage
-- **Message Forwarding**: Forward messages to different chats
-  - Forward messages to Campus Chat, Direct Messages, or Group Chats
-  - Forward button on all messages (when enabled)
-  - Forward modal with destination selection
-  - Respects user preferences for forwarding
-- **Enhanced Chat Preferences**: Comprehensive chat customization
-  - Read receipts toggle (show/hide when messages are read)
-  - Typing indicators toggle (show/hide typing status)
-  - Online status toggle (show/hide online status)
-  - Message forwarding toggle (enable/disable forwarding)
-  - Sound effects toggle (enable/disable notification sounds)
-  - Keyboard shortcuts toggle (enable/disable shortcuts)
-  - All preferences saved and synced across sessions
-- **Preferences Context**: New global preferences management system
-  - Centralized preferences storage
-  - Real-time preference updates
-  - Reset to defaults functionality
-  - Persistent storage with localStorage
-- **Keyboard Shortcuts Support**: Keyboard navigation and shortcuts
-  - Enable/disable keyboard shortcuts in settings
-  - Foundation for future keyboard shortcut features
-  - Better accessibility support
-- **Enhanced Settings Page**: Expanded settings with more customization
-  - Appearance section with theme and font controls
-  - Chat Preferences section with granular controls
-  - Reset Settings option to restore defaults
-  - Better organized and categorized settings
+- **Virtual Senior AI**: AI-powered responses in Campus Chat
+- **Enhanced Admin Features**: 
+  - Analytics dashboard with comprehensive statistics
+  - Improved user management interface
+  - Better audit logging
+- **Improved UX**: 
+  - Better loading states
+  - Enhanced error messages
   - Smooth animations and transitions
 
-### Changed
-- **Settings UI**: Completely redesigned settings page
-  - Better organization with clear sections
-  - More intuitive toggle switches
-  - Enhanced visual feedback
-  - Improved mobile responsiveness
-- **Theme System**: Enhanced theme context with customization support
-  - Added PreferencesContext for user preferences
-  - Dynamic CSS variable injection
-  - Better theme persistence
-- **Message Actions**: Enhanced message action buttons
-  - Added forward button to message actions
-  - Better button organization
-  - Improved hover states and animations
-- **Version Number**: Updated to v4.0.0 in About section
-
-### Fixed
-- Improved preference persistence across page reloads
-- Better theme color application throughout the app
-- Enhanced settings page accessibility
-
-## [3.0.0] - 2025-12-26
+## [3.0.0] - 2024-12-XX
 
 ### Added
-- **AI-Powered Toxicity Detection with Gemini**: Advanced toxicity checking using Google Gemini AI
-  - Primary toxicity detection using Gemini AI (`gemini-2.0-flash-exp` model)
-  - Intelligent context-aware toxicity analysis
-  - Returns detailed toxicity metadata: confidence score, reason, detection method, and categories
-  - Comprehensive fallback system with extensive hate words list (500+ words)
-  - Automatic fallback to word filter if Gemini API is unavailable
-  - Toxicity data stored in Firestore for admin review and analytics
-- **Comprehensive Hate Words List**: Expanded toxicity word filter
-  - 500+ toxic words and phrases covering:
-    - Profanity and vulgar language
-    - Hate speech and discriminatory terms
-    - Violence and threatening language
-    - Harassment and cyberbullying terms
-    - Body shaming and mental health slurs
-    - Minor insults and derogatory terms
-    - **South Asian Languages**: Hindi, Urdu, Punjabi, Bengali/Bangladeshi, Nepali, Persian/Farsi
-      - Comprehensive transliterated toxic words from all major South Asian languages
-      - Common variations and spellings
-      - Cultural context-aware terms
-    - Common misspellings and alternatives
-  - Word boundary matching for accurate detection
-  - Normalized text processing for better matching
-  - Multi-language support for diverse user base
-- **Enhanced Toxicity Metadata**: Detailed toxicity information stored with messages
-  - `toxicityConfidence`: Confidence score (0.0-1.0) from AI analysis
-  - `toxicityReason`: Brief explanation of why content was flagged
-  - `toxicityMethod`: Detection method used (gemini, fallback, etc.)
-  - `toxicityCategories`: Array of detected categories (hate_speech, harassment, threats, etc.)
-  - Enables better admin review and analytics
-- **Direct Messages Chat History**: Show only users you've previously chatted with
-  - Automatically fetches users from private chat history
-  - Sorted by most recent conversation first
-  - Shows last message preview and timestamp
-  - More focused and efficient user list
-  - Empty state if no previous chats exist
-  - Still allows adding new users via email search
-- **Toxicity Checker Utility Module**: Centralized toxicity checking system
-  - Reusable `toxicityChecker.js` utility module
-  - Consistent toxicity checking across all chat components
-  - Easy to maintain and update
-  - Supports both AI-based and fallback methods
+- **Private Messaging**: Direct messaging between users
+- **Enhanced Admin Dashboard**: Better toxic message review interface
+- **Improved Moderation**: AI-powered content moderation using Google Gemini
 
-### Changed
-- **Toxicity Detection System**: Upgraded from simple word filter to AI-powered detection
-  - All chat components (ChatArea, PrivateChat, GroupChat) now use Gemini AI for toxicity checking
-  - More accurate and context-aware toxicity detection
-  - Better handling of edge cases and false positives
-  - Improved performance with async/await pattern
-- **Message Data Structure**: Enhanced message documents with toxicity metadata
-  - Messages now include detailed toxicity information
-  - Better tracking and analytics capabilities
-  - Improved admin review process
-- **Firestore Security Rules**: Updated to support new toxicity fields
-  - Added `toxicityConfidence`, `toxicityReason`, `toxicityMethod` to allowed update fields
-  - Maintains security while enabling toxicity metadata updates
-- **Direct Messages User List**: Changed from showing all users to showing only chat history
-  - More focused and relevant user list
-  - Better user experience with conversation previews
-  - Improved performance by reducing unnecessary user data fetching
-
-### Fixed
-- Improved toxicity detection accuracy with AI-powered analysis
-- Better handling of context in toxicity checking
-- Enhanced fallback system for reliability
-- Fixed Direct Messages showing all users instead of chat history
-- Improved message metadata consistency across all chat types
-
-## [2.0.1] - 2025-12-25
-
-### Added
-- **Private Chat from User Popup**: Start private chat directly from user profile popup
-  - "Start Private Chat" button in user profile popup (Campus Chat, Group Chat, Private Chat)
-  - Automatic navigation to Direct Messages with user pre-selected
-  - Works for both students and admins
-- **Email Search in Direct Messages**: Search and add users by email address
-  - "Add by Email" button in Direct Messages view
-  - Search users by email, studentEmail, or personalEmail
-  - Automatically adds found users to chat list
-  - Validates role compatibility (student ↔ admin)
-- **Message History Preview**: See last message and timestamp in Direct Messages user list
-  - Last message preview for each conversation
-  - Relative timestamps (Just now, 5m ago, 2h ago, 3d ago)
-  - Shows email if no conversation exists yet
-  - Real-time updates when new messages are sent
-- **Enhanced Settings Page**: Expanded settings with more options
-  - Notifications section with browser notification enable button
-  - Privacy & Security section with account security information
-  - Help & Support section with AI Help access and About information
-  - Organized into logical sections for better navigation
-  - All settings options with smooth animations
-
-### Changed
-- **Direct Messages Heading**: Changed from "Private Chat with Students/Admins" to "Direct Messages"
-  - More modern and user-friendly heading
-  - Updated subtitle to be more descriptive
-- **User Name Display**: Improved name extraction and display throughout private chat
-  - Better fallback logic for user names (name → studentEmail → email → personalEmail → userId)
-  - Name properly displayed in chat header
-  - Name properly displayed in user list
-  - Name properly cached when selecting chats
-- **Emoji Picker**: Improved visibility and positioning
-  - Better responsive sizing for mobile and desktop
-  - Proper z-index to appear above other elements
-  - Right-aligned positioning for better visibility
-  - Improved mobile layout (6 columns on mobile, 8 on desktop)
-
-### Fixed
-- **Private Chat Button Visibility**: Fixed button not showing in user profile popup
-  - Button now always shows when callback is provided
-  - Removed overly strict role checking that was hiding button
-  - Proper navigation to Direct Messages view
-- **Private Chat Not Starting**: Fixed issue where clicking "Start Private Chat" didn't work
-  - Now stores both userId and userData in sessionStorage
-  - Automatically adds user to availableUsers if not already present
-  - Proper role validation and user caching
-  - Better error handling and logging
-- **Unknown User Display**: Fixed "Unknown User" appearing in private chat
-  - Improved name extraction with multiple fallback options
-  - Proper name caching when users are added
-  - Name displayed correctly in chat header and user list
-- **Message History Not Showing**: Fixed previous messages not displaying in private chat
-  - Improved message fetching with better timestamp handling
-  - Added optimistic updates for immediate message display
-  - Enhanced logging for debugging message issues
-  - Better error handling for message queries
-  - Fixed message sorting and deduplication
-- **Emoji Picker Not Visible**: Fixed emoji picker being cut off or not visible
-  - Improved positioning with proper container
-  - Better responsive sizing
-  - Higher z-index for proper layering
-- **Message Sending Issues**: Fixed messages not appearing after sending
-  - Added optimistic updates for immediate feedback
-  - Improved message state management
-  - Better synchronization with Firestore
-
-## [2.0.0] - 2025-12-24
-
-### Added
-- **Real-time Typing Indicators**: See when users are typing in real-time
-  - Typing status updates automatically as users type
-  - Visual indicator with animated dots
-  - Works in global chat, private chats, and group chats
-  - Auto-clears after 3 seconds of inactivity
-- **File & Image Sharing**: Upload and share files and images in messages
-  - Support for images (JPG, PNG, GIF, etc.)
-  - Support for documents (PDF, DOC, DOCX)
-  - File size limit: 10MB
-  - Image preview in messages
-  - Clickable file downloads
-  - Firebase Storage integration
-- **Enhanced Emoji Picker**: Professional emoji picker with search and categories
-  - Search functionality
-  - Category navigation (Smileys, Gestures, Objects, Symbols, Flags)
-  - Smooth animations
-  - Easy access from message input
-- **Message Threading/Replies**: Reply to specific messages
-  - Click reply button on any message
-  - Reply preview shows original message context
-  - Visual thread indicators
-  - Reply references stored in Firestore
-- **User Mentions**: @mention users in messages
-  - Type @ to trigger mention autocomplete
-  - Search users by name or email
-  - Keyboard navigation (Arrow keys, Enter, Tab, Escape)
-  - Notifications for mentioned users
-  - Visual mention indicators
-- **Message Pinning**: Pin important messages (Admin only)
-  - Admins can pin/unpin messages
-  - Pinned messages section at top of chat
-  - Shows up to 3 most recent pinned messages
-  - Visual pin indicators
-- **Markdown Formatting**: Rich text formatting in messages
-  - **Bold** text with `**text**` or `__text__`
-  - *Italic* text with `*text*` or `_text_`
-  - `Code` blocks with backticks
-  - [Links](url) with markdown syntax
-  - Automatic line breaks
-- **Browser Notifications**: Desktop notifications for new messages
-  - Notifications when app is in background
-  - Special notifications for @mentions
-  - Click to focus app
-  - Auto-dismiss after 5 seconds
-  - Permission request on first use
-- **Accessibility Improvements**: Enhanced keyboard navigation and ARIA labels
-  - Keyboard navigation for emoji picker
-  - Keyboard navigation for mention autocomplete
-  - ARIA labels on interactive elements
-  - Better focus management
-
-### Changed
-- **Message Input Enhanced**: 
-  - Added file upload button
-  - Added emoji picker button
-  - Added mention autocomplete support
-  - Improved placeholder text
-  - Better visual feedback
-- **Message Display Enhanced**:
-  - Shows file attachments with previews
-  - Shows reply context
-  - Renders markdown formatting
-  - Better visual hierarchy
-- **Performance Optimizations**:
-  - Optimized typing indicator updates
-  - Efficient mention autocomplete filtering
-  - Better state management
-- **UI/UX Improvements**:
-  - Smooth animations for all new features
-  - Better visual feedback
-  - Improved mobile responsiveness
-  - Enhanced empty states
-
-### Fixed
-- Improved message rendering performance
-- Better error handling for file uploads
-- Fixed notification permission handling
-- Improved typing indicator cleanup
-
-## [1.2.2] - 2025-12-23
-
-### Added
-- **Logo.png Integration**: Added logo.png throughout the entire application
-  - Logo component now uses logo.png image file with fallback to text logo
-  - Favicon updated to use logo.png
-  - Loading screen displays logo with smooth pulse animation
-  - Empty states show logo (ChatArea, PrivateChat, GroupChat, Groups)
-  - Error boundary displays logo
-  - Logo copied to public folder for proper asset serving
-- **Smooth Animations Throughout App**: Comprehensive animation system for enhanced user experience
-  - Custom Tailwind animations: fade-in, slide-in (all directions), scale-in, bounce-in, shimmer
-  - Smooth button hover and active states with scale and shadow effects
-  - Page transition animations with fade-in effects
-  - Card hover effects with elevation and shadow
-  - Toast notification slide-in animations
-  - Message enter animations
-  - Modal fade-in animations
-  - Skeleton loading animations
-  - Global smooth transitions for all interactive elements (buttons, inputs, cards)
-  - Animation utility file for consistent animations across components
-- **Settings Page**: Dedicated settings page accessible from sidebar
-  - Dark mode toggle with smooth switch animation
-  - Sign out button
-  - My Profile access (for students)
-  - Clean, organized settings interface
-  - Mobile-responsive design
-
-### Changed
-- Enhanced Sidebar navigation buttons with smooth hover/active scale animations
-- Improved Toast notifications with enhanced slide-in animations
-- Updated Settings component with smooth animations for all interactive elements
-- Enhanced mobile menu button with smooth hover/active states
-- Improved overall UI responsiveness with consistent animation timing
-- Updated Gemini AI model to `gemini-2.5-flash` for newer API key support
-- Hardcoded Gemini model name to ensure consistent model usage
-- Moved dark mode and sign out buttons from sidebar footer to Settings page
-
-### Fixed
-- Improved visual feedback for all user interactions
-- Enhanced user experience with polished, professional animations
-- Fixed mobile sidebar buttons being hidden by browser UI (Chrome tab bar)
-- Fixed private chat creation permissions in Firestore rules
-
-## [1.2.1] - 2025-12-22
-
-### Added
-- **Disappearing Messages**: Private chat messages can now be set to automatically disappear after 24 hours or 7 days
-  - Toggle disappearing messages on/off per chat
-  - Duration options: 24 hours or 7 days
-  - Visual indicators showing time remaining until expiration
-  - Automatic cleanup of expired messages
-  - Settings stored per chat conversation
-
-### Changed
-- Improved private chat error handling and verification
-- Enhanced Firestore rules for disappearing messages support
-
-### Fixed
-- Fixed private chat message loading issues
-- Improved chat document creation and verification flow
-
-## [1.2.0] - 2025-12-21
-
-### Added
-- **Private Chat System**: Direct messaging between students and admins
-  - Students can chat privately with any admin
-  - Admins can chat privately with any student
-  - Real-time messaging with read receipts
-  - Message editing and deletion
-  - Online/offline status indicators
-  - User profile popup integration
-  - Mobile-responsive design
-  - Automatic chat creation on first message
-
-### Changed
-- Updated Sidebar navigation to include "Private Chat" option for both students and admins
-- Enhanced Firestore security rules for private chat collections
-- Improved mobile navigation with collapsible sidebar
-
-### Fixed
-- Fixed Firestore rules for private chat message access
-- Improved error handling for chat creation and message loading
-
-## [1.1.0] - 2025-12-20
-
-### Added
-- **Google Gemini AI Integration**: 
-  - Integrated Google Gemini AI (`@google/generative-ai`) for intelligent responses
-  - Hybrid AI system: Gemini → ChatGPT → Local Knowledge Base
-  - Model options: Gemini 1.5 Flash (free), Gemini 1.5 Flash 8B, Gemini 1.5 Pro, Gemini Pro
-  - AI Help Assistant now uses Gemini AI with local SISTC knowledge base
-  - ChatArea AI Help mode with Gemini integration
-  - Safety settings configured for content moderation
-  - API key management via environment variables (`VITE_GEMINI_API_KEY`)
-  - Automatic API key trimming to handle whitespace issues
-
-### Changed
-- AI Help Assistant now prioritizes Gemini AI over ChatGPT
-- Removed model switching UI - now uses automatic hybrid model selection
-- Updated AI Help to show Gemini status indicators
-- Improved error handling for AI API calls
-
-### Fixed
-- Fixed Gemini API key handling (added `.trim()` to prevent whitespace issues)
-- Fixed Gemini model name from `gemini-pro` to `gemini-1.5-flash` for better compatibility
-- Improved API key validation and error messages
-
-## [1.0.2] - 2025-12-19
-
-### Added
-- **Mobile Responsiveness**: Complete mobile optimization across all components
-  - Collapsible sidebar with hamburger menu
-  - Responsive padding and text sizes
-  - Adaptive layouts for phones and tablets
-  - Touch-friendly interface elements
-  - Mobile-optimized message display
-
-### Changed
-- Sidebar now collapses on mobile devices
-- All components adapted for mobile screens
-- Improved navigation for small screens
-- Code-splitting with React.lazy for better performance
-
-### Fixed
-- Fixed sidebar blocking content on mobile devices
-- Fixed duplicate logo/header in sidebar
-- Improved mobile user experience across all views
-
-## [1.0.1] - 2025-12-18
+## [2.0.0] - 2024-12-XX
 
 ### Added
 - **Groups Feature**: Study group creation and management
@@ -1004,86 +158,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ToastContext.jsx` - Global toast notifications
 
 ### Security
-- Firestore security rules with `isAdmin()` helper function
-- Role-based access control for messages and users collections
-- Admin-only operations (delete messages, ban users, manage users)
-
-### Features
-- **AI Moderation**: Automatic detection and redaction of toxic content
-- **Real-time Updates**: Live message synchronization using Firestore `onSnapshot`
-- **User Roles**: Support for "student", "admin", and "admin1" roles
-- **Profile Management**: Students can update personal information
-- **User Management**: Admins can view, search, and delete user accounts
-- **User Creation**: Admins can create new student and admin accounts from the portal
-
-## [0.9.0] - Pre-Release
-
-### Added
-- **Toast Notification System**: Global toast notifications for success, error, warning, and info messages
-- **Password Reset Functionality**: Users can now reset their passwords via email
-- **Message Editing**: Message authors can now edit their own messages (one-time edit)
-- **Message Reactions**: Users can react to messages with emojis (👍, ❤️, 😂, 😮, 😢, 🔥)
-- **Message Search**: Real-time search functionality to find messages by content, user, or email
-- **Message Reporting**: Users can report inappropriate messages with reasons
-- **User Presence Indicators**: Online/offline status indicators for users
-- **Admin Audit Trail**: Complete logging of all administrative actions (ban, delete, resolve reports)
-- **Advanced Admin Dashboard**: 
-  - Advanced filtering (by date, user, toxic status)
-  - Sorting options (by timestamp, user, message)
-  - Pagination for better performance
-  - Reports management panel
-  - Audit logs viewer
-- **Export Functionality**: Export audit logs to CSV format
-- **Rate Limiting**: 3-second cooldown between messages to prevent spam
-- **Error Boundary**: Global error handling with user-friendly error messages
-- **Responsive Design**: Improved mobile and tablet support
-- **Custom Scrollbars**: Styled scrollbars for better UX
-
-### Changed
-- Removed "admin1" role option from user creation portal - admins can now only create users with "student" or "admin" roles
-- Updated CreateUser component to use 2-column grid layout instead of 3-column for role selection
-- Enhanced ChatArea with message editing, reactions, search, and reporting
-- Enhanced AdminDashboard with advanced filtering, sorting, pagination, and export
-- Updated Firestore security rules to support message editing, reactions, reports, and audit logs
-- Improved error handling throughout the application
-- Better loading states and user feedback
-
----
-
-## Version History Summary
-
-- **v5.0.0** (2026-01-01) - Major update: Modern React patterns, performance optimizations (40% bundle reduction, 60% fewer re-renders), accessibility (WCAG 2.1 AA), security enhancements, advanced caching, build optimizations
-- **v4.2.0** (2026-01-01) - Major mobile/PWA update: Comprehensive mobile UI/UX optimization, PWA enhancements, advanced error handling, safe area insets for all devices
-- **v4.1.1** (2025-12-31) - Comprehensive Firestore rules update (added savedMessages, scheduledMessages), fixed file upload functionality with Firebase Storage security rules
-- **v4.1.0** (2025-12-30) - Major user-side update: Activity Dashboard, Message Scheduler, Saved Messages, Image Gallery, virtual scrolling, enhanced optimizations
-- **v4.0.4** (2025-12-29) - Admin analytics dashboard, advanced search, keyboard shortcuts, message drafts, export chat history, performance optimizations
-- **v4.0.3** (2025-12-28) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
-- **v4.0.2** (2025-12-28) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
-- **v4.0.1** (2025-12-27) - Message deletion fixes, build error fixes, comprehensive error handling improvements
-- **v4.0.0** (2025-12-27) - Advanced theme customization, message forwarding, enhanced chat preferences, keyboard shortcuts
-- **v3.0.0** (2025-12-26) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
-- **v2.0.1** (2025-12-25) - Private chat improvements, email search, message history preview, enhanced settings, and bug fixes
-- **v2.0.0** (2025-12-24) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
-- **v1.2.2** (2025-12-23) - Smooth animations throughout the app
-- **v1.2.1** (2025-12-22) - Disappearing Messages feature
-- **v1.2.0** (2025-12-21) - Private Chat system
-- **v1.1.0** (2025-12-20) - Google Gemini AI integration
-- **v1.0.2** (2025-12-19) - Mobile responsiveness improvements
-- **v1.0.1** (2025-12-18) - Groups feature and bug fixes
-- **v1.0.0** (2025-12-17) - Initial MVP release
-- **v0.9.0** - Pre-release with core features
-
-## Semantic Versioning
-
-This project follows [Semantic Versioning](https://semver.org/):
-- **MAJOR** version for incompatible API changes
-- **MINOR** version for new functionality (backward compatible)
-- **PATCH** version for backward compatible bug fixes
-
-## Contributing
-
-When adding new features or fixes, please update this changelog:
-1. Add entries under `[Unreleased]` for ongoing work
-2. When releasing, move `[Unreleased]` to a new version number
-3. Follow the format: `[MAJOR.MINOR.PATCH] - YYYY-MM-DD`
-4. Use sections: Added, Changed, Deprecated, Removed, Fixed, Security
+- Firestore security rules enforce role-based access
+- Admin-only endpoints and UI elements
+- Secure authentication with Firebase Auth
+- Input sanitization and validation

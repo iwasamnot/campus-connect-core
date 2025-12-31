@@ -4,6 +4,12 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ## Features
 
+### Appearance & Themes
+- **Dual Theme System**: Choose between Fun (colorful & playful) or Minimal (sleek & modern) themes
+- **Dark Mode**: Full dark mode support with automatic system preference detection
+- **Customizable**: Adjust accent colors and font sizes to your preference
+- **Optimized Performance**: Minimal theme optimized for ultra-fast transitions and animations
+
 ### For Students
 - **Campus Chat**: Real-time global chat with AI-powered content moderation
 - **Activity Dashboard**: Comprehensive activity feed and insights
