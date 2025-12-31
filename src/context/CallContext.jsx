@@ -26,6 +26,12 @@ export const CallProvider = ({ children }) => {
   const remoteVideoRef = useRef(null);
   const roomIDRef = useRef(null);
 
+  // Check if calling is configured
+  const isCallingAvailable = useCallback(() => {
+    const appID = import.meta.env.VITE_ZEGOCLOUD_APP_ID;
+    return !!appID && appID.trim() !== '';
+  }, []);
+
   // Initialize ZEGOCLOUD
   const initZegoCloud = useCallback(async () => {
     try {
@@ -33,8 +39,17 @@ export const CallProvider = ({ children }) => {
       
       const appID = import.meta.env.VITE_ZEGOCLOUD_APP_ID;
       
-      if (!appID) {
+      if (!appID || appID.trim() === '') {
         console.warn('ZEGOCLOUD App ID not found. Calls will not work.');
+        console.warn('To enable calling: Add VITE_ZEGOCLOUD_APP_ID to your .env file');
+        console.warn('See ZEGOCLOUD_SETUP.md for instructions');
+        return null;
+      }
+
+      // Validate App ID is a number
+      const appIDNum = parseInt(appID);
+      if (isNaN(appIDNum)) {
+        console.error('ZEGOCLOUD App ID must be a number');
         return null;
       }
 
@@ -42,7 +57,7 @@ export const CallProvider = ({ children }) => {
       // For now using placeholder - implement server-side token generation
       const token = 'placeholder-token';
       
-      const zg = new ZegoExpressEngine(parseInt(appID), token);
+      const zg = new ZegoExpressEngine(appIDNum, token);
       
       zegoCloudRef.current = zg;
       return zg;
@@ -77,9 +92,16 @@ export const CallProvider = ({ children }) => {
         return;
       }
 
+      // Check configuration before attempting to initialize
+      if (!isCallingAvailable()) {
+        showError('Calling is not configured. Please add VITE_ZEGOCLOUD_APP_ID to your .env file. See ZEGOCLOUD_SETUP.md for instructions.');
+        setCallState(null);
+        return;
+      }
+
       const zg = await initZegoCloud();
       if (!zg) {
-        showError('Calling service unavailable. Please check configuration.');
+        showError('Failed to initialize calling service. Please check your ZEGOCLOUD configuration and restart the server.');
         setCallState(null);
         return;
       }
@@ -194,6 +216,7 @@ export const CallProvider = ({ children }) => {
     isVideoEnabled,
     localVideoRef,
     remoteVideoRef,
+    isCallingAvailable: isCallingAvailable(),
     startCall,
     endCall,
     toggleMute,

@@ -30,7 +30,7 @@ import { checkToxicity } from '../utils/toxicityChecker';
 const PrivateChat = () => {
   const { user, userRole } = useAuth();
   const { success, error: showError } = useToast();
-  const { startCall } = useCall();
+  const { startCall, isCallingAvailable } = useCall();
   const [availableUsers, setAvailableUsers] = useState([]); // List of admins (for students) or students (for admins)
   const [selectedChatId, setSelectedChatId] = useState(null); // Current chat ID
   const [selectedUser, setSelectedUser] = useState(null); // The other user in the chat
@@ -1263,6 +1263,10 @@ const PrivateChat = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => {
+                if (!isCallingAvailable) {
+                  showError('Calling is not configured. Please add VITE_ZEGOCLOUD_APP_ID to your .env file. See ZEGOCLOUD_SETUP.md for instructions.');
+                  return;
+                }
                 const userProfile = userProfiles[selectedUser.id] || selectedUser;
                 const displayName = userNames[selectedUser.id] || 
                                  selectedUser.name || 
@@ -1275,14 +1279,23 @@ const PrivateChat = () => {
                   email: selectedUser.email || selectedUser.studentEmail 
                 }, 'voice');
               }}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              title="Voice call"
-              aria-label="Voice call"
+              className={`p-2 rounded-lg transition-colors ${
+                isCallingAvailable 
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
+              title={isCallingAvailable ? "Voice call" : "Calling unavailable - Check configuration"}
+              aria-label={isCallingAvailable ? "Voice call" : "Calling unavailable"}
+              disabled={!isCallingAvailable}
             >
-              <Phone size={18} className="text-indigo-600 dark:text-indigo-400" />
+              <Phone size={18} className={`${isCallingAvailable ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`} />
             </button>
             <button
               onClick={() => {
+                if (!isCallingAvailable) {
+                  showError('Calling is not configured. Please add VITE_ZEGOCLOUD_APP_ID to your .env file. See ZEGOCLOUD_SETUP.md for instructions.');
+                  return;
+                }
                 const userProfile = userProfiles[selectedUser.id] || selectedUser;
                 const displayName = userNames[selectedUser.id] || 
                                  selectedUser.name || 
@@ -1295,11 +1308,16 @@ const PrivateChat = () => {
                   email: selectedUser.email || selectedUser.studentEmail 
                 }, 'video');
               }}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              title="Video call"
-              aria-label="Video call"
+              className={`p-2 rounded-lg transition-colors ${
+                isCallingAvailable 
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
+              title={isCallingAvailable ? "Video call" : "Calling unavailable - Check configuration"}
+              aria-label={isCallingAvailable ? "Video call" : "Calling unavailable"}
+              disabled={!isCallingAvailable}
             >
-              <Video size={18} className="text-indigo-600 dark:text-indigo-400" />
+              <Video size={18} className={`${isCallingAvailable ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`} />
             </button>
           </div>
           {/* Disappearing Messages Settings Button */}

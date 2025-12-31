@@ -703,39 +703,26 @@ input, textarea, [contenteditable] {
     touch-action: manipulation;
   }
   
-  /* Completely disable ALL hover states on touch devices - override any hover styles */
-  button:hover,
-  a:hover,
-  div:hover,
-  .hover\:bg-gray-100:hover,
-  .hover\:bg-gray-200:hover,
-  .hover\:bg-gray-50:hover,
-  .hover\:bg-gray-700:hover,
-  .hover\:bg-gray-600:hover,
-  .hover\:bg-indigo-100:hover,
-  .hover\:bg-indigo-700:hover,
-  .hover\:bg-blue-700:hover,
-  .hover\:bg-green-700:hover,
-  .hover\:bg-red-700:hover,
-  .hover\:bg-purple-700:hover,
-  .hover\:bg-orange-700:hover,
-  .hover\:bg-yellow-700:hover,
+  /* Disable problematic hover effects on touch devices - but preserve essential styling */
+  /* Only disable transforms, scales, and opacity changes that cause "sticky" hover */
+  button:not(nav button):hover,
+  a:not(nav a):hover,
+  .hover\:scale-110:hover,
+  .hover\:scale-105:hover,
+  .hover\:scale-\[1\.02\]:hover {
+    transform: none !important;
+  }
+  
+  /* Disable opacity hover changes that cause sticky states */
   .hover\:opacity-70:hover,
   .hover\:opacity-100:hover,
   .hover\:opacity-90:hover,
-  .hover\:scale-110:hover,
-  .hover\:scale-105:hover,
-  .hover\:scale-\[1\.02\]:hover,
-  .hover\:underline:hover,
-  .hover\:border-indigo-400:hover,
-  .card-hover:hover,
-  .group:hover .group-hover\:opacity-100 {
-    background-color: revert !important;
-    color: revert !important;
-    border-color: revert !important;
+  .group:hover .group-hover\:opacity-100:not(nav *) {
     opacity: revert !important;
-    transform: none !important;
-    box-shadow: revert !important;
+  }
+  
+  /* Disable underline hover on touch */
+  .hover\:underline:hover {
     text-decoration: revert !important;
   }
   
@@ -744,6 +731,23 @@ input, textarea, [contenteditable] {
   .md\:opacity-0.md\:group-hover\:opacity-100,
   .group-hover\:opacity-100 {
     opacity: 1 !important;
+  }
+  
+  /* Preserve sidebar menu button backgrounds and functionality */
+  nav button,
+  nav a {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Ensure sidebar is visible and clickable */
+  nav,
+  .sidebar,
+  [class*="Sidebar"] {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
   }
 
   /* Scrollable containers */
@@ -818,17 +822,42 @@ input, textarea, [contenteditable] {
     z-index: 1;
   }
   
-  /* Additional PWA hover fixes - disable all hover effects in standalone mode */
+  /* Ensure sidebar container has solid background - target by position and background class */
+  div.fixed.top-0.left-0[class*="bg-gray-900"],
+  div.fixed[class*="bg-gray-900"][class*="border-r"] {
+    background-color: rgb(17 24 39) !important; /* gray-900 */
+    opacity: 1 !important;
+    background-image: none !important;
+  }
+  
+  /* Ensure sidebar menu buttons are clickable and visible */
+  nav button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
+    opacity: 1 !important;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Active state backgrounds - ensure they're visible */
+  nav button.bg-indigo-600 {
+    background-color: rgb(79 70 229) !important; /* indigo-600 */
+    opacity: 1 !important;
+  }
+  
+  /* Additional PWA hover fixes - disable problematic hover effects in standalone mode */
   @media (display-mode: standalone) {
-    button:hover,
-    a:hover,
-    div:hover {
-      background-color: revert !important;
-      color: revert !important;
-      border-color: revert !important;
-      opacity: revert !important;
+    /* Only disable transforms and scales, preserve backgrounds for navigation */
+    button:not(nav button):hover,
+    a:not(nav a):hover {
       transform: none !important;
-      box-shadow: revert !important;
+    }
+    
+    /* Preserve sidebar functionality */
+    nav button,
+    nav a {
+      pointer-events: auto !important;
     }
   }
   
