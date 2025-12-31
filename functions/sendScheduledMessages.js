@@ -1,3 +1,11 @@
+/**
+ * Cloud Function to send scheduled messages
+ * Runs every minute to check for scheduled messages that need to be sent
+ * 
+ * Deploy: firebase deploy --only functions:sendScheduledMessages
+ * Schedule: Runs every minute
+ */
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
@@ -29,8 +37,6 @@ exports.sendScheduledMessages = functions.pubsub
       let processedCount = 0;
       let errorCount = 0;
 
-      const batch = db.batch();
-
       for (const docSnapshot of scheduledMessagesQuery.docs) {
         try {
           const scheduledMsg = docSnapshot.data();
@@ -42,13 +48,23 @@ exports.sendScheduledMessages = functions.pubsub
             continue;
           }
 
-          // Prepare message data
+          // Get user data for the message
+          const userDoc = await db.collection('users').doc(scheduledMsg.userId).get();
+          const userData = userDoc.exists ? userDoc.data() : null;
+          const userName = userData?.name || userData?.studentEmail || 'Unknown User';
+          const userEmail = userData?.studentEmail || userData?.personalEmail || null;
+
+          // Prepare message data (matching the structure used in ChatArea)
           const messageData = {
             userId: scheduledMsg.userId,
+            userEmail: userEmail,
+            userName: userName,
             text: scheduledMsg.text,
             displayText: scheduledMsg.text,
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             toxic: false, // Scheduled messages bypass toxicity check for now
+            reactions: {},
+            edited: false,
             readBy: {
               [scheduledMsg.userId]: admin.firestore.FieldValue.serverTimestamp()
             }
@@ -59,24 +75,50 @@ exports.sendScheduledMessages = functions.pubsub
             // Send to global messages
             await db.collection('messages').add(messageData);
             console.log(`Sent scheduled message ${scheduledMsgId} to global chat`);
-          } else if (scheduledMsg.chatType === 'private') {
-            // For private messages, we need a target user ID
-            // Since we don't have this in the scheduled message, skip for now
-            // TODO: Add targetUserId to scheduled messages for private chats
-            console.warn(`Skipping private scheduled message ${scheduledMsgId} - targetUserId required`);
-            errorCount++;
-            continue;
-          } else if (scheduledMsg.chatType === 'group') {
-            // For group messages, we need a group ID
-            // Since we don't have this in the scheduled message, skip for now
-            // TODO: Add groupId to scheduled messages for group chats
-            console.warn(`Skipping group scheduled message ${scheduledMsgId} - groupId required`);
+          } else if (scheduledMsg.chatType === 'private' && scheduledMsg.targetUserId) {
+            // For private messages, create/find chat and send message
+            const chatId = [scheduledMsg.userId, scheduledMsg.targetUserId].sort().join('_');
+            const chatRef = db.collection('privateChats').doc(chatId);
+            
+            // Ensure chat exists
+            const chatDoc = await chatRef.get();
+            if (!chatDoc.exists) {
+              await chatRef.set({
+                participants: [scheduledMsg.userId, scheduledMsg.targetUserId].sort(),
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                lastMessage: scheduledMsg.text,
+                lastMessageTime: admin.firestore.FieldValue.serverTimestamp()
+              });
+            } else {
+              // Update last message
+              await chatRef.update({
+                lastMessage: scheduledMsg.text,
+                lastMessageTime: admin.firestore.FieldValue.serverTimestamp()
+              });
+            }
+            
+            // Add message to chat
+            await chatRef.collection('messages').add(messageData);
+            console.log(`Sent scheduled message ${scheduledMsgId} to private chat ${chatId}`);
+          } else if (scheduledMsg.chatType === 'group' && scheduledMsg.groupId) {
+            // For group messages, send to group messages collection
+            await db.collection('groups').doc(scheduledMsg.groupId).collection('messages').add(messageData);
+            
+            // Update group's last message
+            await db.collection('groups').doc(scheduledMsg.groupId).update({
+              lastMessage: scheduledMsg.text,
+              lastMessageTime: admin.firestore.FieldValue.serverTimestamp()
+            });
+            
+            console.log(`Sent scheduled message ${scheduledMsgId} to group ${scheduledMsg.groupId}`);
+          } else {
+            console.warn(`Skipping scheduled message ${scheduledMsgId} - missing required fields for ${scheduledMsg.chatType} chat`);
             errorCount++;
             continue;
           }
 
           // Mark as sent
-          batch.update(db.collection('scheduledMessages').doc(scheduledMsgId), {
+          await db.collection('scheduledMessages').doc(scheduledMsgId).update({
             sent: true,
             sentAt: admin.firestore.FieldValue.serverTimestamp()
           });
@@ -88,16 +130,10 @@ exports.sendScheduledMessages = functions.pubsub
         }
       }
 
-      // Commit all updates
-      if (processedCount > 0) {
-        await batch.commit();
-        console.log(`Processed ${processedCount} scheduled messages, ${errorCount} errors`);
-      }
-
+      console.log(`Processed ${processedCount} scheduled messages, ${errorCount} errors`);
       return { processedCount, errorCount };
     } catch (error) {
       console.error('Error in sendScheduledMessages:', error);
       return null;
     }
   });
-
