@@ -198,21 +198,47 @@
   background-color: var(--minimal-bg-secondary) !important;
 }
 
-/* Minimal theme - faster, instant transitions */
+/* Minimal theme - fastest transitions (near instant) */
 .theme-minimal *,
 .theme-minimal button,
 .theme-minimal a,
 .theme-minimal input,
 .theme-minimal textarea,
-.theme-minimal select {
-  transition: background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease !important;
+.theme-minimal select,
+.theme-minimal div,
+.theme-minimal span,
+.theme-minimal p {
+  transition: background-color 0.05s ease, color 0.05s ease, border-color 0.05s ease !important;
 }
 
-/* Minimal theme - remove animation delays */
+/* Minimal theme - instant animations */
 .theme-minimal .animate-fade-in,
 .theme-minimal .animate-slide-in-down,
-.theme-minimal .animate-slide-in-up {
-  animation-duration: 0.15s !important;
+.theme-minimal .animate-slide-in-up,
+.theme-minimal .animate-slide-in-right,
+.theme-minimal .animate-slide-in-left {
+  animation-duration: 0.1s !important;
+}
+
+/* Minimal theme - text selection colors */
+.theme-minimal ::selection {
+  background-color: rgba(0, 0, 0, 0.15);
+  color: inherit;
+}
+
+.theme-minimal ::-moz-selection {
+  background-color: rgba(0, 0, 0, 0.15);
+  color: inherit;
+}
+
+.dark.theme-minimal ::selection {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--minimal-text);
+}
+
+.dark.theme-minimal ::-moz-selection {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--minimal-text);
 }
 
 /* Minimal theme - cleaner backgrounds */
@@ -311,10 +337,20 @@ button, a, input, textarea, select {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+/* Minimal theme - faster card transitions */
+.theme-minimal .card-hover {
+  transition: background-color 0.05s ease !important;
+}
+
 /* Smooth button press effect */
 button:active {
   transform: scale(0.98);
   transition: transform 0.1s ease-in-out;
+}
+
+/* Minimal theme - instant button press */
+.theme-minimal button:active {
+  transition: transform 0.05s ease-in-out !important;
 }
 
 /* Smooth input focus */
@@ -479,6 +515,7 @@ html {
 
 .theme-minimal html {
   background-color: var(--minimal-bg);
+  transition: background-color 0.05s ease !important;
 }
 
 .dark.theme-minimal html {
@@ -508,6 +545,7 @@ body {
 
 .theme-minimal body {
   background-color: var(--minimal-bg);
+  transition: background-color 0.05s ease, color 0.05s ease !important;
 }
 
 .dark.theme-minimal body {
@@ -539,6 +577,7 @@ input, textarea, [contenteditable] {
 
 .theme-minimal #root {
   background-color: var(--minimal-bg);
+  transition: background-color 0.05s ease !important;
 }
 
 .dark.theme-minimal #root {
