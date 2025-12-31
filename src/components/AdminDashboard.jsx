@@ -654,8 +654,11 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="admin-search-query" className="sr-only">Search messages</label>
             <input
               type="text"
+              id="admin-search-query"
+              name="search-query"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search messages..."
@@ -664,8 +667,11 @@ const AdminDashboard = () => {
           </div>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="admin-filter-user" className="sr-only">Filter by user</label>
             <input
               type="text"
+              id="admin-filter-user"
+              name="filter-user"
               value={filterUser}
               onChange={(e) => setFilterUser(e.target.value)}
               placeholder="Filter by user..."
@@ -674,8 +680,11 @@ const AdminDashboard = () => {
           </div>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="admin-filter-date" className="sr-only">Filter by date</label>
             <input
               type="date"
+              id="admin-filter-date"
+              name="filter-date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"

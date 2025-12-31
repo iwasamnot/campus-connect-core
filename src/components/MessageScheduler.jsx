@@ -144,10 +144,12 @@ const MessageScheduler = memo(() => {
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="scheduler-message-text" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Message Text
               </label>
               <textarea
+                id="scheduler-message-text"
+                name="text"
                 value={formData.text}
                 onChange={(e) => setFormData({ ...formData, text: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
@@ -158,11 +160,13 @@ const MessageScheduler = memo(() => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="scheduler-datetime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Scheduled Date & Time
                 </label>
                 <input
                   type="datetime-local"
+                  id="scheduler-datetime"
+                  name="scheduledTime"
                   value={formData.scheduledTime}
                   onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
@@ -170,10 +174,12 @@ const MessageScheduler = memo(() => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="scheduler-chat-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Chat Type
                 </label>
                 <select
+                  id="scheduler-chat-type"
+                  name="chatType"
                   value={formData.chatType}
                   onChange={(e) => setFormData({ ...formData, chatType: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"

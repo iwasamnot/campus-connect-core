@@ -254,7 +254,7 @@ const StudentProfile = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <User className="inline mr-2" size={16} />
                   Full Name
                 </label>
@@ -262,6 +262,7 @@ const StudentProfile = () => {
                   <>
                     <input
                       type="text"
+                      id="profile-name"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
@@ -281,7 +282,7 @@ const StudentProfile = () => {
 
               {/* Student Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-student-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Student Email
                 </label>
@@ -289,6 +290,7 @@ const StudentProfile = () => {
                   <>
                     <input
                       type="email"
+                      id="profile-student-email"
                       name="studentEmail"
                       value={formData.studentEmail}
                       onChange={handleChange}
@@ -308,7 +310,7 @@ const StudentProfile = () => {
 
               {/* Personal Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-personal-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Personal Email
                 </label>
@@ -316,6 +318,7 @@ const StudentProfile = () => {
                   <>
                     <input
                       type="email"
+                      id="profile-personal-email"
                       name="personalEmail"
                       value={formData.personalEmail}
                       onChange={handleChange}
@@ -335,7 +338,7 @@ const StudentProfile = () => {
 
               {/* Phone Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Phone className="inline mr-2" size={16} />
                   Phone Number
                 </label>
@@ -343,6 +346,7 @@ const StudentProfile = () => {
                   <>
                     <input
                       type="tel"
+                      id="profile-phone"
                       name="phoneNumber"
                       value={formData.phoneNumber}
                       onChange={handleChange}
@@ -362,7 +366,7 @@ const StudentProfile = () => {
 
               {/* Profile Picture */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-picture-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Image className="inline mr-2" size={16} />
                   Profile Picture
                 </label>
@@ -378,11 +382,12 @@ const StudentProfile = () => {
                         />
                       )}
                       <div className="flex-1">
-                        <label className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <label htmlFor="profile-picture-upload" className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                           <Upload size={18} />
                           <span>{uploading ? 'Uploading...' : 'Upload Image'}</span>
                           <input
                             type="file"
+                            id="profile-picture-upload"
                             accept="image/*"
                             onChange={async (e) => {
                               const file = e.target.files[0];
@@ -420,6 +425,7 @@ const StudentProfile = () => {
                     </div>
                     <input
                       type="url"
+                      id="profile-picture-url"
                       name="profilePicture"
                       value={formData.profilePicture}
                       onChange={handleChange}
@@ -453,13 +459,14 @@ const StudentProfile = () => {
 
               {/* Bio */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <FileText className="inline mr-2" size={16} />
                   Bio / About Me
                 </label>
                 {editing ? (
                   <>
                     <textarea
+                      id="profile-bio"
                       name="bio"
                       value={formData.bio}
                       onChange={handleChange}
@@ -481,7 +488,7 @@ const StudentProfile = () => {
 
               {/* Course/Major */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <GraduationCap className="inline mr-2" size={16} />
                   Course / Major
                 </label>
@@ -489,6 +496,7 @@ const StudentProfile = () => {
                   <>
                     <input
                       type="text"
+                      id="profile-course"
                       name="course"
                       value={formData.course}
                       onChange={handleChange}
@@ -508,13 +516,14 @@ const StudentProfile = () => {
 
               {/* Year of Study */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-year-of-study" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <GraduationCap className="inline mr-2" size={16} />
                   Year of Study
                 </label>
                 {editing ? (
                   <>
                     <select
+                      id="profile-year-of-study"
                       name="yearOfStudy"
                       value={formData.yearOfStudy}
                       onChange={handleChange}
@@ -541,7 +550,7 @@ const StudentProfile = () => {
 
               {/* Date of Birth */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-date-of-birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="inline mr-2" size={16} />
                   Date of Birth
                 </label>
@@ -549,6 +558,7 @@ const StudentProfile = () => {
                   <>
                     <input
                       type="date"
+                      id="profile-date-of-birth"
                       name="dateOfBirth"
                       value={formData.dateOfBirth}
                       onChange={handleChange}
@@ -568,13 +578,14 @@ const StudentProfile = () => {
 
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <MapPin className="inline mr-2" size={16} />
                   Address
                 </label>
                 {editing ? (
                   <>
                     <textarea
+                      id="profile-address"
                       name="address"
                       value={formData.address}
                       onChange={handleChange}

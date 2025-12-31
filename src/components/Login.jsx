@@ -262,7 +262,7 @@ const Login = () => {
         <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="register-name" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <User className="inline mr-2" size={16} />
                   Full Name
                 </label>
@@ -270,6 +270,8 @@ const Login = () => {
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="text"
+                    id="register-name"
+                    name="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
@@ -281,7 +283,7 @@ const Login = () => {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-black dark:text-white mb-2">
+              <label htmlFor="login-email" className="block text-sm font-medium text-black dark:text-white mb-2">
                 <Mail className="inline mr-2" size={16} />
                 Email
               </label>
@@ -289,6 +291,8 @@ const Login = () => {
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                 <input
                   type="email"
+                  id="login-email"
+                  name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter Your Email"
@@ -300,7 +304,7 @@ const Login = () => {
             </div>
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="register-confirm-email" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Confirm Email
                 </label>
@@ -308,6 +312,8 @@ const Login = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="email"
+                    id="register-confirm-email"
+                    name="confirmEmail"
                     value={confirmEmail}
                     onChange={(e) => setConfirmEmail(e.target.value)}
                     placeholder="Confirm your email"
@@ -330,7 +336,7 @@ const Login = () => {
 
             {mode !== 'reset' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="login-password" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <Lock className="inline mr-2" size={16} />
                   Password
                 </label>
@@ -338,6 +344,8 @@ const Login = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="password"
+                    id="login-password"
+                    name="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
@@ -352,7 +360,7 @@ const Login = () => {
 
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="register-confirm-password" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <Lock className="inline mr-2" size={16} />
                   Confirm Password
                 </label>
@@ -360,6 +368,8 @@ const Login = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="password"
+                    id="register-confirm-password"
+                    name="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"

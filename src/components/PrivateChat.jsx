@@ -1224,9 +1224,11 @@ const PrivateChat = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label htmlFor="disappearing-messages-enabled" className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
+                      id="disappearing-messages-enabled"
+                      name="disappearing-messages-enabled"
                       checked={disappearingMessagesEnabled}
                       onChange={(e) => setDisappearingMessagesEnabled(e.target.checked)}
                       className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
@@ -1236,8 +1238,10 @@ const PrivateChat = () => {
                   
                   {disappearingMessagesEnabled && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
+                      <label htmlFor="disappearing-messages-duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
                       <select
+                        id="disappearing-messages-duration"
+                        name="disappearing-messages-duration"
                         value={disappearingMessagesDuration}
                         onChange={(e) => setDisappearingMessagesDuration(Number(e.target.value))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -1482,8 +1486,11 @@ const PrivateChat = () => {
           className="flex gap-2 relative"
         >
           <div className="flex-1 relative">
+            <label htmlFor="private-chat-message-input" className="sr-only">Type a message</label>
             <input
               type="text"
+              id="private-chat-message-input"
+              name="message"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message..."

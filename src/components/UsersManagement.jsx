@@ -287,8 +287,11 @@ const UsersManagement = () => {
 
       {/* Search Bar */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4">
+        <label htmlFor="users-search" className="sr-only">Search users</label>
         <input
           type="text"
+          id="users-search"
+          name="users-search"
           placeholder="Search by email, phone, or user ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -616,12 +619,14 @@ const UsersManagement = () => {
             <div className="p-6 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <User className="inline mr-2" size={16} />
                   Full Name
                 </label>
                 <input
                   type="text"
+                  id="edit-user-name"
+                  name="name"
                   value={editData.name}
                   onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -631,10 +636,12 @@ const UsersManagement = () => {
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Role
                 </label>
                 <select
+                  id="edit-user-role"
+                  name="role"
                   value={editData.role}
                   onChange={(e) => setEditData(prev => ({ ...prev, role: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -647,12 +654,14 @@ const UsersManagement = () => {
 
               {/* Student Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-student-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Student Email
                 </label>
                 <input
                   type="email"
+                  id="edit-user-student-email"
+                  name="studentEmail"
                   value={editData.studentEmail}
                   onChange={(e) => setEditData(prev => ({ ...prev, studentEmail: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -662,12 +671,14 @@ const UsersManagement = () => {
 
               {/* Personal Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-personal-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Personal Email
                 </label>
                 <input
                   type="email"
+                  id="edit-user-personal-email"
+                  name="personalEmail"
                   value={editData.personalEmail}
                   onChange={(e) => setEditData(prev => ({ ...prev, personalEmail: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -677,12 +688,14 @@ const UsersManagement = () => {
 
               {/* Phone Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Phone className="inline mr-2" size={16} />
                   Phone Number
                 </label>
                 <input
                   type="tel"
+                  id="edit-user-phone"
+                  name="phoneNumber"
                   value={editData.phoneNumber}
                   onChange={(e) => setEditData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -692,7 +705,7 @@ const UsersManagement = () => {
 
               {/* Profile Picture */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-picture-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Image className="inline mr-2" size={16} />
                   Profile Picture
                 </label>
@@ -706,11 +719,12 @@ const UsersManagement = () => {
                     />
                   )}
                   <div className="flex-1">
-                    <label className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <label htmlFor="edit-user-picture-upload" className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                       <Upload size={18} />
                       <span>{uploading === editing ? 'Uploading...' : 'Upload Image'}</span>
                       <input
                         type="file"
+                        id="edit-user-picture-upload"
                         accept="image/*"
                         onChange={async (e) => {
                           const file = e.target.files[0];
@@ -743,6 +757,8 @@ const UsersManagement = () => {
                 </div>
                 <input
                   type="url"
+                  id="edit-user-picture-url"
+                  name="profilePicture"
                   value={editData.profilePicture}
                   onChange={(e) => setEditData(prev => ({ ...prev, profilePicture: e.target.value }))}
                   placeholder="Or enter image URL"
@@ -756,11 +772,13 @@ const UsersManagement = () => {
 
               {/* Bio */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <FileText className="inline mr-2" size={16} />
                   Bio / About Me
                 </label>
                 <textarea
+                  id="edit-user-bio"
+                  name="bio"
                   value={editData.bio}
                   onChange={(e) => setEditData(prev => ({ ...prev, bio: e.target.value }))}
                   rows={4}
@@ -775,12 +793,14 @@ const UsersManagement = () => {
 
               {/* Course */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <GraduationCap className="inline mr-2" size={16} />
                   Course / Major
                 </label>
                 <input
                   type="text"
+                  id="edit-user-course"
+                  name="course"
                   value={editData.course}
                   onChange={(e) => setEditData(prev => ({ ...prev, course: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -790,11 +810,13 @@ const UsersManagement = () => {
 
               {/* Year of Study */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-year-of-study" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <GraduationCap className="inline mr-2" size={16} />
                   Year of Study
                 </label>
                 <select
+                  id="edit-user-year-of-study"
+                  name="yearOfStudy"
                   value={editData.yearOfStudy}
                   onChange={(e) => setEditData(prev => ({ ...prev, yearOfStudy: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -812,12 +834,14 @@ const UsersManagement = () => {
 
               {/* Date of Birth */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-date-of-birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="inline mr-2" size={16} />
                   Date of Birth
                 </label>
                 <input
                   type="date"
+                  id="edit-user-date-of-birth"
+                  name="dateOfBirth"
                   value={editData.dateOfBirth}
                   onChange={(e) => setEditData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
                   max={new Date().toISOString().split('T')[0]}
@@ -828,11 +852,13 @@ const UsersManagement = () => {
 
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="edit-user-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <MapPin className="inline mr-2" size={16} />
                   Address
                 </label>
                 <textarea
+                  id="edit-user-address"
+                  name="address"
                   value={editData.address}
                   onChange={(e) => setEditData(prev => ({ ...prev, address: e.target.value }))}
                   rows={2}

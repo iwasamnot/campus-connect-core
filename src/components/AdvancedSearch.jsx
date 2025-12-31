@@ -147,8 +147,11 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <label htmlFor="advanced-search-query" className="sr-only">Search messages, users, or content</label>
             <input
               type="text"
+              id="advanced-search-query"
+              name="search-query"
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
               placeholder="Search messages, users, or content..."
@@ -172,11 +175,13 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* User Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="search-filter-user" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   <User className="w-4 h-4 inline mr-1" />
                   User
                 </label>
                 <select
+                  id="search-filter-user"
+                  name="filter-user"
                   value={filters.user}
                   onChange={(e) => setFilters({ ...filters, user: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -192,12 +197,14 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
 
               {/* Date From */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="search-filter-date-from" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   From Date
                 </label>
                 <input
                   type="date"
+                  id="search-filter-date-from"
+                  name="filter-date-from"
                   value={filters.dateFrom}
                   onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -206,12 +213,14 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
 
               {/* Date To */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="search-filter-date-to" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   To Date
                 </label>
                 <input
                   type="date"
+                  id="search-filter-date-to"
+                  name="filter-date-to"
                   value={filters.dateTo}
                   onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -220,9 +229,11 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
 
               {/* Checkboxes */}
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <label htmlFor="search-filter-has-files" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input
                     type="checkbox"
+                    id="search-filter-has-files"
+                    name="filter-has-files"
                     checked={filters.hasFiles}
                     onChange={(e) => setFilters({ ...filters, hasFiles: e.target.checked })}
                     className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
@@ -230,9 +241,11 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
                   <FileText className="w-4 h-4" />
                   Has Files
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <label htmlFor="search-filter-has-reactions" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input
                     type="checkbox"
+                    id="search-filter-has-reactions"
+                    name="filter-has-reactions"
                     checked={filters.hasReactions}
                     onChange={(e) => setFilters({ ...filters, hasReactions: e.target.checked })}
                     className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
@@ -240,9 +253,11 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
                   <MessageSquare className="w-4 h-4" />
                   Has Reactions
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <label htmlFor="search-filter-is-pinned" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input
                     type="checkbox"
+                    id="search-filter-is-pinned"
+                    name="filter-is-pinned"
                     checked={filters.isPinned}
                     onChange={(e) => setFilters({ ...filters, isPinned: e.target.checked })}
                     className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"

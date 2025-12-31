@@ -1535,9 +1535,12 @@ const ChatArea = ({ setActiveView }) => {
 
             <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
               <div className="flex-1 relative">
+                <label htmlFor="chat-message-input" className="sr-only">Type a message</label>
                 <input
                   ref={messageInputRef}
                   type="text"
+                  id="chat-message-input"
+                  name="message"
                   value={newMessage}
                   onChange={async (e) => {
                     setNewMessage(e.target.value);

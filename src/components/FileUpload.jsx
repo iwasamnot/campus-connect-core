@@ -90,10 +90,11 @@ const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['
       <input
         ref={fileInputRef}
         type="file"
+        id="file-upload"
+        name="file-upload"
         onChange={handleFileSelect}
         accept={allowedTypes.join(',')}
         className="hidden"
-        id="file-upload"
         disabled={uploading}
       />
       <label

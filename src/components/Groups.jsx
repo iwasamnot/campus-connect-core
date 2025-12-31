@@ -332,8 +332,11 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <label htmlFor="groups-search" className="sr-only">Search groups</label>
           <input
             type="text"
+            id="groups-search"
+            name="groups-search"
             placeholder="Search groups..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -443,11 +446,13 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             </div>
             <form onSubmit={handleCreateGroup} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="group-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Group Name *
                 </label>
                 <input
                   type="text"
+                  id="group-name"
+                  name="groupName"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="Enter group name"
@@ -457,10 +462,12 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="group-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description (optional)
                 </label>
                 <textarea
+                  id="group-description"
+                  name="groupDescription"
                   value={newGroupDescription}
                   onChange={(e) => setNewGroupDescription(e.target.value)}
                   placeholder="Enter group description"
@@ -534,8 +541,11 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <label htmlFor="browse-groups-search" className="sr-only">Search groups</label>
                 <input
                   type="text"
+                  id="browse-groups-search"
+                  name="browse-groups-search"
                   placeholder="Search groups..."
                   value={browseSearchTerm}
                   onChange={(e) => setBrowseSearchTerm(e.target.value)}

@@ -765,8 +765,11 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         }}
       >
         <form onSubmit={handleSend} className="flex gap-2 md:gap-3">
+          <label htmlFor="ai-help-input" className="sr-only">Ask about SISTC</label>
           <input
             type="text"
+            id="ai-help-input"
+            name="ai-help-message"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about SISTC..."

@@ -1047,8 +1047,11 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
         <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
           <div className="flex-1 relative">
+            <label htmlFor="group-chat-message-input" className="sr-only">Type your message</label>
             <input
               type="text"
+              id="group-chat-message-input"
+              name="message"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type your message..."

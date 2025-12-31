@@ -99,8 +99,11 @@ const SavedMessages = memo(() => {
         </div>
         <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <label htmlFor="saved-messages-search" className="sr-only">Search saved messages</label>
           <input
             type="text"
+            id="saved-messages-search"
+            name="saved-messages-search"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search saved messages..."
