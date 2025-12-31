@@ -171,13 +171,17 @@ function App() {
 
   return (
     <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900">
+      {/* Skip to main content link for accessibility */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
       <Sidebar 
         activeView={activeView} 
         setActiveView={setActiveView}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      <div className="flex-1 overflow-hidden relative w-full">
+      <div id="main-content" className="flex-1 overflow-hidden relative w-full">
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(true)}
