@@ -3,7 +3,7 @@ import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Menu } from 'lucide-react';
+// Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Error fallback component with retry logic
