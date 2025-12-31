@@ -7,8 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['logo.png'],
+      registerType: 'prompt',
+      includeAssets: ['logo.png', 'favicon.ico'],
+      injectManifest: false,
       manifest: {
         name: 'CampusConnect - Student Messaging Platform',
         short_name: 'CampusConnect',
@@ -51,8 +52,53 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.firebaseapp\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'firebase-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.firebasestorage\.app\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'firebase-storage-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'firestore-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 // 1 hour
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
@@ -96,8 +142,11 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
-        type: 'module'
-      }
+        type: 'module',
+        navigateFallback: 'index.html'
+      },
+      injectRegister: 'auto',
+      strategies: 'generateSW'
     })
   ],
   build: {

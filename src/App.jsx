@@ -71,6 +71,9 @@ const ImageGallery = lazy(() => import('./components/ImageGallery').catch(err =>
   console.error('Error loading ImageGallery:', err);
   return { default: () => <div className="p-4 text-red-600">Error loading Image Gallery. Please refresh the page.</div> };
 }));
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
+  return { default: () => null };
+}));
 
 // Loading component for lazy-loaded routes
 const LoadingSpinner = () => (
@@ -149,6 +152,7 @@ function App() {
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />
+              <PWAInstallPrompt />
             </>
           ) : (
             <>
@@ -186,6 +190,7 @@ function App() {
               {activeView === 'gallery' && <ErrorBoundary><div className="page-transition"><ImageGallery /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />
+              <PWAInstallPrompt />
             </>
           )}
         </Suspense>
