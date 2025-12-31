@@ -157,10 +157,16 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom'],
           'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
           'ui-vendor': ['lucide-react'],
-        }
+        },
+        // Ensure chunk names are stable
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
     chunkSizeWarningLimit: 600, // Increase warning limit slightly since we're code-splitting
+    // Source maps for better error debugging
+    sourcemap: false
   }
 })
 

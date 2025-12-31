@@ -57,16 +57,37 @@ const ErrorFallback = ({ componentName, onRetry }) => {
   );
 };
 
+// Retry function for failed imports
+const retryImport = (importFn, retries = 3, delay = 1000) => {
+  return new Promise((resolve, reject) => {
+    const attempt = (remaining) => {
+      importFn()
+        .then(resolve)
+        .catch((error) => {
+          if (remaining > 0) {
+            console.warn(`Import failed, retrying... (${retries - remaining + 1}/${retries})`);
+            setTimeout(() => attempt(remaining - 1), delay);
+          } else {
+            console.error('Import failed after all retries:', error);
+            reject(error);
+          }
+        });
+    };
+    attempt(retries);
+  });
+};
+
 // Code-split large components for better performance with improved error handling
 const createLazyComponent = (importFn, componentName) => {
   return lazy(() => 
-    importFn().catch(err => {
-      console.error(`Error loading ${componentName}:`, err);
-      // Return a component that shows error but allows retry
-      return { 
-        default: () => <ErrorFallback componentName={componentName} />
-      };
-    })
+    retryImport(importFn, 3, 1000)
+      .catch(err => {
+        console.error(`Error loading ${componentName} after retries:`, err);
+        // Return a component that shows error but allows retry
+        return { 
+          default: () => <ErrorFallback componentName={componentName} />
+        };
+      })
   );
 };
 
