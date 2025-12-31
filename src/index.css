@@ -26,7 +26,6 @@
 
 /* Responsive improvements */
 @media (max-width: 640px) {
-  /* Mobile optimizations */
   .mobile-hidden {
     display: none;
   }
@@ -42,101 +41,9 @@ html {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  touch-action: pan-x pan-y;
 }
 
-/* Mobile optimizations - Prevent unwanted movement while allowing proper scrolling */
-@media (max-width: 768px) {
-  /* Prevent body scroll but allow container scrolling */
-  body {
-    overflow: hidden;
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Touch-friendly buttons */
-  button {
-    min-height: 44px; /* iOS touch target size */
-    min-width: 44px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Prevent unwanted scrolling on containers */
-  .overflow-y-auto,
-  .overflow-auto {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    touch-action: pan-y;
-  }
-
-  /* Lock fixed elements */
-  .fixed {
-    position: fixed !important;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-  }
-
-  /* Prevent layout shifts */
-  img, video {
-    max-width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  /* Smooth scrolling only where needed */
-  * {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Lock main containers */
-  .flex.h-screen {
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  /* Full screen sidebar on mobile */
-  .fixed.w-full {
-    width: 100vw !important;
-    max-width: 100vw !important;
-  }
-
-  /* Prevent unwanted scrolling */
-  .overflow-y-auto,
-  .overflow-auto {
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Prevent text selection on mobile (except inputs) */
-  *:not(input):not(textarea):not([contenteditable]) {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-}
-
-/* Prevent pull-to-refresh on all devices */
-html, body {
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: none;
-}
-
-/* Prevent bounce effect on iOS */
-@supports (-webkit-touch-callout: none) {
-  body {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-  }
-}
-
-/* Global smooth transitions for all interactive elements */
+/* Global smooth transitions */
 button, a, input, textarea, select {
   transition: all 0.2s ease-in-out;
 }
@@ -284,46 +191,6 @@ input:focus, textarea:focus, select:focus {
   background: #64748b;
 }
 
-/* Global mobile scroll lock - Apply to all scrollable containers */
-@media (max-width: 768px) {
-  /* Lock all overflow containers */
-  [class*="overflow"] {
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Specific fixes for common patterns */
-  .overflow-y-auto,
-  .overflow-auto {
-    touch-action: pan-y;
-    overscroll-behavior-y: contain;
-  }
-  
-  .overflow-x-auto {
-    touch-action: pan-x;
-    overscroll-behavior-x: contain;
-  }
-  
-  /* Prevent body scroll when modals are open */
-  body.modal-open {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-  }
-  
-  /* Fix for iOS Safari address bar */
-  @supports (-webkit-touch-callout: none) {
-    .h-screen {
-      height: -webkit-fill-available;
-    }
-    
-    #root {
-      min-height: -webkit-fill-available;
-    }
-  }
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -335,10 +202,6 @@ html {
   font-size: var(--base-font-size);
   height: 100%;
   width: 100%;
-  overflow: hidden;
-  position: fixed;
-  touch-action: none;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior: none;
 }
 
@@ -352,18 +215,8 @@ body {
   font-size: var(--base-font-size);
   height: 100%;
   width: 100%;
-  overflow: hidden;
-  position: fixed;
-  touch-action: none;
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
-  /* Prevent pull-to-refresh on mobile */
   overscroll-behavior-y: none;
-  /* Prevent text selection on mobile (except inputs) */
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 /* Allow text selection in inputs and textareas */
@@ -377,7 +230,7 @@ input, textarea, [contenteditable] {
 #root {
   width: 100%;
   height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile */
+  height: 100dvh;
   overflow: hidden;
   position: relative;
 }
@@ -424,3 +277,51 @@ input, textarea, [contenteditable] {
   color: var(--accent-color) !important;
 }
 
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Scrollable containers */
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-x;
+  }
+
+  /* Lock body when sidebar is open */
+  body.sidebar-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Full screen sidebar */
+  .fixed.w-full {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  /* Fix for iOS Safari */
+  @supports (-webkit-touch-callout: none) {
+    .h-screen {
+      height: -webkit-fill-available;
+    }
+    
+    #root {
+      min-height: -webkit-fill-available;
+    }
+  }
+}
