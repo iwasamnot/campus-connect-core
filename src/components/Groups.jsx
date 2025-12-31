@@ -39,30 +39,57 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(
-      collection(db, 'groups'),
-      where('members', 'array-contains', user.uid),
-      limit(50) // Limit to 50 groups to prevent quota exhaustion
-    );
+    setLoading(true);
+    
+    // Try query with where clause, but fallback to simple query if index is missing
+    let q;
+    try {
+      q = query(
+        collection(db, 'groups'),
+        where('members', 'array-contains', user.uid),
+        limit(50) // Limit to 50 groups to prevent quota exhaustion
+      );
+    } catch (error) {
+      console.warn('Error creating query with where clause, using simple query:', error);
+      // Fallback: fetch all groups and filter client-side
+      q = query(
+        collection(db, 'groups'),
+        limit(50)
+      );
+    }
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const groupsData = snapshot.docs.map(doc => ({
+        const allGroupsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
+        
+        // If using fallback query, filter client-side
+        const groupsData = q._queryConstraints?.some(c => c.type === 'where') 
+          ? allGroupsData 
+          : allGroupsData.filter(group => group.members?.includes(user.uid));
+        
         setGroups(groupsData);
         setLoading(false);
       },
       (error) => {
         console.error('Error fetching groups:', error);
+        // Show user-friendly error message
+        if (error.code === 'failed-precondition') {
+          showError('Groups index is missing. Please create a Firestore index for groups.members or contact support.');
+        } else if (error.code === 'permission-denied') {
+          showError('Permission denied. You may not have permission to view groups.');
+        } else {
+          showError('Failed to load groups. Please try again.');
+        }
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, showError]);
 
   // Fetch all groups for browsing (when modal is open)
   useEffect(() => {
@@ -89,13 +116,17 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       },
       (error) => {
         console.error('Error fetching all groups:', error);
-        showError('Failed to load groups. Please try again.');
+        if (error.code === 'permission-denied') {
+          showError('Permission denied. You may not have permission to browse groups.');
+        } else {
+          showError('Failed to load groups. Please try again.');
+        }
         setAllGroups([]);
       }
     );
 
     return () => unsubscribe();
-  }, [user, showBrowseModal]);
+  }, [user, showBrowseModal, showError]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
