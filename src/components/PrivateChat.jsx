@@ -1353,6 +1353,36 @@ const PrivateChat = () => {
                         </form>
                       ) : (
                         <>
+                          {/* Attachment Display */}
+                          {message.attachment && (
+                            <div className="mb-2">
+                              {message.attachment.type?.startsWith('image/') ? (
+                                <div
+                                  onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
+                                  className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
+                                >
+                                  <img
+                                    src={message.attachment.url}
+                                    alt={message.attachment.name}
+                                    className="max-w-full max-h-64 object-contain"
+                                  />
+                                </div>
+                              ) : (
+                                <a
+                                  href={message.attachment.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                  <File size={20} className="text-indigo-600 dark:text-indigo-400" />
+                                  <span className="text-sm font-medium">{message.attachment.name}</span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    ({(message.attachment.size / 1024).toFixed(1)} KB)
+                                  </span>
+                                </a>
+                              )}
+                            </div>
+                          )}
                           <p className="text-sm whitespace-pre-wrap break-words">
                             {message.displayText || message.text}
                           </p>
