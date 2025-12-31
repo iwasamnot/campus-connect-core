@@ -252,7 +252,6 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ## Firebase Configuration
 
-<<<<<<< HEAD
 The Firebase configuration is now managed through environment variables for better security and flexibility.
 
 ### Local Development
@@ -271,6 +270,7 @@ VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 Get these values from Firebase Console → Project Settings → General → Your apps → Web app config.
 
 **Note**: The app includes fallback values for backward compatibility, but it's recommended to use environment variables.
+
 ## Firestore Rules
 
 Make sure to set up proper Firestore security rules. See `FIRESTORE_RULES.txt` for the complete, up-to-date rules.
