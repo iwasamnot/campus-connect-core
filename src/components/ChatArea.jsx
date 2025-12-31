@@ -1792,6 +1792,15 @@ const ChatArea = ({ setActiveView }) => {
           onClose={() => setShowAdvancedSearch(false)}
         />
       )}
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <ImagePreview
+          imageUrl={previewImage.url}
+          imageName={previewImage.name}
+          onClose={() => setPreviewImage(null)}
+        />
+      )}
     </div>
   );
 };
