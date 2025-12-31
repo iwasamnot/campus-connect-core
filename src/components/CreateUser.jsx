@@ -58,7 +58,7 @@ const CreateUser = () => {
 
     // Validate student email format: must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
     if (formData.role === 'student' && !validateStudentEmail(formData.email)) {
-      setError('Student emails must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au" (e.g., s20xxxxx@sistc.edu.au or s20xxxxx@sistc.nsw.edu.au).');
+      setError('Invalid student email address. Please use a valid student email format.');
       return;
     }
 

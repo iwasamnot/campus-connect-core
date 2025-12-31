@@ -50,7 +50,7 @@ const Login = () => {
         
         // Validate email format
         if (!validateStudentEmail(email)) {
-          setError('Email must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au" (e.g., s20xxxxx@sistc.edu.au or s20xxxxx@sistc.nsw.edu.au). Only students can register.');
+          setError('Invalid email address. Only students with valid email addresses can register.');
           setLoading(false);
           return;
         }
@@ -83,11 +83,8 @@ const Login = () => {
         const isStudentEmail = validateStudentEmail(email);
         const isAdminEmail = validateAdminEmail(email);
         
-        // Debug logging
-        console.log('Login attempt:', { email, isStudentEmail, isAdminEmail });
-        
         if (!isStudentEmail && !isAdminEmail) {
-          setError('Email must be either:\n- Student: start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au" (e.g., s20xxxxx@sistc.edu.au or s20xxxxx@sistc.nsw.edu.au)\n- Admin: start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)');
+          setError('Invalid email address. Please use a valid student or admin email.');
           setLoading(false);
           return;
         }
@@ -141,8 +138,8 @@ const Login = () => {
     const isAdminEmail = validateAdminEmail(email);
     
     if (!isStudentEmail && !isAdminEmail) {
-      setError('Email must be either:\n- Student: start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au" (e.g., s20xxxxx@sistc.edu.au or s20xxxxx@sistc.nsw.edu.au)\n- Admin: start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)');
-      showError('Invalid email format. Must be a valid student or admin email.');
+      setError('Invalid email address. Please use a valid student or admin email.');
+      showError('Invalid email address.');
       return;
     }
 
