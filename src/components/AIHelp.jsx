@@ -441,15 +441,19 @@ ${question}
       console.log('AIHelp: Question length:', question.length);
       console.log('AIHelp: Conversation history length:', conversationHistory.length);
       
-      const result = await model.generateContent({
-        contents: [
-          ...conversationHistory.slice(-6).filter(msg => msg.type === 'user' || msg.type === 'bot').map(msg => ({
-            role: msg.type === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.type === 'user' ? msg.content : msg.content }]
-          })),
-          { role: 'user', parts: [{ text: prompt }] }
-        ],
-      });
+      // Build chat history for Gemini (last 6 messages for context)
+      const chatHistory = conversationHistory.slice(-6).map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      }));
+
+      // Use chat history if available, otherwise just use the prompt
+      const result = await (chatHistory.length > 0 
+        ? model.generateContent({
+            contents: [...chatHistory, { role: 'user', parts: [{ text: prompt }] }]
+          })
+        : model.generateContent(prompt)
+      );
       
       const response = await result.response;
       const text = response.text();
