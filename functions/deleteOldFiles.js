@@ -10,7 +10,9 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { getStorage } = require('firebase-admin/storage');
 
-admin.initializeApp();
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 // Delete files older than 24 hours
 exports.deleteOldFiles = functions.pubsub

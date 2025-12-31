@@ -887,8 +887,19 @@ const PrivateChat = () => {
   // If no chat selected, show list of available users
   if (!selectedChatId) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6">
+      <div className="h-screen h-[100dvh] flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div 
+          className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-4 md:py-6"
+          style={{
+            paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
+            paddingBottom: `1rem`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+            marginTop: '0',
+            position: 'relative',
+            zIndex: 10
+          }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
