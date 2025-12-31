@@ -873,23 +873,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v4.2.0** (2026-01-01) - Major mobile/PWA update: Comprehensive mobile UI/UX optimization, PWA enhancements, advanced error handling, safe area insets for all devices
 - **v4.1.1** (2025-12-31) - Comprehensive Firestore rules update (added savedMessages, scheduledMessages), fixed file upload functionality with Firebase Storage security rules
-- **v4.1.0** (2025-12-31) - Major user-side update: Activity Dashboard, Message Scheduler, Saved Messages, Image Gallery, virtual scrolling, enhanced optimizations
-- **v4.0.4** (2025-12-31) - Admin analytics dashboard, advanced search, keyboard shortcuts, message drafts, export chat history, performance optimizations
-- **v4.0.3** (2025-12-31) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
-- **v4.0.2** (2025-12-31) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
+- **v4.1.0** (2025-12-30) - Major user-side update: Activity Dashboard, Message Scheduler, Saved Messages, Image Gallery, virtual scrolling, enhanced optimizations
+- **v4.0.4** (2025-12-29) - Admin analytics dashboard, advanced search, keyboard shortcuts, message drafts, export chat history, performance optimizations
+- **v4.0.3** (2025-12-28) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
+- **v4.0.2** (2025-12-28) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
 - **v4.0.1** (2025-12-27) - Message deletion fixes, build error fixes, comprehensive error handling improvements
 - **v4.0.0** (2025-12-27) - Advanced theme customization, message forwarding, enhanced chat preferences, keyboard shortcuts
-- **v3.0.0** (2025-12-27) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
-- **v2.0.1** (2024-12-27) - Private chat improvements, email search, message history preview, enhanced settings, and bug fixes
-- **v2.0.0** (2024-12-27) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
-- **v1.2.2** (2024-12-27) - Smooth animations throughout the app
-- **v1.2.1** (2024-12-27) - Disappearing Messages feature
-- **v1.2.0** (2024-12-27) - Private Chat system
-- **v1.1.0** (2024-12-26) - Google Gemini AI integration
-- **v1.0.2** (2024-12-26) - Mobile responsiveness improvements
-- **v1.0.1** (2024-12-26) - Groups feature and bug fixes
-- **v1.0.0** (2024-12-XX) - Initial MVP release
+- **v3.0.0** (2025-12-26) - Major update: AI-powered toxicity detection with Gemini, comprehensive hate words list, enhanced toxicity metadata, Direct Messages chat history
+- **v2.0.1** (2025-12-25) - Private chat improvements, email search, message history preview, enhanced settings, and bug fixes
+- **v2.0.0** (2025-12-24) - Major update: Typing indicators, file sharing, emoji picker, message replies, mentions, pinning, markdown, and notifications
+- **v1.2.2** (2025-12-23) - Smooth animations throughout the app
+- **v1.2.1** (2025-12-22) - Disappearing Messages feature
+- **v1.2.0** (2025-12-21) - Private Chat system
+- **v1.1.0** (2025-12-20) - Google Gemini AI integration
+- **v1.0.2** (2025-12-19) - Mobile responsiveness improvements
+- **v1.0.1** (2025-12-18) - Groups feature and bug fixes
+- **v1.0.0** (2025-12-17) - Initial MVP release
 - **v0.9.0** - Pre-release with core features
 
 ## Semantic Versioning
