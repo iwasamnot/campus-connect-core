@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Image as ImageIcon, X, Download, ZoomIn, ZoomOut } from 'lucide-react';
-import ImagePreview from './ImagePreview';
 import { SkeletonLoader } from './SkeletonLoader';
 import ImagePreview from './ImagePreview';
 
