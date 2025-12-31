@@ -1,0 +1,43 @@
+{
+  "name": "CampusConnect - Student Messaging Platform",
+  "short_name": "CampusConnect",
+  "description": "Secure student messaging platform with AI-powered content moderation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "social", "communication"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Campus Chat",
+      "short_name": "Chat",
+      "description": "Open Campus Chat",
+      "url": "/?view=campus",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Direct Messages",
+      "short_name": "Messages",
+      "description": "Open Direct Messages",
+      "url": "/?view=messages",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    }
+  ]
+}
+
