@@ -222,23 +222,23 @@
 
 /* Minimal theme - text selection colors */
 .theme-minimal ::selection {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(30, 41, 59, 0.3); /* slate-800 with opacity for light mode */
   color: inherit;
 }
 
 .theme-minimal ::-moz-selection {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(30, 41, 59, 0.3);
   color: inherit;
 }
 
 .dark.theme-minimal ::selection {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: var(--minimal-text);
+  background-color: #cbd5e1; /* slate-300 - solid light color for better contrast */
+  color: #0f172a; /* slate-900 - dark text on light selection background */
 }
 
 .dark.theme-minimal ::-moz-selection {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: var(--minimal-text);
+  background-color: #cbd5e1;
+  color: #0f172a;
 }
 
 /* Minimal theme - cleaner backgrounds */
