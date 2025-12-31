@@ -208,7 +208,25 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if ((!newMessage.trim() && !attachedFile) || sending) return;
+    e.stopPropagation();
+    
+    console.log('GroupChat: sendMessage called', { 
+      newMessage: newMessage.trim(), 
+      attachedFile: !!attachedFile, 
+      sending, 
+      groupId: group?.id 
+    });
+    
+    if ((!newMessage.trim() && !attachedFile) || sending) {
+      console.log('GroupChat: Message send blocked - no content or already sending');
+      return;
+    }
+
+    if (!group?.id) {
+      console.error('GroupChat: No group ID');
+      showError('Group not found. Please try refreshing the page.');
+      return;
+    }
 
     // Check toxicity using Gemini AI (with fallback) - only if there's text
     const textToCheck = newMessage.trim() || '';
@@ -248,12 +266,15 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
         messageData.fileName = attachedFile.name;
       }
 
-      await addDoc(collection(db, 'groupMessages'), messageData);
+      console.log('GroupChat: Sending message to Firestore', messageData);
+      const docRef = await addDoc(collection(db, 'groupMessages'), messageData);
+      console.log('GroupChat: Message sent successfully, ID:', docRef.id);
+      
       setNewMessage('');
       setAttachedFile(null);
       success('Message sent!');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('GroupChat: Error sending message:', error);
       const errorMessage = error.code === 'permission-denied'
         ? 'Permission denied. You may not have permission to send messages in this group.'
         : error.code === 'not-found'
@@ -1015,6 +1036,18 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
             <button
               type="submit"
               disabled={sending || (!newMessage.trim() && !attachedFile)}
+              onClick={(e) => {
+                console.log('GroupChat: Send button clicked', { 
+                  sending, 
+                  hasMessage: !!newMessage.trim(), 
+                  hasFile: !!attachedFile 
+                });
+                if (sending || (!newMessage.trim() && !attachedFile)) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+              }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
             >
               <Send size={18} className="md:w-5 md:h-5" />
