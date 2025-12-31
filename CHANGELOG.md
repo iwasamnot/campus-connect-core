@@ -12,6 +12,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-language support
 - Voice messages
 
+## [5.1.0] - 2026-01-01
+
+### Added
+- **File and Image Upload for Group Chat**: Added file/image upload and emoji picker to Group Chat
+  - Upload files and images directly in group conversations
+  - Emoji picker for quick emoji insertion
+  - Image preview modal with zoom, pan, rotate, and download features
+  - File preview before sending
+  - Support for all file types with size limits
+- **File and Image Upload for Private Chat**: Added file/image upload and emoji picker to Private Chat
+  - Upload files and images in private conversations
+  - Emoji picker for quick emoji insertion
+  - Image preview modal with zoom, pan, rotate, and download features
+  - File preview before sending
+  - Support for all file types with size limits
+- **Image Preview Component**: Unified image preview experience across all chat types
+  - Full-screen modal preview
+  - Zoom in/out (pinch on mobile, buttons on desktop)
+  - Pan/drag when zoomed
+  - Rotate (90° increments)
+  - Download button
+  - Keyboard shortcuts (Escape, +/-, R, 0)
+  - Safe area insets for mobile/PWA
+  - Touch-friendly controls
+
+### Changed
+- Reduced bottom safe area padding for a thinner, less intrusive bottom bar
+- Improved mobile/PWA UI with optimized safe area handling
+
 ## [5.0.0] - 2026-01-01
 
 ### Added

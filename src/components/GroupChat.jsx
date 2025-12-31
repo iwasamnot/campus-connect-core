@@ -20,8 +20,11 @@ import {
   limit
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader, Mail } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader, Mail, Paperclip, Smile, File, Image as ImageIcon } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
+import FileUpload from './FileUpload';
+import EmojiPicker from './EmojiPicker';
+import ImagePreview from './ImagePreview';
 import { checkToxicity } from '../utils/toxicityChecker';
 
 const GroupChat = ({ group, onBack, setActiveView }) => {
@@ -45,6 +48,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   const [removingMember, setRemovingMember] = useState(null);
   const [joinRequests, setJoinRequests] = useState([]);
   const [processingRequest, setProcessingRequest] = useState(null);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Fetch user names, profiles, and online status
@@ -201,20 +208,21 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending) return;
+    if ((!newMessage.trim() && !attachedFile) || sending) return;
 
-    // Check toxicity using Gemini AI (with fallback)
-    const toxicityResult = await checkToxicity(newMessage.trim(), true);
+    // Check toxicity using Gemini AI (with fallback) - only if there's text
+    const textToCheck = newMessage.trim() || '';
+    const toxicityResult = textToCheck ? await checkToxicity(textToCheck, true) : { isToxic: false, confidence: 0, reason: '', method: 'none' };
     const isToxic = toxicityResult.isToxic;
-    const displayText = isToxic ? '[REDACTED BY AI]' : newMessage.trim();
+    const displayText = isToxic ? '[REDACTED BY AI]' : textToCheck;
 
     setSending(true);
     try {
-      await addDoc(collection(db, 'groupMessages'), {
+      const messageData = {
         groupId: group.id,
         userId: user.uid,
         userEmail: user.email,
-        text: newMessage.trim(),
+        text: textToCheck,
         displayText: displayText,
         toxic: isToxic,
         toxicityConfidence: toxicityResult.confidence,
@@ -225,8 +233,25 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
         readBy: {
           [user.uid]: serverTimestamp() // Sender has seen their own message
         }
-      });
+      };
+
+      // Add file attachment if present
+      if (attachedFile) {
+        messageData.attachment = {
+          url: attachedFile.url,
+          name: attachedFile.name,
+          type: attachedFile.type,
+          size: attachedFile.size
+        };
+        // Also add legacy fields for compatibility
+        messageData.fileUrl = attachedFile.url;
+        messageData.fileName = attachedFile.name;
+      }
+
+      await addDoc(collection(db, 'groupMessages'), messageData);
       setNewMessage('');
+      setAttachedFile(null);
+      success('Message sent!');
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage = error.code === 'permission-denied'
@@ -789,6 +814,36 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                     </div>
                   ) : (
                     <>
+                      {/* Attachment Display */}
+                      {message.attachment && (
+                        <div className="mb-2">
+                          {message.attachment.type?.startsWith('image/') ? (
+                            <div
+                              onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
+                              className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
+                            >
+                              <img
+                                src={message.attachment.url}
+                                alt={message.attachment.name}
+                                className="max-w-full max-h-64 object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <a
+                              href={message.attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                              <File size={20} className="text-indigo-600 dark:text-indigo-400" />
+                              <span className="text-sm font-medium">{message.attachment.name}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                ({(message.attachment.size / 1024).toFixed(1)} KB)
+                              </span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                       <div className="text-sm">
                         {message.displayText || message.text}
                       </div>

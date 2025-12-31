@@ -27,6 +27,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Full-screen image viewer with download option
   - Image metadata (author, date, filename)
 - **Groups**: Create and join study groups with group chat functionality
+  - File and image sharing
+  - Emoji picker
+  - Image preview with zoom and pan
 - **AI Help Assistant**: Intelligent AI assistant powered by ChatGPT with local SISTC knowledge base
 - **My Profile**: Comprehensive profile management with:
   - Profile picture upload

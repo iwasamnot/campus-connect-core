@@ -19,8 +19,11 @@ import {
   limit
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail, Paperclip, Smile, File, Image as ImageIcon } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
+import FileUpload from './FileUpload';
+import EmojiPicker from './EmojiPicker';
+import ImagePreview from './ImagePreview';
 import { checkToxicity } from '../utils/toxicityChecker';
 
 const PrivateChat = () => {
@@ -47,6 +50,10 @@ const PrivateChat = () => {
   const [emailToAdd, setEmailToAdd] = useState(''); // Email to search/add
   const [searchingUser, setSearchingUser] = useState(false); // Loading state for user search
   const [chatSummaries, setChatSummaries] = useState({}); // Store last message for each chat
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Generate chat ID from two user IDs (sorted to ensure consistency)
@@ -661,7 +668,7 @@ const PrivateChat = () => {
   // Send message
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending || !selectedChatId) {
+    if ((!newMessage.trim() && !attachedFile) || sending || !selectedChatId) {
       if (!selectedChatId) {
         showError('Please select a chat first.');
       }
@@ -670,10 +677,11 @@ const PrivateChat = () => {
 
     setSending(true);
     try {
-      // Check toxicity using Gemini AI (with fallback)
-      const toxicityResult = await checkToxicity(newMessage.trim(), true);
+      // Check toxicity using Gemini AI (with fallback) - only if there's text
+      const textToCheck = newMessage.trim() || '';
+      const toxicityResult = textToCheck ? await checkToxicity(textToCheck, true) : { isToxic: false, confidence: 0, reason: '', method: 'none' };
       const isToxic = toxicityResult.isToxic;
-      const displayText = isToxic ? '[REDACTED BY AI]' : newMessage.trim();
+      const displayText = isToxic ? '[REDACTED BY AI]' : textToCheck;
       
       // Calculate expiration time if disappearing messages is enabled
       let expiresAt = null;
@@ -686,7 +694,7 @@ const PrivateChat = () => {
       const messageData = {
         userId: user.uid,
         userEmail: user.email,
-        text: newMessage.trim(),
+        text: textToCheck,
         displayText: displayText,
         toxic: isToxic,
         toxicityConfidence: toxicityResult.confidence,
@@ -696,6 +704,19 @@ const PrivateChat = () => {
           [user.uid]: serverTimestamp() // Sender has seen their own message
         }
       };
+
+      // Add file attachment if present
+      if (attachedFile) {
+        messageData.attachment = {
+          url: attachedFile.url,
+          name: attachedFile.name,
+          type: attachedFile.type,
+          size: attachedFile.size
+        };
+        // Also add legacy fields for compatibility
+        messageData.fileUrl = attachedFile.url;
+        messageData.fileName = attachedFile.name;
+      }
 
       if (expiresAt) {
         messageData.expiresAt = expiresAt;
@@ -1388,8 +1409,7 @@ const PrivateChat = () => {
       </div>
 
       {/* Message Input */}
-      <form 
-        onSubmit={sendMessage} 
+      <div 
         className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 md:p-6"
         style={{
           paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px) + 0.25rem)`,
@@ -1398,29 +1418,109 @@ const PrivateChat = () => {
           paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
         }}
       >
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-            disabled={sending}
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || sending}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {sending ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : (
-              <Send size={20} />
-            )}
-            <span className="hidden md:inline">Send</span>
-          </button>
-        </div>
-      </form>
+        {/* File Preview */}
+        {attachedFile && (
+          <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {attachedFile.type?.startsWith('image/') ? (
+                <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              ) : (
+                <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {attachedFile.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {(attachedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAttachedFile(null)}
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+            >
+              <X size={16} className="text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
+        )}
+
+        <form 
+          onSubmit={sendMessage} 
+          className="flex gap-2 relative"
+        >
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+              disabled={sending}
+            />
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
+            {/* File Upload */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowFileUpload(!showFileUpload)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Upload file"
+              >
+                <Paperclip size={20} />
+              </button>
+              {showFileUpload && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <FileUpload
+                    onFileUpload={(file) => {
+                      setAttachedFile(file);
+                      setShowFileUpload(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Emoji Picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Add emoji"
+              >
+                <Smile size={20} />
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                      setNewMessage(prev => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={(!newMessage.trim() && !attachedFile) || sending}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              {sending ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Send size={20} />
+              )}
+              <span className="hidden md:inline">Send</span>
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* User Profile Popup */}
       {selectedUserId && (
