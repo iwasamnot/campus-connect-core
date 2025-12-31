@@ -627,6 +627,7 @@ const UsersManagement = () => {
                   type="text"
                   id="edit-user-name"
                   name="name"
+                  autoComplete="name"
                   value={editData.name}
                   onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -662,6 +663,7 @@ const UsersManagement = () => {
                   type="email"
                   id="edit-user-student-email"
                   name="studentEmail"
+                  autoComplete="email"
                   value={editData.studentEmail}
                   onChange={(e) => setEditData(prev => ({ ...prev, studentEmail: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -679,6 +681,7 @@ const UsersManagement = () => {
                   type="email"
                   id="edit-user-personal-email"
                   name="personalEmail"
+                  autoComplete="email"
                   value={editData.personalEmail}
                   onChange={(e) => setEditData(prev => ({ ...prev, personalEmail: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -696,6 +699,7 @@ const UsersManagement = () => {
                   type="tel"
                   id="edit-user-phone"
                   name="phoneNumber"
+                  autoComplete="tel"
                   value={editData.phoneNumber}
                   onChange={(e) => setEditData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"

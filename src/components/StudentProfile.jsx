@@ -264,6 +264,7 @@ const StudentProfile = () => {
                       type="text"
                       id="profile-name"
                       name="name"
+                      autoComplete="name"
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="John Doe"
@@ -292,6 +293,7 @@ const StudentProfile = () => {
                       type="email"
                       id="profile-student-email"
                       name="studentEmail"
+                      autoComplete="email"
                       value={formData.studentEmail}
                       onChange={handleChange}
                       placeholder="student@university.edu"
@@ -320,6 +322,7 @@ const StudentProfile = () => {
                       type="email"
                       id="profile-personal-email"
                       name="personalEmail"
+                      autoComplete="email"
                       value={formData.personalEmail}
                       onChange={handleChange}
                       placeholder="yourname@example.com"
@@ -348,6 +351,7 @@ const StudentProfile = () => {
                       type="tel"
                       id="profile-phone"
                       name="phoneNumber"
+                      autoComplete="tel"
                       value={formData.phoneNumber}
                       onChange={handleChange}
                       placeholder="+1 (555) 123-4567"

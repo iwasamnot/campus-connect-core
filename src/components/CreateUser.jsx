@@ -165,6 +165,7 @@ const CreateUser = () => {
                 type="email"
                 id="email"
                 name="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter Your Email"
@@ -188,6 +189,7 @@ const CreateUser = () => {
                 type="password"
                 id="password"
                 name="password"
+                autoComplete="new-password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="At least 6 characters"

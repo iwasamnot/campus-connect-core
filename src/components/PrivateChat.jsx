@@ -912,13 +912,16 @@ const PrivateChat = () => {
             <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
               <div className="flex items-center gap-2 mb-2">
                 <Mail size={18} className="text-indigo-600 dark:text-indigo-400" />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="private-chat-email-search" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Search user by email
                 </label>
               </div>
               <div className="flex gap-2">
                 <input
                   type="email"
+                  id="private-chat-email-search"
+                  name="email-search"
+                  autoComplete="email"
                   value={emailToAdd}
                   onChange={(e) => setEmailToAdd(e.target.value)}
                   placeholder="Enter email address..."
@@ -957,8 +960,12 @@ const PrivateChat = () => {
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="private-chat-user-search" className="sr-only">Search users by name or email</label>
             <input
               type="text"
+              id="private-chat-user-search"
+              name="user-search"
+              autoComplete="off"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search users by name or email..."
@@ -1333,8 +1340,11 @@ const PrivateChat = () => {
                           }}
                           className="flex gap-2"
                         >
+                          <label htmlFor={`private-edit-message-${message.id}`} className="sr-only">Edit message</label>
                           <input
                             type="text"
+                            id={`private-edit-message-${message.id}`}
+                            name={`private-edit-message-${message.id}`}
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
                             className="flex-1 bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"

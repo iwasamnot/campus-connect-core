@@ -272,6 +272,7 @@ const Login = () => {
                     type="text"
                     id="register-name"
                     name="name"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
@@ -293,6 +294,7 @@ const Login = () => {
                   type="email"
                   id="login-email"
                   name="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter Your Email"
@@ -314,6 +316,7 @@ const Login = () => {
                     type="email"
                     id="register-confirm-email"
                     name="confirmEmail"
+                    autoComplete="email"
                     value={confirmEmail}
                     onChange={(e) => setConfirmEmail(e.target.value)}
                     placeholder="Confirm your email"
@@ -346,6 +349,7 @@ const Login = () => {
                     type="password"
                     id="login-password"
                     name="password"
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
@@ -370,6 +374,7 @@ const Login = () => {
                     type="password"
                     id="register-confirm-password"
                     name="confirmPassword"
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"

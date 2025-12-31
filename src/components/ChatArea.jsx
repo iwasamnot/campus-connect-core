@@ -1145,8 +1145,11 @@ const ChatArea = ({ setActiveView }) => {
                   
                   {editing === message.id ? (
                     <div className="flex gap-2">
+                      <label htmlFor={`edit-message-${message.id}`} className="sr-only">Edit message</label>
                       <input
                         type="text"
+                        id={`edit-message-${message.id}`}
+                        name={`edit-message-${message.id}`}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
                         className="flex-1 px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
