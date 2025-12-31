@@ -138,8 +138,8 @@ const ActivityDashboard = memo(() => {
         setActivityStats({
           messagesToday,
           messagesThisWeek,
-          activeGroups: 0, // TODO: Calculate from groups
-          unreadNotifications: 0 // TODO: Calculate from notifications
+          activeGroups: 0,
+          unreadNotifications: 0
         });
       } catch (error) {
         console.error('Error calculating stats:', error);

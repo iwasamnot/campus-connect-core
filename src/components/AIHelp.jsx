@@ -4,14 +4,6 @@ import { useToast } from '../context/ToastContext';
 import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-// Debug: Log API key status (remove in production)
-if (import.meta.env.DEV) {
-  console.log('AI Config Status:', {
-    hasGemini: !!(import.meta.env.VITE_GEMINI_API_KEY?.trim()),
-    geminiLength: import.meta.env.VITE_GEMINI_API_KEY?.trim()?.length || 0,
-    geminiKeyPreview: import.meta.env.VITE_GEMINI_API_KEY?.trim() ? import.meta.env.VITE_GEMINI_API_KEY.trim().substring(0, 10) + '...' : 'not set'
-  });
-}
 
 // Enhanced SISTC Knowledge Base with more detailed information
 const SISTC_KNOWLEDGE_BASE = {
@@ -388,7 +380,7 @@ const AIHelp = () => {
       });
       return model;
     } catch (error) {
-      console.error('Error initializing Gemini:', error);
+      console.error('Error initializing Gemini model:', error);
       return null;
     }
   };
@@ -397,13 +389,11 @@ const AIHelp = () => {
   const callGemini = async (question, localContext, conversationHistory = []) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     if (!apiKey || apiKey === '') {
-      console.warn('AIHelp: Gemini API key not found in callGemini');
       return null;
     }
 
     const model = getGeminiModel(selectedGeminiModel);
     if (!model) {
-      console.warn('AIHelp: Gemini model not available after initialization');
       return null;
     }
 
@@ -437,10 +427,6 @@ ${question}
 - Use markdown formatting for better readability
 - Be helpful, empathetic, and professional in your responses`;
 
-      console.log('AIHelp: Calling Gemini with model:', selectedGeminiModel);
-      console.log('AIHelp: Question length:', question.length);
-      console.log('AIHelp: Conversation history length:', conversationHistory.length);
-      
       // Build chat history for Gemini (last 6 messages for context)
       const chatHistory = conversationHistory.slice(-6).map(msg => ({
         role: msg.type === 'user' ? 'user' : 'model',
@@ -457,22 +443,13 @@ ${question}
       
       const response = await result.response;
       const text = response.text();
-      console.log('AIHelp: Gemini response received, length:', text?.length || 0);
       if (text && text.trim()) {
-        console.log('AIHelp: ✅ Gemini response preview:', text.substring(0, 150) + '...');
         return text.trim();
       } else {
-        console.warn('AIHelp: ⚠️ Gemini returned empty text');
         return null;
       }
     } catch (error) {
-      console.error('AIHelp: ❌ Error calling Gemini:', error);
-      console.error('AIHelp: Error name:', error.name);
-      console.error('AIHelp: Error message:', error.message);
-      if (error.stack) {
-        console.error('AIHelp: Error stack:', error.stack);
-      }
-      // Return null instead of throwing so it can fall back gracefully
+      console.error('Error calling Gemini:', error);
       return null;
     }
   };
@@ -498,25 +475,12 @@ ${question}
     
     // Try Gemini if API key is available
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-    console.log('AIHelp: Checking Gemini API key...', {
-      hasKey: !!geminiApiKey,
-      keyLength: geminiApiKey?.length || 0,
-      keyPreview: geminiApiKey ? geminiApiKey.substring(0, 10) + '...' : 'not set',
-      historyLength: conversationHistory.length
-    });
     
     if (geminiApiKey && geminiApiKey !== '') {
-      console.log('AIHelp: Attempting to use Gemini AI with model:', selectedGeminiModel);
       const geminiAnswer = await callGemini(question, localAnswer, conversationHistory);
       if (geminiAnswer && geminiAnswer.trim() !== '') {
-        console.log('AIHelp: ✅ Gemini AI response received successfully, length:', geminiAnswer.length);
-        console.log('AIHelp: ✅ Using Gemini response');
         return geminiAnswer;
-      } else {
-        console.warn('AIHelp: ⚠️ Gemini returned empty or null response, falling back to local knowledge base...');
       }
-    } else {
-      console.log('AIHelp: ⚠️ Gemini API key not found, using local knowledge base...');
     }
     
     // Fallback to local knowledge base answer
@@ -558,12 +522,10 @@ ${question}
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
-      console.error('AIHelp: AI Error:', err);
-      console.error('AIHelp: Error details:', err.message);
+      console.error('Error getting AI response:', err);
       
       // Final fallback to local knowledge base
       try {
-        console.log('AIHelp: Using local knowledge base fallback');
         const fallbackAnswer = ai.current.processQuestion(question);
         const botMessage = {
           id: Date.now() + 1,
@@ -573,7 +535,7 @@ ${question}
         };
         setMessages(prev => [...prev, botMessage]);
       } catch (fallbackErr) {
-        console.error('AIHelp: Fallback error:', fallbackErr);
+        console.error('Fallback error:', fallbackErr);
         const errorBotMessage = {
           id: Date.now() + 1,
           type: 'bot',
