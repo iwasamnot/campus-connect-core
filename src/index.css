@@ -130,14 +130,19 @@
 }
 
 /* Minimal theme - flat backgrounds, more contrast */
-.theme-minimal .bg-indigo-600,
-.theme-minimal .bg-indigo-700,
-.theme-minimal .bg-blue-600,
-.theme-minimal .bg-purple-600,
-.theme-minimal .bg-pink-600,
+/* Don't override indigo buttons - keep them visible */
 .theme-minimal .bg-red-600,
 .theme-minimal .bg-green-600 {
   background-color: var(--minimal-accent) !important;
+}
+
+/* Keep indigo buttons as indigo for better visibility and UX */
+.theme-minimal .bg-indigo-600 {
+  background-color: #6366f1 !important; /* Keep original indigo */
+}
+
+.dark.theme-minimal .bg-indigo-600 {
+  background-color: #6366f1 !important; /* Keep original indigo in dark mode too */
 }
 
 .theme-minimal .hover\:bg-indigo-700:hover,
