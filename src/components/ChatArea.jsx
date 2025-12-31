@@ -1103,6 +1103,7 @@ const ChatArea = ({ setActiveView }) => {
                       ? 'bg-indigo-600 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
                   }`}
+                  style={{ position: 'relative' }}
                 >
                     <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
