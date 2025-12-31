@@ -10,10 +10,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 - Two-factor authentication (2FA)
 - Multi-language support
-- Progressive Web App (PWA) features
 - Voice messages
 - Message scheduling
 - Advanced analytics dashboard
+
+## [4.0.3] - 2024-12-27
+
+### Added
+- **Extended Email Domain Support**: Added support for `@sistc.nsw.edu.au` email domain
+  - Students can now register/login with either `@sistc.edu.au` or `@sistc.nsw.edu.au`
+  - Examples: `s20xxxxx@sistc.edu.au` or `s20230091@sistc.nsw.edu.au`
+  - Updated validation in Login, CreateUser, and AuthContext components
+- **Admin Email Verification Controls**: Admins can now verify and manage email verification status
+  - New "Email Verified" column in Users Management table
+  - Visual status indicators (Verified/Not Verified badges)
+  - Verify/Unverify buttons for each user
+  - Admin accounts show "Auto" status (always verified)
+  - All verification actions logged in audit trail
+  - Real-time status updates
+
+### Changed
+- **Email Validation**: Updated to accept multiple SISTC email domains
+  - Supports both `@sistc.edu.au` and `@sistc.nsw.edu.au`
+  - Validation logic updated across all components
+  - Error messages updated to reflect both domains
+- **Users Management UI**: Enhanced with email verification management
+  - Added verification status column
+  - Color-coded badges for quick status identification
+  - Admin-only verification controls
+
+### Fixed
+- Improved email format detection for user document creation
+- Better handling of email validation edge cases
 
 ## [4.0.2] - 2024-12-27
 
@@ -609,6 +637,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v4.0.3** (2024-12-27) - Extended email domain support (@sistc.nsw.edu.au), admin email verification controls
 - **v4.0.2** (2024-12-27) - Admin login validation fix, email domain update to @sistc.edu.au, admin email verification bypass
 - **v4.0.1** (2024-12-27) - Message deletion fixes, build error fixes, comprehensive error handling improvements
 - **v4.0.0** (2024-12-27) - Advanced theme customization, message forwarding, enhanced chat preferences, keyboard shortcuts

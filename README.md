@@ -33,6 +33,10 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Performance optimized with memoization
   - Comprehensive error handling
 - **Users Management**: View, search, edit, and manage all user accounts
+  - **Email Verification Controls**: Verify/unverify student emails
+  - Visual verification status indicators
+  - Real-time status updates
+  - Audit logging for all verification actions
 - **Create Users**: Create new student and admin accounts from the portal
 - **Message Management**: Delete any message and review reported content
   - Delete any message including AI messages
@@ -253,7 +257,8 @@ The platform supports email/password authentication with role-based access:
 
 1. **Student Registration & Login**
    - Students can register with email and password
-   - **Email Format**: Must start with "s20" and contain "@sistc.edu.au" (e.g., s2012345@sistc.edu.au)
+   - **Email Format**: Must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
+     - Examples: `s2012345@sistc.edu.au` or `s20230091@sistc.nsw.edu.au`
    - Email verification required before login
    - Role automatically set to "student" during registration
 
@@ -270,12 +275,26 @@ The platform supports email/password authentication with role-based access:
 ## User Roles
 
 - **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
-  - Email format: `s20xxxxx@sistc.edu.au`
-  - Email verification required
+  - Email format: `s20xxxxx@sistc.edu.au` or `s20xxxxx@sistc.nsw.edu.au`
+  - Email verification required (can be verified by admin)
 - **Admin**: Can access Audit Logs, Users Management, and Create User functionality
   - Email format: `admin*@campusconnect.com` (e.g., admin1@campusconnect.com)
-  - Email verification bypassed
+  - Email verification bypassed (always verified)
+  - Can verify/unverify student emails from Users Management
   - Must be created in Firebase Console (see `ADMIN_SETUP.md`)
+
+## Admin Features
+
+### Email Verification Management
+- **View Verification Status**: See which users have verified their emails in the Users Management table
+- **Verify Emails**: Manually verify student emails with a single click
+- **Unverify Emails**: Remove verification status if needed (e.g., for security reasons)
+- **Visual Indicators**: 
+  - ✅ Green badge = Verified
+  - ❌ Red badge = Not Verified
+  - 🛡️ Auto badge = Admin (always verified)
+- **Audit Trail**: All verification actions are automatically logged in the audit logs
+- **Real-time Updates**: Verification status updates immediately across the system
 
 ## Automatic Deployment
 
