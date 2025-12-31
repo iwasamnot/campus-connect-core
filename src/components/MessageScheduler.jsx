@@ -102,13 +102,20 @@ const MessageScheduler = memo(() => {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div 
+        className="flex items-center justify-between mb-4"
+        style={{
+          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
-            Message Scheduler
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
+            <span>Message Scheduler</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
             Schedule messages to be sent at a specific time
           </p>
         </div>

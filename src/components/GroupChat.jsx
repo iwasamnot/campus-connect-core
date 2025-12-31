@@ -607,7 +607,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
               <ArrowLeft size={20} className="text-indigo-600 dark:text-indigo-400" />
             </button>
             <div>
-              <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">{group.name}</h2>
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">{group.name}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {group.members?.length || 0} member(s)
                 {group.admins?.includes(user?.uid) && (
