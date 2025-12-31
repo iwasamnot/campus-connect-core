@@ -226,11 +226,19 @@ Get these values from Firebase Console → Project Settings → General → Your
 
 Make sure to set up proper Firestore security rules. See `FIRESTORE_RULES.txt` for the complete, up-to-date rules.
 
-The rules include:
+The rules include comprehensive security for all collections:
 - **Messages**: Read/create for all authenticated users, edit/delete for authors and admins
+  - Supports reactions, replies, mentions, attachments, read receipts, pinning
+- **Group Messages**: Same permissions as messages, for group chats
+- **Private Chats**: Participants can read/write, private messaging with subcollections
+- **Groups**: All users can read, members can create/update, admins can manage
 - **Users**: Read for all, create/update own profile, admins can manage all users
 - **Reports**: Create for all users, read/update/delete for admins only
-- **Audit Logs**: Admin-only access for complete security
+- **Audit Logs**: Create for all users (system logging), read/delete for admins only
+- **Typing Indicators**: Users can manage their own typing status
+- **Pinned Messages**: All users can read, admins can pin/unpin
+- **Saved Messages**: Users can only access their own saved messages
+- **Scheduled Messages**: Users can only manage their own scheduled messages
 
 ```javascript
 rules_version = '2';
