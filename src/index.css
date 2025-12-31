@@ -634,13 +634,25 @@ input, textarea, [contenteditable] {
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
+/* Touch and PWA optimizations */
+@media (max-width: 768px), (hover: none), (pointer: coarse) {
   /* Touch-friendly buttons */
   button {
     min-height: 44px;
     min-width: 44px;
     touch-action: manipulation;
+  }
+  
+  /* Disable hover states on touch devices */
+  button:hover,
+  a:hover {
+    transform: none !important;
+  }
+  
+  /* Show action buttons always on touch devices */
+  .opacity-0.group-hover\:opacity-100,
+  .md\:opacity-0.md\:group-hover\:opacity-100 {
+    opacity: 1 !important;
   }
 
   /* Scrollable containers */

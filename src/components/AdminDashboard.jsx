@@ -863,7 +863,7 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => handleBanUser(message.id, message.userId, message.userEmail)}
                             disabled={banning === message.id || message.userBanned}
-                            className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
                           >
                             <Ban size={14} />
                             <span>{message.userBanned ? 'Banned' : 'Ban'}</span>
@@ -871,7 +871,7 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => handleDeleteMessage(message.id)}
                             disabled={deleting === message.id}
-                            className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-500 active:bg-gray-900 dark:active:bg-gray-400 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
                           >
                             <Trash2 size={14} />
                             <span>Delete</span>

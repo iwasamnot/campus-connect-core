@@ -1407,7 +1407,7 @@ const ChatArea = ({ setActiveView }) => {
                           <Flag size={14} />
                         </button>
                         {reporting === message.id && (
-                          <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px]">
+                          <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px] touch-action-none">
                             <textarea
                               value={reportReason}
                               onChange={(e) => setReportReason(e.target.value)}
@@ -1418,7 +1418,7 @@ const ChatArea = ({ setActiveView }) => {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleReportMessage(message.id)}
-                                className="flex-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded"
+                                className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs rounded transition-colors touch-action-manipulation"
                               >
                                 Report
                               </button>
@@ -1427,7 +1427,7 @@ const ChatArea = ({ setActiveView }) => {
                                   setReporting(null);
                                   setReportReason('');
                                 }}
-                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+                                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs rounded transition-colors touch-action-manipulation"
                               >
                                 Cancel
                               </button>
@@ -1438,10 +1438,10 @@ const ChatArea = ({ setActiveView }) => {
                     )}
                   </div>
 
-                  {/* Reaction picker */}
+                  {/* Reaction picker - always visible on touch, hover on desktop */}
                   {!isAuthor && (
-                    <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex gap-1">
+                    <div className="mt-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 touch-action-none">
                         {EMOJI_REACTIONS.map((emoji) => {
                           const reactionKey = `${message.id}-${emoji}`;
                           const isReacting = reacting.has(reactionKey);
@@ -1450,12 +1450,13 @@ const ChatArea = ({ setActiveView }) => {
                               key={emoji}
                               onClick={() => !isReacting && handleReaction(message.id, emoji)}
                               disabled={isReacting}
-                              className={`p-1 rounded transition-all ${
-                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-200 dark:hover:bg-indigo-700'
+                              className={`p-2 rounded transition-colors touch-action-manipulation ${
+                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-200 dark:hover:bg-indigo-700 active:bg-indigo-300 dark:active:bg-indigo-600'
                               } ${
                                 userReaction === emoji ? 'bg-indigo-200 dark:bg-indigo-800' : ''
                               }`}
                               title="Add reaction"
+                              aria-label={`Add ${emoji} reaction`}
                             >
                               {emoji}
                             </button>
