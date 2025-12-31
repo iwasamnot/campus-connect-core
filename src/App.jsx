@@ -6,71 +6,70 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Menu } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Code-split large components for better performance with error handling
-const ChatArea = lazy(() => import('./components/ChatArea').catch(err => {
-  console.error('Error loading ChatArea:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Chat Area. Please refresh the page.</div> };
-}));
-const AdminDashboard = lazy(() => import('./components/AdminDashboard').catch(err => {
-  console.error('Error loading AdminDashboard:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Admin Dashboard. Please refresh the page.</div> };
-}));
-const StudentProfile = lazy(() => import('./components/StudentProfile').catch(err => {
-  console.error('Error loading StudentProfile:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Student Profile. Please refresh the page.</div> };
-}));
-const UsersManagement = lazy(() => import('./components/UsersManagement').catch(err => {
-  console.error('Error loading UsersManagement:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Users Management. Please refresh the page.</div> };
-}));
-const CreateUser = lazy(() => import('./components/CreateUser').catch(err => {
-  console.error('Error loading CreateUser:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Create User. Please refresh the page.</div> };
-}));
-const AIHelp = lazy(() => import('./components/AIHelp').catch(err => {
-  console.error('Error loading AIHelp:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading AI Help. Please refresh the page.</div> };
-}));
-const Groups = lazy(() => import('./components/Groups').catch(err => {
-  console.error('Error loading Groups:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Groups. Please refresh the page.</div> };
-}));
-const GroupChat = lazy(() => import('./components/GroupChat').catch(err => {
-  console.error('Error loading GroupChat:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Group Chat. Please refresh the page.</div> };
-}));
-const PrivateChat = lazy(() => import('./components/PrivateChat').catch(err => {
-  console.error('Error loading PrivateChat:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Private Chat. Please refresh the page.</div> };
-}));
-const Settings = lazy(() => import('./components/Settings').catch(err => {
-  console.error('Error loading Settings:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Settings. Please refresh the page.</div> };
-}));
-const AdminAnalytics = lazy(() => import('./components/AdminAnalytics').catch(err => {
-  console.error('Error loading AdminAnalytics:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Admin Analytics. Please refresh the page.</div> };
-}));
-const KeyboardShortcuts = lazy(() => import('./components/KeyboardShortcuts').catch(err => {
-  console.error('Error loading KeyboardShortcuts:', err);
+// Error fallback component
+const ErrorFallback = ({ componentName, onRetry }) => (
+  <div className="flex items-center justify-center min-h-[400px] p-6">
+    <div className="text-center max-w-md">
+      <div className="text-red-600 dark:text-red-400 mb-4">
+        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Unable to Load {componentName}
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">
+        There was an error loading this component. This might be a temporary issue.
+      </p>
+      <div className="flex gap-3 justify-center">
+        <button
+          onClick={onRetry || (() => window.location.reload())}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+        >
+          Retry
+        </button>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors"
+        >
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Code-split large components for better performance with improved error handling
+const createLazyComponent = (importFn, componentName) => {
+  return lazy(() => 
+    importFn().catch(err => {
+      console.error(`Error loading ${componentName}:`, err);
+      // Return a component that shows error but allows retry
+      return { 
+        default: () => <ErrorFallback componentName={componentName} />
+      };
+    })
+  );
+};
+
+const ChatArea = createLazyComponent(() => import('./components/ChatArea'), 'Chat Area');
+const AdminDashboard = createLazyComponent(() => import('./components/AdminDashboard'), 'Admin Dashboard');
+const StudentProfile = createLazyComponent(() => import('./components/StudentProfile'), 'Student Profile');
+const UsersManagement = createLazyComponent(() => import('./components/UsersManagement'), 'Users Management');
+const CreateUser = createLazyComponent(() => import('./components/CreateUser'), 'Create User');
+const AIHelp = createLazyComponent(() => import('./components/AIHelp'), 'AI Help');
+const Groups = createLazyComponent(() => import('./components/Groups'), 'Groups');
+const GroupChat = createLazyComponent(() => import('./components/GroupChat'), 'Group Chat');
+const PrivateChat = createLazyComponent(() => import('./components/PrivateChat'), 'Private Chat');
+const Settings = createLazyComponent(() => import('./components/Settings'), 'Settings');
+const AdminAnalytics = createLazyComponent(() => import('./components/AdminAnalytics'), 'Admin Analytics');
+const KeyboardShortcuts = lazy(() => import('./components/KeyboardShortcuts').catch(() => {
   return { default: () => null };
 }));
-const ActivityDashboard = lazy(() => import('./components/ActivityDashboard').catch(err => {
-  console.error('Error loading ActivityDashboard:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Activity Dashboard. Please refresh the page.</div> };
-}));
-const MessageScheduler = lazy(() => import('./components/MessageScheduler').catch(err => {
-  console.error('Error loading MessageScheduler:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Message Scheduler. Please refresh the page.</div> };
-}));
-const SavedMessages = lazy(() => import('./components/SavedMessages').catch(err => {
-  console.error('Error loading SavedMessages:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Saved Messages. Please refresh the page.</div> };
-}));
-const ImageGallery = lazy(() => import('./components/ImageGallery').catch(err => {
-  console.error('Error loading ImageGallery:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Image Gallery. Please refresh the page.</div> };
-}));
+const ActivityDashboard = createLazyComponent(() => import('./components/ActivityDashboard'), 'Activity Dashboard');
+const MessageScheduler = createLazyComponent(() => import('./components/MessageScheduler'), 'Message Scheduler');
+const SavedMessages = createLazyComponent(() => import('./components/SavedMessages'), 'Saved Messages');
+const ImageGallery = createLazyComponent(() => import('./components/ImageGallery'), 'Image Gallery');
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
   return { default: () => null };
 }));

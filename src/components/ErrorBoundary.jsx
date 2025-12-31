@@ -33,28 +33,35 @@ class ErrorBoundary extends React.Component {
             <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
               We're sorry, but something unexpected happened. Please try refreshing the page.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3">
               <button
-                onClick={() => window.location.reload()}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                onClick={() => {
+                  this.setState({ hasError: false, error: null });
+                  // Force a small delay to allow state to reset
+                  setTimeout(() => window.location.reload(), 100);
+                }}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
               >
                 Refresh Page
               </button>
               <button
-                onClick={() => this.setState({ hasError: false, error: null })}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                onClick={() => {
+                  this.setState({ hasError: false, error: null });
+                }}
+                className="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold py-3 px-6 rounded-lg transition-colors"
               >
                 Try Again
               </button>
             </div>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-6">
-                <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
+                <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer mb-2">
                   Error Details (Development Only)
                 </summary>
-                <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-900 p-4 rounded overflow-auto">
-                  {this.state.error.toString()}
-                  {this.state.error.stack}
+                <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-900 p-4 rounded overflow-auto max-h-60">
+                  {this.state.error?.toString()}
+                  {'\n'}
+                  {this.state.error?.stack}
                 </pre>
               </details>
             )}
