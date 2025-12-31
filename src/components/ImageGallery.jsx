@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Image as ImageIcon, X, Download, ZoomIn, ZoomOut } from 'lucide-react';
+import ImagePreview from './ImagePreview';
 import { SkeletonLoader } from './SkeletonLoader';
 import ImagePreview from './ImagePreview';
 
@@ -218,56 +219,13 @@ const ImageGallery = memo(() => {
         </div>
       )}
 
-      {/* Image Modal */}
+      {/* Use ImagePreview component for better UX */}
       {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] w-full">
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <img
-              src={selectedImage.fileUrl || selectedImage.attachment?.url || selectedImage.preview}
-              alt={selectedImage.fileName || selectedImage.attachment?.name || 'Image'}
-              className="max-w-full max-h-[90vh] mx-auto object-contain rounded-lg"
-              onError={(e) => {
-                console.error('Error loading image:', selectedImage);
-                e.target.src = '/placeholder-image.png'; // Fallback image
-              }}
-            />
-            <div className="absolute bottom-4 left-4 right-4 bg-black/50 rounded-lg p-4 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{selectedImage.userName || 'Unknown'}</p>
-                  <p className="text-sm opacity-75">{formatDate(selectedImage.timestamp)}</p>
-                  {(selectedImage.fileName || selectedImage.attachment?.name) && (
-                    <p className="text-sm opacity-75 mt-1">
-                      {selectedImage.fileName || selectedImage.attachment?.name}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownload(
-                      selectedImage.fileUrl || selectedImage.attachment?.url || selectedImage.preview,
-                      selectedImage.fileName || selectedImage.attachment?.name || 'image'
-                    );
-                  }}
-                  className="p-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
-                  title="Download image"
-                >
-                  <Download className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ImagePreview
+          imageUrl={selectedImage.fileUrl || selectedImage.attachment?.url || selectedImage.preview}
+          imageName={selectedImage.fileName || selectedImage.attachment?.name || 'Image'}
+          onClose={() => setSelectedImage(null)}
+        />
       )}
     </div>
   );
