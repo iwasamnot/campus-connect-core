@@ -181,19 +181,26 @@ function App() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      <div id="main-content" className="flex-1 overflow-hidden relative w-full">
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 hover:shadow-xl"
-          style={{
-            top: `calc(1rem + env(safe-area-inset-top, 0px))`,
-            left: `calc(1rem + env(safe-area-inset-left, 0px))`
-          }}
-          aria-label="Open menu"
-        >
-          <Menu size={24} />
-        </button>
+      <div 
+        id="main-content" 
+        className="flex-1 overflow-hidden relative w-full"
+        onTouchStart={(e) => {
+          // Swipe from left edge to open menu
+          if (window.innerWidth < 768 && !sidebarOpen && e.touches[0].clientX < 20) {
+            setSidebarOpen(true);
+          }
+        }}
+      >
+        {/* Swipe indicator on mobile - subtle hint */}
+        {!sidebarOpen && window.innerWidth < 768 && (
+          <div 
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-20 w-1 h-16 bg-indigo-600/30 rounded-r-full md:hidden"
+            style={{
+              left: '0px',
+              animation: 'pulse 2s infinite'
+            }}
+          />
+        )}
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>

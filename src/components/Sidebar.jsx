@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
 import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon } from 'lucide-react';
@@ -5,11 +6,38 @@ import Logo from './Logo';
 
 const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
   const { userRole } = useAuth();
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  // Minimum swipe distance
+  const minSwipeDistance = 50;
 
   const handleNavClick = (view) => {
     setActiveView(view);
     // Close sidebar on mobile after navigation
     if (window.innerWidth < 768) {
+      onClose();
+    }
+  };
+
+  // Handle touch events for swipe to close
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    
+    // Close sidebar on left swipe
+    if (isLeftSwipe && isOpen && window.innerWidth < 768) {
       onClose();
     }
   };
@@ -25,21 +53,25 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
       )}
       
       {/* Sidebar */}
-      <div className={`
-        fixed md:static
-        top-0 left-0
-        w-full md:w-64 bg-gray-900 dark:bg-gray-900 text-white 
-        flex flex-col h-screen h-[100dvh] border-r border-gray-800
-        z-50
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}
-      style={{
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        maxHeight: '100dvh',
-        height: '100dvh'
-      }}
+      <div 
+        className={`
+          fixed md:static
+          top-0 left-0
+          w-full md:w-64 bg-gray-900 dark:bg-gray-900 text-white 
+          flex flex-col h-screen h-[100dvh] border-r border-gray-800
+          z-50
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          maxHeight: '100dvh',
+          height: '100dvh'
+        }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
         {/* Mobile Header - Always visible on mobile */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0"

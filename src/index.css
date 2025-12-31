@@ -73,6 +73,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Swipe gesture indicator animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 /* Smooth horizontal scroll for tables */
 .smooth-scroll {
   scroll-behavior: smooth;
