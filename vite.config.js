@@ -20,6 +20,8 @@ export default defineConfig({
         orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
+        id: '/',
+        categories: ['education', 'social', 'communication'],
         icons: [
           {
             src: '/logo.png',
@@ -138,8 +140,25 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               }
             }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.googleapis\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'google-apis-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 // 1 hour
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
           }
-        ]
+        ],
+        navigationPreload: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/_/, /^\/admin/]
       },
       devOptions: {
         enabled: true,
@@ -151,16 +170,22 @@ export default defineConfig({
     })
   ],
   build: {
+    // Optimize build output for PWA
+    target: 'es2015', // Better compatibility with service workers
+    cssCodeSplit: true, // Split CSS for better caching
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Split vendor chunks more aggressively
+          // Split vendor chunks more aggressively for better PWA performance
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
               return 'react-vendor';
             }
             if (id.includes('firebase')) {
               return 'firebase-vendor';
+            }
+            if (id.includes('zego-express-engine')) {
+              return 'zego-vendor';
             }
             if (id.includes('lucide-react')) {
               return 'ui-vendor';
