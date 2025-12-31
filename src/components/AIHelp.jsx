@@ -504,16 +504,11 @@ ${question}
     setLoading(true);
 
     try {
-      // Use intelligent AI: Gemini with conversation history, fallback to local knowledge base
-      console.log('AIHelp: Getting AI response for question:', question);
       const answer = await getHybridAIResponse(question);
 
       if (!answer || answer.trim() === '') {
-        console.warn('AIHelp: No answer generated, using fallback');
         throw new Error('No answer generated');
       }
-
-      console.log('AIHelp: Using AI response, length:', answer.length);
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
