@@ -28,12 +28,11 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
       <div className={`
         fixed md:static
         top-0 left-0
-        w-64 bg-gray-900 dark:bg-gray-900 text-white 
+        w-full md:w-64 bg-gray-900 dark:bg-gray-900 text-white 
         flex flex-col h-screen h-[100dvh] border-r border-gray-800
         z-50
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        touch-none
       `}>
         {/* Mobile Close Button */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
@@ -54,7 +53,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
           </p>
         </div>
 
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto overscroll-contain touch-pan-y">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch">
         {!isAdminRole(userRole) ? (
           <>
             <button

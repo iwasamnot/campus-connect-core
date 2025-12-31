@@ -98,6 +98,13 @@ html {
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
+    position: relative;
+  }
+  
+  /* Full screen sidebar on mobile */
+  .fixed.w-full {
+    width: 100vw !important;
+    max-width: 100vw !important;
   }
 
   /* Prevent unwanted scrolling */
