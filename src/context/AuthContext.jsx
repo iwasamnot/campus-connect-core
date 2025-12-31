@@ -203,7 +203,9 @@ export const AuthProvider = ({ children }) => {
         }
       } else {
         // If no user document found, check if it's an admin email and create accordingly
-        const defaultRole = isAdminEmail ? 'admin' : 'student';
+        const emailLower = loggedInUser.email ? loggedInUser.email.toLowerCase() : '';
+        const isStudentEmail = emailLower.startsWith('s20') && (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
+        const defaultRole = isAdminEmail ? 'admin' : (isStudentEmail ? 'student' : 'student');
         console.warn(`No user document found in Firestore. Creating one with ${defaultRole} role.`);
         await setDoc(doc(db, 'users', loggedInUser.uid), {
           email: loggedInUser.email,

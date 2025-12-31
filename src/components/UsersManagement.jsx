@@ -5,7 +5,7 @@ import { db, storage } from '../firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { isAdminRole } from '../utils/helpers';
-import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText, Upload } from 'lucide-react';
+import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText, Upload, CheckCircle, XCircle, Shield } from 'lucide-react';
 
 const UsersManagement = () => {
   const { user: currentUser } = useAuth();
@@ -18,6 +18,7 @@ const UsersManagement = () => {
   const [uploading, setUploading] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [verifying, setVerifying] = useState(null);
 
   // Fetch all users (limited to prevent quota exhaustion)
   useEffect(() => {
@@ -176,6 +177,11 @@ const UsersManagement = () => {
       }
 
       changes.updatedAt = new Date().toISOString();
+      
+      // If role changed to admin, automatically verify email
+      if (editData.role === 'admin' && originalUser.role !== 'admin') {
+        changes.emailVerified = true;
+      }
       changes.updatedBy = currentUser.uid;
       changes.updatedByEmail = currentUser.email;
 
@@ -205,6 +211,33 @@ const UsersManagement = () => {
       return new Date(dateString).toLocaleString();
     } catch {
       return 'N/A';
+    }
+  };
+
+  const handleVerifyEmail = async (userId, userEmail, currentStatus) => {
+    const newStatus = !currentStatus;
+    setVerifying(userId);
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        emailVerified: newStatus,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.uid,
+        updatedByEmail: currentUser.email
+      });
+
+      await logAuditAction('verify_email', {
+        userId,
+        userEmail,
+        verified: newStatus,
+        verifiedBy: currentUser.email
+      });
+
+      success(`Email ${newStatus ? 'verified' : 'unverified'} successfully.`);
+    } catch (error) {
+      console.error('Error updating email verification:', error);
+      showError('Failed to update email verification status. Please try again.');
+    } finally {
+      setVerifying(null);
     }
   };
 
@@ -284,6 +317,9 @@ const UsersManagement = () => {
                     Created At
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Email Verified
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -343,6 +379,60 @@ const UsersManagement = () => {
                       <div className="flex items-center gap-1">
                         <Calendar size={14} className="text-gray-400 dark:text-gray-500" />
                         {formatDate(user.createdAt)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-2">
+                        {user.role === 'admin' ? (
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            <Shield size={12} />
+                            Auto
+                          </span>
+                        ) : (
+                          <>
+                            <span className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.emailVerified
+                                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                            }`}>
+                              {user.emailVerified ? (
+                                <>
+                                  <CheckCircle size={12} />
+                                  Verified
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle size={12} />
+                                  Not Verified
+                                </>
+                              )}
+                            </span>
+                            <button
+                              onClick={() => handleVerifyEmail(user.id, user.email, user.emailVerified)}
+                              disabled={verifying === user.id}
+                              className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                user.emailVerified
+                                  ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                                  : 'bg-green-600 hover:bg-green-700 text-white'
+                              }`}
+                              title={user.emailVerified ? 'Unverify email' : 'Verify email'}
+                            >
+                              {verifying === user.id ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              ) : user.emailVerified ? (
+                                <>
+                                  <XCircle size={12} />
+                                  Unverify
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle size={12} />
+                                  Verify
+                                </>
+                              )}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
