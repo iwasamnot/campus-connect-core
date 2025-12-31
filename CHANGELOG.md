@@ -12,6 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-language support
 - Voice messages
 
+## [4.1.1] - 2025-12-31
+
+### Fixed
+- **File Upload Functionality**: Fixed file and image upload issues
+  - Added Firebase Storage security rules to allow authenticated users to upload files
+  - Improved error handling with specific error messages
+  - Added file name sanitization to prevent upload issues
+  - Enhanced debugging with console logging
+  - Added legacy fileUrl and fileName fields for compatibility
+  - Storage rules allow:
+    - Messages: 10MB max file size
+    - Profile pictures: 5MB max file size
+    - Read access for all authenticated users
+    - Admin delete permissions
+
+### Changed
+- **Firebase Configuration**: Added storage rules configuration to firebase.json
+- **FileUpload Component**: Enhanced with better error handling and debugging
+
 ## [4.1.0] - 2025-12-31
 
 ### Added

@@ -42,7 +42,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Forward messages to other chats
   - Save/bookmark messages
   - Pin messages (admin only)
-  - File and image sharing
+  - File and image sharing (up to 10MB per file)
   - Markdown formatting support
   - User @mentions with autocomplete
   - Report inappropriate content
