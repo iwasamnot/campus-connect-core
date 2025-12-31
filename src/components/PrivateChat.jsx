@@ -110,50 +110,93 @@ const PrivateChat = () => {
           return;
         }
 
-        // Fetch user data for all participants
+        // Fetch user data for all participants using batch queries (more efficient than individual getDoc calls)
+        // Firestore 'in' queries are limited to 10 items, so we need to batch them
         const users = [];
         const names = {};
         const profiles = {};
         const online = {};
         const summaries = {};
 
-        await Promise.all(
-          Array.from(userIds).map(async (userId) => {
-            try {
-              const userDoc = await getDoc(doc(db, 'users', userId));
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
-                users.push({
-                  id: userDoc.id,
-                  ...userData
-                });
-                
-                // Extract name with fallback priority
-                names[userDoc.id] = userData.name || 
-                                    userData.studentEmail?.split('@')[0] || 
-                                    userData.email?.split('@')[0] || 
-                                    userData.personalEmail?.split('@')[0] ||
-                                    userDoc.id.substring(0, 8);
-                profiles[userDoc.id] = userData;
-                online[userDoc.id] = {
-                  isOnline: userData.isOnline || false,
-                  lastSeen: userData.lastSeen || null
+        const userIdsArray = Array.from(userIds);
+        
+        // Batch fetch users in groups of 10 (Firestore 'in' query limit)
+        const batchSize = 10;
+        for (let i = 0; i < userIdsArray.length; i += batchSize) {
+          const batch = userIdsArray.slice(i, i + batchSize);
+          
+          try {
+            // Use 'in' query to fetch multiple users at once (1 read per batch instead of N reads)
+            const usersQuery = query(
+              collection(db, 'users'),
+              where('__name__', 'in', batch)
+            );
+            
+            const usersSnapshot = await getDocs(usersQuery);
+            usersSnapshot.docs.forEach(userDoc => {
+              const userData = userDoc.data();
+              users.push({
+                id: userDoc.id,
+                ...userData
+              });
+              
+              // Extract name with fallback priority
+              names[userDoc.id] = userData.name || 
+                                  userData.studentEmail?.split('@')[0] || 
+                                  userData.email?.split('@')[0] || 
+                                  userData.personalEmail?.split('@')[0] ||
+                                  userDoc.id.substring(0, 8);
+              profiles[userDoc.id] = userData;
+              online[userDoc.id] = {
+                isOnline: userData.isOnline || false,
+                lastSeen: userData.lastSeen || null
+              };
+              
+              // Store chat summary
+              if (chatDataMap[userDoc.id]) {
+                summaries[userDoc.id] = {
+                  lastMessage: chatDataMap[userDoc.id].lastMessage,
+                  lastMessageTime: chatDataMap[userDoc.id].lastMessageTime,
+                  hasUnread: false
                 };
-                
-                // Store chat summary
-                if (chatDataMap[userId]) {
-                  summaries[userId] = {
-                    lastMessage: chatDataMap[userId].lastMessage,
-                    lastMessageTime: chatDataMap[userId].lastMessageTime,
-                    hasUnread: false
-                  };
-                }
               }
-            } catch (error) {
-              console.error(`Error fetching user ${userId}:`, error);
+            });
+          } catch (error) {
+            console.error(`Error fetching user batch ${i}-${i + batchSize}:`, error);
+            // Fallback to individual fetches only if batch query fails
+            for (const userId of batch) {
+              try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  users.push({
+                    id: userDoc.id,
+                    ...userData
+                  });
+                  names[userDoc.id] = userData.name || 
+                                      userData.studentEmail?.split('@')[0] || 
+                                      userData.email?.split('@')[0] || 
+                                      userData.personalEmail?.split('@')[0] ||
+                                      userDoc.id.substring(0, 8);
+                  profiles[userDoc.id] = userData;
+                  online[userDoc.id] = {
+                    isOnline: userData.isOnline || false,
+                    lastSeen: userData.lastSeen || null
+                  };
+                  if (chatDataMap[userDoc.id]) {
+                    summaries[userDoc.id] = {
+                      lastMessage: chatDataMap[userDoc.id].lastMessage,
+                      lastMessageTime: chatDataMap[userDoc.id].lastMessageTime,
+                      hasUnread: false
+                    };
+                  }
+                }
+              } catch (individualError) {
+                console.error(`Error fetching user ${userId}:`, individualError);
+              }
             }
-          })
-        );
+          }
+        }
 
         // Sort users by last message time (most recent first)
         users.sort((a, b) => {
