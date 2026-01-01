@@ -22,23 +22,52 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ThemeProvider>
-      <ErrorBoundary>
-        <PreferencesProvider>
-          <AuthProvider>
-            <PresenceProvider>
-              <ToastProvider>
-                <CallProvider>
-                  <App />
-                </CallProvider>
-              </ToastProvider>
-            </PresenceProvider>
-          </AuthProvider>
-        </PreferencesProvider>
-      </ErrorBoundary>
-    </ThemeProvider>
-  </React.StrictMode>,
-)
+// Remove loading fallback when React mounts
+const rootElement = document.getElementById('root');
+const loadingFallback = document.getElementById('loading-fallback');
+if (loadingFallback) {
+  loadingFallback.style.display = 'none';
+}
+
+// Global error handler for unhandled promise rejections
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('Unhandled promise rejection:', e.reason);
+  // Don't show error UI here - let ErrorBoundary handle it
+});
+
+try {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <PreferencesProvider>
+            <AuthProvider>
+              <PresenceProvider>
+                <ToastProvider>
+                  <CallProvider>
+                    <App />
+                  </CallProvider>
+                </ToastProvider>
+              </PresenceProvider>
+            </AuthProvider>
+          </PreferencesProvider>
+        </ErrorBoundary>
+      </ThemeProvider>
+    </React.StrictMode>,
+  );
+} catch (error) {
+  console.error('Failed to render React app:', error);
+  if (rootElement) {
+    rootElement.innerHTML = `
+      <div style="padding: 20px; font-family: system-ui; max-width: 600px; margin: 50px auto;">
+        <h1 style="color: #dc2626; margin-bottom: 16px;">⚠️ React Render Error</h1>
+        <p style="color: #374151; margin-bottom: 12px;">${error.message || 'Unknown error occurred'}</p>
+        <p style="color: #6b7280; margin-bottom: 20px;">Please check the browser console for more details.</p>
+        <button onclick="window.location.reload()" style="background: #4f46e5; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
+          Reload Page
+        </button>
+      </div>
+    `;
+  }
+}
 
