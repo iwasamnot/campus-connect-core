@@ -1306,8 +1306,8 @@ const ChatArea = ({ setActiveView }) => {
                     />
                   )}
 
-                  {/* Action buttons - smaller on mobile, hover on desktop */}
-                  <div className="absolute -top-2 right-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-row gap-1 md:gap-1.5 touch-action-none z-20 scale-75 md:scale-100 origin-top-right">
+                  {/* Action buttons - hidden by default, show on hover (desktop) or tap (mobile) */}
+                  <div className="absolute -top-2 right-0 opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-row gap-1 md:gap-1.5 touch-action-none z-20 scale-75 md:scale-100 origin-top-right">
                     <button
                       onClick={async () => {
                         try {
