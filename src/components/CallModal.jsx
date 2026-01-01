@@ -1,8 +1,17 @@
-import { useCall } from '../context/CallContext';
+import { useContext } from 'react';
+import { CallContext } from '../context/CallContext';
 import { Phone, Video, Mic, MicOff, VideoOff, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const CallModal = () => {
+  // Safely get context with fallback
+  const callContext = useContext(CallContext);
+  
+  // If context is not available, don't render (prevents error during HMR or initialization)
+  if (!callContext) {
+    return null;
+  }
+
   const { 
     callState, 
     callType, 
@@ -14,7 +23,7 @@ const CallModal = () => {
     endCall, 
     toggleMute, 
     toggleVideo 
-  } = useCall();
+  } = callContext;
   const { user } = useAuth();
 
   if (!callState || !callTarget) return null;

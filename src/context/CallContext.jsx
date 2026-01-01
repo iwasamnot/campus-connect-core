@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect, us
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 
-const CallContext = createContext();
+export const CallContext = createContext();
 
 export const useCall = () => {
   const context = useContext(CallContext);
