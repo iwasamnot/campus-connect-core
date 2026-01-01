@@ -1306,8 +1306,8 @@ const ChatArea = ({ setActiveView }) => {
                     />
                   )}
 
-                  {/* Action buttons - always visible on mobile, hover on desktop */}
-                  <div className="absolute -top-2 right-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-row gap-1.5 touch-action-none z-20">
+                  {/* Action buttons - smaller on mobile, hover on desktop */}
+                  <div className="absolute -top-2 right-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-row gap-1 md:gap-1.5 touch-action-none z-20 scale-75 md:scale-100 origin-top-right">
                     <button
                       onClick={async () => {
                         try {
@@ -1321,30 +1321,30 @@ const ChatArea = ({ setActiveView }) => {
                           }
                         }
                       }}
-                      className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
+                      className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-1 md:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
                       title="Save message"
                       aria-label="Save message"
                     >
-                      <Bookmark size={12} />
+                      <Bookmark size={10} className="md:w-3 md:h-3" />
                     </button>
                     {preferences.allowMessageForwarding && (
                       <button
                         onClick={() => handleForwardMessage(message.id)}
-                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
+                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-1 md:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
                         title="Forward message"
                         aria-label="Forward message"
                       >
-                        <Forward size={12} />
+                        <Forward size={10} className="md:w-3 md:h-3" />
                       </button>
                     )}
                     {!isAuthor && (
                       <button
                         onClick={() => setReplyingTo(message)}
-                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
+                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-1 md:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
                         title="Reply to message"
                         aria-label="Reply to message"
                       >
-                        <Reply size={12} />
+                        <Reply size={10} className="md:w-3 md:h-3" />
                       </button>
                     )}
                     {isAdminRole(userRole) && (
@@ -1371,7 +1371,7 @@ const ChatArea = ({ setActiveView }) => {
                             showError('Failed to pin message');
                           }
                         }}
-                        className={`p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg ${
+                        className={`p-1 md:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg ${
                           pinnedMessages.includes(message.id)
                             ? 'bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white'
                             : 'bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white'
@@ -1379,7 +1379,7 @@ const ChatArea = ({ setActiveView }) => {
                         title={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
                         aria-label={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
                       >
-                        <Pin size={12} />
+                        <Pin size={10} className="md:w-3 md:h-3" />
                       </button>
                     )}
                     {canEdit && (
@@ -1388,33 +1388,33 @@ const ChatArea = ({ setActiveView }) => {
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
+                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-1 md:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
                         title="Edit message"
                         aria-label="Edit message"
                       >
-                        <Edit2 size={12} />
+                        <Edit2 size={10} className="md:w-3 md:h-3" />
                       </button>
                     )}
                     {canDelete && (
                       <button
                         onClick={() => handleDeleteMessage(message.id, message.userId, isAIMessage)}
                         disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-action-manipulation shadow-lg"
+                        className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-1 md:p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-action-manipulation shadow-lg"
                         title={isAIMessage ? "Delete AI message (Admin only)" : "Delete message"}
                         aria-label={isAIMessage ? "Delete AI message" : "Delete message"}
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={10} className="md:w-3 md:h-3" />
                       </button>
                     )}
                     {!isAuthor && (
                       <div className="relative">
                         <button
                           onClick={() => setReporting(reporting === message.id ? null : message.id)}
-                          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
+                          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white p-1 md:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg"
                           title="Report message"
                           aria-label="Report message"
                         >
-                          <Flag size={12} />
+                          <Flag size={10} className="md:w-3 md:h-3" />
                         </button>
                         {reporting === message.id && (
                           <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px] touch-action-none">
