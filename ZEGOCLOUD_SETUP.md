@@ -37,35 +37,70 @@ VITE_ZEGOCLOUD_APP_ID=your-app-id-here
    npm run dev
    ```
 
-## For Production Deployment
+## For Production Deployment (Server-Side Token Generation)
 
 ### Important Security Note
 
 **Never expose your Server Secret in client-side code!**
 
-For production use, you need to:
+The app now includes a Firebase Cloud Function for server-side token generation. Here's how to set it up:
 
-1. **Set up server-side token generation**
-   - Create a Firebase Cloud Function or backend endpoint
-   - Generate tokens server-side using your Server Secret
-   - Return tokens to the client on-demand
+### Step 1: Get Your ZEGOCLOUD Server Secret
 
-2. **Get Server Secret** (keep it secure!)
-   - In ZEGOCLOUD Console → Project Configuration → Basic Configurations
-   - Find **ServerSecret** field
-   - **DO NOT** add this to `.env` or client-side code
-   - Use it only in your server-side token generation code
+1. Go to [ZEGOCLOUD Console](https://console.zegocloud.com)
+2. Select your project
+3. Go to **Project Configuration** → **Basic Configurations**
+4. Find **ServerSecret** field
+5. Copy the Server Secret (keep it secure - never commit to git!)
 
-3. **Update CallContext.jsx**
-   - Replace the placeholder token with a call to your backend API
-   - Example:
-     ```javascript
-     const response = await fetch('/api/zegocloud/token', {
-       method: 'POST',
-       body: JSON.stringify({ userId: user.uid, roomID })
-     });
-     const { token } = await response.json();
-     ```
+### Step 2: Install ZEGOCLOUD Token Generator Package
+
+```bash
+cd functions
+npm install zego-server-assistant
+```
+
+### Step 3: Configure Server Secret in Firebase Functions
+
+You have two options:
+
+#### Option A: Using Firebase CLI (Recommended)
+
+```bash
+firebase functions:config:set zegocloud.server_secret="YOUR_SERVER_SECRET_HERE"
+firebase functions:config:set zegocloud.app_id="128222087"
+```
+
+#### Option B: Using Firebase Console
+
+1. Go to [Firebase Console](https://console.firebase.google.com/project/campus-connect-sistc)
+2. Navigate to **Functions** → **Configuration** → **Environment Variables**
+3. Click **Add Variable**
+4. Add:
+   - Name: `zegocloud.server_secret`, Value: `YOUR_SERVER_SECRET_HERE`
+   - Name: `zegocloud.app_id`, Value: `128222087`
+
+### Step 4: Deploy the Cloud Function
+
+```bash
+cd functions
+npm install
+cd ..
+firebase deploy --only functions:generateZegoToken
+```
+
+### Step 5: Verify It Works
+
+The app will automatically try to get tokens from the Cloud Function. If token generation fails, it will fall back to token-less mode (if enabled).
+
+### How It Works
+
+1. When a user starts a call, the app calls the `generateZegoToken` Cloud Function
+2. The function generates a token using your Server Secret
+3. The token is returned to the client
+4. The client uses the token to authenticate with ZEGOCLOUD
+
+**Security**: The Server Secret never leaves the server, keeping it secure.
 
 ## Current Implementation Status
 

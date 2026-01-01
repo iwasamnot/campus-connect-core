@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
-import { db } from '../firebaseConfig';
+import { db, functions } from '../firebaseConfig';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, where, limit, getDocs } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 
 export const CallContext = createContext();
 
