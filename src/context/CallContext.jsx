@@ -352,6 +352,93 @@ export const CallProvider = ({ children }) => {
     }
   }, [localStream, callType, isVideoEnabled]);
 
+  // Listen for incoming call notifications
+  useEffect(() => {
+    if (!user?.uid || !isCallingAvailable()) return;
+
+    const notificationsRef = collection(db, 'callNotifications');
+    const q = query(notificationsRef, where('to', '==', user.uid), where('status', '==', 'ringing'), limit(1));
+    
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      if (!snapshot.empty && callState === null) { // Only accept if not already in a call
+        const notification = snapshot.docs[0].data();
+        const notificationDoc = snapshot.docs[0];
+        console.log('Incoming call notification:', notification);
+        
+        // Set call state to show incoming call
+        setCallTarget({
+          id: notification.from,
+          name: notification.fromName || 'User',
+          email: null
+        });
+        setCallType(notification.type);
+        setCallState('incoming');
+        
+        // Auto-join the room after a short delay
+        setTimeout(async () => {
+          try {
+            const zg = await initZegoCloud();
+            if (!zg) {
+              setCallState(null);
+              return;
+            }
+            
+            roomIDRef.current = notification.roomID;
+            
+            // Try with empty string token first, then without token
+            let loginResult;
+            try {
+              loginResult = await zg.loginRoom(notification.roomID, '', {
+                userID: user.uid,
+                userName: user.email || user.displayName || 'User'
+              });
+            } catch (err) {
+              console.log('Trying token-less mode without token parameter');
+              loginResult = await zg.loginRoom(notification.roomID, {
+                userID: user.uid,
+                userName: user.email || user.displayName || 'User'
+              });
+            }
+            
+            if (loginResult === 0) {
+              // Create and publish stream
+              const streamConfig = notification.type === 'video'
+                ? { camera: { video: true, audio: true }, microphone: { audio: true } }
+                : { camera: { video: false, audio: true }, microphone: { audio: true } };
+              
+              const stream = await zg.createStream(streamConfig);
+              setLocalStream(stream);
+              
+              if (notification.type === 'video' && localVideoRef.current) {
+                localVideoRef.current.srcObject = stream;
+              }
+              
+              const streamID = `${user.uid}_main`;
+              await zg.startPublishingStream(streamID, stream);
+              
+              setIsVideoEnabled(notification.type === 'video');
+              setCallState('active');
+              setIsMuted(false);
+              
+              // Delete the notification
+              await deleteDoc(notificationDoc.ref);
+            } else {
+              console.error('Failed to join room:', loginResult);
+              setCallState(null);
+            }
+          } catch (error) {
+            console.error('Error accepting incoming call:', error);
+            setCallState(null);
+          }
+        }, 1000); // Auto-join after 1 second
+      }
+    }, (error) => {
+      console.error('Error listening for call notifications:', error);
+    });
+
+    return () => unsubscribe();
+  }, [user, isCallingAvailable, initZegoCloud, callState]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
