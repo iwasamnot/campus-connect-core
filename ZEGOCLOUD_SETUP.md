@@ -53,12 +53,9 @@ The app now includes a Firebase Cloud Function for server-side token generation.
 4. Find **ServerSecret** field
 5. Copy the Server Secret (keep it secure - never commit to git!)
 
-### Step 2: Install ZEGOCLOUD Token Generator Package
+### Step 2: Token Generator Already Included ✅
 
-```bash
-cd functions
-npm install zego-server-assistant
-```
+The token generator is already implemented in `functions/zegoTokenGenerator.js`. No additional packages needed!
 
 ### Step 3: Configure Server Secret in Firebase Functions
 
