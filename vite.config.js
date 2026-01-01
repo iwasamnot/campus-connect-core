@@ -156,7 +156,7 @@ export default defineConfig({
             }
           }
         ],
-        navigationPreload: true,
+        navigationPreload: false, // Disabled to prevent preloadResponse cancellation errors
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/_/, /^\/admin/]
       },

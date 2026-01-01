@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 
@@ -29,7 +29,14 @@ export const CallProvider = ({ children }) => {
   // Check if calling is configured
   const isCallingAvailable = useCallback(() => {
     const appID = import.meta.env.VITE_ZEGOCLOUD_APP_ID;
-    return !!appID && appID.trim() !== '';
+    const available = !!appID && appID.trim() !== '';
+    if (!available) {
+      console.warn('ZEGOCLOUD App ID not found. VITE_ZEGOCLOUD_APP_ID:', appID);
+      console.warn('Make sure you have added VITE_ZEGOCLOUD_APP_ID to your .env file and restarted the dev server.');
+    } else {
+      console.log('ZEGOCLOUD App ID found:', appID);
+    }
+    return available;
   }, []);
 
   // End call helper (defined early for use in other callbacks)
@@ -325,6 +332,9 @@ export const CallProvider = ({ children }) => {
     };
   }, [endCallInternal]);
 
+  // Memoize the availability check to avoid re-computing on every render
+  const callingAvailable = useMemo(() => isCallingAvailable(), [isCallingAvailable]);
+
   const value = {
     callState,
     callType,
@@ -333,7 +343,7 @@ export const CallProvider = ({ children }) => {
     isVideoEnabled,
     localVideoRef,
     remoteVideoRef,
-    isCallingAvailable: isCallingAvailable(),
+    isCallingAvailable: callingAvailable,
     startCall,
     endCall,
     toggleMute,
