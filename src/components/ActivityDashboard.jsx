@@ -115,25 +115,67 @@ const ActivityDashboard = memo(() => {
         const todayStart = new Date(now.setHours(0, 0, 0, 0));
         const weekStart = new Date(now.setDate(now.getDate() - 7));
 
-        // Messages today
-        const todayQuery = query(
-          collection(db, 'messages'),
-          where('userId', '==', user.uid),
-          where('timestamp', '>=', todayStart),
-          orderBy('timestamp', 'desc')
-        );
-        const todaySnapshot = await getDocs(todayQuery);
-        const messagesToday = todaySnapshot.size;
+        // Messages today - with fallback if index is missing
+        let messagesToday = 0;
+        try {
+          const todayQuery = query(
+            collection(db, 'messages'),
+            where('userId', '==', user.uid),
+            where('timestamp', '>=', todayStart),
+            orderBy('timestamp', 'desc')
+          );
+          const todaySnapshot = await getDocs(todayQuery);
+          messagesToday = todaySnapshot.size;
+        } catch (error) {
+          if (error.code === 'failed-precondition') {
+            // Index missing - use fallback query without orderBy
+            console.warn('Index missing for messages query. Using fallback.');
+            try {
+              const fallbackQuery = query(
+                collection(db, 'messages'),
+                where('userId', '==', user.uid),
+                where('timestamp', '>=', todayStart)
+              );
+              const fallbackSnapshot = await getDocs(fallbackQuery);
+              messagesToday = fallbackSnapshot.size;
+            } catch (fallbackError) {
+              console.error('Fallback query also failed:', fallbackError);
+            }
+          } else {
+            throw error;
+          }
+        }
 
-        // Messages this week
-        const weekQuery = query(
-          collection(db, 'messages'),
-          where('userId', '==', user.uid),
-          where('timestamp', '>=', weekStart),
-          orderBy('timestamp', 'desc')
-        );
-        const weekSnapshot = await getDocs(weekQuery);
-        const messagesThisWeek = weekSnapshot.size;
+        // Messages this week - with fallback if index is missing
+        let messagesThisWeek = 0;
+        try {
+          const weekQuery = query(
+            collection(db, 'messages'),
+            where('userId', '==', user.uid),
+            where('timestamp', '>=', weekStart),
+            orderBy('timestamp', 'desc')
+          );
+          const weekSnapshot = await getDocs(weekQuery);
+          messagesThisWeek = weekSnapshot.size;
+        } catch (error) {
+          if (error.code === 'failed-precondition') {
+            // Index missing - use fallback query without orderBy
+            console.warn('Index missing for messages query. Using fallback.');
+            try {
+              const fallbackQuery = query(
+                collection(db, 'messages'),
+                where('userId', '==', user.uid),
+                where('timestamp', '>=', weekStart)
+              );
+              const fallbackSnapshot = await getDocs(fallbackQuery);
+              messagesThisWeek = fallbackSnapshot.size;
+            } catch (fallbackError) {
+              console.error('Fallback query also failed:', fallbackError);
+            }
+          } else {
+            throw error;
+          }
+        }
 
         setActivityStats({
           messagesToday,
