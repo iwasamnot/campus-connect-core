@@ -1307,7 +1307,7 @@ const ChatArea = ({ setActiveView }) => {
                   )}
 
                   {/* Action buttons - hidden by default, show on hover only */}
-                  <div className="absolute -top-2 right-0 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-200 flex flex-row gap-1 md:gap-1.5 touch-action-none z-20 scale-75 md:scale-100 origin-top-right">
+                  <div className="absolute -top-2 right-0 hidden group-hover:flex pointer-events-none group-hover:pointer-events-auto transition-all duration-200 flex-row gap-1 md:gap-1.5 touch-action-none z-20 scale-75 md:scale-100 origin-top-right">
                     <button
                       onClick={async () => {
                         try {
