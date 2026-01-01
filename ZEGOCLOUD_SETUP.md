@@ -69,7 +69,20 @@ For production use, you need to:
 
 ## Current Implementation Status
 
-⚠️ **Development/Testing Only**: The current implementation uses token-less mode (empty token). This will work for testing if your ZEGOCLOUD app is configured to allow token-less access. For production use, you'll need server-side token generation.
+⚠️ **Token Authentication Required**: ZEGOCLOUD requires token authentication. You have two options:
+
+### Option 1: Enable Token-less Mode (Development Only)
+1. Go to [ZEGOCLOUD Console](https://console.zegocloud.com)
+2. Select your project
+3. Go to **Project Settings** → **Basic Configurations**
+4. Look for **Token-less Mode** or **Development Mode**
+5. Enable it for your App ID
+6. Save the settings
+
+**Note**: Token-less mode is only available for development/testing. For production, you must use Option 2.
+
+### Option 2: Server-side Token Generation (Recommended for Production)
+You need to implement server-side token generation using your Server Secret. See the "For Production Deployment" section above.
 
 ## Testing the Feature
 
