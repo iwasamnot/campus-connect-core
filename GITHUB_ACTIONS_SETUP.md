@@ -96,6 +96,7 @@ Add these secrets in your GitHub repository:
 - `VITE_FIREBASE_MEASUREMENT_ID` - Firebase measurement ID (optional, for build)
 - `VITE_GEMINI_API_KEY` - Gemini API key (for AI features)
 - `VITE_OPENAI_API_KEY` - OpenAI API key (optional)
+- `VITE_ZEGOCLOUD_APP_ID` - ZEGOCLOUD App ID (for voice/video calling features)
 
 ## Troubleshooting
 
