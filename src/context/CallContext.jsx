@@ -68,18 +68,8 @@ export const CallProvider = ({ children }) => {
         }
 
         // Stop all playing streams
-        try {
-          const streamList = await zg.getStreamList();
-          streamList.forEach(stream => {
-            if (stream.streamID !== streamID) {
-              zg.stopPlayingStream(stream.streamID).catch(err => {
-                console.error('Error stopping remote stream:', err);
-              });
-            }
-          });
-        } catch (err) {
-          console.error('Error getting stream list:', err);
-        }
+        // Note: Remote streams are tracked via roomStreamUpdate events
+        // We'll stop them individually as they're tracked in state if needed
 
         // Leave room
         try {
@@ -234,10 +224,11 @@ export const CallProvider = ({ children }) => {
       const roomID = [user.uid, target.id].sort().join('_');
       roomIDRef.current = roomID;
 
-      // Join room (token-less mode for development - empty string as token)
-      // For production, generate token server-side and pass it here
-      const token = ''; // Empty token for token-less mode (requires ZEGOCLOUD app config)
-      const loginResult = await zg.loginRoom(roomID, token, { 
+      // Join room (token-less mode for development)
+      // For production, generate token server-side and pass it as second parameter
+      // Token-less mode: zg.loginRoom(roomID, { userID, userName })
+      // With token: zg.loginRoom(roomID, token, { userID, userName })
+      const loginResult = await zg.loginRoom(roomID, { 
         userID: user.uid, 
         userName: user.email || user.displayName || 'User' 
       });
@@ -265,20 +256,8 @@ export const CallProvider = ({ children }) => {
         throw new Error(`Failed to publish stream. Error code: ${publishResult}`);
       }
 
-      // Check for existing remote streams and subscribe to them
-      const streamList = await zg.getStreamList();
-      streamList.forEach(existingStream => {
-        if (existingStream.streamID !== streamID) {
-          console.log('Found existing remote stream, subscribing:', existingStream.streamID);
-          zg.startPlayingStream(existingStream.streamID).then(remoteStream => {
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current.srcObject = remoteStream;
-            }
-          }).catch(err => {
-            console.error('Error subscribing to existing remote stream:', err);
-          });
-        }
-      });
+      // Note: Remote streams will be handled by the 'roomStreamUpdate' event listener
+      // which is already set up in initZegoCloud. No need to manually check for streams here.
 
       setIsVideoEnabled(type === 'video');
       setCallState('active');
