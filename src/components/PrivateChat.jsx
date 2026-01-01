@@ -1337,7 +1337,7 @@ const PrivateChat = () => {
             
             {/* Disappearing Messages Settings Dropdown */}
             {showDisappearingSettings && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4 transform transition-all duration-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-900 dark:text-white">Disappearing Messages</h3>
                   <button

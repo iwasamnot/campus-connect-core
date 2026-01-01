@@ -1307,7 +1307,7 @@ const ChatArea = ({ setActiveView }) => {
                   )}
 
                   {/* Action buttons - always visible on mobile, hover on desktop */}
-                  <div className="absolute top-0 right-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-row gap-1.5 touch-action-none z-10" style={{ transform: 'translateY(-50%)' }}>
+                  <div className="absolute -top-2 right-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-row gap-1.5 touch-action-none z-20">
                     <button
                       onClick={async () => {
                         try {
