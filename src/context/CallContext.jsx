@@ -38,8 +38,11 @@ export const CallProvider = ({ children }) => {
       console.warn('Type:', typeof appID);
       console.warn('All env vars starting with VITE_ZEGOCLOUD:', 
         Object.keys(import.meta.env).filter(key => key.startsWith('VITE_ZEGOCLOUD')));
+      console.warn('All VITE_ env vars:', 
+        Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')).slice(0, 10));
       console.warn('📝 For local dev: Add VITE_ZEGOCLOUD_APP_ID=128222087 to .env file and restart dev server');
       console.warn('📝 For Firebase: Add VITE_ZEGOCLOUD_APP_ID=128222087 to GitHub Secrets (Settings → Secrets → Actions)');
+      console.warn('💡 If secret is set, clear browser cache and service worker, then hard refresh (Ctrl+Shift+R)');
     } else {
       console.log('✅ ZEGOCLOUD App ID found:', appID);
       console.log('✅ Calling feature is available');

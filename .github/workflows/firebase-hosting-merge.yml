@@ -47,6 +47,18 @@ jobs:
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
           VITE_ZEGOCLOUD_APP_ID: ${{ secrets.VITE_ZEGOCLOUD_APP_ID }}
       
+      - name: Verify ZEGOCLOUD App ID in build output
+        run: |
+          echo "Checking if VITE_ZEGOCLOUD_APP_ID was included in build..."
+          if grep -r "128222087" dist/assets/*.js 2>/dev/null | head -1; then
+            echo "✅ ZEGOCLOUD App ID found in built files"
+          else
+            echo "⚠️ WARNING: ZEGOCLOUD App ID not found in built files"
+            echo "This might indicate the environment variable wasn't replaced during build"
+            echo "Checking for VITE_ZEGOCLOUD references..."
+            grep -r "VITE_ZEGOCLOUD" dist/assets/*.js 2>/dev/null | head -3 || echo "No VITE_ZEGOCLOUD references found"
+          fi
+      
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
       
