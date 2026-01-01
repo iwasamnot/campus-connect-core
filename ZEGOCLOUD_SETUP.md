@@ -69,7 +69,7 @@ For production use, you need to:
 
 ## Current Implementation Status
 
-⚠️ **Development/Testing Only**: The current implementation uses a placeholder token. This will work for testing the UI and basic functionality, but you'll need server-side token generation for production use.
+⚠️ **Development/Testing Only**: The current implementation uses token-less mode (empty token). This will work for testing if your ZEGOCLOUD app is configured to allow token-less access. For production use, you'll need server-side token generation.
 
 ## Testing the Feature
 
@@ -95,9 +95,11 @@ Once you've added your App ID:
 - Make sure you're using HTTPS (required for media access in most browsers)
 
 ### Calls not connecting
-- This is expected with placeholder tokens
-- Implement server-side token generation for full functionality
+- Verify your ZEGOCLOUD app allows token-less mode (for development)
+- For production, implement server-side token generation
 - Check ZEGOCLOUD Console for connection logs
+- Ensure both users have granted camera/microphone permissions
+- Check browser console for specific error messages
 
 ## Additional Resources
 
