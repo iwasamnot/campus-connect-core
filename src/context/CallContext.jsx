@@ -263,13 +263,24 @@ export const CallProvider = ({ children }) => {
 
       // Join room (token-less mode for development)
       // For production, generate token server-side and pass it as second parameter
-      // Token-less mode: pass empty string as token
-      // With token: pass generated token string
-      const token = ''; // Empty string for token-less mode
-      const loginResult = await zg.loginRoom(roomID, token, { 
-        userID: user.uid, 
-        userName: user.email || user.displayName || 'User' 
-      });
+      // Note: ZEGOCLOUD requires token parameter - for token-less mode, pass empty string
+      // API signature: loginRoom(roomID, token, config) or loginRoom(roomID, config) if no token
+      // Try with empty string first, if that fails, try without token parameter
+      let loginResult;
+      try {
+        // Try with empty string token (some ZEGOCLOUD versions require this)
+        loginResult = await zg.loginRoom(roomID, '', { 
+          userID: user.uid, 
+          userName: user.email || user.displayName || 'User' 
+        });
+      } catch (err) {
+        // If that fails, try without token parameter (token-less mode)
+        console.log('Trying token-less mode without token parameter');
+        loginResult = await zg.loginRoom(roomID, { 
+          userID: user.uid, 
+          userName: user.email || user.displayName || 'User' 
+        });
+      }
 
       if (loginResult !== 0) {
         throw new Error(`Failed to join room. Error code: ${loginResult}`);

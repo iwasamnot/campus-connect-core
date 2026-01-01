@@ -331,5 +331,26 @@ service cloud.firestore {
         isAdmin()
       );
     }
+
+    // Call notifications collection
+    match /callNotifications/{notificationId} {
+      // Allow users to read notifications sent to them
+      allow read: if isAuthenticated() && 
+        resource.data.to == request.auth.uid;
+      
+      // Allow authenticated users to create call notifications
+      allow create: if isAuthenticated() && 
+        request.resource.data.from == request.auth.uid;
+      
+      // Allow users to update notifications sent to them (for status changes)
+      allow update: if isAuthenticated() && 
+        resource.data.to == request.auth.uid;
+      
+      // Allow users to delete notifications sent to them, or the sender to delete their own notifications
+      allow delete: if isAuthenticated() && (
+        resource.data.to == request.auth.uid ||
+        resource.data.from == request.auth.uid
+      );
+    }
   }
 }
