@@ -263,23 +263,30 @@ export const CallProvider = ({ children }) => {
 
       // Join room (token-less mode for development)
       // For production, generate token server-side and pass it as second parameter
-      // Note: ZEGOCLOUD requires token parameter - for token-less mode, pass empty string
-      // API signature: loginRoom(roomID, token, config) or loginRoom(roomID, config) if no token
-      // Try with empty string first, if that fails, try without token parameter
+      // Note: ZEGOCLOUD SDK requires token parameter - for token-less mode, we need to pass null or empty string
+      // However, based on the error, it seems the app might require actual tokens
+      // API signature: loginRoom(roomID, token, config)
+      // Try with null first (some SDK versions accept null for token-less), then empty string
       let loginResult;
       try {
-        // Try with empty string token (some ZEGOCLOUD versions require this)
-        loginResult = await zg.loginRoom(roomID, '', { 
+        // Try with null token (some ZEGOCLOUD versions accept null for token-less mode)
+        loginResult = await zg.loginRoom(roomID, null, { 
           userID: user.uid, 
           userName: user.email || user.displayName || 'User' 
         });
       } catch (err) {
-        // If that fails, try without token parameter (token-less mode)
-        console.log('Trying token-less mode without token parameter');
-        loginResult = await zg.loginRoom(roomID, { 
-          userID: user.uid, 
-          userName: user.email || user.displayName || 'User' 
-        });
+        console.log('Null token failed, trying empty string:', err);
+        try {
+          // Try with empty string token
+          loginResult = await zg.loginRoom(roomID, '', { 
+            userID: user.uid, 
+            userName: user.email || user.displayName || 'User' 
+          });
+        } catch (err2) {
+          console.error('Both null and empty string tokens failed. ZEGOCLOUD app may require actual tokens.');
+          console.error('Error with empty string:', err2);
+          throw new Error('ZEGOCLOUD requires token authentication. Please enable token-less mode in ZEGOCLOUD Console or implement server-side token generation. See ZEGOCLOUD_SETUP.md for details.');
+        }
       }
 
       if (loginResult !== 0) {
