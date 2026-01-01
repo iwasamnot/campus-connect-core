@@ -34,8 +34,8 @@ jobs:
       
       - name: Create cleanup script
         run: |
-          cat > cleanup.js << 'EOF'
-          import admin from 'firebase-admin';
+          cat > cleanup.cjs << 'EOF'
+          const admin = require('firebase-admin');
           admin.initializeApp({
             credential: admin.credential.applicationDefault(),
             storageBucket: 'campus-connect-sistc.firebasestorage.app'
@@ -97,5 +97,5 @@ jobs:
           EOF
       
       - name: Run cleanup script
-        run: node cleanup.js
+        run: node cleanup.cjs
 
