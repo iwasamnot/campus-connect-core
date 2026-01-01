@@ -290,6 +290,9 @@ export const CallProvider = ({ children }) => {
       }
 
       if (loginResult !== 0) {
+        if (loginResult === 1100001) {
+          throw new Error('ZEGOCLOUD requires token authentication. Please enable token-less mode in your ZEGOCLOUD Console (Project Settings → Basic Configurations → Enable Token-less mode) OR implement server-side token generation. See ZEGOCLOUD_SETUP.md for details.');
+        }
         throw new Error(`Failed to join room. Error code: ${loginResult}`);
       }
 
