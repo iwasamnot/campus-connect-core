@@ -30,11 +30,19 @@ export const CallProvider = ({ children }) => {
   const isCallingAvailable = useCallback(() => {
     const appID = import.meta.env.VITE_ZEGOCLOUD_APP_ID;
     const available = !!appID && appID.trim() !== '';
+    
+    // Enhanced debugging
     if (!available) {
-      console.warn('ZEGOCLOUD App ID not found. VITE_ZEGOCLOUD_APP_ID:', appID);
-      console.warn('Make sure you have added VITE_ZEGOCLOUD_APP_ID to your .env file and restarted the dev server.');
+      console.warn('⚠️ ZEGOCLOUD App ID not found');
+      console.warn('Current value:', appID);
+      console.warn('Type:', typeof appID);
+      console.warn('All env vars starting with VITE_ZEGOCLOUD:', 
+        Object.keys(import.meta.env).filter(key => key.startsWith('VITE_ZEGOCLOUD')));
+      console.warn('📝 For local dev: Add VITE_ZEGOCLOUD_APP_ID=128222087 to .env file and restart dev server');
+      console.warn('📝 For Firebase: Add VITE_ZEGOCLOUD_APP_ID=128222087 to GitHub Secrets (Settings → Secrets → Actions)');
     } else {
-      console.log('ZEGOCLOUD App ID found:', appID);
+      console.log('✅ ZEGOCLOUD App ID found:', appID);
+      console.log('✅ Calling feature is available');
     }
     return available;
   }, []);
