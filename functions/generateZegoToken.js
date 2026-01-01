@@ -20,8 +20,8 @@ if (!admin.apps.length) {
 }
 
 // ZEGOCLOUD Token Generator
-// Install: npm install zego-server-assistant
-const { generateToken04 } = require('zego-server-assistant');
+// Install: npm install @zegocloud/zego-server-assistant
+const { generateToken04 } = require('@zegocloud/zego-server-assistant');
 
 // Get ZEGOCLOUD configuration from environment variables
 // Set these in Firebase Console → Functions → Configuration → Environment Variables
