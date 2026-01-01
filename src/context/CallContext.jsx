@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
+import { db } from '../firebaseConfig';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, where, limit, getDocs } from 'firebase/firestore';
 
 export const CallContext = createContext();
 
@@ -76,6 +78,19 @@ export const CallProvider = ({ children }) => {
           await zg.logoutRoom(roomIDRef.current);
         } catch (err) {
           console.error('Error logging out of room:', err);
+        }
+      }
+
+      // Clear call notifications
+      if (user?.uid) {
+        try {
+          const notificationsRef = collection(db, 'callNotifications');
+          const q = query(notificationsRef, where('to', '==', user.uid), limit(10));
+          const snapshot = await getDocs(q);
+          const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+          await Promise.all(deletePromises);
+        } catch (err) {
+          console.error('Error clearing call notifications:', err);
         }
       }
 
