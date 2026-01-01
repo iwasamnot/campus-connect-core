@@ -244,6 +244,23 @@ export const CallProvider = ({ children }) => {
       const roomID = [user.uid, target.id].sort().join('_');
       roomIDRef.current = roomID;
 
+      // Send call notification to the other user via Firestore
+      try {
+        const callNotificationRef = doc(collection(db, 'callNotifications'), `${target.id}_${Date.now()}`);
+        await setDoc(callNotificationRef, {
+          from: user.uid,
+          fromName: user.email || user.displayName || 'User',
+          to: target.id,
+          roomID: roomID,
+          type: type, // 'voice' or 'video'
+          status: 'ringing',
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.error('Error sending call notification:', err);
+        // Continue anyway - the call might still work
+      }
+
       // Join room (token-less mode for development)
       // For production, generate token server-side and pass it as second parameter
       // Token-less mode: pass empty string as token
