@@ -3,6 +3,7 @@
  * Based on ZEGOCLOUD's token generation algorithm
  * 
  * Reference: https://github.com/ZEGOCLOUD/zego_server_assistant
+ * Token04 Format: Base64(JSON(token) + '.' + HMAC-SHA256(JSON(token), secret))
  */
 
 const crypto = require('crypto');
@@ -21,33 +22,34 @@ function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload)
     throw new Error('appID, userID, and secret are required');
   }
 
-  // Create payload JSON
+  // Create payload JSON string (must be compact, no spaces)
   const payloadJson = JSON.stringify(payload);
   
-  // Create token structure
+  // Create token structure (order matters for ZEGOCLOUD)
   const token = {
     version: '04',
-    app_id: appID,
-    user_id: userID,
+    app_id: parseInt(appID), // Ensure it's a number
+    user_id: String(userID), // Ensure it's a string
     nonce: Math.floor(Math.random() * 2147483647),
     ctime: Math.floor(Date.now() / 1000),
     expire: Math.floor(Date.now() / 1000) + effectiveTimeInSeconds,
     payload: payloadJson
   };
 
-  // Create token string (without signature)
+  // Create compact JSON string (no spaces, sorted keys might matter)
   const tokenString = JSON.stringify(token);
   
   // Generate signature using HMAC-SHA256
+  // Important: Use the secret as-is (it should be a string)
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(tokenString);
   const signature = hmac.digest('hex');
   
-  // Combine token and signature
+  // Combine: tokenString + '.' + signature
   const tokenWithSignature = tokenString + '.' + signature;
   
-  // Base64 encode
-  const encodedToken = Buffer.from(tokenWithSignature).toString('base64');
+  // Base64 encode the entire string
+  const encodedToken = Buffer.from(tokenWithSignature, 'utf8').toString('base64');
   
   return encodedToken;
 }

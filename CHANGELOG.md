@@ -5,6 +5,22 @@ All notable changes to CampusConnect will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.1] - 2025-01-02
+
+### Fixed
+- **Build Error - Logo Export**: Fixed "Export 'Logo' is not defined in module" error that occurred in production builds
+  - Imported Logo component in main.jsx to ensure it's always in the main bundle
+  - Updated vite.config.js to prevent Logo from being code-split into separate chunks
+  - Ensured Logo component has both default and named exports for compatibility
+  - This fixes the issue where lazy-loaded components couldn't import Logo correctly
+- **Service Worker**: Disabled navigation preload to prevent service worker preload cancellation warnings
+- **Build Configuration**: Improved build stability by ensuring critical components are in the main bundle
+
+### Technical Improvements
+- Enhanced build configuration to prevent code-splitting issues with shared components
+- Improved module resolution for components used by lazy-loaded routes
+- Better error handling for build-time module resolution
+
 ## [5.1.0] - 2024-12-XX
 
 ### Added

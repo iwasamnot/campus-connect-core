@@ -59,4 +59,7 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
   );
 };
 
+// Export both default and named for compatibility with static and dynamic imports
+// This ensures Logo works correctly when imported by lazy-loaded components
 export default Logo;
+export { Logo };

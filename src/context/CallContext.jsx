@@ -262,31 +262,70 @@ export const CallProvider = ({ children }) => {
         // Continue anyway - the call might still work
       }
 
-      // Join room (token-less mode for development)
-      // For production, generate token server-side and pass it as second parameter
-      // Note: ZEGOCLOUD SDK requires token parameter - for token-less mode, we need to pass null or empty string
-      // However, based on the error, it seems the app might require actual tokens
+      // Generate token server-side (production) or use token-less mode (development)
       // API signature: loginRoom(roomID, token, config)
-      // Try with null first (some SDK versions accept null for token-less), then empty string
+      let token = null;
       let loginResult;
+      
+      // Try to get token from server-side Cloud Function first
       try {
-        // Try with null token (some ZEGOCLOUD versions accept null for token-less mode)
-        loginResult = await zg.loginRoom(roomID, null, { 
+        console.log('🔐 Attempting to generate ZEGOCLOUD token from server...');
+        const generateToken = httpsCallable(functions, 'generateZegoToken');
+        const tokenResult = await generateToken({
+          userId: user.uid,
+          roomID: roomID
+        });
+        
+        if (tokenResult.data && tokenResult.data.token) {
+          token = tokenResult.data.token;
+          console.log('✅ Token generated successfully from server');
+        } else {
+          throw new Error('Token not returned from server');
+        }
+      } catch (tokenError) {
+        console.warn('⚠️ Server-side token generation failed:', tokenError);
+        console.warn('💡 Falling back to token-less mode (development only)');
+        console.warn('📝 For production, ensure:');
+        console.warn('   1. ZEGOCLOUD_SERVER_SECRET is set in Firebase Functions config');
+        console.warn('   2. generateZegoToken function is deployed');
+        console.warn('   3. See ZEGOCLOUD_TOKEN_SETUP.md for setup instructions');
+        
+        // Fall back to token-less mode (null token)
+        token = null;
+      }
+      
+      // Join room with token (or null for token-less mode)
+      try {
+        loginResult = await zg.loginRoom(roomID, token, { 
           userID: user.uid, 
           userName: user.email || user.displayName || 'User' 
         });
       } catch (err) {
-        console.log('Null token failed, trying empty string:', err);
-        try {
-          // Try with empty string token
-          loginResult = await zg.loginRoom(roomID, '', { 
-            userID: user.uid, 
-            userName: user.email || user.displayName || 'User' 
-          });
-        } catch (err2) {
-          console.error('Both null and empty string tokens failed. ZEGOCLOUD app may require actual tokens.');
-          console.error('Error with empty string:', err2);
-          throw new Error('ZEGOCLOUD requires token authentication. Please enable token-less mode in ZEGOCLOUD Console or implement server-side token generation. See ZEGOCLOUD_SETUP.md for details.');
+        console.error('Failed to join room:', err);
+        
+        // If token was null and it failed, try empty string as last resort
+        if (token === null) {
+          try {
+            console.log('Trying with empty string token...');
+            loginResult = await zg.loginRoom(roomID, '', { 
+              userID: user.uid, 
+              userName: user.email || user.displayName || 'User' 
+            });
+          } catch (err2) {
+            const errorMsg = err2?.message || String(err2 || '');
+            if (errorMsg.includes('substring') || errorMsg.includes('null') || errorMsg.includes('Cannot read properties')) {
+              showError('ZEGOCLOUD token authentication required. Please configure server-side token generation (see ZEGOCLOUD_TOKEN_SETUP.md) OR enable token-less mode in ZEGOCLOUD Console.');
+            } else {
+              showError('Failed to start call. ZEGOCLOUD authentication error. See console for details.');
+            }
+            setCallState(null);
+            return;
+          }
+        } else {
+          // Token was provided but still failed
+          showError('Failed to authenticate with ZEGOCLOUD. Please check your configuration.');
+          setCallState(null);
+          return;
         }
       }
 

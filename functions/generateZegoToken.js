@@ -75,6 +75,9 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
       stream_id_list: null
     };
 
+    console.log(`Generating token with APP_ID: ${APP_ID}, userId: ${userId}, roomID: ${roomID}`);
+    console.log(`SERVER_SECRET length: ${SERVER_SECRET ? SERVER_SECRET.length : 0}`);
+
     const token = generateToken04(
       parseInt(APP_ID),
       userId,
@@ -84,10 +87,12 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
     );
 
     console.log(`Generated token for user ${userId} in room ${roomID}`);
+    console.log(`Token length: ${token.length}, Token preview: ${token.substring(0, 50)}...`);
     
     return { token };
   } catch (error) {
     console.error('Error generating ZEGOCLOUD token:', error);
+    console.error('Error stack:', error.stack);
     throw new functions.https.HttpsError(
       'internal',
       'Failed to generate token',

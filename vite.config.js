@@ -196,6 +196,11 @@ export default defineConfig({
             // Other node_modules
             return 'vendor';
           }
+          // Force Logo component into main bundle to avoid export issues with lazy loading
+          // Don't split Logo - keep it in the entry chunk
+          if (id.includes('Logo.jsx') || id.includes('Logo.tsx')) {
+            return undefined; // Keep in entry chunk, don't split
+          }
         },
         // Ensure chunk names are stable
         chunkFileNames: 'assets/[name]-[hash].js',

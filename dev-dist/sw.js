@@ -81,12 +81,13 @@ define(['./workbox-137dedbd'], (function (workbox) { 'use strict';
     "url": "registerSW.js",
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
-    "url": "index.html",
-    "revision": "0.bshkp8r5qjs"
+    "url": "/index.html",
+    "revision": "0.valql41etm4"
   }], {});
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
-    allowlist: [/^\/$/]
+  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
+    allowlist: [/^\/$/],
+    denylist: [/^\/api/, /^\/_/, /^\/admin/]
   }));
   workbox.registerRoute(/^https:\/\/.*\.firebaseapp\.com\/.*/i, new workbox.NetworkFirst({
     "cacheName": "firebase-cache",
@@ -138,6 +139,15 @@ define(['./workbox-137dedbd'], (function (workbox) { 'use strict';
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 50,
       maxAgeSeconds: 2592000
+    })]
+  }), 'GET');
+  workbox.registerRoute(/^https:\/\/.*\.googleapis\.com\/.*/i, new workbox.NetworkFirst({
+    "cacheName": "google-apis-cache",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 30,
+      maxAgeSeconds: 3600
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
     })]
   }), 'GET');
 
