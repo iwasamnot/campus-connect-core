@@ -127,22 +127,29 @@ const ActivityDashboard = memo(() => {
           const todaySnapshot = await getDocs(todayQuery);
           messagesToday = todaySnapshot.size;
         } catch (error) {
-          if (error.code === 'failed-precondition') {
-            // Index missing - use fallback query without orderBy
-            console.warn('Index missing for messages query. Using fallback.');
+          if (error.code === 'failed-precondition' || error.code === 'resource-exhausted') {
+            // Index missing - use simple fallback query (client-side filtering)
+            console.warn('Index missing for messages query. Using fallback with client-side filtering.');
             try {
+              // Simple query - just get all user messages, filter client-side
               const fallbackQuery = query(
                 collection(db, 'messages'),
-                where('userId', '==', user.uid),
-                where('timestamp', '>=', todayStart)
+                where('userId', '==', user.uid)
               );
               const fallbackSnapshot = await getDocs(fallbackQuery);
-              messagesToday = fallbackSnapshot.size;
+              // Filter client-side by timestamp
+              messagesToday = fallbackSnapshot.docs.filter(doc => {
+                const msg = doc.data();
+                const msgTime = msg.timestamp?.toDate?.() || new Date(msg.timestamp || 0);
+                return msgTime >= todayStart;
+              }).length;
             } catch (fallbackError) {
-              console.error('Fallback query also failed:', fallbackError);
+              console.warn('Fallback query also failed, setting to 0:', fallbackError.message);
+              messagesToday = 0;
             }
           } else {
-            throw error;
+            console.warn('Unexpected error in today query:', error.message);
+            messagesToday = 0;
           }
         }
 
@@ -158,22 +165,29 @@ const ActivityDashboard = memo(() => {
           const weekSnapshot = await getDocs(weekQuery);
           messagesThisWeek = weekSnapshot.size;
         } catch (error) {
-          if (error.code === 'failed-precondition') {
-            // Index missing - use fallback query without orderBy
-            console.warn('Index missing for messages query. Using fallback.');
+          if (error.code === 'failed-precondition' || error.code === 'resource-exhausted') {
+            // Index missing - use simple fallback query (client-side filtering)
+            console.warn('Index missing for messages query. Using fallback with client-side filtering.');
             try {
+              // Simple query - just get all user messages, filter client-side
               const fallbackQuery = query(
                 collection(db, 'messages'),
-                where('userId', '==', user.uid),
-                where('timestamp', '>=', weekStart)
+                where('userId', '==', user.uid)
               );
               const fallbackSnapshot = await getDocs(fallbackQuery);
-              messagesThisWeek = fallbackSnapshot.size;
+              // Filter client-side by timestamp
+              messagesThisWeek = fallbackSnapshot.docs.filter(doc => {
+                const msg = doc.data();
+                const msgTime = msg.timestamp?.toDate?.() || new Date(msg.timestamp || 0);
+                return msgTime >= weekStart;
+              }).length;
             } catch (fallbackError) {
-              console.error('Fallback query also failed:', fallbackError);
+              console.warn('Fallback query also failed, setting to 0:', fallbackError.message);
+              messagesThisWeek = 0;
             }
           } else {
-            throw error;
+            console.warn('Unexpected error in week query:', error.message);
+            messagesThisWeek = 0;
           }
         }
 
@@ -184,7 +198,12 @@ const ActivityDashboard = memo(() => {
           unreadNotifications: 0
         });
       } catch (error) {
-        console.error('Error calculating stats:', error);
+        // Only log unexpected errors, not index-related ones
+        if (error.code !== 'failed-precondition' && error.code !== 'resource-exhausted') {
+          console.error('Error calculating stats:', error);
+        } else {
+          console.warn('Index missing for activity stats. Some features may be limited.');
+        }
       }
     };
 
