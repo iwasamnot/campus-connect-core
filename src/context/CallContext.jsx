@@ -220,15 +220,21 @@ export const CallProvider = ({ children }) => {
         return;
       }
 
+      // Validate user
+      if (!user || !user.uid) {
+        throw new Error('User not authenticated');
+      }
+
       // Generate room ID
       const roomID = [user.uid, target.id].sort().join('_');
       roomIDRef.current = roomID;
 
       // Join room (token-less mode for development)
       // For production, generate token server-side and pass it as second parameter
-      // Token-less mode: zg.loginRoom(roomID, { userID, userName })
-      // With token: zg.loginRoom(roomID, token, { userID, userName })
-      const loginResult = await zg.loginRoom(roomID, { 
+      // Token-less mode: pass empty string as token
+      // With token: pass generated token string
+      const token = ''; // Empty string for token-less mode
+      const loginResult = await zg.loginRoom(roomID, token, { 
         userID: user.uid, 
         userName: user.email || user.displayName || 'User' 
       });
