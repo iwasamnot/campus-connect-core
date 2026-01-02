@@ -28,27 +28,45 @@ jobs:
           echo "Checking Firebase configuration secrets..."
           MISSING_SECRETS=()
           
-          if [ -z "${{ secrets.VITE_FIREBASE_API_KEY }}" ]; then
-            MISSING_SECRETS+=("VITE_FIREBASE_API_KEY")
+          # Check each secret and verify it's not empty
+          if [ -z "${{ secrets.VITE_FIREBASE_API_KEY }}" ] || [ "${{ secrets.VITE_FIREBASE_API_KEY }}" = "" ]; then
+            MISSING_SECRETS+=("VITE_FIREBASE_API_KEY (empty or not set)")
+          else
+            echo "✅ VITE_FIREBASE_API_KEY is set (length: ${{ length(secrets.VITE_FIREBASE_API_KEY) }})"
           fi
-          if [ -z "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" ]; then
-            MISSING_SECRETS+=("VITE_FIREBASE_PROJECT_ID")
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" ] || [ "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" = "" ]; then
+            MISSING_SECRETS+=("VITE_FIREBASE_PROJECT_ID (empty or not set)")
+          else
+            echo "✅ VITE_FIREBASE_PROJECT_ID is set (value: ${{ secrets.VITE_FIREBASE_PROJECT_ID }})"
           fi
-          if [ -z "${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" ]; then
-            MISSING_SECRETS+=("VITE_FIREBASE_AUTH_DOMAIN")
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" ] || [ "${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" = "" ]; then
+            MISSING_SECRETS+=("VITE_FIREBASE_AUTH_DOMAIN (empty or not set)")
+          else
+            echo "✅ VITE_FIREBASE_AUTH_DOMAIN is set"
           fi
-          if [ -z "${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" ]; then
-            MISSING_SECRETS+=("VITE_FIREBASE_STORAGE_BUCKET")
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" ] || [ "${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" = "" ]; then
+            MISSING_SECRETS+=("VITE_FIREBASE_STORAGE_BUCKET (empty or not set)")
+          else
+            echo "✅ VITE_FIREBASE_STORAGE_BUCKET is set"
           fi
-          if [ -z "${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" ]; then
-            MISSING_SECRETS+=("VITE_FIREBASE_MESSAGING_SENDER_ID")
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" ] || [ "${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" = "" ]; then
+            MISSING_SECRETS+=("VITE_FIREBASE_MESSAGING_SENDER_ID (empty or not set)")
+          else
+            echo "✅ VITE_FIREBASE_MESSAGING_SENDER_ID is set"
           fi
-          if [ -z "${{ secrets.VITE_FIREBASE_APP_ID }}" ]; then
-            MISSING_SECRETS+=("VITE_FIREBASE_APP_ID")
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_APP_ID }}" ] || [ "${{ secrets.VITE_FIREBASE_APP_ID }}" = "" ]; then
+            MISSING_SECRETS+=("VITE_FIREBASE_APP_ID (empty or not set)")
+          else
+            echo "✅ VITE_FIREBASE_APP_ID is set"
           fi
           
           if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
-            echo "❌ ERROR: Missing required Firebase secrets:"
+            echo "❌ ERROR: Missing or empty required Firebase secrets:"
             for secret in "${MISSING_SECRETS[@]}"; do
               echo "   - $secret"
             done
@@ -57,7 +75,7 @@ jobs:
             echo "See README.md for setup instructions"
             exit 1
           else
-            echo "✅ All required Firebase secrets are set (values hidden for security)"
+            echo "✅ All required Firebase secrets are set and non-empty"
           fi
       
       - name: Verify ZEGOCLOUD App ID (without exposing value)
@@ -69,6 +87,7 @@ jobs:
           else
             echo "✅ VITE_ZEGOCLOUD_APP_ID secret is set (value hidden for security)"
           fi
+      
       
       - name: Build project
         run: npm run build
