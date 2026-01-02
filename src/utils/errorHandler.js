@@ -35,6 +35,10 @@ export const getErrorMessage = (error) => {
         return 'No account found with this email. Please create an account first.';
       case 'auth/wrong-password':
         return 'Incorrect password. Please try again.';
+      case 'auth/invalid-credential':
+        return 'Invalid email or password. Please check your credentials and try again.';
+      case 'auth/invalid-login-credentials':
+        return 'Invalid email or password. Please check your credentials and try again.';
       case 'auth/weak-password':
         return 'Password is too weak. Please use a stronger password.';
       case 'auth/network-request-failed':
