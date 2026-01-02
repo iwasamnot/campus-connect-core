@@ -186,10 +186,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // CRITICAL: Logo and logoRegistry MUST be in main entry bundle, not split
-          // When lazy components import Logo, it must already be available
-          // Return undefined to force into main entry chunk
-          // Check for logoRegistry first with multiple path variations (case-insensitive)
+          // CRITICAL: Core modules MUST be in main entry bundle, not split
+          // These are imported by lazy components and must be available synchronously
+          
+          // Firebase config - MUST be in main bundle (lazy components import auth, db, etc.)
+          if (
+            id.includes('firebaseConfig') ||
+            id.includes('firebaseConfig.js') ||
+            id.includes('src/firebaseConfig') ||
+            id.includes('src\\firebaseConfig')
+          ) {
+            return undefined; // Force into main entry - never split
+          }
+          
+          // Logo and logoRegistry - MUST be in main bundle
           const lowerId = id.toLowerCase();
           if (
             lowerId.includes('logoregistry') ||

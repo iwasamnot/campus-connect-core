@@ -6,6 +6,14 @@ import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
+// CRITICAL: Import firebaseConfig in main App to ensure it's in main bundle
+// Lazy components import auth, db, etc. from firebaseConfig
+import { auth, db } from './firebaseConfig';
+// Ensure firebaseConfig is never tree-shaken
+if (false) {
+  // This code never runs but ensures firebaseConfig is included in bundle
+  console.log(auth, db);
+}
 // CRITICAL: Import Logo in main App to ensure it's ALWAYS in the main bundle
 // Lazy components use window.__LogoComponent directly (set in main.jsx)
 // This prevents export errors when lazy-loaded components need Logo
