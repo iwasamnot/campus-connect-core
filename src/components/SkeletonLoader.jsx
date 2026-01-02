@@ -3,7 +3,8 @@ import React from 'react';
 /**
  * Skeleton loader component for better loading states
  */
-export const SkeletonLoader = ({ className = '', width = '100%', height = '1rem', rounded = true }) => {
+// CRITICAL: Declare SkeletonLoader as a top-level const before exporting
+const SkeletonLoader = ({ className = '', width = '100%', height = '1rem', rounded = true }) => {
   return (
     <div
       className={`bg-gray-200 dark:bg-gray-700 animate-pulse ${rounded ? 'rounded' : ''} ${className}`}
@@ -16,7 +17,8 @@ export const SkeletonLoader = ({ className = '', width = '100%', height = '1rem'
 /**
  * Message skeleton loader
  */
-export const MessageSkeleton = () => {
+// CRITICAL: Declare MessageSkeleton as a top-level const before exporting
+const MessageSkeleton = () => {
   return (
     <div className="flex gap-3 p-4 animate-pulse">
       <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
@@ -37,7 +39,8 @@ export const MessageSkeleton = () => {
 /**
  * Table skeleton loader
  */
-export const TableSkeleton = ({ rows = 5, columns = 4 }) => {
+// CRITICAL: Declare TableSkeleton as a top-level const before exporting
+const TableSkeleton = ({ rows = 5, columns = 4 }) => {
   return (
     <div className="space-y-2">
       {Array.from({ length: rows }).map((_, i) => (
@@ -54,7 +57,8 @@ export const TableSkeleton = ({ rows = 5, columns = 4 }) => {
 /**
  * Card skeleton loader
  */
-export const CardSkeleton = () => {
+// CRITICAL: Declare CardSkeleton as a top-level const before exporting
+const CardSkeleton = () => {
   return (
     <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg animate-pulse">
       <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
@@ -63,5 +67,7 @@ export const CardSkeleton = () => {
   );
 };
 
+// Export all declared components
+export { SkeletonLoader, MessageSkeleton, TableSkeleton, CardSkeleton };
 export default SkeletonLoader;
 

@@ -7,7 +7,8 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
   : null;
 
 // Hook for managing typing indicators
-export const useTypingIndicator = (chatId, chatType = 'global') => {
+// CRITICAL: Declare useTypingIndicator as a top-level const before exporting
+const useTypingIndicator = (chatId, chatType = 'global') => {
   const { user } = useAuth();
   const [typingUsers, setTypingUsers] = useState({});
 
@@ -46,6 +47,9 @@ export const useTypingIndicator = (chatId, chatType = 'global') => {
 
   return typingUsers;
 };
+
+// Export the declared hook
+export { useTypingIndicator };
 
 // Typing indicator component
 const TypingIndicator = ({ typingUsers, userNames }) => {
