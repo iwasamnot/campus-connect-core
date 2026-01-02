@@ -12,10 +12,18 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 // Import Logo in main bundle to prevent code-splitting issues with lazy-loaded components
 // This ensures Logo is always available synchronously
 import Logo, { Logo as LogoNamed } from './components/Logo.jsx'
-import { registerLogo } from './utils/logoRegistry.js'
+import { registerLogo, getLogo } from './utils/logoRegistry.js'
 
 // Register Logo in the registry so lazy-loaded components can access it
 registerLogo(Logo);
+
+// CRITICAL: Actually use logoRegistry here to ensure it's in main bundle
+// This prevents it from being code-split into a separate chunk
+const _logoRegistryRef = getLogo;
+if (false) {
+  // This code never runs but ensures logoRegistry is included in bundle
+  console.log(_logoRegistryRef);
+}
 
 // Keep reference to prevent tree-shaking (Logo is used by lazy-loaded components)
 // Export it so it's available globally if needed

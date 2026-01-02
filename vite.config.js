@@ -189,13 +189,24 @@ export default defineConfig({
           // CRITICAL: Logo and logoRegistry MUST be in main entry bundle, not split
           // When lazy components import Logo, it must already be available
           // Return undefined to force into main entry chunk
+          // Check for logoRegistry first with multiple path variations
+          if (
+            id.includes('logoRegistry') ||
+            id.includes('utils/logoRegistry') ||
+            id.includes('utils\\logoRegistry') ||
+            id.includes('logoRegistry.js') ||
+            id.endsWith('logoRegistry.js') ||
+            id.includes('src/utils/logoRegistry')
+          ) {
+            return undefined; // Force into main entry - never split
+          }
+          
+          // Check for Logo component
           if (
             id.includes('Logo.jsx') || 
             id.includes('Logo.tsx') || 
             id.includes('components/Logo') ||
             id.includes('components\\Logo') ||
-            id.includes('logoRegistry') ||
-            id.includes('utils/logoRegistry') ||
             (id.includes('Logo') && !id.includes('node_modules'))
           ) {
             return undefined; // Force into main entry - never split
