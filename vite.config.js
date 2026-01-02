@@ -67,8 +67,6 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         skipWaiting: true, // Immediately activate new service worker
         clientsClaim: true, // Take control of all clients immediately
-        // Force cache invalidation on update - use timestamp to ensure unique cache per build
-        cacheId: `campusconnect-${Date.now()}`,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.firebaseapp\.com\/.*/i,
@@ -186,129 +184,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // CRITICAL: Core modules MUST be in main entry bundle, not split
-          // These are imported by lazy components and must be available synchronously
-          const lowerId = id.toLowerCase();
+          // SIMPLEST APPROACH: Put ALL source files in main bundle
+          // Only split vendor code for better caching
+          // This prevents ALL export errors by ensuring everything is available synchronously
           
-          // ULTRA-AGGRESSIVE: Force ALL source files into main bundle by default
-          // Only allow vendor chunks to be split
-          // This prevents ANY shared chunks from being created
+          // If it's a source file, put it in main bundle (no code-splitting)
           if (!id.includes('node_modules') && id.includes('src/')) {
-            // Check if it's already handled by specific rules below
-            // If not, force into main bundle
-            const isHandled = 
-              lowerId.includes('firebaseconfig') ||
-              lowerId.includes('logoregistry') ||
-              lowerId.includes('logo.jsx') ||
-              lowerId.includes('errorhandler') ||
-              lowerId.includes('helpers') ||
-              lowerId.includes('sanitize') ||
-              lowerId.includes('validation') ||
-              lowerId.includes('context') ||
-              (id.includes('components/') && !id.match(/ChatArea|AdminDashboard|PrivateChat|GroupChat|Settings|StudentProfile|UsersManagement|CreateUser|AIHelp|Groups|AdminAnalytics|ActivityDashboard|MessageScheduler|SavedMessages|ImageGallery|KeyboardShortcuts|PWAInstallPrompt/));
-            
-            // If it's a source file and not a lazy component, force into main
-            if (isHandled || !id.match(/ChatArea|AdminDashboard|PrivateChat|GroupChat|Settings|StudentProfile|UsersManagement|CreateUser|AIHelp|Groups|AdminAnalytics|ActivityDashboard|MessageScheduler|SavedMessages|ImageGallery|KeyboardShortcuts|PWAInstallPrompt/)) {
-              return undefined; // Force into main entry
-            }
+            return undefined; // Main bundle - no splitting
           }
           
-          // Firebase config - MUST be in main bundle (lazy components import auth, db, etc.)
-          // Check with multiple variations to catch all cases
-          if (
-            lowerId.includes('firebaseconfig') ||
-            id.includes('firebaseConfig') ||
-            id.includes('firebaseConfig.js') ||
-            id.includes('src/firebaseConfig') ||
-            id.includes('src\\firebaseConfig') ||
-            id.endsWith('firebaseConfig.js') ||
-            (id.includes('firebase') && id.includes('Config') && !id.includes('node_modules'))
-          ) {
-            return undefined; // Force into main entry - never split
-          }
-          
-          // Logo and logoRegistry - MUST be in main bundle
-          if (
-            lowerId.includes('logoregistry') ||
-            id.includes('logoRegistry') ||
-            id.includes('utils/logoRegistry') ||
-            id.includes('utils\\logoRegistry') ||
-            id.includes('logoRegistry.js') ||
-            id.endsWith('logoRegistry.js') ||
-            id.includes('src/utils/logoRegistry') ||
-            id.includes('src\\utils\\logoRegistry')
-          ) {
-            return undefined; // Force into main entry - never split
-          }
-          
-          // Check for Logo component
-          if (
-            id.includes('Logo.jsx') || 
-            id.includes('Logo.tsx') || 
-            id.includes('components/Logo') ||
-            id.includes('components\\Logo') ||
-            (id.includes('Logo') && !id.includes('node_modules'))
-          ) {
-            return undefined; // Force into main entry - never split
-          }
-          
-          // ALL utility modules - MUST be in main bundle (lazy components import from utils/)
-          // This prevents ALL export errors at once instead of fixing them one by one
-          const utilsModules = [
-            'errorhandler', 'helpers', 'sanitize', 'validation', 'drafts', 
-            'export', 'savemessage', 'markdown', 'notifications', 'toxicitychecker',
-            'debounce', 'accessibility', 'virtualscroll', 'animations', 'usagelimiter'
-          ];
-          
-          for (const utilModule of utilsModules) {
-            if (
-              lowerId.includes(utilModule) ||
-              id.includes(`utils/${utilModule}`) ||
-              id.includes(`utils\\${utilModule}`) ||
-              id.endsWith(`${utilModule}.js`) ||
-              id.includes(`src/utils/${utilModule}`)
-            ) {
-              return undefined; // Force into main entry - never split
-            }
-          }
-          
-          // ALL context modules - MUST be in main bundle (lazy components import hooks from context/)
-          // Context providers are used by ALL lazy components and must be available synchronously
-          // CRITICAL: Catch ANY file in src/context/ directory - be extremely aggressive
-          if (
-            !id.includes('node_modules') &&
-            (
-              (id.includes('context/') || id.includes('context\\')) &&
-              (id.includes('AuthContext') ||
-               id.includes('ThemeContext') ||
-               id.includes('ToastContext') ||
-               id.includes('PresenceContext') ||
-               id.includes('PreferencesContext') ||
-               id.includes('CallContext') ||
-               lowerId.includes('authcontext') ||
-               lowerId.includes('themecontext') ||
-               lowerId.includes('toastcontext') ||
-               lowerId.includes('presencecontext') ||
-               lowerId.includes('preferencescontext') ||
-               lowerId.includes('callcontext'))
-            )
-          ) {
-            return undefined; // Force into main entry - never split
-          }
-          
-          // Also catch any shared chunks that might contain context exports
-          // If a chunk would contain context-related code, force it into main bundle
-          if (lowerId.includes('context') && !id.includes('node_modules')) {
-            return undefined; // Force into main entry - never split
-          }
-          
-          // CRITICAL: Prevent ANY small index-* chunks from being created
-          // These are often shared chunks that cause export errors
-          // If we see a chunk that would be named "index-*" and it's not the main entry,
-          // check if it contains any of our critical modules and force into main
-          // Note: The main entry is handled separately, so any other "index" chunk is suspicious
-          
-          // Split vendor chunks more aggressively for better PWA performance
+          // Only split vendor chunks for better caching
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
               return 'react-vendor';
@@ -329,43 +214,8 @@ export default defineConfig({
             return 'vendor';
           }
           
-          // CRITICAL: If we reach here and it's a source file (not node_modules),
-          // and it's not already handled above, check if it's imported by multiple lazy components
-          // If so, force it into main bundle to prevent shared chunk creation
-          if (!id.includes('node_modules') && id.includes('src/')) {
-            // Check if it's a context, utility, or component that lazy components might share
-            // Be VERY aggressive - catch ANY shared component or utility
-            if (
-              id.includes('context/') ||
-              id.includes('utils/') ||
-              (id.includes('components/') && (
-                id.includes('Logo') ||
-                id.includes('SkeletonLoader') ||
-                id.includes('TypingIndicator') ||
-                id.includes('ImagePreview') ||
-                id.includes('EmojiPicker') ||
-                id.includes('MentionAutocomplete') ||
-                id.includes('AdvancedSearch') ||
-                id.includes('UserProfilePopup') ||
-                id.includes('FileUpload') ||
-                id.includes('ErrorBoundary')
-              ))
-            ) {
-              return undefined; // Force into main entry - prevent shared chunks
-            }
-            
-            // EXTRA SAFETY: If it's ANY component that's not lazy-loaded itself,
-            // and it's in src/components/, force it into main to prevent shared chunks
-            // This catches any component that might be shared between lazy components
-            if (id.includes('components/') && !id.includes('ChatArea') && !id.includes('AdminDashboard') && 
-                !id.includes('PrivateChat') && !id.includes('GroupChat') && !id.includes('Settings') &&
-                !id.includes('StudentProfile') && !id.includes('UsersManagement') && !id.includes('CreateUser') &&
-                !id.includes('AIHelp') && !id.includes('Groups') && !id.includes('AdminAnalytics') &&
-                !id.includes('ActivityDashboard') && !id.includes('MessageScheduler') && !id.includes('SavedMessages') &&
-                !id.includes('ImageGallery') && !id.includes('KeyboardShortcuts') && !id.includes('PWAInstallPrompt')) {
-              return undefined; // Force into main entry - prevent shared chunks
-            }
-          }
+          // Everything else goes to main bundle
+          return undefined;
         },
         // Ensure chunk names are stable
         chunkFileNames: 'assets/[name]-[hash].js',
@@ -373,18 +223,7 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    chunkSizeWarningLimit: 600,
-    // Disable source maps for production to reduce bundle size
-    sourcemap: false,
-    // Minify more aggressively
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: false, // Keep console.error and console.warn for mobile debugging
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'] // Only remove non-critical logs
-      }
-    }
-  }
+    sourcemap: false // Disable sourcemaps for production to reduce build size
+  },
+  chunkSizeWarningLimit: 600
 })
-
