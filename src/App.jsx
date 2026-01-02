@@ -6,27 +6,16 @@ import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
-// CRITICAL: Import Logo and logoRegistry in main App to ensure they're ALWAYS in the main bundle
-// This prevents export errors when lazy-loaded components import Logo
+// CRITICAL: Import Logo in main App to ensure it's ALWAYS in the main bundle
+// Lazy components use window.__LogoComponent directly (set in main.jsx)
+// This prevents export errors when lazy-loaded components need Logo
 import Logo from './components/Logo';
-import { registerLogo, getLogo } from './utils/logoRegistry';
 
-// Register Logo immediately
-registerLogo(Logo);
-
-// Store Logo globally for lazy components
+// Store Logo globally for lazy components (also set in main.jsx for redundancy)
+// Lazy components access Logo via window.__LogoComponent to avoid import/export issues
 if (typeof window !== 'undefined') {
   window.__AppLogo = Logo;
   window.__LogoComponent = Logo;
-}
-
-// CRITICAL: Actually use logoRegistry here to ensure it's in main bundle
-// This prevents it from being code-split
-const _logoRegistryRef = getLogo;
-const _logoRef = Logo;
-if (false) {
-  // This code never runs but ensures both are included in bundle
-  console.log(_logoRegistryRef, _logoRef);
 }
 
 // Error fallback component with retry logic
