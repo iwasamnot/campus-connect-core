@@ -189,14 +189,17 @@ export default defineConfig({
           // CRITICAL: Logo and logoRegistry MUST be in main entry bundle, not split
           // When lazy components import Logo, it must already be available
           // Return undefined to force into main entry chunk
-          // Check for logoRegistry first with multiple path variations
+          // Check for logoRegistry first with multiple path variations (case-insensitive)
+          const lowerId = id.toLowerCase();
           if (
+            lowerId.includes('logoregistry') ||
             id.includes('logoRegistry') ||
             id.includes('utils/logoRegistry') ||
             id.includes('utils\\logoRegistry') ||
             id.includes('logoRegistry.js') ||
             id.endsWith('logoRegistry.js') ||
-            id.includes('src/utils/logoRegistry')
+            id.includes('src/utils/logoRegistry') ||
+            id.includes('src\\utils\\logoRegistry')
           ) {
             return undefined; // Force into main entry - never split
           }

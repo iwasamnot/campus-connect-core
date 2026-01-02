@@ -2,9 +2,10 @@ import { useState, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
 import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon } from 'lucide-react';
-// Use logoRegistry to prevent export errors in production builds
-import { getLogo } from '../utils/logoRegistry';
-const Logo = getLogo();
+// Use window.__LogoComponent directly to avoid import/export issues
+const Logo = typeof window !== 'undefined' && window.__LogoComponent 
+  ? window.__LogoComponent 
+  : () => <div>Logo</div>; // Fallback placeholder
 
 const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
   const { userRole } = useAuth();

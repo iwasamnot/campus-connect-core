@@ -22,9 +22,11 @@ import {
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark } from 'lucide-react';
 import ImagePreview from './ImagePreview';
-// Use logoRegistry to prevent export errors in production builds
-import { getLogo } from '../utils/logoRegistry';
-const Logo = getLogo();
+// Use window.__LogoComponent directly to avoid import/export issues
+// This is set in main.jsx and App.jsx before any lazy components load
+const Logo = typeof window !== 'undefined' && window.__LogoComponent 
+  ? window.__LogoComponent 
+  : () => <div>Logo</div>; // Fallback placeholder
 import UserProfilePopup from './UserProfilePopup';
 import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
 import EmojiPicker from './EmojiPicker';
