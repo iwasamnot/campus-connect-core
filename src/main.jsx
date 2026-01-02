@@ -14,6 +14,10 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Logo, { Logo as LogoNamed } from './components/Logo.jsx'
 import { registerLogo } from './utils/logoRegistry.js'
 
+// CRITICAL: Import firebaseConfig in main.jsx to ensure it's in main bundle
+// Lazy components import auth, db, etc. from firebaseConfig
+import { auth, db, storage, functions } from './firebaseConfig.js'
+
 // Register Logo in the registry so lazy-loaded components can access it
 // Note: Logo is also registered in App.jsx, but we register it here too for safety
 registerLogo(Logo);
@@ -22,6 +26,21 @@ registerLogo(Logo);
 // Export it so it's available globally if needed
 window.__LogoComponent = Logo
 window.__LogoNamed = LogoNamed
+
+// CRITICAL: Store Firebase exports globally to prevent export errors
+// Lazy components can access these via window if import fails
+if (typeof window !== 'undefined') {
+  window.__firebaseAuth = auth;
+  window.__firebaseDb = db;
+  window.__firebaseStorage = storage;
+  window.__firebaseFunctions = functions;
+}
+
+// Ensure firebaseConfig is never tree-shaken
+if (false) {
+  // This code never runs but ensures firebaseConfig is included in bundle
+  console.log(auth, db, storage, functions);
+}
 // Ensure Logo is always available - force inclusion in main bundle
 const _logoRef = Logo;
 const _logoNamedRef = LogoNamed;

@@ -188,19 +188,23 @@ export default defineConfig({
         manualChunks: (id) => {
           // CRITICAL: Core modules MUST be in main entry bundle, not split
           // These are imported by lazy components and must be available synchronously
+          const lowerId = id.toLowerCase();
           
           // Firebase config - MUST be in main bundle (lazy components import auth, db, etc.)
+          // Check with multiple variations to catch all cases
           if (
+            lowerId.includes('firebaseconfig') ||
             id.includes('firebaseConfig') ||
             id.includes('firebaseConfig.js') ||
             id.includes('src/firebaseConfig') ||
-            id.includes('src\\firebaseConfig')
+            id.includes('src\\firebaseConfig') ||
+            id.endsWith('firebaseConfig.js') ||
+            (id.includes('firebase') && id.includes('Config') && !id.includes('node_modules'))
           ) {
             return undefined; // Force into main entry - never split
           }
           
           // Logo and logoRegistry - MUST be in main bundle
-          const lowerId = id.toLowerCase();
           if (
             lowerId.includes('logoregistry') ||
             id.includes('logoRegistry') ||
