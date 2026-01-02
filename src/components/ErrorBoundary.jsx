@@ -1,6 +1,8 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
-import Logo from './Logo';
+// Use logoRegistry to prevent export errors in production builds
+import { getLogo } from '../utils/logoRegistry';
+const Logo = getLogo();
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

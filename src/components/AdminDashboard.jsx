@@ -18,7 +18,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText } from 'lucide-react';
-import Logo from './Logo';
+// Use logoRegistry to prevent export errors in production builds
+import { getLogo } from '../utils/logoRegistry';
+const Logo = getLogo();
 
 const AdminDashboard = () => {
   const { user, userRole } = useAuth();

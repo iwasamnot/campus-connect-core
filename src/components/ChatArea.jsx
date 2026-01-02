@@ -22,7 +22,9 @@ import {
 import { db } from '../firebaseConfig';
 import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark } from 'lucide-react';
 import ImagePreview from './ImagePreview';
-import Logo from './Logo';
+// Use logoRegistry to prevent export errors in production builds
+import { getLogo } from '../utils/logoRegistry';
+const Logo = getLogo();
 import UserProfilePopup from './UserProfilePopup';
 import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
 import EmojiPicker from './EmojiPicker';
