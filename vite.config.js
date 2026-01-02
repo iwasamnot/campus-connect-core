@@ -65,8 +65,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
         maximumFileSizeToCacheInBytes: 5000000, // 5 MB - increased to accommodate ZEGOCLOUD SDK (2.16 MB)
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
+        skipWaiting: true, // Immediately activate new service worker
+        clientsClaim: true, // Take control of all clients immediately
+        // Force cache invalidation on update - use timestamp to ensure unique cache per build
+        cacheId: `campusconnect-${Date.now()}`,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.firebaseapp\.com\/.*/i,
