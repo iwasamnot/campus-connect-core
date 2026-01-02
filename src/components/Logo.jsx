@@ -61,5 +61,12 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
 
 // Export both default and named for compatibility with static and dynamic imports
 // This ensures Logo works correctly when imported by lazy-loaded components
+// Using explicit exports to ensure proper module resolution
 export default Logo;
 export { Logo };
+
+// Ensure Logo is available for dynamic imports
+if (typeof window !== 'undefined') {
+  // Make Logo available globally as a fallback
+  window.__LogoFallback = Logo;
+}

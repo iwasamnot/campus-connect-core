@@ -4,6 +4,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      // Force Logo to be pre-bundled and always available
+      './src/components/Logo.jsx'
+    ]
+  },
   plugins: [
     react(),
     VitePWA({
@@ -176,6 +184,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          // IMPORTANT: Logo must be in main bundle - don't split it
+          // Check for Logo first before any other splitting logic
+          if (id.includes('Logo.jsx') || id.includes('Logo.tsx') || id.includes('components/Logo')) {
+            return undefined; // Force into main entry chunk
+          }
+          
           // Split vendor chunks more aggressively for better PWA performance
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
@@ -195,11 +209,6 @@ export default defineConfig({
             }
             // Other node_modules
             return 'vendor';
-          }
-          // Force Logo component into main bundle to avoid export issues with lazy loading
-          // Don't split Logo - keep it in the entry chunk
-          if (id.includes('Logo.jsx') || id.includes('Logo.tsx')) {
-            return undefined; // Keep in entry chunk, don't split
           }
         },
         // Ensure chunk names are stable

@@ -6,6 +6,14 @@ import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
+// Import Logo in main App to ensure it's always in the main bundle
+// This prevents export errors when lazy-loaded components import Logo
+import Logo from './components/Logo';
+// Keep reference to prevent tree-shaking
+if (false) {
+  // This code never runs but ensures Logo is included in bundle
+  console.log(Logo);
+}
 
 // Error fallback component with retry logic
 const ErrorFallback = ({ componentName, onRetry }) => {

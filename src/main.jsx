@@ -11,10 +11,18 @@ import { CallProvider } from './context/CallContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 // Import Logo in main bundle to prevent code-splitting issues with lazy-loaded components
 // This ensures Logo is always available synchronously
-import Logo from './components/Logo.jsx'
+import Logo, { Logo as LogoNamed } from './components/Logo.jsx'
 // Keep reference to prevent tree-shaking (Logo is used by lazy-loaded components)
 // Export it so it's available globally if needed
 window.__LogoComponent = Logo
+window.__LogoNamed = LogoNamed
+// Ensure Logo is always available - force inclusion in main bundle
+const _logoRef = Logo;
+const _logoNamedRef = LogoNamed;
+if (false) {
+  // This code never runs but ensures Logo is included in bundle
+  console.log(_logoRef, _logoNamedRef);
+}
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {

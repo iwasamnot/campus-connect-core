@@ -979,27 +979,27 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                   )}
 
                   {/* Action buttons */}
-                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 sm:gap-1.5 scale-90 sm:scale-100 origin-center">
                     {canEdit && (
                       <button
                         onClick={() => {
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 rounded-full"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title="Edit message"
                       >
-                        <Edit2 size={14} />
+                        <Edit2 size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                     {canDelete && (
                       <button
                         onClick={() => handleDeleteMessage(message.id)}
                         disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-red-600 hover:bg-red-700 text-white p-1 sm:p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title="Delete message"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                   </div>
