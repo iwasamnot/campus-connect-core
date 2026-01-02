@@ -279,6 +279,12 @@ export default defineConfig({
             return undefined; // Force into main entry - never split
           }
           
+          // CRITICAL: Prevent ANY small index-* chunks from being created
+          // These are often shared chunks that cause export errors
+          // If we see a chunk that would be named "index-*" and it's not the main entry,
+          // check if it contains any of our critical modules and force into main
+          // Note: The main entry is handled separately, so any other "index" chunk is suspicious
+          
           // Split vendor chunks more aggressively for better PWA performance
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
@@ -298,6 +304,30 @@ export default defineConfig({
             }
             // Other node_modules
             return 'vendor';
+          }
+          
+          // CRITICAL: If we reach here and it's a source file (not node_modules),
+          // and it's not already handled above, check if it's imported by multiple lazy components
+          // If so, force it into main bundle to prevent shared chunk creation
+          if (!id.includes('node_modules') && id.includes('src/')) {
+            // Check if it's a context, utility, or component that lazy components might share
+            if (
+              id.includes('context/') ||
+              id.includes('utils/') ||
+              id.includes('components/') && (
+                id.includes('Logo') ||
+                id.includes('SkeletonLoader') ||
+                id.includes('TypingIndicator') ||
+                id.includes('ImagePreview') ||
+                id.includes('EmojiPicker') ||
+                id.includes('MentionAutocomplete') ||
+                id.includes('AdvancedSearch') ||
+                id.includes('UserProfilePopup') ||
+                id.includes('FileUpload')
+              )
+            ) {
+              return undefined; // Force into main entry - prevent shared chunks
+            }
           }
         },
         // Ensure chunk names are stable
