@@ -139,6 +139,27 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
     console.log(`Token length: ${token.length}`);
     console.log(`Token format check: ${token.includes('.') ? 'Has dot separator ✓' : 'Missing dot separator ✗'}`);
     console.log(`Token parts: ${token.split('.').length} parts (expected 2)`);
+    console.log(`Token preview: ${token.substring(0, 50)}...`);
+    
+    // Additional validation
+    if (!token || token.length < 100) {
+      console.error('⚠️ WARNING: Generated token seems too short. This might indicate an issue.');
+    }
+    
+    if (!token.includes('.')) {
+      console.error('❌ ERROR: Token is missing the dot separator. Token format is incorrect.');
+    }
+    
+    console.log('');
+    console.log('📝 If you receive error 50119 (token auth err) from ZEGOCLOUD:');
+    console.log('   1. Verify Server Secret in ZEGOCLOUD Console:');
+    console.log('      https://console.zegocloud.com/project/YOUR_PROJECT_ID/settings');
+    console.log('   2. Copy the Server Secret exactly (no extra spaces)');
+    console.log('   3. Set it in Firebase Functions:');
+    console.log('      firebase functions:config:set zegocloud.server_secret="YOUR_SECRET"');
+    console.log('   4. Redeploy: firebase deploy --only functions:generateZegoToken');
+    console.log('   5. Wait 1-2 minutes for deployment to complete');
+    console.log('');
     
     return { token };
   } catch (error) {
