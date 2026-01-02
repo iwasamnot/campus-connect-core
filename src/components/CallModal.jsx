@@ -20,6 +20,7 @@ const CallModal = () => {
     isVideoEnabled, 
     localVideoRef, 
     remoteVideoRef,
+    acceptCall,
     endCall, 
     toggleMute, 
     toggleVideo 
@@ -63,10 +64,10 @@ const CallModal = () => {
                   )}
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  {callState === 'outgoing' ? 'Calling...' : callTarget.name || callTarget.email}
+                  {callState === 'outgoing' ? 'Calling...' : callState === 'incoming' ? 'Incoming Call' : callTarget.name || callTarget.email}
                 </h2>
                 <p className="text-gray-400">
-                  {callType === 'video' ? 'Video Call' : 'Voice Call'}
+                  {callState === 'incoming' ? (callTarget.name || callTarget.email) : (callType === 'video' ? 'Video Call' : 'Voice Call')}
                 </p>
               </div>
             </div>
@@ -76,6 +77,17 @@ const CallModal = () => {
         {/* Call controls */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-8">
           <div className="flex items-center justify-center gap-4">
+            {/* Accept button (only for incoming calls) */}
+            {callState === 'incoming' && (
+              <button
+                onClick={acceptCall}
+                className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors"
+                aria-label="Accept call"
+              >
+                <Phone size={28} className="text-white" />
+              </button>
+            )}
+
             {/* Mute button */}
             {callState === 'active' && (
               <button
@@ -106,11 +118,15 @@ const CallModal = () => {
               </button>
             )}
 
-            {/* End call button */}
+            {/* End call / Decline button */}
             <button
               onClick={endCall}
-              className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors"
-              aria-label="End call"
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
+                callState === 'incoming' 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-red-600 hover:bg-red-700'
+              }`}
+              aria-label={callState === 'incoming' ? 'Decline call' : 'End call'}
             >
               <X size={28} className="text-white" />
             </button>

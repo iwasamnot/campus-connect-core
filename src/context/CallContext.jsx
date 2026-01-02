@@ -34,6 +34,7 @@ const CallProvider = ({ children }) => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const roomIDRef = useRef(null);
+  const incomingCallNotificationRef = useRef(null);
 
   // Check if calling is configured
   const isCallingAvailable = useCallback(() => {
@@ -387,8 +388,106 @@ const CallProvider = ({ children }) => {
     }
   }, [user, initZegoCloud, showError, isCallingAvailable, endCallInternal]);
 
+  // Accept incoming call
+  const acceptCall = useCallback(async () => {
+    if (callState !== 'incoming' || !incomingCallNotificationRef.current) {
+      return;
+    }
+
+    const { notification, notificationDoc } = incomingCallNotificationRef.current;
+    
+    try {
+      const zg = await initZegoCloud();
+      if (!zg) {
+        showError('Failed to initialize calling service.');
+        setCallState(null);
+        return;
+      }
+      
+      roomIDRef.current = notification.roomID;
+      
+      // Try with empty string token first, then without token
+      let loginResult;
+      try {
+        loginResult = await zg.loginRoom(notification.roomID, '', {
+          userID: user.uid,
+          userName: user.email || user.displayName || 'User'
+        });
+      } catch (err) {
+        console.log('Trying token-less mode without token parameter');
+        loginResult = await zg.loginRoom(notification.roomID, {
+          userID: user.uid,
+          userName: user.email || user.displayName || 'User'
+        });
+      }
+      
+      if (loginResult === 0) {
+        // Request permissions first
+        try {
+          const constraints = notification.type === 'video' 
+            ? { video: true, audio: true }
+            : { audio: true };
+          const testStream = await navigator.mediaDevices.getUserMedia(constraints);
+          testStream.getTracks().forEach(track => track.stop());
+        } catch (err) {
+          showError(`${notification.type === 'video' ? 'Camera and microphone' : 'Microphone'} access is required`);
+          setCallState(null);
+          return;
+        }
+
+        // Create and publish stream
+        const streamConfig = notification.type === 'video'
+          ? { camera: { video: true, audio: true }, microphone: { audio: true } }
+          : { camera: { video: false, audio: true }, microphone: { audio: true } };
+        
+        const stream = await zg.createStream(streamConfig);
+        setLocalStream(stream);
+        
+        if (notification.type === 'video' && localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+        
+        const streamID = `${user.uid}_main`;
+        const publishResult = await zg.startPublishingStream(streamID, stream);
+        
+        if (publishResult !== 0) {
+          throw new Error(`Failed to publish stream. Error code: ${publishResult}`);
+        }
+        
+        setIsVideoEnabled(notification.type === 'video');
+        setCallState('active');
+        setIsMuted(false);
+        
+        // Delete the notification
+        await deleteDoc(notificationDoc.ref);
+        incomingCallNotificationRef.current = null;
+      } else {
+        console.error('Failed to join room:', loginResult);
+        showError('Failed to join call. Please try again.');
+        setCallState(null);
+      }
+    } catch (error) {
+      console.error('Error accepting incoming call:', error);
+      showError('Failed to accept call. Please try again.');
+      setCallState(null);
+      incomingCallNotificationRef.current = null;
+    }
+  }, [callState, user, initZegoCloud, showError]);
+
   // End call (public API)
-  const endCall = endCallInternal;
+  const endCall = useCallback(async () => {
+    // If declining an incoming call, delete the notification
+    if (callState === 'incoming' && incomingCallNotificationRef.current) {
+      try {
+        const { notificationDoc } = incomingCallNotificationRef.current;
+        await deleteDoc(notificationDoc.ref);
+      } catch (err) {
+        console.error('Error deleting call notification:', err);
+      }
+      incomingCallNotificationRef.current = null;
+    }
+    endCallInternal();
+  }, [callState, endCallInternal]);
 
   // Toggle mute
   const toggleMute = useCallback(async () => {
@@ -442,63 +541,12 @@ const CallProvider = ({ children }) => {
         setCallType(notification.type);
         setCallState('incoming');
         
-        // Auto-join the room after a short delay
-        setTimeout(async () => {
-          try {
-            const zg = await initZegoCloud();
-            if (!zg) {
-              setCallState(null);
-              return;
-            }
-            
-            roomIDRef.current = notification.roomID;
-            
-            // Try with empty string token first, then without token
-            let loginResult;
-            try {
-              loginResult = await zg.loginRoom(notification.roomID, '', {
-                userID: user.uid,
-                userName: user.email || user.displayName || 'User'
-              });
-            } catch (err) {
-              console.log('Trying token-less mode without token parameter');
-              loginResult = await zg.loginRoom(notification.roomID, {
-                userID: user.uid,
-                userName: user.email || user.displayName || 'User'
-              });
-            }
-            
-            if (loginResult === 0) {
-              // Create and publish stream
-              const streamConfig = notification.type === 'video'
-                ? { camera: { video: true, audio: true }, microphone: { audio: true } }
-                : { camera: { video: false, audio: true }, microphone: { audio: true } };
-              
-              const stream = await zg.createStream(streamConfig);
-              setLocalStream(stream);
-              
-              if (notification.type === 'video' && localVideoRef.current) {
-                localVideoRef.current.srcObject = stream;
-              }
-              
-              const streamID = `${user.uid}_main`;
-              await zg.startPublishingStream(streamID, stream);
-              
-              setIsVideoEnabled(notification.type === 'video');
-              setCallState('active');
-              setIsMuted(false);
-              
-              // Delete the notification
-              await deleteDoc(notificationDoc.ref);
-            } else {
-              console.error('Failed to join room:', loginResult);
-              setCallState(null);
-            }
-          } catch (error) {
-            console.error('Error accepting incoming call:', error);
-            setCallState(null);
-          }
-        }, 1000); // Auto-join after 1 second
+        // Store notification data for acceptCall function
+        roomIDRef.current = notification.roomID;
+        incomingCallNotificationRef.current = {
+          notification,
+          notificationDoc
+        };
       }
     }, (error) => {
       console.error('Error listening for call notifications:', error);
@@ -539,6 +587,7 @@ const CallProvider = ({ children }) => {
     remoteVideoRef,
     isCallingAvailable: callingAvailable,
     startCall,
+    acceptCall,
     endCall,
     toggleMute,
     toggleVideo
