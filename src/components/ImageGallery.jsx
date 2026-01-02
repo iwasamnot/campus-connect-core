@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { Image as ImageIcon, X, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import { SkeletonLoader } from './SkeletonLoader';
 import ImagePreview from './ImagePreview';

@@ -2,7 +2,10 @@ import { useState, useMemo, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { Calendar, Clock, Send, Trash2, X, Plus } from 'lucide-react';
 import { SkeletonLoader } from './SkeletonLoader';
 

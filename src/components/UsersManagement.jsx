@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebaseConfig';
+// Use window globals to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
+const storage = typeof window !== 'undefined' && window.__firebaseStorage 
+  ? window.__firebaseStorage 
+  : null;
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { isAdminRole } from '../utils/helpers';

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, doc, onSnapshot, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 
 // Hook for managing typing indicators
 export const useTypingIndicator = (chatId, chatType = 'global') => {

@@ -16,7 +16,10 @@ import {
   getDoc,
   limit
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 

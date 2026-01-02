@@ -17,7 +17,10 @@ import {
   arrayUnion,
   arrayRemove
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { Users, Plus, Search, X, Loader, Globe, UserPlus, Mail, CheckCircle, XCircle } from 'lucide-react';
 
 const Groups = ({ setActiveView, setSelectedGroup }) => {

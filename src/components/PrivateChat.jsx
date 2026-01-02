@@ -19,7 +19,10 @@ import {
   getDocs,
   limit
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail, Paperclip, Smile, File, Image as ImageIcon, Phone, Video } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
 import FileUpload from './FileUpload';

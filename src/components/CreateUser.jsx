@@ -3,7 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebaseConfig';
+// Use window globals to avoid import/export issues in production builds
+const auth = typeof window !== 'undefined' && window.__firebaseAuth 
+  ? window.__firebaseAuth 
+  : null;
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { UserPlus, Mail, Lock, User, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 
 const CreateUser = () => {

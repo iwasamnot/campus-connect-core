@@ -1,7 +1,10 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { Upload, X, Image, File, Loader } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebaseConfig';
+// Use window.__firebaseStorage to avoid import/export issues in production builds
+const storage = typeof window !== 'undefined' && window.__firebaseStorage 
+  ? window.__firebaseStorage 
+  : null;
 import { sanitizeFileName } from '../utils/sanitize';
 import { validateFile } from '../utils/validation';
 import { handleError } from '../utils/errorHandler';
