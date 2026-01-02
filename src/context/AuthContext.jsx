@@ -13,7 +13,9 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
+// CRITICAL: Declare useAuth as a top-level const before exporting
+// This ensures the export binding refers to a top-level declared variable
+const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -21,7 +23,11 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
+// Export the declared function
+export { useAuth };
+
+// CRITICAL: Declare AuthProvider as a top-level const before exporting
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null); // 'student' or 'admin'
   const [loading, setLoading] = useState(true);
@@ -309,4 +315,7 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// Export the declared component
+export { AuthProvider };
 

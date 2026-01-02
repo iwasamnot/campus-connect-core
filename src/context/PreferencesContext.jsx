@@ -16,7 +16,8 @@ const usePreferences = () => {
 // Export the declared function
 export { usePreferences };
 
-export const PreferencesProvider = ({ children }) => {
+// CRITICAL: Declare PreferencesProvider as a top-level const before exporting
+const PreferencesProvider = ({ children }) => {
   const [preferences, setPreferences] = useState(() => {
     if (typeof window === 'undefined') {
       return {
@@ -145,4 +146,7 @@ export const PreferencesProvider = ({ children }) => {
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 };
+
+// Export the declared component
+export { PreferencesProvider };
 

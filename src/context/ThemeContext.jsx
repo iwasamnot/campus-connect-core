@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
-export const useTheme = () => {
+// CRITICAL: Declare useTheme as a top-level const before exporting
+const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
@@ -10,7 +11,11 @@ export const useTheme = () => {
   return context;
 };
 
-export const ThemeProvider = ({ children }) => {
+// Export the declared function
+export { useTheme };
+
+// CRITICAL: Declare ThemeProvider as a top-level const (no export keyword here)
+const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
     // Check localStorage first, then system preference
     if (typeof window === 'undefined') return false;
@@ -71,4 +76,7 @@ export const ThemeProvider = ({ children }) => {
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
+
+// Export the declared component
+export { ThemeProvider };
 

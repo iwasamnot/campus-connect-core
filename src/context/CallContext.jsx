@@ -5,9 +5,11 @@ import { db, functions } from '../firebaseConfig';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, where, limit, getDocs } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 
-export const CallContext = createContext();
+// CRITICAL: Declare CallContext as a top-level const before exporting
+const CallContext = createContext();
 
-export const useCall = () => {
+// CRITICAL: Declare useCall as a top-level const before exporting
+const useCall = () => {
   const context = useContext(CallContext);
   if (!context) {
     throw new Error('useCall must be used within a CallProvider');
@@ -15,7 +17,11 @@ export const useCall = () => {
   return context;
 };
 
-export const CallProvider = ({ children }) => {
+// Export the declared values
+export { CallContext, useCall };
+
+// CRITICAL: Declare CallProvider as a top-level const (no export keyword here)
+const CallProvider = ({ children }) => {
   const { user } = useAuth();
   const { success, error: showError } = useToast();
   const [callState, setCallState] = useState(null); // null | 'outgoing' | 'active'
@@ -528,3 +534,6 @@ export const CallProvider = ({ children }) => {
 
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
 };
+
+// Export the declared component
+export { CallProvider };
