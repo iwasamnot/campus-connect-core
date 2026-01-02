@@ -229,6 +229,19 @@ export default defineConfig({
             return undefined; // Force into main entry - never split
           }
           
+          // errorHandler - MUST be in main bundle (lazy components import handleError)
+          if (
+            lowerId.includes('errorhandler') ||
+            id.includes('errorHandler') ||
+            id.includes('errorHandler.js') ||
+            id.includes('utils/errorHandler') ||
+            id.includes('utils\\errorHandler') ||
+            id.endsWith('errorHandler.js') ||
+            id.includes('src/utils/errorHandler')
+          ) {
+            return undefined; // Force into main entry - never split
+          }
+          
           // Split vendor chunks more aggressively for better PWA performance
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {

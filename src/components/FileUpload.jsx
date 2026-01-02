@@ -7,7 +7,17 @@ const storage = typeof window !== 'undefined' && window.__firebaseStorage
   : null;
 import { sanitizeFileName } from '../utils/sanitize';
 import { validateFile } from '../utils/validation';
-import { handleError } from '../utils/errorHandler';
+// Use window.__handleError to avoid import/export issues in production builds
+// Fallback to direct import if global is not available (for local dev)
+const handleError = typeof window !== 'undefined' && window.__handleError 
+  ? window.__handleError 
+  : ((error, context, onError) => {
+      // Fallback error handler if global is not available
+      const errorMessage = error?.message || 'An error occurred';
+      console.error(`[${context}] Error:`, error);
+      if (onError) onError(errorMessage);
+      return { message: errorMessage, type: 'UNKNOWN' };
+    });
 
 // STRICT LIMITS to stay within Firebase free tier (5GB storage, 1GB/day downloads)
 // Max file size: 5MB (reduced from 10MB to conserve storage)

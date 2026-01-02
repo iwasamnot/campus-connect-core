@@ -17,6 +17,9 @@ import { registerLogo } from './utils/logoRegistry.js'
 // CRITICAL: Import firebaseConfig in main.jsx to ensure it's in main bundle
 // Lazy components import auth, db, etc. from firebaseConfig
 import { auth, db, storage, functions } from './firebaseConfig.js'
+// CRITICAL: Import errorHandler in main.jsx to ensure it's in main bundle
+// Lazy components import handleError from errorHandler
+import { handleError } from './utils/errorHandler.js'
 
 // Register Logo in the registry so lazy-loaded components can access it
 // Note: Logo is also registered in App.jsx, but we register it here too for safety
@@ -28,6 +31,10 @@ window.__LogoComponent = Logo
 window.__LogoNamed = LogoNamed
 
 // CRITICAL: Store Firebase exports globally to prevent export errors
+// Also store errorHandler globally for lazy components
+if (typeof window !== 'undefined') {
+  window.__handleError = handleError;
+}
 // Lazy components can access these via window if import fails
 if (typeof window !== 'undefined') {
   window.__firebaseAuth = auth;
