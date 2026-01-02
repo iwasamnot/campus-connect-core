@@ -23,9 +23,25 @@ if (!admin.apps.length) {
 const { generateToken04 } = require('./zegoTokenGenerator');
 
 // Get ZEGOCLOUD configuration from environment variables
-// Set these in Firebase Console → Functions → Configuration → Environment Variables
-const APP_ID = functions.config().zegocloud?.app_id || process.env.ZEGOCLOUD_APP_ID || '128222087';
-const SERVER_SECRET = functions.config().zegocloud?.server_secret || process.env.ZEGOCLOUD_SERVER_SECRET;
+// IMPORTANT: Firebase Functions v2 uses environment variables, not functions.config()
+// Set these using: firebase functions:config:set zegocloud.server_secret="YOUR_SECRET"
+// OR in Firebase Console → Functions → Configuration → Environment Variables
+// 
+// For debugging, log all available config at function load time
+const allConfig = functions.config();
+const zegocloudConfig = allConfig.zegocloud || {};
+console.log('=== ZEGOCLOUD Config Debug ===');
+console.log('All config keys:', Object.keys(allConfig));
+console.log('ZEGOCLOUD config object:', zegocloudConfig);
+console.log('ZEGOCLOUD app_id:', zegocloudConfig.app_id);
+console.log('ZEGOCLOUD server_secret exists:', !!zegocloudConfig.server_secret);
+console.log('ZEGOCLOUD server_secret length:', zegocloudConfig.server_secret ? zegocloudConfig.server_secret.length : 0);
+console.log('Process env ZEGOCLOUD_SERVER_SECRET exists:', !!process.env.ZEGOCLOUD_SERVER_SECRET);
+console.log('Process env ZEGOCLOUD_SERVER_SECRET length:', process.env.ZEGOCLOUD_SERVER_SECRET ? process.env.ZEGOCLOUD_SERVER_SECRET.length : 0);
+console.log('================================');
+
+const APP_ID = zegocloudConfig.app_id || process.env.ZEGOCLOUD_APP_ID || '128222087';
+const SERVER_SECRET = zegocloudConfig.server_secret || process.env.ZEGOCLOUD_SERVER_SECRET;
 
 exports.generateZegoToken = functions.https.onCall(async (data, context) => {
   // Verify user is authenticated
@@ -55,12 +71,31 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
 
   // Check if Server Secret is configured
   if (!SERVER_SECRET) {
-    console.error('ZEGOCLOUD_SERVER_SECRET is not configured');
-    console.error('Available config keys:', Object.keys(functions.config()));
-    console.error('ZEGOCLOUD config:', functions.config().zegocloud);
+    const currentConfig = functions.config();
+    console.error('=== ZEGOCLOUD_SERVER_SECRET Configuration Error ===');
+    console.error('SERVER_SECRET is:', SERVER_SECRET);
+    console.error('Available config keys:', Object.keys(currentConfig));
+    console.error('ZEGOCLOUD config object:', currentConfig.zegocloud);
+    console.error('Process env ZEGOCLOUD_SERVER_SECRET:', process.env.ZEGOCLOUD_SERVER_SECRET ? 'EXISTS (length: ' + process.env.ZEGOCLOUD_SERVER_SECRET.length + ')' : 'NOT SET');
+    console.error('===================================================');
+    console.error('');
+    console.error('📝 To fix this, run one of these commands:');
+    console.error('');
+    console.error('Option 1 (Firebase CLI):');
+    console.error('  firebase functions:config:set zegocloud.server_secret="YOUR_SERVER_SECRET"');
+    console.error('  firebase deploy --only functions:generateZegoToken');
+    console.error('');
+    console.error('Option 2 (Firebase Console):');
+    console.error('  1. Go to: https://console.firebase.google.com/project/campus-connect-sistc/functions/config');
+    console.error('  2. Click "Add variable"');
+    console.error('  3. Key: zegocloud.server_secret');
+    console.error('  4. Value: YOUR_SERVER_SECRET');
+    console.error('  5. Click "Save"');
+    console.error('  6. Redeploy function: firebase deploy --only functions:generateZegoToken');
+    console.error('');
     throw new functions.https.HttpsError(
       'failed-precondition',
-      'ZEGOCLOUD Server Secret is not configured. Please set it in Firebase Functions configuration.'
+      'ZEGOCLOUD Server Secret is not configured. Check function logs for setup instructions.'
     );
   }
   
