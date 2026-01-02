@@ -43,12 +43,13 @@ function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload)
   // Important: Use the secret as-is (it should be a string)
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(tokenString);
-  const signature = hmac.digest('hex');
+  // Get signature as Buffer (binary) for proper Base64 encoding
+  const signature = hmac.digest(); // Returns Buffer, not hex string
   
   // ZEGOCLOUD Token04 format: Base64(JSON(token)) + '.' + Base64(HMAC-SHA256(...))
   // NOT: Base64(JSON(token) + '.' + HMAC-SHA256(...))
   const encodedTokenString = Buffer.from(tokenString, 'utf8').toString('base64');
-  const encodedSignature = Buffer.from(signature, 'hex').toString('base64');
+  const encodedSignature = signature.toString('base64'); // Buffer to Base64 directly
   
   // Combine: Base64(token) + '.' + Base64(signature)
   const finalToken = encodedTokenString + '.' + encodedSignature;
