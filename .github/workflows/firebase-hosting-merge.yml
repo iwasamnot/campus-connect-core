@@ -32,8 +32,7 @@ jobs:
           if [ -z "${{ secrets.VITE_FIREBASE_API_KEY }}" ] || [ "${{ secrets.VITE_FIREBASE_API_KEY }}" = "" ]; then
             MISSING_SECRETS+=("VITE_FIREBASE_API_KEY (empty or not set)")
           else
-            API_KEY_LEN=$(echo -n "${{ secrets.VITE_FIREBASE_API_KEY }}" | wc -c)
-            echo "✅ VITE_FIREBASE_API_KEY is set (length: $API_KEY_LEN)"
+            echo "✅ VITE_FIREBASE_API_KEY is set"
           fi
           
           if [ -z "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" ] || [ "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" = "" ]; then
