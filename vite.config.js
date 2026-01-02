@@ -190,6 +190,29 @@ export default defineConfig({
           // These are imported by lazy components and must be available synchronously
           const lowerId = id.toLowerCase();
           
+          // ULTRA-AGGRESSIVE: Force ALL source files into main bundle by default
+          // Only allow vendor chunks to be split
+          // This prevents ANY shared chunks from being created
+          if (!id.includes('node_modules') && id.includes('src/')) {
+            // Check if it's already handled by specific rules below
+            // If not, force into main bundle
+            const isHandled = 
+              lowerId.includes('firebaseconfig') ||
+              lowerId.includes('logoregistry') ||
+              lowerId.includes('logo.jsx') ||
+              lowerId.includes('errorhandler') ||
+              lowerId.includes('helpers') ||
+              lowerId.includes('sanitize') ||
+              lowerId.includes('validation') ||
+              lowerId.includes('context') ||
+              (id.includes('components/') && !id.match(/ChatArea|AdminDashboard|PrivateChat|GroupChat|Settings|StudentProfile|UsersManagement|CreateUser|AIHelp|Groups|AdminAnalytics|ActivityDashboard|MessageScheduler|SavedMessages|ImageGallery|KeyboardShortcuts|PWAInstallPrompt/));
+            
+            // If it's a source file and not a lazy component, force into main
+            if (isHandled || !id.match(/ChatArea|AdminDashboard|PrivateChat|GroupChat|Settings|StudentProfile|UsersManagement|CreateUser|AIHelp|Groups|AdminAnalytics|ActivityDashboard|MessageScheduler|SavedMessages|ImageGallery|KeyboardShortcuts|PWAInstallPrompt/)) {
+              return undefined; // Force into main entry
+            }
+          }
+          
           // Firebase config - MUST be in main bundle (lazy components import auth, db, etc.)
           // Check with multiple variations to catch all cases
           if (
@@ -311,10 +334,11 @@ export default defineConfig({
           // If so, force it into main bundle to prevent shared chunk creation
           if (!id.includes('node_modules') && id.includes('src/')) {
             // Check if it's a context, utility, or component that lazy components might share
+            // Be VERY aggressive - catch ANY shared component or utility
             if (
               id.includes('context/') ||
               id.includes('utils/') ||
-              id.includes('components/') && (
+              (id.includes('components/') && (
                 id.includes('Logo') ||
                 id.includes('SkeletonLoader') ||
                 id.includes('TypingIndicator') ||
@@ -323,9 +347,22 @@ export default defineConfig({
                 id.includes('MentionAutocomplete') ||
                 id.includes('AdvancedSearch') ||
                 id.includes('UserProfilePopup') ||
-                id.includes('FileUpload')
-              )
+                id.includes('FileUpload') ||
+                id.includes('ErrorBoundary')
+              ))
             ) {
+              return undefined; // Force into main entry - prevent shared chunks
+            }
+            
+            // EXTRA SAFETY: If it's ANY component that's not lazy-loaded itself,
+            // and it's in src/components/, force it into main to prevent shared chunks
+            // This catches any component that might be shared between lazy components
+            if (id.includes('components/') && !id.includes('ChatArea') && !id.includes('AdminDashboard') && 
+                !id.includes('PrivateChat') && !id.includes('GroupChat') && !id.includes('Settings') &&
+                !id.includes('StudentProfile') && !id.includes('UsersManagement') && !id.includes('CreateUser') &&
+                !id.includes('AIHelp') && !id.includes('Groups') && !id.includes('AdminAnalytics') &&
+                !id.includes('ActivityDashboard') && !id.includes('MessageScheduler') && !id.includes('SavedMessages') &&
+                !id.includes('ImageGallery') && !id.includes('KeyboardShortcuts') && !id.includes('PWAInstallPrompt')) {
               return undefined; // Force into main entry - prevent shared chunks
             }
           }
