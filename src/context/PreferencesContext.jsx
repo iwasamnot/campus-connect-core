@@ -2,13 +2,19 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const PreferencesContext = createContext();
 
-export const usePreferences = () => {
+// CRITICAL: Declare usePreferences as a top-level const before exporting
+// This ensures the export binding refers to a top-level declared variable
+// Prevents "exported binding needs to refer to a top level declared variable" errors
+const usePreferences = () => {
   const context = useContext(PreferencesContext);
   if (!context) {
     throw new Error('usePreferences must be used within a PreferencesProvider');
   }
   return context;
 };
+
+// Export the declared function
+export { usePreferences };
 
 export const PreferencesProvider = ({ children }) => {
   const [preferences, setPreferences] = useState(() => {
