@@ -469,6 +469,18 @@ const ChatArea = ({ setActiveView }) => {
       return text.trim();
     } catch (error) {
       console.error('Error calling Gemini:', error);
+      
+      // Check if it's an API blocked error (403 with API_KEY_SERVICE_BLOCKED)
+      if (error.message && (
+        error.message.includes('403') || 
+        error.message.includes('API_KEY_SERVICE_BLOCKED') ||
+        error.message.includes('SERVICE_DISABLED') ||
+        error.message.includes('blocked')
+      )) {
+        console.warn('⚠️ Gemini API is blocked or disabled. AI Help feature will be unavailable.');
+        console.warn('💡 To fix: Check API key restrictions in Google Cloud Console');
+      }
+      
       return null;
     }
   };

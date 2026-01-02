@@ -450,6 +450,22 @@ ${question}
       }
     } catch (error) {
       console.error('Error calling Gemini:', error);
+      
+      // Check if it's an API blocked error (403 with API_KEY_SERVICE_BLOCKED)
+      if (error.message && (
+        error.message.includes('403') || 
+        error.message.includes('API_KEY_SERVICE_BLOCKED') ||
+        error.message.includes('SERVICE_DISABLED') ||
+        error.message.includes('blocked')
+      )) {
+        console.warn('⚠️ Gemini API is blocked or disabled. This usually means:');
+        console.warn('   1. The API key has restrictions that block the Generative Language API');
+        console.warn('   2. The API is not enabled in the Google Cloud project');
+        console.warn('   3. The API key service is blocked for this project');
+        console.warn('💡 The AI Help feature will fall back to the local knowledge base.');
+        console.warn('   To fix: Check API key restrictions in Google Cloud Console');
+      }
+      
       return null;
     }
   };
