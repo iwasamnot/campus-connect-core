@@ -251,22 +251,38 @@ export default defineConfig({
           
           // ALL context modules - MUST be in main bundle (lazy components import hooks from context/)
           // Context providers are used by ALL lazy components and must be available synchronously
-          const contextModules = [
-            'authcontext', 'themecontext', 'toastcontext', 'presencecontext', 
-            'preferencescontext', 'callcontext'
-          ];
-          
-          for (const contextModule of contextModules) {
-            if (
-              lowerId.includes(contextModule) ||
-              id.includes(`context/${contextModule}`) ||
-              id.includes(`context\\${contextModule}`) ||
-              id.endsWith(`${contextModule}.jsx`) ||
-              id.endsWith(`${contextModule}.js`) ||
-              id.includes(`src/context/${contextModule}`)
-            ) {
-              return undefined; // Force into main entry - never split
-            }
+          // Check for ANY context file - be very aggressive to catch all variations
+          if (
+            lowerId.includes('context') && 
+            !id.includes('node_modules') &&
+            (
+              lowerId.includes('authcontext') ||
+              lowerId.includes('themecontext') ||
+              lowerId.includes('toastcontext') ||
+              lowerId.includes('presencecontext') ||
+              lowerId.includes('preferencescontext') ||
+              lowerId.includes('callcontext') ||
+              id.includes('context/AuthContext') ||
+              id.includes('context/ThemeContext') ||
+              id.includes('context/ToastContext') ||
+              id.includes('context/PresenceContext') ||
+              id.includes('context/PreferencesContext') ||
+              id.includes('context/CallContext') ||
+              id.includes('context\\AuthContext') ||
+              id.includes('context\\ThemeContext') ||
+              id.includes('context\\ToastContext') ||
+              id.includes('context\\PresenceContext') ||
+              id.includes('context\\PreferencesContext') ||
+              id.includes('context\\CallContext') ||
+              id.endsWith('AuthContext.jsx') ||
+              id.endsWith('ThemeContext.jsx') ||
+              id.endsWith('ToastContext.jsx') ||
+              id.endsWith('PresenceContext.jsx') ||
+              id.endsWith('PreferencesContext.jsx') ||
+              id.endsWith('CallContext.jsx')
+            )
+          ) {
+            return undefined; // Force into main entry - never split
           }
           
           // Split vendor chunks more aggressively for better PWA performance
