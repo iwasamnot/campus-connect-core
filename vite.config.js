@@ -251,37 +251,31 @@ export default defineConfig({
           
           // ALL context modules - MUST be in main bundle (lazy components import hooks from context/)
           // Context providers are used by ALL lazy components and must be available synchronously
-          // Check for ANY context file - be very aggressive to catch all variations
+          // CRITICAL: Catch ANY file in src/context/ directory - be extremely aggressive
           if (
-            lowerId.includes('context') && 
             !id.includes('node_modules') &&
             (
-              lowerId.includes('authcontext') ||
-              lowerId.includes('themecontext') ||
-              lowerId.includes('toastcontext') ||
-              lowerId.includes('presencecontext') ||
-              lowerId.includes('preferencescontext') ||
-              lowerId.includes('callcontext') ||
-              id.includes('context/AuthContext') ||
-              id.includes('context/ThemeContext') ||
-              id.includes('context/ToastContext') ||
-              id.includes('context/PresenceContext') ||
-              id.includes('context/PreferencesContext') ||
-              id.includes('context/CallContext') ||
-              id.includes('context\\AuthContext') ||
-              id.includes('context\\ThemeContext') ||
-              id.includes('context\\ToastContext') ||
-              id.includes('context\\PresenceContext') ||
-              id.includes('context\\PreferencesContext') ||
-              id.includes('context\\CallContext') ||
-              id.endsWith('AuthContext.jsx') ||
-              id.endsWith('ThemeContext.jsx') ||
-              id.endsWith('ToastContext.jsx') ||
-              id.endsWith('PresenceContext.jsx') ||
-              id.endsWith('PreferencesContext.jsx') ||
-              id.endsWith('CallContext.jsx')
+              (id.includes('context/') || id.includes('context\\')) &&
+              (id.includes('AuthContext') ||
+               id.includes('ThemeContext') ||
+               id.includes('ToastContext') ||
+               id.includes('PresenceContext') ||
+               id.includes('PreferencesContext') ||
+               id.includes('CallContext') ||
+               lowerId.includes('authcontext') ||
+               lowerId.includes('themecontext') ||
+               lowerId.includes('toastcontext') ||
+               lowerId.includes('presencecontext') ||
+               lowerId.includes('preferencescontext') ||
+               lowerId.includes('callcontext'))
             )
           ) {
+            return undefined; // Force into main entry - never split
+          }
+          
+          // Also catch any shared chunks that might contain context exports
+          // If a chunk would contain context-related code, force it into main bundle
+          if (lowerId.includes('context') && !id.includes('node_modules')) {
             return undefined; // Force into main entry - never split
           }
           
