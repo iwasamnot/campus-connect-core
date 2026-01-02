@@ -10,6 +10,13 @@
     <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
     <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
     
+    <!-- Preload critical components to prevent module resolution errors -->
+    <script>
+      // Ensure Logo is available globally before any lazy components load
+      // This prevents "Export 'Logo' is not defined" errors
+      window.__LogoPreload = true;
+    </script>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="description" content="Secure student messaging platform with AI-powered content moderation" />
     <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
