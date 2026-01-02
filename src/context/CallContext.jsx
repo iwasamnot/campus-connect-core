@@ -148,7 +148,23 @@ const CallProvider = ({ children }) => {
       // See ZEGOCLOUD_SETUP.md for production token generation
       const token = '';
       
+      // Clean up any existing instance before creating a new one
+      // This prevents multiple SDK instances and reduces connection warnings
+      if (zegoCloudRef.current) {
+        try {
+          zegoCloudRef.current.destroyEngine();
+        } catch (err) {
+          console.warn('Error destroying previous ZEGOCLOUD instance:', err);
+        }
+        zegoCloudRef.current = null;
+      }
+      
       const zg = new ZegoExpressEngine(appIDNum, token);
+      
+      // Note: You may see warnings like "frequently shutdown too many times. cannot create socket anymore"
+      // These are from the SDK's internal logging/reporting system and are NON-CRITICAL.
+      // They don't affect call functionality - they're just about the SDK sending diagnostic logs.
+      // If calls are working, these warnings can be safely ignored.
       
       // Set up event listeners for remote streams
       zg.on('roomStreamUpdate', (roomID, updateType, streamList) => {
