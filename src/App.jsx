@@ -6,26 +6,28 @@ import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
-// CRITICAL: Import Logo in main App to ensure it's ALWAYS in the main bundle
+// CRITICAL: Import Logo and logoRegistry in main App to ensure they're ALWAYS in the main bundle
 // This prevents export errors when lazy-loaded components import Logo
-// We must actually USE Logo here, not just import it, to prevent tree-shaking
 import Logo from './components/Logo';
+import { registerLogo, getLogo } from './utils/logoRegistry';
 
-// Actually render Logo somewhere to ensure it's never tree-shaken
-// This is a hidden div that ensures Logo is always included
-const LogoPreloader = () => {
-  if (typeof window === 'undefined') return null;
-  // Store Logo globally for lazy components
+// Register Logo immediately
+registerLogo(Logo);
+
+// Store Logo globally for lazy components
+if (typeof window !== 'undefined') {
   window.__AppLogo = Logo;
   window.__LogoComponent = Logo;
-  return null; // Don't actually render anything
-};
+}
 
-// Force Logo to be included by actually using it
-LogoPreloader();
-
-// Also export it to prevent optimization
-export const _logoPreload = Logo;
+// CRITICAL: Actually use logoRegistry here to ensure it's in main bundle
+// This prevents it from being code-split
+const _logoRegistryRef = getLogo;
+const _logoRef = Logo;
+if (false) {
+  // This code never runs but ensures both are included in bundle
+  console.log(_logoRegistryRef, _logoRef);
+}
 
 // Error fallback component with retry logic
 const ErrorFallback = ({ componentName, onRetry }) => {
