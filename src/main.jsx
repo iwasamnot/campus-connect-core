@@ -17,9 +17,22 @@ import { registerLogo } from './utils/logoRegistry.js'
 // CRITICAL: Import firebaseConfig in main.jsx to ensure it's in main bundle
 // Lazy components import auth, db, etc. from firebaseConfig
 import { auth, db, storage, functions } from './firebaseConfig.js'
-// CRITICAL: Import errorHandler in main.jsx to ensure it's in main bundle
-// Lazy components import handleError from errorHandler
+
+// CRITICAL: Import ALL utility modules in main.jsx to prevent export errors
+// This ensures ALL utilities are in main bundle before lazy components load
 import { handleError } from './utils/errorHandler.js'
+import { isAdminRole, isUserOnline } from './utils/helpers.js'
+import { sanitizeFileName, sanitizeEmail, sanitizeText, sanitizeHTML } from './utils/sanitize.js'
+import { validateFile, isValidStudentEmail, isValidAdminEmail, validatePassword, validateName, isValidEmail } from './utils/validation.js'
+import { saveDraft, getDraft, clearDraft } from './utils/drafts.js'
+import { exportMessagesToJSON, exportMessagesToCSV, exportMessagesToTXT } from './utils/export.js'
+import { saveMessage } from './utils/saveMessage.js'
+import { parseMarkdown, hasMarkdown } from './utils/markdown.js'
+import notificationService from './utils/notifications.js'
+import { checkToxicity } from './utils/toxicityChecker.js'
+import { debounce } from './utils/debounce.js'
+import { keyboard } from './utils/accessibility.js'
+import { calculateVisibleRange, getVisibleItems, calculateTotalHeight, calculateOffset } from './utils/virtualScroll.js'
 
 // Register Logo in the registry so lazy-loaded components can access it
 // Note: Logo is also registered in App.jsx, but we register it here too for safety
@@ -30,17 +43,46 @@ registerLogo(Logo);
 window.__LogoComponent = Logo
 window.__LogoNamed = LogoNamed
 
-// CRITICAL: Store Firebase exports globally to prevent export errors
-// Also store errorHandler globally for lazy components
-if (typeof window !== 'undefined') {
-  window.__handleError = handleError;
-}
+// CRITICAL: Store ALL exports globally to prevent export errors
 // Lazy components can access these via window if import fails
 if (typeof window !== 'undefined') {
+  // Firebase exports
   window.__firebaseAuth = auth;
   window.__firebaseDb = db;
   window.__firebaseStorage = storage;
   window.__firebaseFunctions = functions;
+  
+  // Utility exports - ALL utilities used by lazy components
+  window.__handleError = handleError;
+  window.__isAdminRole = isAdminRole;
+  window.__isUserOnline = isUserOnline;
+  window.__sanitizeFileName = sanitizeFileName;
+  window.__sanitizeEmail = sanitizeEmail;
+  window.__sanitizeText = sanitizeText;
+  window.__sanitizeHTML = sanitizeHTML;
+  window.__validateFile = validateFile;
+  window.__isValidStudentEmail = isValidStudentEmail;
+  window.__isValidAdminEmail = isValidAdminEmail;
+  window.__validatePassword = validatePassword;
+  window.__validateName = validateName;
+  window.__isValidEmail = isValidEmail;
+  window.__saveDraft = saveDraft;
+  window.__getDraft = getDraft;
+  window.__clearDraft = clearDraft;
+  window.__exportMessagesToJSON = exportMessagesToJSON;
+  window.__exportMessagesToCSV = exportMessagesToCSV;
+  window.__exportMessagesToTXT = exportMessagesToTXT;
+  window.__saveMessage = saveMessage;
+  window.__parseMarkdown = parseMarkdown;
+  window.__hasMarkdown = hasMarkdown;
+  window.__notificationService = notificationService;
+  window.__checkToxicity = checkToxicity;
+  window.__debounce = debounce;
+  window.__keyboard = keyboard;
+  window.__calculateVisibleRange = calculateVisibleRange;
+  window.__getVisibleItems = getVisibleItems;
+  window.__calculateTotalHeight = calculateTotalHeight;
+  window.__calculateOffset = calculateOffset;
 }
 
 // Ensure firebaseConfig is never tree-shaken

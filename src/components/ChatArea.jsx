@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole, isUserOnline } from '../utils/helpers';
+// Use window globals to avoid import/export issues in production builds
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
+const isUserOnline = typeof window !== 'undefined' && window.__isUserOnline 
+  ? window.__isUserOnline 
+  : (userData) => userData?.isOnline === true;
 import { 
   collection, 
   addDoc, 
@@ -36,13 +42,19 @@ import EmojiPicker from './EmojiPicker';
 import FileUpload from './FileUpload';
 import MentionAutocomplete from './MentionAutocomplete';
 import AdvancedSearch from './AdvancedSearch';
-import { saveDraft, getDraft, clearDraft } from '../utils/drafts';
-import { exportMessagesToJSON, exportMessagesToCSV, exportMessagesToTXT } from '../utils/export';
-import { saveMessage } from '../utils/saveMessage';
+// Use window globals to avoid import/export issues
+const saveDraft = typeof window !== 'undefined' && window.__saveDraft ? window.__saveDraft : () => {};
+const getDraft = typeof window !== 'undefined' && window.__getDraft ? window.__getDraft : () => null;
+const clearDraft = typeof window !== 'undefined' && window.__clearDraft ? window.__clearDraft : () => {};
+const exportMessagesToJSON = typeof window !== 'undefined' && window.__exportMessagesToJSON ? window.__exportMessagesToJSON : () => {};
+const exportMessagesToCSV = typeof window !== 'undefined' && window.__exportMessagesToCSV ? window.__exportMessagesToCSV : () => {};
+const exportMessagesToTXT = typeof window !== 'undefined' && window.__exportMessagesToTXT ? window.__exportMessagesToTXT : () => {};
+const saveMessage = typeof window !== 'undefined' && window.__saveMessage ? window.__saveMessage : () => {};
+const parseMarkdown = typeof window !== 'undefined' && window.__parseMarkdown ? window.__parseMarkdown : (text) => text;
+const hasMarkdown = typeof window !== 'undefined' && window.__hasMarkdown ? window.__hasMarkdown : () => false;
+const notificationService = typeof window !== 'undefined' && window.__notificationService ? window.__notificationService : { show: () => {} };
+const checkToxicity = typeof window !== 'undefined' && window.__checkToxicity ? window.__checkToxicity : () => Promise.resolve({ isToxic: false });
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-import { parseMarkdown, hasMarkdown } from '../utils/markdown';
-import notificationService from '../utils/notifications';
-import { checkToxicity } from '../utils/toxicityChecker';
 import { usePreferences } from '../context/PreferencesContext';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];

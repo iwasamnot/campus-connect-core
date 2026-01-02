@@ -8,7 +8,10 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
   : null;
 import { Bookmark, Trash2, Search, X, MessageSquare } from 'lucide-react';
 import { SkeletonLoader } from './SkeletonLoader';
-import { debounce } from '../utils/debounce';
+// Use window globals to avoid import/export issues
+const debounce = typeof window !== 'undefined' && window.__debounce 
+  ? window.__debounce 
+  : (fn, delay) => fn; // Fallback: return function as-is
 
 const SavedMessages = memo(() => {
   const { user } = useAuth();

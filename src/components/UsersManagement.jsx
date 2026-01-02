@@ -10,7 +10,10 @@ const storage = typeof window !== 'undefined' && window.__firebaseStorage
   : null;
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole } from '../utils/helpers';
+// Use window globals to avoid import/export issues
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
 import { Trash2, User, Mail, Phone, Calendar, AlertCircle, Edit2, X, Check, Image, GraduationCap, MapPin, FileText, Upload, CheckCircle, XCircle, Shield, MoreVertical } from 'lucide-react';
 
 const UsersManagement = () => {

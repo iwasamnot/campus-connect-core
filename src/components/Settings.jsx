@@ -1,7 +1,10 @@
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { usePreferences } from '../context/PreferencesContext';
-import { isAdminRole } from '../utils/helpers';
+// Use window globals to avoid import/export issues
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
 import { Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw, Sparkles, Minus } from 'lucide-react';
 
 const Settings = ({ setActiveView }) => {

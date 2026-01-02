@@ -229,17 +229,24 @@ export default defineConfig({
             return undefined; // Force into main entry - never split
           }
           
-          // errorHandler - MUST be in main bundle (lazy components import handleError)
-          if (
-            lowerId.includes('errorhandler') ||
-            id.includes('errorHandler') ||
-            id.includes('errorHandler.js') ||
-            id.includes('utils/errorHandler') ||
-            id.includes('utils\\errorHandler') ||
-            id.endsWith('errorHandler.js') ||
-            id.includes('src/utils/errorHandler')
-          ) {
-            return undefined; // Force into main entry - never split
+          // ALL utility modules - MUST be in main bundle (lazy components import from utils/)
+          // This prevents ALL export errors at once instead of fixing them one by one
+          const utilsModules = [
+            'errorhandler', 'helpers', 'sanitize', 'validation', 'drafts', 
+            'export', 'savemessage', 'markdown', 'notifications', 'toxicitychecker',
+            'debounce', 'accessibility', 'virtualscroll', 'animations', 'usagelimiter'
+          ];
+          
+          for (const utilModule of utilsModules) {
+            if (
+              lowerId.includes(utilModule) ||
+              id.includes(`utils/${utilModule}`) ||
+              id.includes(`utils\\${utilModule}`) ||
+              id.endsWith(`${utilModule}.js`) ||
+              id.includes(`src/utils/${utilModule}`)
+            ) {
+              return undefined; // Force into main entry - never split
+            }
           }
           
           // Split vendor chunks more aggressively for better PWA performance

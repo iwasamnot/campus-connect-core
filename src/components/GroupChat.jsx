@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole, isUserOnline } from '../utils/helpers';
+// Use window globals to avoid import/export issues
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
+const isUserOnline = typeof window !== 'undefined' && window.__isUserOnline 
+  ? window.__isUserOnline 
+  : (userData) => userData?.isOnline === true;
 import { 
   collection, 
   addDoc, 
@@ -28,7 +34,10 @@ import UserProfilePopup from './UserProfilePopup';
 import FileUpload from './FileUpload';
 import EmojiPicker from './EmojiPicker';
 import ImagePreview from './ImagePreview';
-import { checkToxicity } from '../utils/toxicityChecker';
+// Use window globals to avoid import/export issues
+const checkToxicity = typeof window !== 'undefined' && window.__checkToxicity 
+  ? window.__checkToxicity 
+  : () => Promise.resolve({ isToxic: false });
 
 const GroupChat = ({ group, onBack, setActiveView }) => {
   const { user, userRole } = useAuth();

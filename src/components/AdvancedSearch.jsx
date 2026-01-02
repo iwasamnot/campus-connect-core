@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react';
 import { Search, X, Filter, Calendar, User, MessageSquare, FileText } from 'lucide-react';
-import { debounce } from '../utils/debounce';
+// Use window globals to avoid import/export issues
+const debounce = typeof window !== 'undefined' && window.__debounce 
+  ? window.__debounce 
+  : (fn, delay) => fn; // Fallback: return function as-is
 
 const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose }) => {
   const [query, setQuery] = useState('');

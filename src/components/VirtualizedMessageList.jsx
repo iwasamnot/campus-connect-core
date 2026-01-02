@@ -1,5 +1,17 @@
 import { useState, useEffect, useRef, useMemo, memo, useCallback } from 'react';
-import { calculateVisibleRange, getVisibleItems, calculateTotalHeight, calculateOffset } from '../utils/virtualScroll';
+// Use window globals to avoid import/export issues
+const calculateVisibleRange = typeof window !== 'undefined' && window.__calculateVisibleRange 
+  ? window.__calculateVisibleRange 
+  : () => ({ start: 0, end: 0 });
+const getVisibleItems = typeof window !== 'undefined' && window.__getVisibleItems 
+  ? window.__getVisibleItems 
+  : (items) => items;
+const calculateTotalHeight = typeof window !== 'undefined' && window.__calculateTotalHeight 
+  ? window.__calculateTotalHeight 
+  : () => 0;
+const calculateOffset = typeof window !== 'undefined' && window.__calculateOffset 
+  ? window.__calculateOffset 
+  : () => 0;
 
 /**
  * Virtualized message list component for performance

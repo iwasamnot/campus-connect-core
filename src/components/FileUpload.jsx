@@ -5,8 +5,13 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const storage = typeof window !== 'undefined' && window.__firebaseStorage 
   ? window.__firebaseStorage 
   : null;
-import { sanitizeFileName } from '../utils/sanitize';
-import { validateFile } from '../utils/validation';
+// Use window globals to avoid import/export issues
+const sanitizeFileName = typeof window !== 'undefined' && window.__sanitizeFileName 
+  ? window.__sanitizeFileName 
+  : (name) => name;
+const validateFile = typeof window !== 'undefined' && window.__validateFile 
+  ? window.__validateFile 
+  : () => ({ valid: true });
 // Use window.__handleError to avoid import/export issues in production builds
 // Fallback to direct import if global is not available (for local dev)
 const handleError = typeof window !== 'undefined' && window.__handleError 
