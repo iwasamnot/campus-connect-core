@@ -186,7 +186,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // CRITICAL: Logo MUST be in main entry bundle, not split
+          // CRITICAL: Logo and logoRegistry MUST be in main entry bundle, not split
           // When lazy components import Logo, it must already be available
           // Return undefined to force into main entry chunk
           if (
@@ -194,14 +194,11 @@ export default defineConfig({
             id.includes('Logo.tsx') || 
             id.includes('components/Logo') ||
             id.includes('components\\Logo') ||
-            (id.includes('Logo') && !id.includes('node_modules') && !id.includes('logoRegistry'))
+            id.includes('logoRegistry') ||
+            id.includes('utils/logoRegistry') ||
+            (id.includes('Logo') && !id.includes('node_modules'))
           ) {
             return undefined; // Force into main entry - never split
-          }
-          
-          // Logo registry should also be in main bundle
-          if (id.includes('logoRegistry')) {
-            return undefined; // Keep in main entry
           }
           
           // Split vendor chunks more aggressively for better PWA performance
