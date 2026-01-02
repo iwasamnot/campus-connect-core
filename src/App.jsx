@@ -9,11 +9,14 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Import Logo in main App to ensure it's always in the main bundle
 // This prevents export errors when lazy-loaded components import Logo
 import Logo from './components/Logo';
-// Keep reference to prevent tree-shaking
-if (false) {
-  // This code never runs but ensures Logo is included in bundle
-  console.log(Logo);
+// Actually use Logo to ensure it's never tree-shaken
+// Export it globally so lazy components can access it
+if (typeof window !== 'undefined') {
+  window.__AppLogo = Logo;
 }
+// Force Logo to be included by referencing it in a way that can't be optimized away
+const logoRef = Logo;
+export { logoRef as _logoRef };
 
 // Error fallback component with retry logic
 const ErrorFallback = ({ componentName, onRetry }) => {

@@ -186,8 +186,15 @@ export default defineConfig({
         manualChunks: (id) => {
           // IMPORTANT: Logo must be in main bundle - don't split it
           // Check for Logo first before any other splitting logic
-          if (id.includes('Logo.jsx') || id.includes('Logo.tsx') || id.includes('components/Logo')) {
-            return undefined; // Force into main entry chunk
+          // Use multiple checks to catch all variations
+          if (
+            id.includes('Logo.jsx') || 
+            id.includes('Logo.tsx') || 
+            id.includes('components/Logo') ||
+            id.includes('components\\Logo') ||
+            (id.includes('Logo') && !id.includes('node_modules'))
+          ) {
+            return undefined; // Force into main entry chunk - never split
           }
           
           // Split vendor chunks more aggressively for better PWA performance
