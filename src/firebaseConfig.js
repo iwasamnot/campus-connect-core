@@ -93,6 +93,7 @@ try {
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app);
+// Initialize Functions with explicit region (us-central1) to match deployed functions
+export const functions = getFunctions(app, 'us-central1');
 export default app;
 
