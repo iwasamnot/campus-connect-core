@@ -3,10 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle } from 'lucide-react';
-// Use window.__LogoComponent directly to avoid import/export issues
-const Logo = typeof window !== 'undefined' && window.__LogoComponent 
-  ? window.__LogoComponent 
-  : () => <div>Logo</div>; // Fallback placeholder
+// Import Logo directly - it's in main bundle so no code-splitting issues
+import Logo from '../components/Logo.jsx';
 import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
 import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
 import { handleError } from '../utils/errorHandler';
