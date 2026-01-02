@@ -56,11 +56,24 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
   // Check if Server Secret is configured
   if (!SERVER_SECRET) {
     console.error('ZEGOCLOUD_SERVER_SECRET is not configured');
+    console.error('Available config keys:', Object.keys(functions.config()));
+    console.error('ZEGOCLOUD config:', functions.config().zegocloud);
     throw new functions.https.HttpsError(
       'failed-precondition',
       'ZEGOCLOUD Server Secret is not configured. Please set it in Firebase Functions configuration.'
     );
   }
+  
+  // Verify Server Secret is not empty
+  if (SERVER_SECRET.trim() === '') {
+    console.error('ZEGOCLOUD_SERVER_SECRET is set but empty');
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'ZEGOCLOUD Server Secret is empty. Please set a valid Server Secret in Firebase Functions configuration.'
+    );
+  }
+  
+  console.log(`Using APP_ID: ${APP_ID}, SERVER_SECRET length: ${SERVER_SECRET.length} (hidden for security)`);
 
   try {
     // Generate token
@@ -77,6 +90,7 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
 
     console.log(`Generating token with APP_ID: ${APP_ID}, userId: ${userId}, roomID: ${roomID}`);
     console.log(`SERVER_SECRET length: ${SERVER_SECRET ? SERVER_SECRET.length : 0}`);
+    console.log(`Payload object:`, JSON.stringify(payloadObject));
 
     const token = generateToken04(
       parseInt(APP_ID),
@@ -87,7 +101,9 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
     );
 
     console.log(`Generated token for user ${userId} in room ${roomID}`);
-    console.log(`Token length: ${token.length}, Token preview: ${token.substring(0, 50)}...`);
+    console.log(`Token length: ${token.length}`);
+    console.log(`Token format check: ${token.includes('.') ? 'Has dot separator ✓' : 'Missing dot separator ✗'}`);
+    console.log(`Token parts: ${token.split('.').length} parts (expected 2)`);
     
     return { token };
   } catch (error) {
