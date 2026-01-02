@@ -45,13 +45,15 @@ function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload)
   hmac.update(tokenString);
   const signature = hmac.digest('hex');
   
-  // Combine: tokenString + '.' + signature
-  const tokenWithSignature = tokenString + '.' + signature;
+  // ZEGOCLOUD Token04 format: Base64(JSON(token)) + '.' + Base64(HMAC-SHA256(...))
+  // NOT: Base64(JSON(token) + '.' + HMAC-SHA256(...))
+  const encodedTokenString = Buffer.from(tokenString, 'utf8').toString('base64');
+  const encodedSignature = Buffer.from(signature, 'hex').toString('base64');
   
-  // Base64 encode the entire string
-  const encodedToken = Buffer.from(tokenWithSignature, 'utf8').toString('base64');
+  // Combine: Base64(token) + '.' + Base64(signature)
+  const finalToken = encodedTokenString + '.' + encodedSignature;
   
-  return encodedToken;
+  return finalToken;
 }
 
 module.exports = { generateToken04 };
