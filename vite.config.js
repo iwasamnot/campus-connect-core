@@ -249,6 +249,26 @@ export default defineConfig({
             }
           }
           
+          // ALL context modules - MUST be in main bundle (lazy components import hooks from context/)
+          // Context providers are used by ALL lazy components and must be available synchronously
+          const contextModules = [
+            'authcontext', 'themecontext', 'toastcontext', 'presencecontext', 
+            'preferencescontext', 'callcontext'
+          ];
+          
+          for (const contextModule of contextModules) {
+            if (
+              lowerId.includes(contextModule) ||
+              id.includes(`context/${contextModule}`) ||
+              id.includes(`context\\${contextModule}`) ||
+              id.endsWith(`${contextModule}.jsx`) ||
+              id.endsWith(`${contextModule}.js`) ||
+              id.includes(`src/context/${contextModule}`)
+            ) {
+              return undefined; // Force into main entry - never split
+            }
+          }
+          
           // Split vendor chunks more aggressively for better PWA performance
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {

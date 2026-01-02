@@ -2,12 +2,22 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import { AuthProvider } from './context/AuthContext.jsx'
-import { ThemeProvider } from './context/ThemeContext.jsx'
-import { ToastProvider } from './context/ToastContext.jsx'
+// CRITICAL: Import ALL context providers in main.jsx to ensure they're in main bundle
+// Lazy components import hooks (useAuth, useToast, etc.) from these contexts
+import { AuthProvider, useAuth } from './context/AuthContext.jsx'
+import { ThemeProvider, useTheme } from './context/ThemeContext.jsx'
+import { ToastProvider, useToast } from './context/ToastContext.jsx'
 import { PresenceProvider } from './context/PresenceContext.jsx'
-import { PreferencesProvider } from './context/PreferencesContext.jsx'
-import { CallProvider } from './context/CallContext.jsx'
+import { PreferencesProvider, usePreferences } from './context/PreferencesContext.jsx'
+import { CallProvider, useCall } from './context/CallContext.jsx'
+
+// Keep references to prevent tree-shaking (contexts are used by lazy components)
+// Note: We can't expose hooks via window (they're React hooks), but importing them here
+// ensures the context modules are in the main bundle
+if (false) {
+  // This code never runs but ensures contexts are included in bundle
+  console.log(useAuth, useTheme, useToast, usePreferences, useCall);
+}
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 // Import Logo in main bundle to prevent code-splitting issues with lazy-loaded components
 // This ensures Logo is always available synchronously
