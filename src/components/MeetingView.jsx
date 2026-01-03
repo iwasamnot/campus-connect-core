@@ -1,31 +1,91 @@
-import { useMeeting, useParticipant } from '@videosdk.live/react-sdk';
+import React, { useEffect, useRef, useMemo } from "react";
+import { useMeeting, useParticipant } from "@videosdk.live/react-sdk";
 import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
-import { useEffect, useRef } from 'react';
 
-const MeetingView = ({ onLeave, userName }) => {
-  const { 
-    toggleMic, 
-    toggleWebcam, 
-    leave, 
-    participants, 
-    micEnabled, 
-    webcamEnabled, 
-    localParticipant, 
-    meeting, 
-    join 
-  } = useMeeting() || {};
+const ParticipantView = ({ participantId, userName }) => {
+  const videoRef = useRef(null);
+  const audioRef = useRef(null);
+  const { webcamStream, micStream, webcamOn, micOn, displayName, isLocal } = useParticipant(participantId);
 
-  // Join meeting on mount
   useEffect(() => {
-    if (join) {
-      try {
-        join();
-      } catch (err) {
-        console.warn('Error joining meeting:', err);
+    if (videoRef.current) {
+      if (webcamOn && webcamStream && webcamStream.track) {
+        // Wrap the track in a new MediaStream to prevent the 'srcObject' error
+        const mediaStream = new MediaStream();
+        mediaStream.addTrack(webcamStream.track);
+        videoRef.current.srcObject = mediaStream;
+        videoRef.current.play().catch((err) => console.error("Video play error", err));
+      } else {
+        videoRef.current.srcObject = null;
       }
     }
+  }, [webcamStream, webcamOn]);
+
+  // Attach mic stream to audio element (only for remote participants)
+  useEffect(() => {
+    if (!isLocal && audioRef.current && micStream && micStream.track) {
+      try {
+        const mediaStream = new MediaStream();
+        mediaStream.addTrack(micStream.track);
+        audioRef.current.srcObject = mediaStream;
+      } catch (err) {
+        console.error('Error attaching audio stream:', err);
+      }
+    } else if (audioRef.current) {
+      audioRef.current.srcObject = null;
+    }
+  }, [micStream, isLocal]);
+
+  return (
+    <div className="relative bg-gray-800 rounded-lg overflow-hidden w-full aspect-video border border-gray-700">
+      <video 
+        ref={videoRef} 
+        autoPlay 
+        playsInline 
+        muted={isLocal} 
+        className="w-full h-full object-cover" 
+      />
+      {!webcamOn && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+              {(displayName || userName || participantId).charAt(0).toUpperCase()}
+            </div>
+            <p className="text-white text-sm">{displayName || userName || 'Participant'}</p>
+            {!micOn && (
+              <p className="text-gray-400 text-xs mt-1">🔇 Muted</p>
+            )}
+          </div>
+        </div>
+      )}
+      {!isLocal && micStream && (
+        <audio
+          ref={audioRef}
+          autoPlay
+          playsInline
+        />
+      )}
+    </div>
+  );
+};
+
+const MeetingView = ({ onLeave, userName }) => {
+  const { join, leave, participants, localParticipant, toggleMic, toggleWebcam, micEnabled, webcamEnabled } = useMeeting();
+
+  // FIX: Join only once on mount to avoid "Maximum update depth exceeded"
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (join) {
+        try {
+          join();
+        } catch (err) {
+          console.warn('Error joining meeting:', err);
+        }
+      }
+    }, 500);
+    
     return () => {
-      // Cleanup on unmount
+      clearTimeout(timer);
       if (leave) {
         try {
           leave();
@@ -34,115 +94,72 @@ const MeetingView = ({ onLeave, userName }) => {
         }
       }
     };
-  }, [join, leave]);
+  }, []); // Empty dependency array - only run once
 
-  const ParticipantView = ({ participantId }) => {
-    const { webcamStream, micStream, displayName, webcamOn, micOn, isLocal: isLocalParticipant } = useParticipant(participantId);
-    const videoRef = useRef(null);
-    const audioRef = useRef(null);
-    
-    // Attach webcam stream to video element (safe version)
-    useEffect(() => {
-      if (videoRef.current && webcamOn && webcamStream && webcamStream.track) {
-        try {
-          const mediaStream = new MediaStream();
-          mediaStream.addTrack(webcamStream.track);
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.play().catch((err) => {
-            console.warn('Video play error:', err);
-          });
-        } catch (err) {
-          console.error('Error attaching video stream:', err);
-        }
-      } else if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-    }, [webcamStream, webcamOn]);
+  // FIX: Filter participants to avoid showing the local user twice
+  const remoteParticipants = useMemo(() => {
+    if (!participants || typeof participants.keys !== 'function') {
+      return [];
+    }
+    const localId = localParticipant?.id;
+    return [...participants.keys()].filter((id) => id !== localId);
+  }, [participants, localParticipant]);
 
-    // Attach mic stream to audio element (only for remote participants)
-    useEffect(() => {
-      if (!isLocalParticipant && audioRef.current && micStream && micStream.track) {
-        try {
-          const mediaStream = new MediaStream();
-          mediaStream.addTrack(micStream.track);
-          audioRef.current.srcObject = mediaStream;
-        } catch (err) {
-          console.error('Error attaching audio stream:', err);
-        }
-      } else if (audioRef.current) {
-        audioRef.current.srcObject = null;
+  // Safe toggle handlers to avoid circular JSON error
+  const handleToggleMic = () => {
+    if (toggleMic) {
+      try {
+        toggleMic();
+      } catch (err) {
+        console.warn('Error toggling mic:', err);
       }
-    }, [micStream, isLocalParticipant]);
-    
-    return (
-      <div className="relative w-full aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted={isLocalParticipant}
-          className="w-full h-full object-cover"
-        />
-        {!webcamOn && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl text-white font-bold">
-                  {(displayName || userName || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <p className="text-white text-sm">{displayName || userName || 'Participant'}</p>
-              {!micOn && (
-                <p className="text-gray-400 text-xs mt-1">🔇 Muted</p>
-              )}
-            </div>
-          </div>
-        )}
-        {!isLocalParticipant && micStream && (
-          <audio
-            ref={audioRef}
-            autoPlay
-            playsInline
-          />
-        )}
-      </div>
-    );
+    }
   };
 
-  // Filter remote participants (exclude local user to avoid duplication)
-  // Safely handle participants map
-  const participantsArray = participants && typeof participants.keys === 'function' 
-    ? Array.from(participants.keys()) 
-    : [];
-  
-  const remoteParticipants = localParticipant && localParticipant.id
-    ? participantsArray.filter(id => id !== localParticipant.id)
-    : participantsArray;
+  const handleToggleWebcam = () => {
+    if (toggleWebcam) {
+      try {
+        toggleWebcam();
+      } catch (err) {
+        console.warn('Error toggling webcam:', err);
+      }
+    }
+  };
 
-  // Calculate grid columns
+  const handleLeave = () => {
+    try {
+      if (leave) leave();
+    } catch (err) {
+      console.warn('Error calling leave():', err);
+    }
+    if (onLeave) onLeave();
+  };
+
   const participantCount = (localParticipant ? 1 : 0) + remoteParticipants.length;
   const gridCols = participantCount === 1 ? 'grid-cols-1' : participantCount === 2 ? 'grid-cols-2' : 'grid-cols-2';
 
   return (
     <div className="flex flex-col h-full bg-black">
-      {/* Video Grid */}
-      <div className={`flex-1 p-4 grid ${gridCols} gap-4 overflow-auto`}>
-        {/* Always show local user first (if available) */}
+      {/* Video Grid - Responsive: 1 col for mobile, 2 for desktop */}
+      <div className={`flex-1 p-4 grid ${gridCols} gap-4 overflow-auto items-center`}>
+        {/* Render Local User (You) - Only if it exists */}
         {localParticipant && localParticipant.id && (
           <ParticipantView 
-            key={`local-${localParticipant.id}`} 
-            participantId={localParticipant.id} 
+            key={`local-${localParticipant.id}`}
+            participantId={localParticipant.id}
+            userName={userName}
           />
         )}
         
-        {/* Show remote participants */}
-        {remoteParticipants.map((participantId) => (
+        {/* Render Remote Participants - Filtered to exclude local user */}
+        {remoteParticipants.map((id) => (
           <ParticipantView 
-            key={`remote-${participantId}`} 
-            participantId={participantId} 
+            key={`remote-${id}`}
+            participantId={id}
+            userName={userName}
           />
         ))}
-        
+
         {/* Show waiting message if no participants */}
         {participantCount === 0 && (
           <div className="flex items-center justify-center h-full col-span-2">
@@ -156,19 +173,11 @@ const MeetingView = ({ onLeave, userName }) => {
         )}
       </div>
 
-      {/* Controls Bar */}
+      {/* Control Bar */}
       <div className="bg-gradient-to-t from-black to-transparent p-6 flex-shrink-0">
         <div className="flex items-center justify-center gap-4">
           <button
-            onClick={() => {
-              if (toggleMic) {
-                try {
-                  toggleMic();
-                } catch (err) {
-                  console.warn('Error toggling mic:', err);
-                }
-              }
-            }}
+            onClick={handleToggleMic}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
               micEnabled 
                 ? 'bg-gray-700 hover:bg-gray-600' 
@@ -186,15 +195,7 @@ const MeetingView = ({ onLeave, userName }) => {
           </button>
 
           <button
-            onClick={() => {
-              if (toggleWebcam) {
-                try {
-                  toggleWebcam();
-                } catch (err) {
-                  console.warn('Error toggling webcam:', err);
-                }
-              }
-            }}
+            onClick={handleToggleWebcam}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
               webcamEnabled 
                 ? 'bg-gray-700 hover:bg-gray-600' 
@@ -212,18 +213,7 @@ const MeetingView = ({ onLeave, userName }) => {
           </button>
 
           <button
-            onClick={() => {
-              // Guard: Only call leave() if it exists
-              try {
-                if (leave) {
-                  leave();
-                }
-              } catch (err) {
-                console.warn('Error calling leave():', err);
-              }
-              // Always call onLeave to clean up state
-              if (onLeave) onLeave();
-            }}
+            onClick={handleLeave}
             className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors"
             aria-label="Leave meeting"
             title="Leave meeting"
