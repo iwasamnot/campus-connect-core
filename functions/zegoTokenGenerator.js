@@ -25,7 +25,9 @@ function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload)
   // Create payload JSON string (must be compact, no spaces)
   const payloadJson = JSON.stringify(payload);
   
-  // Create token structure (order matters for ZEGOCLOUD)
+  // Create token structure
+  // IMPORTANT: Key order matters for ZEGOCLOUD token signature verification
+  // Order must be: version, app_id, user_id, nonce, ctime, expire, payload
   const token = {
     version: '04',
     app_id: parseInt(appID), // Ensure it's a number
@@ -36,7 +38,8 @@ function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload)
     payload: payloadJson
   };
 
-  // Create compact JSON string (no spaces, sorted keys might matter)
+  // Create compact JSON string (no spaces)
+  // JavaScript JSON.stringify maintains key insertion order, which is what we need
   const tokenString = JSON.stringify(token);
   
   // Generate signature using HMAC-SHA256
