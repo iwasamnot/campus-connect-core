@@ -2,6 +2,24 @@
 
 This guide helps you grant microphone and camera permissions in your browser for local testing of ZEGOCLOUD calling features.
 
+## ⚠️ Important: Use External Browser
+
+**If you're using Cursor's built-in browser preview or any embedded browser in a code editor**, you **must use an external browser** (Chrome, Edge, Firefox, Safari) for testing calling features. Embedded browsers don't support microphone/camera permissions.
+
+### Quick Setup Steps:
+
+1. **Start your dev server:**
+   ```bash
+   npm run dev
+   ```
+
+2. **Open the URL shown in the terminal** (usually `http://localhost:5173`) in an **external browser**:
+   - **Chrome/Edge**: Copy the URL and paste it in a new tab
+   - **Firefox**: Copy the URL and paste it in a new tab
+   - **Or**: Press `Ctrl+Click` (Windows) / `Cmd+Click` (Mac) on the localhost link in the terminal
+
+3. **Grant permissions** using the steps below for your browser
+
 ## Quick Setup for Local Testing
 
 ### Chrome/Edge (Chromium-based browsers)
