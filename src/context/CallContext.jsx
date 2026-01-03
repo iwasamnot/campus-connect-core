@@ -112,37 +112,41 @@ const CallProvider = ({ children }) => {
       // Generate meeting ID (same format as before for compatibility)
       const meetingID = [user.uid, target.id].sort().join('_');
 
-      // Send call notification to the other user via Firestore
-      try {
-        const callNotificationRef = doc(collection(db, 'callNotifications'), `${target.id}_${Date.now()}`);
-        await setDoc(callNotificationRef, {
-          from: user.uid,
-          fromName: user.email || user.displayName || 'User',
-          to: target.id,
-          roomID: meetingID,
-          type: type, // 'voice' or 'video'
-          status: 'ringing',
-          createdAt: serverTimestamp()
-        });
-      } catch (err) {
-        console.error('Error sending call notification:', err);
-        // Continue anyway - the call might still work
-      }
+      // Note: Call notification will be sent after we get the real meetingId from VideoSDK
 
       // Get VideoSDK token and meeting ID from backend
       try {
         console.log('🔐 Requesting VideoSDK token...');
         const getToken = httpsCallable(functions, 'getVideoSDKToken');
         const tokenResult = await getToken({
-          userId: user.uid,
-          meetingId: meetingID
+          userId: user.uid
         });
 
         if (tokenResult.data && tokenResult.data.token && tokenResult.data.meetingId) {
+          const realMeetingId = tokenResult.data.meetingId;
           setToken(tokenResult.data.token);
-          setMeetingId(tokenResult.data.meetingId);
+          setMeetingId(realMeetingId);
+          
+          // Update the notification with the real VideoSDK meetingId
+          try {
+            const callNotificationRef = doc(collection(db, 'callNotifications'), `${target.id}_${Date.now()}`);
+            await setDoc(callNotificationRef, {
+              from: user.uid,
+              fromName: user.email || user.displayName || 'User',
+              to: target.id,
+              roomID: realMeetingId, // Use the real VideoSDK meetingId
+              meetingId: realMeetingId, // Also store as meetingId for clarity
+              type: type, // 'voice' or 'video'
+              status: 'ringing',
+              createdAt: serverTimestamp()
+            });
+          } catch (notifErr) {
+            console.error('Error updating call notification with meetingId:', notifErr);
+            // Continue - the call might still work
+          }
+          
           setCallState('active');
-          console.log('✅ VideoSDK token received, call active');
+          console.log('✅ VideoSDK token received, call active with meetingId:', realMeetingId);
         } else {
           throw new Error('Invalid token response from server');
         }
@@ -162,17 +166,28 @@ const CallProvider = ({ children }) => {
 
   // Accept incoming call
   const acceptCall = useCallback(async () => {
+    // Guard: Check if we have an incoming call
     if (callState !== 'incoming' || !incomingCallNotificationRef.current) {
+      console.warn('acceptCall called but no incoming call found');
       return;
     }
+
+    // Guard: Check if notification and notificationDoc exist
+    const notificationRef = incomingCallNotificationRef.current;
+    if (!notificationRef.notification || !notificationRef.notificationDoc) {
+      console.error('Incoming call notification is missing data');
+      setCallState(null);
+      incomingCallNotificationRef.current = null;
+      return;
+    }
+
+    const { notification, notificationDoc } = notificationRef;
 
     // Stop ringtone
     if (ringtoneIntervalRef.current) {
       clearInterval(ringtoneIntervalRef.current);
       ringtoneIntervalRef.current = null;
     }
-
-    const { notification } = incomingCallNotificationRef.current;
 
     try {
       // Request permissions first
@@ -185,6 +200,17 @@ const CallProvider = ({ children }) => {
       } catch (err) {
         showError(`${notification.type === 'video' ? 'Camera and microphone' : 'Microphone'} access is required`);
         setCallState(null);
+        incomingCallNotificationRef.current = null;
+        return;
+      }
+
+      // Get the meetingId from the notification (should be the real VideoSDK meetingId)
+      const meetingIdToJoin = notification.meetingId || notification.roomID;
+      if (!meetingIdToJoin) {
+        console.error('No meetingId found in notification');
+        showError('Invalid call notification. Missing meeting ID.');
+        setCallState(null);
+        incomingCallNotificationRef.current = null;
         return;
       }
 
@@ -193,21 +219,24 @@ const CallProvider = ({ children }) => {
         console.log('🔐 Requesting VideoSDK token for incoming call...');
         const getToken = httpsCallable(functions, 'getVideoSDKToken');
         const tokenResult = await getToken({
-          userId: user.uid,
-          meetingId: notification.roomID
+          userId: user.uid
         });
 
-        if (tokenResult.data && tokenResult.data.token && tokenResult.data.meetingId) {
+        if (tokenResult.data && tokenResult.data.token) {
           setToken(tokenResult.data.token);
-          setMeetingId(tokenResult.data.meetingId);
+          setMeetingId(meetingIdToJoin); // Use the meetingId from the notification
           setCallState('active');
           setIsVideoEnabled(notification.type === 'video');
           setIsMuted(false);
 
           // Delete the notification
-          await deleteDoc(incomingCallNotificationRef.current.notificationDoc.ref);
+          try {
+            await deleteDoc(notificationDoc.ref);
+          } catch (deleteErr) {
+            console.error('Error deleting call notification:', deleteErr);
+          }
           incomingCallNotificationRef.current = null;
-          console.log('✅ VideoSDK token received, call active');
+          console.log('✅ VideoSDK token received, call active with meetingId:', meetingIdToJoin);
         } else {
           throw new Error('Invalid token response from server');
         }
@@ -215,6 +244,7 @@ const CallProvider = ({ children }) => {
         console.error('❌ Failed to get VideoSDK token for incoming call:', tokenError);
         showError('Failed to accept call. Please try again.');
         setCallState(null);
+        incomingCallNotificationRef.current = null;
         return;
       }
     } catch (error) {
@@ -236,8 +266,10 @@ const CallProvider = ({ children }) => {
     // If declining an incoming call, delete the notification
     if (callState === 'incoming' && incomingCallNotificationRef.current) {
       try {
-        const { notificationDoc } = incomingCallNotificationRef.current;
-        await deleteDoc(notificationDoc.ref);
+        const notificationRef = incomingCallNotificationRef.current;
+        if (notificationRef.notificationDoc && notificationRef.notificationDoc.ref) {
+          await deleteDoc(notificationRef.notificationDoc.ref);
+        }
       } catch (err) {
         console.error('Error deleting call notification:', err);
       }

@@ -3,7 +3,7 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 const MeetingView = ({ onLeave, userName }) => {
-  const { toggleMic, toggleWebcam, leave, participants, micEnabled, webcamEnabled, localParticipant } = useMeeting();
+  const { toggleMic, toggleWebcam, leave, participants, micEnabled, webcamEnabled, localParticipant, meeting } = useMeeting();
 
   const ParticipantView = ({ participantId, isLocal = false }) => {
     const { webcamStream, micStream, displayName, isLocal: isLocalParticipant } = useParticipant(participantId);
@@ -126,7 +126,15 @@ const MeetingView = ({ onLeave, userName }) => {
 
           <button
             onClick={() => {
-              leave();
+              // Guard: Only call leave() if meeting object exists
+              try {
+                if (meeting && leave) {
+                  leave();
+                }
+              } catch (err) {
+                console.warn('Error calling leave():', err);
+              }
+              // Always call onLeave to clean up state
               if (onLeave) onLeave();
             }}
             className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors"
