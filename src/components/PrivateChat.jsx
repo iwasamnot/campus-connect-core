@@ -1276,7 +1276,7 @@ const PrivateChat = () => {
             <button
               onClick={() => {
                 if (!isCallingAvailable) {
-                  showError('Calling is not configured. Please add VITE_ZEGOCLOUD_APP_ID to your .env file. See ZEGOCLOUD_SETUP.md for instructions.');
+                  showError('Calling is temporarily unavailable. Please try again later.');
                   return;
                 }
                 const userProfile = userProfiles[selectedUser.id] || selectedUser;
@@ -1296,7 +1296,7 @@ const PrivateChat = () => {
                   ? 'hover:bg-gray-100 dark:hover:bg-gray-700' 
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              title={isCallingAvailable ? "Voice call" : "Calling unavailable - Check configuration"}
+              title={isCallingAvailable ? "Voice call" : "Calling unavailable"}
               aria-label={isCallingAvailable ? "Voice call" : "Calling unavailable"}
               disabled={!isCallingAvailable}
             >
@@ -1305,7 +1305,7 @@ const PrivateChat = () => {
             <button
               onClick={() => {
                 if (!isCallingAvailable) {
-                  showError('Calling is not configured. Please add VITE_ZEGOCLOUD_APP_ID to your .env file. See ZEGOCLOUD_SETUP.md for instructions.');
+                  showError('Calling is temporarily unavailable. Please try again later.');
                   return;
                 }
                 const userProfile = userProfiles[selectedUser.id] || selectedUser;
