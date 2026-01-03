@@ -240,16 +240,17 @@ A secure, student-only messaging platform for universities with AI-powered conte
      ```
      VITE_GEMINI_API_KEY=your-gemini-api-key-here
      ```
-   - Add your ZEGOCLOUD credentials (optional, for voice/video calling):
+   - Add your ZEGOCLOUD App ID (optional, for voice/video calling):
      ```
      VITE_ZEGOCLOUD_APP_ID=your-zegocloud-app-id
-     VITE_ZEGOCLOUD_SERVER_SECRET=your-zegocloud-server-secret
      ```
    - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for AI Help Assistant, Virtual Senior, and toxicity detection)
-   - **ZEGOCLOUD Credentials**: Get from https://console.zegocloud.com (for voice and video calling features)
-     - App ID: Found in Project Configuration → Basic Information
+   - **ZEGOCLOUD Setup**: Get from https://console.zegocloud.com (for voice and video calling features)
+     - App ID: Found in Project Configuration → Basic Information (add to `.env` as `VITE_ZEGOCLOUD_APP_ID`)
      - Server Secret: Found in Project Configuration → Basic Configurations → ServerSecret
-     - **Note**: For production, implement server-side token generation for security
+     - **Important**: Server Secret is stored securely in Firebase Secret Manager (NOT in `.env` file)
+     - See `ZEGOCLOUD_TOKEN_SETUP.md` for complete setup instructions
+     - Setup command: `firebase functions:secrets:set ZEGO_SERVER_SECRET`
    - **Important**: Restart the dev server after adding environment variables
    - If no API key is provided, the AI will use the local knowledge base
    - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)
