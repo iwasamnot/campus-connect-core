@@ -3,16 +3,30 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 const MeetingView = ({ onLeave, userName }) => {
-  const { toggleMic, toggleWebcam, leave, participants, micEnabled, webcamEnabled, localParticipant, meeting, join } = useMeeting();
+  const { 
+    toggleMic, 
+    toggleWebcam, 
+    leave, 
+    participants, 
+    micEnabled, 
+    webcamEnabled, 
+    localParticipant, 
+    meeting, 
+    join 
+  } = useMeeting() || {};
 
   // Join meeting on mount
   useEffect(() => {
     if (join) {
-      join();
+      try {
+        join();
+      } catch (err) {
+        console.warn('Error joining meeting:', err);
+      }
     }
     return () => {
       // Cleanup on unmount
-      if (leave && meeting) {
+      if (leave) {
         try {
           leave();
         } catch (err) {
@@ -20,7 +34,7 @@ const MeetingView = ({ onLeave, userName }) => {
         }
       }
     };
-  }, [join, leave, meeting]);
+  }, [join, leave]);
 
   const ParticipantView = ({ participantId }) => {
     const { webcamStream, micStream, displayName, webcamOn, micOn, isLocal: isLocalParticipant } = useParticipant(participantId);
@@ -96,9 +110,14 @@ const MeetingView = ({ onLeave, userName }) => {
   };
 
   // Filter remote participants (exclude local user to avoid duplication)
-  const remoteParticipants = localParticipant 
-    ? Array.from(participants.keys()).filter(id => id !== localParticipant.id)
-    : Array.from(participants.keys());
+  // Safely handle participants map
+  const participantsArray = participants && typeof participants.keys === 'function' 
+    ? Array.from(participants.keys()) 
+    : [];
+  
+  const remoteParticipants = localParticipant && localParticipant.id
+    ? participantsArray.filter(id => id !== localParticipant.id)
+    : participantsArray;
 
   // Calculate grid columns
   const participantCount = (localParticipant ? 1 : 0) + remoteParticipants.length;
@@ -108,10 +127,10 @@ const MeetingView = ({ onLeave, userName }) => {
     <div className="flex flex-col h-full bg-black">
       {/* Video Grid */}
       <div className={`flex-1 p-4 grid ${gridCols} gap-4 overflow-auto`}>
-        {/* Always show local user first */}
-        {localParticipant && (
+        {/* Always show local user first (if available) */}
+        {localParticipant && localParticipant.id && (
           <ParticipantView 
-            key={localParticipant.id} 
+            key={`local-${localParticipant.id}`} 
             participantId={localParticipant.id} 
           />
         )}
@@ -119,7 +138,7 @@ const MeetingView = ({ onLeave, userName }) => {
         {/* Show remote participants */}
         {remoteParticipants.map((participantId) => (
           <ParticipantView 
-            key={participantId} 
+            key={`remote-${participantId}`} 
             participantId={participantId} 
           />
         ))}
@@ -141,7 +160,15 @@ const MeetingView = ({ onLeave, userName }) => {
       <div className="bg-gradient-to-t from-black to-transparent p-6 flex-shrink-0">
         <div className="flex items-center justify-center gap-4">
           <button
-            onClick={() => toggleMic()}
+            onClick={() => {
+              if (toggleMic) {
+                try {
+                  toggleMic();
+                } catch (err) {
+                  console.warn('Error toggling mic:', err);
+                }
+              }
+            }}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
               micEnabled 
                 ? 'bg-gray-700 hover:bg-gray-600' 
@@ -149,6 +176,7 @@ const MeetingView = ({ onLeave, userName }) => {
             }`}
             aria-label={micEnabled ? 'Mute' : 'Unmute'}
             title={micEnabled ? 'Mute' : 'Unmute'}
+            disabled={!toggleMic}
           >
             {micEnabled ? (
               <Mic size={24} className="text-white" />
@@ -158,7 +186,15 @@ const MeetingView = ({ onLeave, userName }) => {
           </button>
 
           <button
-            onClick={() => toggleWebcam()}
+            onClick={() => {
+              if (toggleWebcam) {
+                try {
+                  toggleWebcam();
+                } catch (err) {
+                  console.warn('Error toggling webcam:', err);
+                }
+              }
+            }}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
               webcamEnabled 
                 ? 'bg-gray-700 hover:bg-gray-600' 
@@ -166,6 +202,7 @@ const MeetingView = ({ onLeave, userName }) => {
             }`}
             aria-label={webcamEnabled ? 'Turn off camera' : 'Turn on camera'}
             title={webcamEnabled ? 'Turn off camera' : 'Turn on camera'}
+            disabled={!toggleWebcam}
           >
             {webcamEnabled ? (
               <Video size={24} className="text-white" />
@@ -176,9 +213,9 @@ const MeetingView = ({ onLeave, userName }) => {
 
           <button
             onClick={() => {
-              // Guard: Only call leave() if meeting object exists
+              // Guard: Only call leave() if it exists
               try {
-                if (meeting && leave) {
+                if (leave) {
                   leave();
                 }
               } catch (err) {
