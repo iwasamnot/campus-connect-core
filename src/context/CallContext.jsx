@@ -161,18 +161,34 @@ const CallProvider = ({ children }) => {
         zegoCloudRef.current = null;
       }
       
-      const zg = new ZegoExpressEngine(appIDNum, token);
-      
       // CRITICAL: Force test environment mode to match Testing status in ZEGOCLOUD Console
       // Without this, SDK defaults to production (env: 0), which causes connection failures
       // when your console is set to Testing mode, resulting in "frequently shutdown" errors
+      // Method A: Pass testEnvironment in constructor (recommended for recent SDK versions)
+      let zg;
       try {
-        zg.setCustomConfig({ testEnvironment: true });
-        console.log('✅ ZEGOCLOUD forced to TEST environment (matches Testing mode in console)');
-      } catch (err) {
-        console.error('❌ CRITICAL: Could not set ZEGOCLOUD test environment config:', err);
-        console.error('   This may cause connection failures if your console is in Testing mode');
-        // Continue anyway, but connection may fail
+        // Try Method A: Pass config as third parameter to constructor
+        zg = new ZegoExpressEngine(appIDNum, token, { 
+          testEnvironment: true 
+        });
+        console.log('✅ ZEGOCLOUD initialized with testEnvironment: true (Method A - constructor)');
+      } catch (constructorError) {
+        console.warn('⚠️ Method A failed, trying Method B:', constructorError);
+        // Method B: Try static method before constructor (for older SDK versions)
+        try {
+          if (ZegoExpressEngine.setDebugConfig) {
+            ZegoExpressEngine.setDebugConfig({ testEnvironment: true });
+          } else if (ZegoExpressEngine.setLogConfig) {
+            ZegoExpressEngine.setLogConfig({ testEnvironment: true });
+          }
+          zg = new ZegoExpressEngine(appIDNum, token);
+          console.log('✅ ZEGOCLOUD initialized with testEnvironment: true (Method B - static method)');
+        } catch (methodBError) {
+          console.error('❌ CRITICAL: Both methods failed to set test environment:', methodBError);
+          // Fallback: Create without test environment config (may fail if console is in Testing mode)
+          zg = new ZegoExpressEngine(appIDNum, token);
+          console.warn('⚠️ ZEGOCLOUD created without test environment config - connection may fail');
+        }
       }
       
       // Set up event listeners for remote streams
