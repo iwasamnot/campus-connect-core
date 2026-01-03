@@ -26,8 +26,8 @@ if (!admin.apps.length) {
 // ZEGOCLOUD Token Generator (Manual Implementation)
 const { generateToken04 } = require('./zegoTokenGenerator');
 
-// ZEGOCLOUD App ID (hardcoded, can be moved to env if needed)
-const APP_ID = 128222087;
+// ZEGOCLOUD App ID (hardcoded, must be a NUMBER, not a string)
+const APP_ID = 128222087; // Number type
 
 // Firebase Functions v2 with Secret Manager
 // The secret ZEGO_SERVER_SECRET must be set using: firebase functions:secrets:set ZEGO_SERVER_SECRET
@@ -144,45 +144,43 @@ exports.generateZegoToken = onCall(
 
     try {
       // Generate token
-      // Token expires in 24 hours (86400 seconds)
-      const effectiveTimeInSeconds = 86400;
-      const payloadObject = {
-        room_id: roomID,
-        privilege: {
-          1: 1, // Login room (1 = allow)
-          2: 1  // Publish stream (1 = allow)
-        },
-        stream_id_list: null
-      };
+      // Token expires in 1 hour (3600 seconds) - standard for testing
+      const effectiveTimeInSeconds = 3600;
+      
+      // Use empty string payload for basic tokens (as recommended for testing)
+      // For room-restricted tokens, use payload object with room_id
+      const payload = "";
 
       console.log('=== Token Generation Parameters ===');
       console.log(`📝 APP_ID: ${APP_ID} (type: ${typeof APP_ID}) - MUST be number`);
       console.log(`👤 USERID: "${userId}" (type: ${typeof userId}, length: ${userId.length}) - MUST be string`);
-      console.log(`🏠 roomID: "${roomID}"`);
+      console.log(`🏠 roomID: "${roomID}" (for reference only)`);
       console.log(`🔑 SERVER_SECRET length: ${SERVER_SECRET ? SERVER_SECRET.length : 0} - MUST be exactly 32`);
       console.log(`⏱️  Token expires in: ${effectiveTimeInSeconds} seconds`);
-      console.log(`📦 Payload object:`, JSON.stringify(payloadObject));
+      console.log(`📦 Payload: "${payload}" (empty string for basic token)`);
       console.log('====================================');
 
-      // CRITICAL: Verify types match ZEGOCLOUD requirements
-      // generateToken04 expects: (appID: number, userID: string, secret: string, effectiveTimeInSeconds: number, payload: object|string)
-      const appIDNum = typeof APP_ID === 'number' ? APP_ID : parseInt(APP_ID);
-      const userIDStr = String(userId);
-      const secretStr = String(SERVER_SECRET);
+      // CRITICAL: Ensure types match ZEGOCLOUD requirements exactly
+      // generateToken04 expects: (appID: number, userID: string, secret: string, effectiveTimeInSeconds: number, payload: string)
+      // APP_ID is already a number constant (128222087)
+      const appIDNum = APP_ID; // Already a number, no conversion needed
+      const userIDStr = String(userId); // Ensure it's a string
+      const secretStr = String(SERVER_SECRET); // Ensure it's a string
+      const effectiveTimeInt = parseInt(effectiveTimeInSeconds); // Ensure it's an integer
       
       console.log(`🔨 Calling generateToken04 with:`);
       console.log(`   appID: ${appIDNum} (type: ${typeof appIDNum})`);
       console.log(`   userID: "${userIDStr}" (type: ${typeof userIDStr})`);
       console.log(`   secret: length ${secretStr.length} (type: ${typeof secretStr})`);
-      console.log(`   effectiveTime: ${effectiveTimeInSeconds} (type: ${typeof effectiveTimeInSeconds})`);
-      console.log(`   payload: object`);
+      console.log(`   effectiveTime: ${effectiveTimeInt} (type: ${typeof effectiveTimeInt})`);
+      console.log(`   payload: "${payload}" (type: ${typeof payload})`);
       
       const token = generateToken04(
-        appIDNum,        // Number (128222087)
+        appIDNum,        // Number (128222087) - MUST be number, not string
         userIDStr,       // String (must match frontend user.uid exactly)
         secretStr,       // String (32 hex characters)
-        effectiveTimeInSeconds, // Number
-        payloadObject    // Object (will be JSON.stringified internally)
+        effectiveTimeInt, // Number (integer)
+        payload          // String (empty string "" for basic tokens)
       );
       console.log(`✅ Token generated successfully for userId="${userId}"`);
 
