@@ -35,6 +35,7 @@ const CallProvider = ({ children }) => {
   const remoteVideoRef = useRef(null);
   const roomIDRef = useRef(null);
   const incomingCallNotificationRef = useRef(null);
+  const ringtoneIntervalRef = useRef(null);
 
   // Check if calling is configured
   const isCallingAvailable = useCallback(() => {
@@ -207,7 +208,18 @@ const CallProvider = ({ children }) => {
         console.log('Room state changed:', { roomID, state, errorCode, extendedData });
         if (state === 'DISCONNECTED' && errorCode !== 0) {
           console.error('Room disconnected with error:', errorCode);
-          showError('Call connection lost. Please try again.');
+          
+          // Handle specific error codes
+          let errorMessage = 'Call connection lost. Please try again.';
+          if (errorCode === 20014) {
+            errorMessage = 'ZEGOCLOUD app configuration error (20014). Please verify your App ID and app settings in ZEGOCLOUD Console.';
+          } else if (errorCode === 50119) {
+            errorMessage = 'ZEGOCLOUD token authentication failed. Please check server-side token generation configuration.';
+          } else if (errorCode === 1102016) {
+            errorMessage = 'ZEGOCLOUD connection error. Please check your network and try again.';
+          }
+          
+          showError(errorMessage);
           endCallInternal();
         }
       });
@@ -293,10 +305,14 @@ const CallProvider = ({ children }) => {
       
       // Try to get token from server-side Cloud Function first
       try {
-        console.log('🔐 Attempting to generate ZEGOCLOUD token from server...');
+        console.log('=== ZEGOCLOUD Token Generation Request ===');
+        console.log(`📤 Sending token request with userId: "${user.uid}"`);
+        console.log(`📤 RoomID: "${roomID}"`);
+        console.log('==========================================');
+        
         const generateToken = httpsCallable(functions, 'generateZegoToken');
         const tokenResult = await generateToken({
-          userId: user.uid,
+          userId: user.uid, // CRITICAL: This UserID MUST match the userID used in loginRoom() below
           roomID: roomID
         });
         
@@ -304,6 +320,8 @@ const CallProvider = ({ children }) => {
           token = tokenResult.data.token;
           console.log('✅ Token generated successfully from server');
           console.log(`Token length: ${token.length}, preview: ${token.substring(0, 20)}...`);
+          console.log(`⚠️ IMPORTANT: This token was generated for userId="${user.uid}"`);
+          console.log(`⚠️ IMPORTANT: You MUST use userID="${user.uid}" in loginRoom() call below`);
         } else {
           console.error('❌ Invalid token returned from server:', tokenResult.data);
           throw new Error('Token not returned from server or invalid format');
@@ -327,10 +345,17 @@ const CallProvider = ({ children }) => {
       
       // Join room with token (empty string for token-less mode)
       // CRITICAL: Always pass a string to loginRoom, never null/undefined
+      // CRITICAL: The userID used here MUST match the userId used to generate the token above
       try {
-        console.log(`Joining room with token (length: ${token.length})...`);
+        console.log('=== ZEGOCLOUD loginRoom Call ===');
+        console.log(`🏠 RoomID: "${roomID}"`);
+        console.log(`👤 UserID: "${user.uid}" (type: ${typeof user.uid})`);
+        console.log(`🔑 Token length: ${token.length}`);
+        console.log(`⚠️ CRITICAL: userID="${user.uid}" MUST match the userId used in token generation above`);
+        console.log('================================');
+        
         loginResult = await zg.loginRoom(roomID, token, { 
-          userID: user.uid, 
+          userID: user.uid, // CRITICAL: Must match userId used in generateToken() call above
           userName: user.email || user.displayName || 'User' 
         });
       } catch (err) {
@@ -338,21 +363,34 @@ const CallProvider = ({ children }) => {
         const errorMsg = err?.message || String(err || '');
         const errorCode = err?.code || err?.errorCode;
         
-        // Check if it's a token-related error
+        // Check for specific error codes
+        let userFriendlyError = `Failed to start call. Error: ${errorMsg || errorCode || 'Unknown error'}`;
+        
         if (errorMsg.includes('substring') || errorMsg.includes('null') || errorMsg.includes('Cannot read properties') || errorCode === 1100001) {
-          showError('ZEGOCLOUD token authentication required. Please configure server-side token generation (see ZEGOCLOUD_TOKEN_SETUP.md) OR enable token-less mode in ZEGOCLOUD Console.');
-        } else {
-          showError(`Failed to start call. Error: ${errorMsg || errorCode || 'Unknown error'}`);
+          userFriendlyError = 'ZEGOCLOUD token authentication required. Please configure server-side token generation (see ZEGOCLOUD_TOKEN_SETUP.md) OR enable token-less mode in ZEGOCLOUD Console.';
+        } else if (errorCode === 20014 || errorMsg.includes('20014')) {
+          userFriendlyError = 'ZEGOCLOUD app configuration error (20014). Please verify your App ID (128222087) and app settings in ZEGOCLOUD Console. The app may need to be activated or reconfigured.';
+        } else if (errorCode === 50119 || errorMsg.includes('50119') || errorMsg.includes('token auth err')) {
+          userFriendlyError = 'ZEGOCLOUD token authentication failed (50119). Check: 1) Token mode is enabled in ZEGOCLOUD Console (Settings → Basic Configurations → Authentication Mode = "Token"), 2) Server Secret matches exactly (32 hex chars, no spaces), 3) Function is redeployed. See function logs for details.';
         }
+        
+        showError(userFriendlyError);
         setCallState(null);
         return;
       }
 
       if (loginResult !== 0) {
+        let errorMessage = `Failed to join room. Error code: ${loginResult}`;
         if (loginResult === 1100001) {
-          throw new Error('ZEGOCLOUD requires token authentication. Please enable token-less mode in your ZEGOCLOUD Console (Project Settings → Basic Configurations → Enable Token-less mode) OR implement server-side token generation. See ZEGOCLOUD_SETUP.md for details.');
+          errorMessage = 'ZEGOCLOUD requires token authentication. Please enable token-less mode in your ZEGOCLOUD Console (Project Settings → Basic Configurations → Enable Token-less mode) OR implement server-side token generation. See ZEGOCLOUD_SETUP.md for details.';
+        } else if (loginResult === 20014) {
+          errorMessage = 'ZEGOCLOUD app configuration error (20014). Please verify your App ID (128222087) and app settings in ZEGOCLOUD Console. The app may not be properly activated or configured.';
+        } else if (loginResult === 50119) {
+          errorMessage = 'ZEGOCLOUD token authentication failed (50119). Check: 1) Token mode is enabled in ZEGOCLOUD Console (Settings → Basic Configurations → Authentication Mode = "Token"), 2) Server Secret matches exactly (32 hex chars, no spaces), 3) Function is redeployed. See function logs for details.';
+        } else if (loginResult === 1102016) {
+          errorMessage = 'ZEGOCLOUD connection error (1102016). Please check your network connection and try again.';
         }
-        throw new Error(`Failed to join room. Error code: ${loginResult}`);
+        throw new Error(errorMessage);
       }
 
       // Create and publish stream
@@ -394,6 +432,12 @@ const CallProvider = ({ children }) => {
       return;
     }
 
+    // Stop ringtone
+    if (ringtoneIntervalRef.current) {
+      clearInterval(ringtoneIntervalRef.current);
+      ringtoneIntervalRef.current = null;
+    }
+
     const { notification, notificationDoc } = incomingCallNotificationRef.current;
     
     try {
@@ -406,19 +450,72 @@ const CallProvider = ({ children }) => {
       
       roomIDRef.current = notification.roomID;
       
-      // Try with empty string token first, then without token
+      // Generate token server-side (same as startCall)
+      let token = '';
+      try {
+        console.log('=== ZEGOCLOUD Token Generation Request (Incoming Call) ===');
+        console.log(`📤 Sending token request with userId: "${user.uid}"`);
+        console.log(`📤 RoomID: "${notification.roomID}"`);
+        console.log('===========================================================');
+        
+        const generateToken = httpsCallable(functions, 'generateZegoToken');
+        const tokenResult = await generateToken({
+          userId: user.uid, // CRITICAL: This UserID MUST match the userID used in loginRoom() below
+          roomID: notification.roomID
+        });
+        
+        if (tokenResult.data && tokenResult.data.token && typeof tokenResult.data.token === 'string') {
+          token = tokenResult.data.token;
+          console.log('✅ Token generated successfully from server for incoming call');
+          console.log(`⚠️ IMPORTANT: This token was generated for userId="${user.uid}"`);
+          console.log(`⚠️ IMPORTANT: You MUST use userID="${user.uid}" in loginRoom() call below`);
+        } else {
+          console.error('❌ Invalid token returned from server for incoming call:', tokenResult.data);
+          throw new Error('Token not returned from server or invalid format');
+        }
+      } catch (tokenError) {
+        console.warn('⚠️ Server-side token generation failed for incoming call:', tokenError);
+        console.warn('💡 Falling back to token-less mode (empty string token)');
+        token = '';
+      }
+
+      // Join room with token (guaranteed to be a string)
+      // CRITICAL: The userID used here MUST match the userId used to generate the token above
       let loginResult;
       try {
-        loginResult = await zg.loginRoom(notification.roomID, '', {
-          userID: user.uid,
+        console.log('=== ZEGOCLOUD loginRoom Call (Incoming Call) ===');
+        console.log(`🏠 RoomID: "${notification.roomID}"`);
+        console.log(`👤 UserID: "${user.uid}" (type: ${typeof user.uid})`);
+        console.log(`🔑 Token length: ${token.length}`);
+        console.log(`⚠️ CRITICAL: userID="${user.uid}" MUST match the userId used in token generation above`);
+        console.log('================================================');
+        
+        loginResult = await zg.loginRoom(notification.roomID, token, {
+          userID: user.uid, // CRITICAL: Must match userId used in generateToken() call above
           userName: user.email || user.displayName || 'User'
         });
       } catch (err) {
-        console.log('Trying token-less mode without token parameter');
-        loginResult = await zg.loginRoom(notification.roomID, {
-          userID: user.uid,
-          userName: user.email || user.displayName || 'User'
-        });
+        console.error('Failed to join room for incoming call:', err);
+        const errorMsg = err?.message || String(err || '');
+        const errorCode = err?.code || err?.errorCode;
+        
+        let userFriendlyError = `Failed to accept call. Error: ${errorMsg || errorCode || 'Unknown error'}`;
+        
+        if (errorMsg.includes('substring') || errorMsg.includes('null') || errorMsg.includes('Cannot read properties') || errorCode === 1100001) {
+          userFriendlyError = 'ZEGOCLOUD token authentication required. Please configure server-side token generation (see ZEGOCLOUD_TOKEN_SETUP.md) OR enable token-less mode in ZEGOCLOUD Console.';
+        } else if (errorCode === 20014 || errorMsg.includes('20014')) {
+          userFriendlyError = 'ZEGOCLOUD app configuration error (20014). Please verify your App ID (128222087) and app settings in ZEGOCLOUD Console. The app may need to be activated or reconfigured.';
+        } else if (errorCode === 50119 || errorMsg.includes('50119') || errorMsg.includes('token auth err')) {
+          userFriendlyError = 'ZEGOCLOUD token authentication failed (50119). Check: 1) Token mode is enabled in ZEGOCLOUD Console (Settings → Basic Configurations → Authentication Mode = "Token"), 2) Server Secret matches exactly (32 hex chars, no spaces), 3) Function is redeployed. See function logs for details.';
+        } else if (errorCode === 20014 || errorMsg.includes('20014')) {
+          userFriendlyError = 'ZEGOCLOUD app configuration error (20014). Please verify your App ID and app settings in ZEGOCLOUD Console. The app may need to be activated or reconfigured.';
+        } else if (errorCode === 50119 || errorMsg.includes('50119') || errorMsg.includes('token auth err')) {
+          userFriendlyError = 'ZEGOCLOUD token authentication failed. Please verify your Server Secret matches exactly what is in ZEGOCLOUD Console.';
+        }
+        
+        showError(userFriendlyError);
+        setCallState(null);
+        return;
       }
       
       if (loginResult === 0) {
@@ -476,6 +573,12 @@ const CallProvider = ({ children }) => {
 
   // End call (public API)
   const endCall = useCallback(async () => {
+    // Stop ringtone if playing
+    if (ringtoneIntervalRef.current) {
+      clearInterval(ringtoneIntervalRef.current);
+      ringtoneIntervalRef.current = null;
+    }
+
     // If declining an incoming call, delete the notification
     if (callState === 'incoming' && incomingCallNotificationRef.current) {
       try {
@@ -526,6 +629,56 @@ const CallProvider = ({ children }) => {
     const notificationsRef = collection(db, 'callNotifications');
     const q = query(notificationsRef, where('to', '==', user.uid), where('status', '==', 'ringing'), limit(1));
     
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Create ringtone beep sound
+    const playRingtoneBeep = () => {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } catch (err) {
+        console.warn('Could not play ringtone:', err);
+      }
+    };
+
+    const playRingtone = () => {
+      // Stop any existing ringtone
+      if (ringtoneIntervalRef.current) {
+        clearInterval(ringtoneIntervalRef.current);
+      }
+      
+      // Play immediately
+      playRingtoneBeep();
+      
+      // Then play every 2 seconds
+      ringtoneIntervalRef.current = setInterval(() => {
+        playRingtoneBeep();
+      }, 2000);
+    };
+
+    const stopRingtone = () => {
+      if (ringtoneIntervalRef.current) {
+        clearInterval(ringtoneIntervalRef.current);
+        ringtoneIntervalRef.current = null;
+      }
+    };
+    
     const unsubscribe = onSnapshot(q, async (snapshot) => {
       if (!snapshot.empty && callState === null) { // Only accept if not already in a call
         const notification = snapshot.docs[0].data();
@@ -547,13 +700,58 @@ const CallProvider = ({ children }) => {
           notification,
           notificationDoc
         };
+
+        // Show browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            const browserNotification = new Notification('Incoming Call', {
+              body: `${notification.fromName || 'Someone'} is calling you (${notification.type === 'video' ? 'Video' : 'Voice'} call)`,
+              icon: '/logo.png',
+              badge: '/logo.png',
+              tag: 'incoming-call',
+              requireInteraction: true,
+              silent: false
+            });
+
+            browserNotification.onclick = () => {
+              window.focus();
+              browserNotification.close();
+            };
+
+            // Auto-close after 30 seconds
+            setTimeout(() => {
+              browserNotification.close();
+            }, 30000);
+          } catch (err) {
+            console.warn('Could not show browser notification:', err);
+          }
+        }
+
+        // Play ringtone
+        playRingtone();
+      } else if (snapshot.empty && callState === 'incoming') {
+        // Call was cancelled/ended
+        stopRingtone();
+        setCallState(null);
+        incomingCallNotificationRef.current = null;
       }
     }, (error) => {
       console.error('Error listening for call notifications:', error);
     });
 
-    return () => unsubscribe();
-  }, [user, isCallingAvailable, initZegoCloud, callState]);
+    return () => {
+      unsubscribe();
+      stopRingtone();
+    };
+  }, [user, isCallingAvailable, callState]);
+
+  // Stop ringtone when call state changes away from incoming
+  useEffect(() => {
+    if (callState !== 'incoming' && ringtoneIntervalRef.current) {
+      clearInterval(ringtoneIntervalRef.current);
+      ringtoneIntervalRef.current = null;
+    }
+  }, [callState]);
 
   // Cleanup on unmount
   useEffect(() => {

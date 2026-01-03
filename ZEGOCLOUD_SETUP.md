@@ -146,6 +146,19 @@ Once you've added your App ID:
 - Ensure both users have granted camera/microphone permissions
 - Check browser console for specific error messages
 
+## Server Information
+
+### WebSocket Server URL
+
+For App ID `128222087`, the ZEGOCLOUD WebSocket server URL is:
+```
+wss://webliveroom128222087-api.coolzcloud.com/ws
+```
+
+**Note**: The ZEGOCLOUD SDK automatically resolves and connects to the correct server URL based on your App ID. You don't need to manually configure this URL in the code - it's provided here for reference and troubleshooting purposes.
+
+If you're experiencing connection issues, you can verify that this server is accessible from your network.
+
 ## Additional Resources
 
 - [ZEGOCLOUD Documentation](https://docs.zegocloud.com/)

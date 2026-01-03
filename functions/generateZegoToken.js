@@ -26,6 +26,11 @@ const { generateToken04 } = require('./zegoTokenGenerator');
 // IMPORTANT: Firebase Functions v2 uses environment variables, not functions.config()
 // Set these using: firebase functions:config:set zegocloud.server_secret="YOUR_SECRET"
 // OR in Firebase Console → Functions → Configuration → Environment Variables
+//
+// ⚠️ IMPORTANT: Use SERVER SECRET, NOT Callback Secret!
+// - Server Secret: Used for token generation (32 hex characters)
+// - Callback Secret: Used for webhook verification (different secret)
+// Get Server Secret from: ZEGOCLOUD Console → Project Settings → Basic Configurations → ServerSecret
 // 
 // For debugging, log all available config at function load time
 const allConfig = functions.config();
@@ -41,7 +46,11 @@ console.log('Process env ZEGOCLOUD_SERVER_SECRET length:', process.env.ZEGOCLOUD
 console.log('================================');
 
 const APP_ID = zegocloudConfig.app_id || process.env.ZEGOCLOUD_APP_ID || '128222087';
-const SERVER_SECRET = zegocloudConfig.server_secret || process.env.ZEGOCLOUD_SERVER_SECRET;
+// Trim whitespace from Server Secret (common issue: extra spaces when copying)
+let SERVER_SECRET = (zegocloudConfig.server_secret || process.env.ZEGOCLOUD_SERVER_SECRET);
+if (SERVER_SECRET) {
+  SERVER_SECRET = SERVER_SECRET.trim();
+}
 
 exports.generateZegoToken = functions.https.onCall(async (data, context) => {
   // Verify user is authenticated
@@ -61,8 +70,16 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
     );
   }
 
+  // CRITICAL: Log UserID information for debugging
+  console.log('=== ZEGOCLOUD Token Generation - UserID Verification ===');
+  console.log(`📥 Received userId from frontend: "${userId}"`);
+  console.log(`🔐 Authenticated user UID (context.auth.uid): "${context.auth.uid}"`);
+  console.log(`✓ UserID match check: ${userId === context.auth.uid ? 'MATCH ✓' : 'MISMATCH ✗'}`);
+  console.log('========================================================');
+
   // Verify userId matches authenticated user (security check)
   if (userId !== context.auth.uid) {
+    console.error(`❌ ERROR: UserID mismatch! Frontend sent "${userId}" but authenticated user is "${context.auth.uid}"`);
     throw new functions.https.HttpsError(
       'permission-denied',
       'User can only generate tokens for themselves'
@@ -100,7 +117,7 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
   }
   
   // Verify Server Secret is not empty
-  if (SERVER_SECRET.trim() === '') {
+  if (!SERVER_SECRET || SERVER_SECRET.trim() === '') {
     console.error('ZEGOCLOUD_SERVER_SECRET is set but empty');
     throw new functions.https.HttpsError(
       'failed-precondition',
@@ -108,7 +125,17 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
     );
   }
   
+  // Validate Server Secret format (should be 32 hex characters)
+  // ZEGOCLOUD Server Secrets are typically 32-character hex strings
+  const secretPattern = /^[0-9a-fA-F]{32}$/;
+  if (!secretPattern.test(SERVER_SECRET)) {
+    console.warn(`⚠️ WARNING: Server Secret format may be incorrect. Expected 32 hex characters, got ${SERVER_SECRET.length} characters.`);
+    console.warn(`   First 10 chars: ${SERVER_SECRET.substring(0, 10)}...`);
+    console.warn(`   This might cause error 50119 (token auth err) if the secret is incorrect.`);
+  }
+  
   console.log(`Using APP_ID: ${APP_ID}, SERVER_SECRET length: ${SERVER_SECRET.length} (hidden for security)`);
+  console.log(`SERVER_SECRET format check: ${secretPattern.test(SERVER_SECRET) ? 'Valid (32 hex chars) ✓' : 'Warning: May be invalid format ⚠️'}`);
 
   try {
     // Generate token
@@ -123,23 +150,64 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
       stream_id_list: null
     };
 
-    console.log(`Generating token with APP_ID: ${APP_ID}, userId: ${userId}, roomID: ${roomID}`);
-    console.log(`SERVER_SECRET length: ${SERVER_SECRET ? SERVER_SECRET.length : 0}`);
-    console.log(`Payload object:`, JSON.stringify(payloadObject));
+    console.log('=== Token Generation Parameters ===');
+    console.log(`📝 APP_ID: ${APP_ID} (type: ${typeof APP_ID})`);
+    console.log(`👤 USERID: "${userId}" (type: ${typeof userId}, length: ${userId.length})`);
+    console.log(`🏠 roomID: "${roomID}"`);
+    console.log(`🔑 SERVER_SECRET length: ${SERVER_SECRET ? SERVER_SECRET.length : 0}`);
+    console.log(`⏱️  Token expires in: ${effectiveTimeInSeconds} seconds`);
+    console.log(`📦 Payload object:`, JSON.stringify(payloadObject));
+    console.log('====================================');
 
+    console.log(`🔨 Calling generateToken04 with userId="${userId}"`);
     const token = generateToken04(
       parseInt(APP_ID),
-      userId,
+      userId, // CRITICAL: This UserID MUST match the userID used in loginRoom() on frontend
       SERVER_SECRET,
       effectiveTimeInSeconds,
       payloadObject
     );
+    console.log(`✅ Token generated successfully for userId="${userId}"`);
 
     console.log(`Generated token for user ${userId} in room ${roomID}`);
     console.log(`Token length: ${token.length}`);
     console.log(`Token format check: ${token.includes('.') ? 'Has dot separator ✓' : 'Missing dot separator ✗'}`);
     console.log(`Token parts: ${token.split('.').length} parts (expected 2)`);
     console.log(`Token preview: ${token.substring(0, 50)}...`);
+    
+    // Decode token to verify contents
+    try {
+      const [tokenPart, signaturePart] = token.split('.');
+      const decodedToken = JSON.parse(Buffer.from(tokenPart, 'base64').toString('utf8'));
+      
+      console.log('=== Token Verification ===');
+      console.log(`📱 Decoded token app_id: ${decodedToken.app_id} (expected: ${APP_ID}) ${parseInt(decodedToken.app_id) === parseInt(APP_ID) ? '✓' : '✗'}`);
+      console.log(`👤 Decoded token user_id: "${decodedToken.user_id}" (expected: "${userId}") ${decodedToken.user_id === userId ? '✓ MATCH' : '✗ MISMATCH!'}`);
+      console.log(`🏠 Decoded token room_id: ${decodedToken.payload ? JSON.parse(decodedToken.payload).room_id : 'N/A'}`);
+      console.log(`⏰ Token expires at: ${new Date(decodedToken.expire * 1000).toISOString()}`);
+      console.log(`📋 Token structure: version=${decodedToken.version}, app_id=${decodedToken.app_id}, user_id="${decodedToken.user_id}"`);
+      console.log('==========================');
+      
+      // CRITICAL: Verify UserID matches
+      if (decodedToken.user_id !== userId) {
+        console.error(`❌ CRITICAL ERROR: Token user_id ("${decodedToken.user_id}") does not match requested userId ("${userId}")!`);
+        console.error(`   This token will FAIL authentication with error 50119!`);
+        console.error(`   Frontend MUST use userID="${decodedToken.user_id}" in loginRoom() call!`);
+      } else {
+        console.log(`✅ UserID verification: Token user_id matches requested userId`);
+        console.log(`✅ IMPORTANT: Frontend must use userID="${decodedToken.user_id}" in loginRoom() for this token to work`);
+      }
+      
+      // Verify App ID matches
+      if (parseInt(decodedToken.app_id) !== parseInt(APP_ID)) {
+        console.error(`❌ ERROR: Token app_id (${decodedToken.app_id}) does not match configured APP_ID (${APP_ID})!`);
+      }
+      
+      // Verify token structure
+      console.log(`Token has required fields: ${decodedToken.version && decodedToken.app_id && decodedToken.user_id ? 'Yes ✓' : 'No ✗'}`);
+    } catch (decodeError) {
+      console.error('⚠️ Could not decode token for verification:', decodeError);
+    }
     
     // Additional validation
     if (!token || token.length < 100) {
@@ -152,13 +220,48 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
     
     console.log('');
     console.log('📝 If you receive error 50119 (token auth err) from ZEGOCLOUD:');
-    console.log('   1. Verify Server Secret in ZEGOCLOUD Console:');
-    console.log('      https://console.zegocloud.com/project/YOUR_PROJECT_ID/settings');
-    console.log('   2. Copy the Server Secret exactly (no extra spaces)');
-    console.log('   3. Set it in Firebase Functions:');
-    console.log('      firebase functions:config:set zegocloud.server_secret="YOUR_SECRET"');
-    console.log('   4. Redeploy: firebase deploy --only functions:generateZegoToken');
-    console.log('   5. Wait 1-2 minutes for deployment to complete');
+    console.log('   This means ZEGOCLOUD rejected the token signature. Troubleshooting steps:');
+    console.log('');
+    console.log('   STEP 1: Verify Token Authentication is Enabled in ZEGOCLOUD Console');
+    console.log('      - Go to: https://console.zegocloud.com');
+    console.log('      - Navigate to: Your Project → Settings → Basic Configurations');
+    console.log('      - Check "Authentication Mode" - it should be set to "Token" (not "AppSign")');
+    console.log('      - If it\'s set to "AppSign", change it to "Token" and save');
+    console.log('      - Wait 2-3 minutes for changes to propagate');
+    console.log('');
+    console.log('   STEP 2: Verify Server Secret Format');
+    console.log('      - In ZEGOCLOUD Console → Settings → Basic Configurations');
+    console.log('      - Find "ServerSecret" (NOT "AppSecret", NOT "CallbackSecret")');
+    console.log('      - It should be exactly 32 hex characters (0-9, a-f, A-F)');
+    console.log(`      - Current Server Secret length: ${SERVER_SECRET.length}`);
+    console.log(`      - Current Server Secret format: ${secretPattern.test(SERVER_SECRET) ? 'Valid (32 hex) ✓' : 'Invalid format ⚠️'}`);
+    console.log('      - Copy it EXACTLY (no spaces, no quotes)');
+    console.log('      - First 10 characters of your secret: ' + SERVER_SECRET.substring(0, 10) + '...');
+    console.log('');
+    console.log('   STEP 3: Verify App ID');
+    console.log(`      - Current App ID: ${APP_ID}`);
+    console.log('      - In ZEGOCLOUD Console, verify App ID matches exactly: 128222087');
+    console.log('');
+    console.log('   STEP 4: Set Server Secret in Firebase Functions');
+    console.log('      firebase functions:config:set zegocloud.server_secret="YOUR_SERVER_SECRET"');
+    console.log('      (Replace YOUR_SERVER_SECRET with the exact 32-char hex string from ZEGOCLOUD Console)');
+    console.log('      (Use quotes, but NO spaces inside the quotes)');
+    console.log('      firebase deploy --only functions:generateZegoToken');
+    console.log('');
+    console.log('   STEP 5: Verify Configuration After Deployment');
+    console.log('      - Wait 2-3 minutes for deployment');
+    console.log('      - Check function logs: firebase functions:log --only generateZegoToken');
+    console.log('      - Look for "SERVER_SECRET format check: Valid" message');
+    console.log('      - If it says "Invalid", the secret format is wrong');
+    console.log('');
+    console.log('   STEP 6: Test Again');
+    console.log('      - Clear browser cache (Ctrl+Shift+Delete)');
+    console.log('      - Hard refresh (Ctrl+Shift+R)');
+    console.log('      - Try calling again');
+    console.log('');
+    console.log('   If still failing after all steps:');
+    console.log('      - Contact ZEGOCLOUD Support with your App ID and error code 50119');
+    console.log('      - They can verify if your Server Secret matches their records');
     console.log('');
     
     return { token };
