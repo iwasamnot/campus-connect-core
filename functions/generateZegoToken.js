@@ -156,21 +156,33 @@ exports.generateZegoToken = onCall(
       };
 
       console.log('=== Token Generation Parameters ===');
-      console.log(`📝 APP_ID: ${APP_ID} (type: ${typeof APP_ID})`);
-      console.log(`👤 USERID: "${userId}" (type: ${typeof userId}, length: ${userId.length})`);
+      console.log(`📝 APP_ID: ${APP_ID} (type: ${typeof APP_ID}) - MUST be number`);
+      console.log(`👤 USERID: "${userId}" (type: ${typeof userId}, length: ${userId.length}) - MUST be string`);
       console.log(`🏠 roomID: "${roomID}"`);
-      console.log(`🔑 SERVER_SECRET length: ${SERVER_SECRET ? SERVER_SECRET.length : 0}`);
+      console.log(`🔑 SERVER_SECRET length: ${SERVER_SECRET ? SERVER_SECRET.length : 0} - MUST be exactly 32`);
       console.log(`⏱️  Token expires in: ${effectiveTimeInSeconds} seconds`);
       console.log(`📦 Payload object:`, JSON.stringify(payloadObject));
       console.log('====================================');
 
-      console.log(`🔨 Calling generateToken04 with userId="${userId}"`);
+      // CRITICAL: Verify types match ZEGOCLOUD requirements
+      // generateToken04 expects: (appID: number, userID: string, secret: string, effectiveTimeInSeconds: number, payload: object|string)
+      const appIDNum = typeof APP_ID === 'number' ? APP_ID : parseInt(APP_ID);
+      const userIDStr = String(userId);
+      const secretStr = String(SERVER_SECRET);
+      
+      console.log(`🔨 Calling generateToken04 with:`);
+      console.log(`   appID: ${appIDNum} (type: ${typeof appIDNum})`);
+      console.log(`   userID: "${userIDStr}" (type: ${typeof userIDStr})`);
+      console.log(`   secret: length ${secretStr.length} (type: ${typeof secretStr})`);
+      console.log(`   effectiveTime: ${effectiveTimeInSeconds} (type: ${typeof effectiveTimeInSeconds})`);
+      console.log(`   payload: object`);
+      
       const token = generateToken04(
-        APP_ID,
-        userId, // CRITICAL: This UserID MUST match the userID used in loginRoom() on frontend
-        SERVER_SECRET,
-        effectiveTimeInSeconds,
-        payloadObject
+        appIDNum,        // Number (128222087)
+        userIDStr,       // String (must match frontend user.uid exactly)
+        secretStr,       // String (32 hex characters)
+        effectiveTimeInSeconds, // Number
+        payloadObject    // Object (will be JSON.stringified internally)
       );
       console.log(`✅ Token generated successfully for userId="${userId}"`);
 

@@ -127,24 +127,7 @@ const CallProvider = ({ children }) => {
   // Initialize ZEGOCLOUD
   const initZegoCloud = useCallback(async () => {
     try {
-      // CRITICAL: Import ZegoExpressEngine first
       const ZegoExpressEngine = (await import('zego-express-engine-webrtc')).ZegoExpressEngine;
-      
-      // CRITICAL: Set global config IMMEDIATELY after import, before ANY instance creation
-      // This must be done at the module level (as close as possible) to ensure env:1
-      try {
-        if (ZegoExpressEngine.setDebugConfig) {
-          ZegoExpressEngine.setDebugConfig({ testEnvironment: true });
-          console.log('✅ Global test environment config set (setDebugConfig) - MUST see env:1 in logs');
-        } else if (ZegoExpressEngine.setLogConfig) {
-          ZegoExpressEngine.setLogConfig({ testEnvironment: true });
-          console.log('✅ Global test environment config set (setLogConfig) - MUST see env:1 in logs');
-        } else {
-          console.warn('⚠️ setDebugConfig/setLogConfig not available on ZegoExpressEngine');
-        }
-      } catch (globalConfigError) {
-        console.error('❌ CRITICAL: Failed to set global test environment config:', globalConfigError);
-      }
       
       const appID = import.meta.env.VITE_ZEGOCLOUD_APP_ID;
       
@@ -178,14 +161,13 @@ const CallProvider = ({ children }) => {
         zegoCloudRef.current = null;
       }
       
-      // Create the instance (global config was set above, before this point)
-      // Global config should ensure env:1 (test cluster) is used
-      console.log('🚀 Creating ZEGOCLOUD Engine instance...');
-      console.log('🔍 After creation, look for {"appID":128222087,"env":1} in logs (env:1 = test cluster, env:0 = production)');
+      // Simplified Production Initialization (project is now Online/Production)
+      // No test environment config needed - SDK will use production cluster (env:0)
+      console.log('🚀 Creating ZEGOCLOUD Engine instance (Production mode)...');
       
       const zg = new ZegoExpressEngine(appIDNum, token);
       
-      console.log('✅ ZEGOCLOUD Engine created. Verify logs show env:1 (not env:0)');
+      console.log('✅ ZEGOCLOUD Engine created (Production mode)');
       
       // Set up event listeners for remote streams
       zg.on('roomStreamUpdate', (roomID, updateType, streamList) => {
