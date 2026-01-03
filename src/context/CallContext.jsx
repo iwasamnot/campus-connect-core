@@ -162,33 +162,37 @@ const CallProvider = ({ children }) => {
       }
       
       // CRITICAL: Force test environment mode to match Testing status in ZEGOCLOUD Console
+      // Set global config BEFORE creating instance to ensure env:1 (test cluster) is used
       // Without this, SDK defaults to production (env: 0), which causes connection failures
       // when your console is set to Testing mode, resulting in "frequently shutdown" errors
-      // Method A: Pass testEnvironment in constructor (recommended for recent SDK versions)
+      try {
+        // Set global config FIRST (must be before instance creation)
+        if (ZegoExpressEngine.setDebugConfig) {
+          ZegoExpressEngine.setDebugConfig({ testEnvironment: true });
+          console.log('✅ Global test environment config set (setDebugConfig)');
+        } else if (ZegoExpressEngine.setLogConfig) {
+          ZegoExpressEngine.setLogConfig({ testEnvironment: true });
+          console.log('✅ Global test environment config set (setLogConfig)');
+        }
+      } catch (globalConfigError) {
+        console.warn('⚠️ Could not set global config:', globalConfigError);
+      }
+      
+      // Now create the instance (global config is already set)
+      // Also pass config in constructor for redundancy
       let zg;
       try {
-        // Try Method A: Pass config as third parameter to constructor
+        // Try with config object in constructor
         zg = new ZegoExpressEngine(appIDNum, token, { 
           testEnvironment: true 
         });
-        console.log('✅ ZEGOCLOUD initialized with testEnvironment: true (Method A - constructor)');
+        console.log('✅ ZEGOCLOUD initialized with testEnvironment: true');
+        console.log('🔍 Looking for env:1 in logs to confirm test cluster is active...');
       } catch (constructorError) {
-        console.warn('⚠️ Method A failed, trying Method B:', constructorError);
-        // Method B: Try static method before constructor (for older SDK versions)
-        try {
-          if (ZegoExpressEngine.setDebugConfig) {
-            ZegoExpressEngine.setDebugConfig({ testEnvironment: true });
-          } else if (ZegoExpressEngine.setLogConfig) {
-            ZegoExpressEngine.setLogConfig({ testEnvironment: true });
-          }
-          zg = new ZegoExpressEngine(appIDNum, token);
-          console.log('✅ ZEGOCLOUD initialized with testEnvironment: true (Method B - static method)');
-        } catch (methodBError) {
-          console.error('❌ CRITICAL: Both methods failed to set test environment:', methodBError);
-          // Fallback: Create without test environment config (may fail if console is in Testing mode)
-          zg = new ZegoExpressEngine(appIDNum, token);
-          console.warn('⚠️ ZEGOCLOUD created without test environment config - connection may fail');
-        }
+        // Fallback: Create without config object (global config should still apply)
+        console.warn('⚠️ Constructor with config failed, trying without:', constructorError);
+        zg = new ZegoExpressEngine(appIDNum, token);
+        console.log('✅ ZEGOCLOUD initialized (using global config if set)');
       }
       
       // Set up event listeners for remote streams
