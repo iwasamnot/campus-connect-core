@@ -46,10 +46,37 @@ console.log('Process env ZEGOCLOUD_SERVER_SECRET length:', process.env.ZEGOCLOUD
 console.log('================================');
 
 const APP_ID = zegocloudConfig.app_id || process.env.ZEGOCLOUD_APP_ID || '128222087';
-// Trim whitespace from Server Secret (common issue: extra spaces when copying)
+// Get Server Secret and handle common configuration issues
 let SERVER_SECRET = (zegocloudConfig.server_secret || process.env.ZEGOCLOUD_SERVER_SECRET);
 if (SERVER_SECRET) {
+  // Debug: Check for quote issues (common mistake when setting via CLI)
+  const originalLength = SERVER_SECRET.length;
+  const firstChar = SERVER_SECRET.charAt(0);
+  const lastChar = SERVER_SECRET.charAt(SERVER_SECRET.length - 1);
+  
+  // Log debug info (only at module load time, not on every function call)
+  console.log('=== Server Secret Debug (Module Load) ===');
+  console.log(`DEBUG: Secret first char: "${firstChar}" (char code: ${firstChar.charCodeAt(0)})`);
+  console.log(`DEBUG: Secret last char: "${lastChar}" (char code: ${lastChar.charCodeAt(0)})`);
+  console.log(`DEBUG: Secret length: ${originalLength}`);
+  console.log(`DEBUG: Expected length: 32 (valid ZEGOCLOUD secret)`);
+  if (originalLength === 34) {
+    console.warn('⚠️ WARNING: Secret length is 34 characters (expected 32)');
+    console.warn('   This usually means the secret has extra quotes around it!');
+    console.warn('   Example: "abc123..." instead of abc123...');
+  }
+  console.log('=========================================');
+  
+  // Trim whitespace first
   SERVER_SECRET = SERVER_SECRET.trim();
+  
+  // Check if first/last characters are quotes and remove them
+  if ((SERVER_SECRET.startsWith('"') && SERVER_SECRET.endsWith('"')) ||
+      (SERVER_SECRET.startsWith("'") && SERVER_SECRET.endsWith("'"))) {
+    console.warn('⚠️ WARNING: Server Secret has quote characters at start/end - removing them');
+    SERVER_SECRET = SERVER_SECRET.slice(1, -1).trim();
+    console.log(`DEBUG: After removing quotes, length: ${SERVER_SECRET.length}`);
+  }
 }
 
 exports.generateZegoToken = functions.https.onCall(async (data, context) => {
@@ -128,14 +155,27 @@ exports.generateZegoToken = functions.https.onCall(async (data, context) => {
   // Validate Server Secret format (should be 32 hex characters)
   // ZEGOCLOUD Server Secrets are typically 32-character hex strings
   const secretPattern = /^[0-9a-fA-F]{32}$/;
-  if (!secretPattern.test(SERVER_SECRET)) {
-    console.warn(`⚠️ WARNING: Server Secret format may be incorrect. Expected 32 hex characters, got ${SERVER_SECRET.length} characters.`);
+  
+  // Enhanced debugging for Server Secret
+  console.log('=== Server Secret Validation ===');
+  console.log(`DEBUG: Secret first char: "${SERVER_SECRET.charAt(0)}" (char code: ${SERVER_SECRET.charCodeAt(0)})`);
+  console.log(`DEBUG: Secret last char: "${SERVER_SECRET.charAt(SERVER_SECRET.length - 1)}" (char code: ${SERVER_SECRET.charCodeAt(SERVER_SECRET.length - 1)})`);
+  console.log(`DEBUG: Secret length: ${SERVER_SECRET.length} (expected: 32)`);
+  // A valid ZEGOCLOUD secret is exactly 32 characters. If length is 34, it definitely has extra quotes.
+  if (SERVER_SECRET.length === 34) {
+    console.error('❌ ERROR: Secret length is 34 characters! This means it has extra quotes.');
+    console.error('   The secret should be exactly 32 hex characters, not 34.');
+    console.error('   If you set it via CLI with quotes, Firebase may have included the quotes in the value.');
+    console.error('   Solution: Remove quotes when setting: firebase functions:config:set zegocloud.server_secret=YOUR_SECRET (no quotes)');
+  } else if (SERVER_SECRET.length !== 32) {
+    console.warn(`⚠️ WARNING: Server Secret length is ${SERVER_SECRET.length}, expected 32 hex characters.`);
     console.warn(`   First 10 chars: ${SERVER_SECRET.substring(0, 10)}...`);
     console.warn(`   This might cause error 50119 (token auth err) if the secret is incorrect.`);
   }
+  console.log(`SERVER_SECRET format check: ${secretPattern.test(SERVER_SECRET) ? 'Valid (32 hex chars) ✓' : 'Invalid format ⚠️'}`);
+  console.log('=================================');
   
   console.log(`Using APP_ID: ${APP_ID}, SERVER_SECRET length: ${SERVER_SECRET.length} (hidden for security)`);
-  console.log(`SERVER_SECRET format check: ${secretPattern.test(SERVER_SECRET) ? 'Valid (32 hex chars) ✓' : 'Warning: May be invalid format ⚠️'}`);
 
   try {
     // Generate token
