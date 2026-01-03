@@ -347,18 +347,52 @@ const CallProvider = ({ children }) => {
       // Join room with token (empty string for token-less mode)
       // CRITICAL: Always pass a string to loginRoom, never null/undefined
       // CRITICAL: The userID used here MUST match the userId used to generate the token above
+      
+      // TEMPORARY TEST: Hardcoded token from ZEGOCLOUD Console Token Debugger
+      // Set to true to test with console-generated token, false to use backend token
+      const USE_HARDCODED_TOKEN_TEST = false; // CHANGE TO true TO ENABLE TEST
+      
+      if (USE_HARDCODED_TOKEN_TEST) {
+        console.log('🧪 TEMPORARY TEST MODE: Using hardcoded token from ZEGOCLOUD Console');
+        const testToken = "04AAAAAGlaJ5AADBf2F23HvbgqNZ6mXwDGmHrDPImxkBJeaTwlIE/8xeGZwFCk+G3Ko77s6YC/BIhSPYLtlCWKL+RJWvKT8lmYbK3cz+qRfEmRQMKpijHybscEPavejqmLZSWKKzo9RWhYO6w5b68TxMuM6EJN8wX1uOY4o8ZMsdnMjU8oxORL0F7j9YM/s6e/cG5VigmRJYyrIzO0MJWRNFvcKZEuJIeip8nuIHIkbge2Je/JnoBZ+sOFODPsqcrYOM1ajvhVD2AOEsYzgv3EOLv1DRIAG/pTX2xmqFeTA=";
+        const testUserID = "exrfVqzsFGeIcVlRYo92YMr95bY2"; // UserID used to generate the token
+        
+        console.log('🧪 Test Token length:', testToken.length);
+        console.log('🧪 Test UserID:', testUserID);
+        console.log('🧪 Actual UserID:', user.uid);
+        console.log('🧪 UserID Match:', testUserID === user.uid ? '✅ MATCH' : '❌ MISMATCH - Token was generated for different UserID!');
+        
+        token = testToken; // Override with test token
+        console.warn('⚠️ TEST MODE: Using hardcoded token - will use testUserID for loginRoom');
+      }
+      
       try {
         console.log('=== ZEGOCLOUD loginRoom Call ===');
         console.log(`🏠 RoomID: "${roomID}"`);
         console.log(`👤 UserID: "${user.uid}" (type: ${typeof user.uid})`);
         console.log(`🔑 Token length: ${token.length}`);
+        if (USE_HARDCODED_TOKEN_TEST) {
+          console.log('🧪 TEST MODE: Using hardcoded token from ZEGOCLOUD Console');
+        }
         console.log(`⚠️ CRITICAL: userID="${user.uid}" MUST match the userId used in token generation above`);
         console.log('================================');
         
+        // For test mode, use the testUserID if provided, otherwise use actual user.uid
+        const loginUserID = USE_HARDCODED_TOKEN_TEST ? "exrfVqzsFGeIcVlRYo92YMr95bY2" : user.uid;
+        
         loginResult = await zg.loginRoom(roomID, token, { 
-          userID: user.uid, // CRITICAL: Must match userId used in generateToken() call above
+          userID: loginUserID, // Use testUserID in test mode, otherwise actual user.uid
           userName: user.email || user.displayName || 'User' 
         });
+        
+        if (USE_HARDCODED_TOKEN_TEST) {
+          if (loginResult === 0) {
+            console.log('✅✅✅ SUCCESS: Hardcoded token worked! Issue is in backend token generation.');
+          } else {
+            console.error('❌❌❌ FAILURE: Even the console-generated token failed with code:', loginResult);
+            console.error('   This means the issue is NOT in backend - check SDK initialization or account credentials.');
+          }
+        }
       } catch (err) {
         console.error('Failed to join room:', err);
         const errorMsg = err?.message || String(err || '');
