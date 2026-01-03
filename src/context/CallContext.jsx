@@ -127,7 +127,24 @@ const CallProvider = ({ children }) => {
   // Initialize ZEGOCLOUD
   const initZegoCloud = useCallback(async () => {
     try {
+      // CRITICAL: Import ZegoExpressEngine first
       const ZegoExpressEngine = (await import('zego-express-engine-webrtc')).ZegoExpressEngine;
+      
+      // CRITICAL: Set global config IMMEDIATELY after import, before ANY instance creation
+      // This must be done at the module level (as close as possible) to ensure env:1
+      try {
+        if (ZegoExpressEngine.setDebugConfig) {
+          ZegoExpressEngine.setDebugConfig({ testEnvironment: true });
+          console.log('✅ Global test environment config set (setDebugConfig) - MUST see env:1 in logs');
+        } else if (ZegoExpressEngine.setLogConfig) {
+          ZegoExpressEngine.setLogConfig({ testEnvironment: true });
+          console.log('✅ Global test environment config set (setLogConfig) - MUST see env:1 in logs');
+        } else {
+          console.warn('⚠️ setDebugConfig/setLogConfig not available on ZegoExpressEngine');
+        }
+      } catch (globalConfigError) {
+        console.error('❌ CRITICAL: Failed to set global test environment config:', globalConfigError);
+      }
       
       const appID = import.meta.env.VITE_ZEGOCLOUD_APP_ID;
       
@@ -161,39 +178,14 @@ const CallProvider = ({ children }) => {
         zegoCloudRef.current = null;
       }
       
-      // CRITICAL: Force test environment mode to match Testing status in ZEGOCLOUD Console
-      // Set global config BEFORE creating instance to ensure env:1 (test cluster) is used
-      // Without this, SDK defaults to production (env: 0), which causes connection failures
-      // when your console is set to Testing mode, resulting in "frequently shutdown" errors
-      try {
-        // Set global config FIRST (must be before instance creation)
-        if (ZegoExpressEngine.setDebugConfig) {
-          ZegoExpressEngine.setDebugConfig({ testEnvironment: true });
-          console.log('✅ Global test environment config set (setDebugConfig)');
-        } else if (ZegoExpressEngine.setLogConfig) {
-          ZegoExpressEngine.setLogConfig({ testEnvironment: true });
-          console.log('✅ Global test environment config set (setLogConfig)');
-        }
-      } catch (globalConfigError) {
-        console.warn('⚠️ Could not set global config:', globalConfigError);
-      }
+      // Create the instance (global config was set above, before this point)
+      // Global config should ensure env:1 (test cluster) is used
+      console.log('🚀 Creating ZEGOCLOUD Engine instance...');
+      console.log('🔍 After creation, look for {"appID":128222087,"env":1} in logs (env:1 = test cluster, env:0 = production)');
       
-      // Now create the instance (global config is already set)
-      // Also pass config in constructor for redundancy
-      let zg;
-      try {
-        // Try with config object in constructor
-        zg = new ZegoExpressEngine(appIDNum, token, { 
-          testEnvironment: true 
-        });
-        console.log('✅ ZEGOCLOUD initialized with testEnvironment: true');
-        console.log('🔍 Looking for env:1 in logs to confirm test cluster is active...');
-      } catch (constructorError) {
-        // Fallback: Create without config object (global config should still apply)
-        console.warn('⚠️ Constructor with config failed, trying without:', constructorError);
-        zg = new ZegoExpressEngine(appIDNum, token);
-        console.log('✅ ZEGOCLOUD initialized (using global config if set)');
-      }
+      const zg = new ZegoExpressEngine(appIDNum, token);
+      
+      console.log('✅ ZEGOCLOUD Engine created. Verify logs show env:1 (not env:0)');
       
       // Set up event listeners for remote streams
       zg.on('roomStreamUpdate', (roomID, updateType, streamList) => {
