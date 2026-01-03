@@ -163,20 +163,17 @@ const CallProvider = ({ children }) => {
       
       const zg = new ZegoExpressEngine(appIDNum, token);
       
-      // Set custom configuration for test environment
-      // This helps with debugging and development
+      // CRITICAL: Force test environment mode to match Testing status in ZEGOCLOUD Console
+      // Without this, SDK defaults to production (env: 0), which causes connection failures
+      // when your console is set to Testing mode, resulting in "frequently shutdown" errors
       try {
         zg.setCustomConfig({ testEnvironment: true });
-        console.log('✅ ZEGOCLOUD test environment mode enabled');
+        console.log('✅ ZEGOCLOUD forced to TEST environment (matches Testing mode in console)');
       } catch (err) {
-        console.warn('⚠️ Could not set ZEGOCLOUD custom config:', err);
-        // Continue anyway - this is optional
+        console.error('❌ CRITICAL: Could not set ZEGOCLOUD test environment config:', err);
+        console.error('   This may cause connection failures if your console is in Testing mode');
+        // Continue anyway, but connection may fail
       }
-      
-      // Note: You may see warnings like "frequently shutdown too many times. cannot create socket anymore"
-      // These are from the SDK's internal logging/reporting system and are NON-CRITICAL.
-      // They don't affect call functionality - they're just about the SDK sending diagnostic logs.
-      // If calls are working, these warnings can be safely ignored.
       
       // Set up event listeners for remote streams
       zg.on('roomStreamUpdate', (roomID, updateType, streamList) => {
