@@ -163,6 +163,16 @@ const CallProvider = ({ children }) => {
       
       const zg = new ZegoExpressEngine(appIDNum, token);
       
+      // Set custom configuration for test environment
+      // This helps with debugging and development
+      try {
+        zg.setCustomConfig({ testEnvironment: true });
+        console.log('✅ ZEGOCLOUD test environment mode enabled');
+      } catch (err) {
+        console.warn('⚠️ Could not set ZEGOCLOUD custom config:', err);
+        // Continue anyway - this is optional
+      }
+      
       // Note: You may see warnings like "frequently shutdown too many times. cannot create socket anymore"
       // These are from the SDK's internal logging/reporting system and are NON-CRITICAL.
       // They don't affect call functionality - they're just about the SDK sending diagnostic logs.
