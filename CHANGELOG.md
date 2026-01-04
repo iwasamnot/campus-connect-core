@@ -8,24 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.1.2] - 2025-01-XX
 
 ### Changed
-- **Firebase Functions v2 Migration**: Migrated `generateZegoToken` Cloud Function to Firebase Functions v2 with Secret Manager
-  - Now uses `firebase-functions/v2/https` with `onCall` API
-  - Server Secret now managed via Firebase Secret Manager (`ZEGO_SERVER_SECRET`)
-  - More secure secret handling with automatic quote detection and removal
-  - Improved error messages and debugging logs
-  - Updated setup instructions to use `firebase functions:secrets:set` command
-
-### Enhanced
-- **ZEGOCLOUD Token Generation**: Enhanced debugging and validation
-  - Added comprehensive UserID matching verification logs
-  - Enhanced Server Secret validation with quote detection (34-char length detection)
-  - Better error messages for common configuration mistakes
-  - Token verification logs to ensure UserID matches between generation and loginRoom calls
-
-### Documentation
-- Updated ZEGOCLOUD_SETUP.md with WebSocket server URL documentation
-- Updated ZEGOCLOUD_TOKEN_SETUP.md with Firebase Functions v2 and Secret Manager instructions
-- Enhanced README.md with updated ZEGOCLOUD setup instructions
+- **Repo cleanup**: Removed legacy calling-provider artifacts (docs, workflow secrets, and Cloud Function) and kept calling documentation focused on VideoSDK.live.
 
 ## [5.1.1] - 2025-01-02
 
