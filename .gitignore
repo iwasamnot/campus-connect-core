@@ -10,15 +10,20 @@ lerna-debug.log*
 # Service account keys (NEVER commit these!)
 serviceAccountKey.json
 *-service-account.json
-*.json
-!package.json
-!package-lock.json
-!tsconfig.json
+*.firebase-adminsdk*.json
+firebase-debug.log
+firestore-debug.log
 
 node_modules
 dist
 dist-ssr
 *.local
+
+# Firebase local cache
+.firebase/
+
+# Old/dev build artifacts (not deployed)
+dev-dist/
 
 # Capacitor
 ios/App/Pods/

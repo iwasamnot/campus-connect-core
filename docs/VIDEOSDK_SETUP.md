@@ -1,6 +1,6 @@
 # VideoSDK.live Setup Guide
 
-This project has been migrated from ZEGOCLOUD to VideoSDK.live for calling functionality.
+This guide covers the calling setup using VideoSDK.live.
 
 ## ✅ Completed Setup
 
@@ -15,16 +15,14 @@ This project has been migrated from ZEGOCLOUD to VideoSDK.live for calling funct
 
 ### Step 1: Set VideoSDK Secret in Firebase
 
-Your VideoSDK Server Secret: `ab0135234ba26d4007676715194f243f0248214f6e04e35e21369cf342e1f556`
-
 Run this command to set it:
 
 ```powershell
 firebase functions:secrets:set VIDEOSDK_SECRET
 ```
 
-When prompted, paste: `ab0135234ba26d4007676715194f243f0248214f6e04e35e21369cf342e1f556`
-(No quotes, just the 64-character hex string)
+When prompted, paste your VideoSDK Server Secret (a 64-character hex string).
+(No quotes, no spaces)
 
 ### Step 2: Update CORS Configuration (if needed)
 
@@ -66,7 +64,7 @@ firebase deploy --only functions:getVideoSDKToken
 
 ## 🔑 Credentials
 
-- **API Key**: `0cd81014-abab-4f45-968d-b3ddae835a82` (hardcoded in function)
+- **API Key**: configured in `functions/getVideoSDKToken.js`
 - **Server Secret**: Stored in Firebase Secret Manager as `VIDEOSDK_SECRET`
 
 ## 📚 How It Works
@@ -75,16 +73,6 @@ firebase deploy --only functions:getVideoSDKToken
 2. **Token Generation**: The Firebase function generates a JWT token using the Server Secret
 3. **Meeting Creation**: The token and meeting ID are passed to VideoSDK's `MeetingProvider`
 4. **Call Connection**: VideoSDK handles all WebRTC connections automatically
-
-## 🆚 Key Differences from ZEGOCLOUD
-
-| Feature | ZEGOCLOUD | VideoSDK.live |
-|---------|-----------|---------------|
-| Setup Complexity | High (token generation, environment config) | Low (standard JWT) |
-| Client Configuration | Required (App ID in .env) | Not required |
-| Token Format | Custom crypto helper | Standard JWT (jsonwebtoken) |
-| Debugging | Complex (token verification difficult) | Easy (can verify on jwt.io) |
-| Free Tier | Limited | 10,000 minutes/month |
 
 ## 🐛 Troubleshooting
 
@@ -104,7 +92,5 @@ firebase deploy --only functions:getVideoSDKToken
 
 ## 📝 Notes
 
-- The old ZEGOCLOUD package (`zego-express-engine-webrtc`) is still in package.json but not used
-- You can remove it later if desired: `npm uninstall zego-express-engine-webrtc`
 - VideoSDK handles all environment/cluster configuration automatically (no env:0 vs env:1 issues)
 

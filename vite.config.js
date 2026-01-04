@@ -63,7 +63,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
-        maximumFileSizeToCacheInBytes: 5000000, // 5 MB - increased to accommodate ZEGOCLOUD SDK (2.16 MB)
+        maximumFileSizeToCacheInBytes: 5000000, // 5 MB - increased to accommodate large vendor SDKs
         cleanupOutdatedCaches: true,
         skipWaiting: true, // Immediately activate new service worker
         clientsClaim: true, // Take control of all clients immediately
@@ -200,9 +200,6 @@ export default defineConfig({
             }
             if (id.includes('firebase')) {
               return 'firebase-vendor';
-            }
-            if (id.includes('zego-express-engine')) {
-              return 'zego-vendor';
             }
             if (id.includes('lucide-react')) {
               return 'ui-vendor';
