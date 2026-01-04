@@ -208,7 +208,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
 2. **Configure Firebase**
    - **Find your project**: Your project ID is `campus-connect-sistc`
      - Direct link: https://console.firebase.google.com/project/campus-connect-sistc
-     - See `FIND_MY_PROJECT.md` for detailed instructions if you can't find it
+    - See `docs/FIND_MY_PROJECT.md` for detailed instructions if you can't find it
    - **If project doesn't exist**: Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
    - **Enable Authentication**:
      - **Email/Password**: Go to Authentication → Sign-in method → Enable Email/Password
@@ -218,9 +218,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - **Enable Firebase Storage** (Required for file uploads):
      - Go to Storage → Get Started
      - **Requires Blaze plan** (billing setup needed, but includes free tier)
-     - See `ENABLE_STORAGE.md` for setup instructions
+    - See `docs/ENABLE_STORAGE.md` for setup instructions
      - **IMPORTANT**: Set up billing protection to limit spending to $1
-     - See `BILLING_PROTECTION.md` for how to set $1 spending limit
+    - See `docs/BILLING_PROTECTION.md` for how to set $1 spending limit
    - **Update Firestore security rules** from `firestore.rules`
    - **Get your Firebase configuration values** from Firebase Console → Project Settings → General → Your apps
 
@@ -249,7 +249,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
      - App ID: Found in Project Configuration → Basic Information (add to `.env` as `VITE_ZEGOCLOUD_APP_ID`)
      - Server Secret: Found in Project Configuration → Basic Configurations → ServerSecret
      - **Important**: Server Secret is stored securely in Firebase Secret Manager (NOT in `.env` file)
-     - See `ZEGOCLOUD_TOKEN_SETUP.md` for complete setup instructions
+    - See `docs/ZEGOCLOUD_TOKEN_SETUP.md` for complete setup instructions
      - Setup command: `firebase functions:secrets:set ZEGO_SERVER_SECRET`
    - **Important**: Restart the dev server after adding environment variables
    - If no API key is provided, the AI will use the local knowledge base
@@ -416,7 +416,7 @@ The platform supports email/password authentication with role-based access:
    - Admin accounts must be created manually in Firebase Console
    - **Email Format**: Must start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)
    - Email verification bypassed for admin accounts
-   - See `ADMIN_SETUP.md` for detailed admin account setup instructions
+  - See `docs/ADMIN_SETUP.md` for detailed admin account setup instructions
 
 3. **Password Reset**
    - Available for both student and admin accounts
@@ -424,7 +424,7 @@ The platform supports email/password authentication with role-based access:
 
 ## User Roles
 
-See `ROLES_SETUP_GUIDE.md` for comprehensive role setup instructions.
+See `docs/ROLES_SETUP_GUIDE.md` for comprehensive role setup instructions.
 
 - **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
   - Email format: `s20xxxxx@sistc.edu.au` or `s20xxxxx@sistc.nsw.edu.au`
@@ -433,7 +433,7 @@ See `ROLES_SETUP_GUIDE.md` for comprehensive role setup instructions.
   - Email format: `admin*@campusconnect.com` (e.g., admin1@campusconnect.com)
   - Email verification bypassed (always verified)
   - Can verify/unverify student emails from Users Management
-  - Must be created in Firebase Console (see `ADMIN_SETUP.md`)
+  - Must be created in Firebase Console (see `docs/ADMIN_SETUP.md`)
 
 ## Admin Features
 
@@ -509,7 +509,7 @@ For automatic deployment to work, you need to set up GitHub Secrets:
        - **Firebase Admin** (required)
        - **Service Usage Admin** (required for enabling APIs)
        - **Storage Admin** (required for Storage rules)
-     - See `GITHUB_ACTIONS_SETUP.md` for detailed setup instructions
+     - See `docs/GITHUB_ACTIONS_SETUP.md` for detailed setup instructions
    
    #### AI API Key (Required for AI features)
    
