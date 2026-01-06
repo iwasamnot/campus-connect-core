@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.1.2] - 2025-01-XX
 
+## [Unreleased]
+
+### Fixed
+- **Scrolling**: Restored page scrolling across the app (Login/Registration/Admin and other views)
+  - Removed global scroll lock from `#root` and enabled vertical scrolling
+  - Made the main content area scrollable instead of `overflow-hidden`
+  - Fixed PWA standalone mode where scrolling could be blocked
+
 ### Changed
 - **Firebase Functions v2 Migration**: Migrated `generateZegoToken` Cloud Function to Firebase Functions v2 with Secret Manager
   - Now uses `firebase-functions/v2/https` with `onCall` API
