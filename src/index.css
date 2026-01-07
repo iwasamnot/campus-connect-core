@@ -622,13 +622,12 @@ input, textarea, [contenteditable] {
 
 #root {
   width: 100%;
-  /* Don't hard-lock the app to the viewport.
-     Allow pages (login/admin/etc) to scroll naturally when content exceeds the viewport. */
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available; /* iOS Safari fix */
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* Keep a single scroll container (views handle their own scrolling).
+     This prevents "stuck" scroll / weird viewport jumps in mobile PWA. */
+  height: 100vh;
+  height: 100dvh;
+  height: -webkit-fill-available; /* iOS Safari fix */
+  overflow: hidden;
   position: relative;
   background-color: #ffffff;
   transition: background-color 0.1s ease;
@@ -876,9 +875,7 @@ input, textarea, [contenteditable] {
     #root {
       height: 100%;
       height: 100dvh;
-      /* Keep body locked (prevents bounce) but allow the app to scroll */
-      overflow-x: hidden;
-      overflow-y: auto;
+      overflow: hidden;
     }
     
     /* Ensure headers are visible in PWA */

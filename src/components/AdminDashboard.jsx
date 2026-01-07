@@ -16,9 +16,15 @@ import {
   getDoc,
   limit
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText, MessageSquare, X } from 'lucide-react';
-import Logo from './Logo';
+// Use window.__LogoComponent directly to avoid import/export issues
+const Logo = typeof window !== 'undefined' && window.__LogoComponent 
+  ? window.__LogoComponent 
+  : () => <div>Logo</div>; // Fallback placeholder
 
 const AdminDashboard = () => {
   const { user, userRole } = useAuth();
@@ -767,7 +773,8 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    // Use full-height of the app content area (prevents 100vh issues in PWA).
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div 
         className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
