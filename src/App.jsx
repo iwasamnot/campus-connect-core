@@ -221,7 +221,7 @@ function App() {
       />
       <div 
         id="main-content" 
-        className="flex-1 overflow-y-auto overflow-x-hidden relative w-full"
+        className="flex-1 overflow-y-auto relative w-full"
         onTouchStart={(e) => {
           // Swipe from left edge to open menu (only on mobile, when sidebar is closed)
           if (isMobile && !sidebarOpen && e.touches[0].clientX < 30) {

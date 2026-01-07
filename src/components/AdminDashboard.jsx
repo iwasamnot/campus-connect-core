@@ -25,6 +25,7 @@ import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, C
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
   ? window.__LogoComponent 
   : () => <div>Logo</div>; // Fallback placeholder
+import AdminQueryBox from './AdminQueryBox';
 
 const AdminDashboard = () => {
   const { user, userRole } = useAuth();
@@ -1067,6 +1068,9 @@ const AdminDashboard = () => {
             Showing {paginatedMessages.length} of {filteredMessages.length} messages
           </span>
         </div>
+
+        {/* Always-visible admin query box (answers: last online, last message, online count, etc.) */}
+        <AdminQueryBox />
       </div>
 
       {/* Reports Panel */}
