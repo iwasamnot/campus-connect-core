@@ -1,35 +1,51 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Upload, X, Image, File, Loader } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebaseConfig';
+// Use window.__firebaseStorage to avoid import/export issues in production builds
+const storage = typeof window !== 'undefined' && window.__firebaseStorage 
+  ? window.__firebaseStorage 
+  : null;
+// Use window globals to avoid import/export issues
+const sanitizeFileName = typeof window !== 'undefined' && window.__sanitizeFileName 
+  ? window.__sanitizeFileName 
+  : (name) => name;
+const validateFile = typeof window !== 'undefined' && window.__validateFile 
+  ? window.__validateFile 
+  : () => ({ valid: true });
+// Use window.__handleError to avoid import/export issues in production builds
+// Fallback to direct import if global is not available (for local dev)
+const handleError = typeof window !== 'undefined' && window.__handleError 
+  ? window.__handleError 
+  : ((error, context, onError) => {
+      // Fallback error handler if global is not available
+      const errorMessage = error?.message || 'An error occurred';
+      console.error(`[${context}] Error:`, error);
+      if (onError) onError(errorMessage);
+      return { message: errorMessage, type: 'UNKNOWN' };
+    });
 
-const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = ['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] }) => {
+// STRICT LIMITS to stay within Firebase free tier (5GB storage, 1GB/day downloads)
+// Max file size: 5MB (reduced from 10MB to conserve storage)
+const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] }) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handleFileSelect = async (e) => {
+  const handleFileSelect = useCallback(async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file size
-    if (file.size > maxSize) {
-      setError(`File size exceeds ${maxSize / (1024 * 1024)}MB limit`);
+    // Validate file using utility
+    const validation = validateFile(file, maxSize, allowedTypes);
+    if (!validation.isValid) {
+      setError(validation.errors[0]);
       return;
     }
-
-    // Validate file type
-    const isValidType = allowedTypes.some(type => {
-      if (type.endsWith('/*')) {
-        return file.type.startsWith(type.slice(0, -1));
-      }
-      return file.type === type;
-    });
-
-    if (!isValidType) {
-      setError('File type not allowed');
-      return;
+    
+    // Additional check: Warn if file is very large (close to limit)
+    if (file.size > maxSize * 0.9) {
+      console.warn('File is close to size limit:', file.size, 'bytes');
     }
 
     setError(null);
@@ -37,9 +53,11 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
 
     try {
       // Create preview for images
+      let imagePreview = null;
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
+          imagePreview = reader.result;
           setPreview(reader.result);
         };
         reader.readAsDataURL(file);
@@ -47,11 +65,19 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
 
       // Upload to Firebase Storage
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `messages/${timestamp}_${file.name}`);
+      const sanitizedFileName = sanitizeFileName(file.name);
+      const fileName = `${timestamp}_${sanitizedFileName}`;
+      const storageRef = ref(storage, `messages/${fileName}`);
+      
+      console.log('Uploading file to:', `messages/${fileName}`);
+      console.log('File size:', file.size, 'bytes');
+      console.log('File type:', file.type);
       
       await uploadBytes(storageRef, file);
+      console.log('File uploaded successfully');
+      
       const downloadURL = await getDownloadURL(storageRef);
+      console.log('Download URL obtained:', downloadURL);
 
       // Callback with file info
       onFileUpload({
@@ -59,7 +85,7 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
         name: file.name,
         type: file.type,
         size: file.size,
-        preview: preview
+        preview: file.type.startsWith('image/') ? downloadURL : null
       });
 
       // Reset
@@ -68,22 +94,25 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
         fileInputRef.current.value = '';
       }
     } catch (err) {
-      console.error('Error uploading file:', err);
-      setError('Failed to upload file. Please try again.');
+      const { message } = handleError(err, 'FileUpload', (errorMessage) => {
+        setError(errorMessage);
+      });
+      setError(message);
     } finally {
       setUploading(false);
     }
-  };
+  }, [maxSize, allowedTypes, onFileUpload]);
 
   return (
     <div className="relative">
       <input
         ref={fileInputRef}
         type="file"
+        id="file-upload"
+        name="file-upload"
         onChange={handleFileSelect}
         accept={allowedTypes.join(',')}
         className="hidden"
-        id="file-upload"
         disabled={uploading}
       />
       <label
@@ -109,6 +138,7 @@ const FileUpload = ({ onFileUpload, maxSize = 10 * 1024 * 1024, allowedTypes = [
           <img src={preview} alt="Preview" className="max-w-xs max-h-48 rounded" />
           <button
             onClick={() => setPreview(null)}
+            aria-label="Remove preview"
             className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
           >
             <X size={14} />

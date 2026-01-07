@@ -558,10 +558,29 @@ Be strict but fair. Consider context. False positives are better than false nega
   } catch (error) {
     console.error('Error checking toxicity with Gemini:', error);
     
-    // Check if it's a quota/rate limit error (429)
-    if (error.message && (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate limit'))) {
+    const errorMessage = error?.message || '';
+    const errorCode = error?.code || '';
+    const errorString = JSON.stringify(error) || '';
+    const now = Date.now();
+    
+    // Check for API not enabled error (403 Forbidden with SERVICE_DISABLED)
+    if (errorCode === 403 || errorCode === '403' || 
+        errorMessage.includes('SERVICE_DISABLED') || 
+        errorMessage.includes('has not been used') ||
+        errorMessage.includes('is disabled') ||
+        errorMessage.includes('Enable it by visiting') ||
+        errorString.includes('SERVICE_DISABLED')) {
+      console.warn('⚠️ Generative Language API is not enabled in your Google Cloud project.');
+      console.warn('💡 Enable it at: https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview');
+      console.warn('📝 Using fallback word filter for toxicity checking.');
+      // Set quota exceeded flag to prevent repeated API calls (60 minutes cooldown)
       geminiQuotaExceeded = true;
-      quotaExceededUntil = Date.now() + GEMINI_COOLDOWN;
+      quotaExceededUntil = now + (GEMINI_COOLDOWN * 60); // 60 minutes cooldown for API not enabled
+    }
+    // Check if it's a quota/rate limit error (429)
+    else if (error.message && (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate limit'))) {
+      geminiQuotaExceeded = true;
+      quotaExceededUntil = now + GEMINI_COOLDOWN;
       console.warn('Gemini quota exceeded, will use fallback for next', GEMINI_COOLDOWN / 1000, 'seconds');
     }
     

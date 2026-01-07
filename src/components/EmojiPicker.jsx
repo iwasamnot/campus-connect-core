@@ -51,8 +51,11 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
 
       {/* Search */}
       <div className="p-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <label htmlFor="emoji-search" className="sr-only">Search emojis</label>
         <input
           type="text"
+          id="emoji-search"
+          name="emoji-search"
           placeholder="Search emojis..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

@@ -3,7 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebaseConfig';
+// Use window globals to avoid import/export issues in production builds
+const auth = typeof window !== 'undefined' && window.__firebaseAuth 
+  ? window.__firebaseAuth 
+  : null;
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { UserPlus, Mail, Lock, User, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 
 const CreateUser = () => {
@@ -33,11 +39,11 @@ const CreateUser = () => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // Validate student email format: must start with "s20" and contain "@sistc"
+  // Validate student email format: must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
   const validateStudentEmail = (email) => {
     if (!email) return false;
     const emailLower = email.toLowerCase();
-    return emailLower.startsWith('s20') && emailLower.includes('@sistc');
+    return emailLower.startsWith('s20') && (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
   };
 
   const handleSubmit = async (e) => {
@@ -56,9 +62,9 @@ const CreateUser = () => {
       return;
     }
 
-    // Validate student email format: must start with "s20" and contain "@sistc"
+    // Validate student email format: must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
     if (formData.role === 'student' && !validateStudentEmail(formData.email)) {
-      setError('Student emails must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in).');
+      setError('Invalid student email address. Please use a valid student email format.');
       return;
     }
 
@@ -87,6 +93,7 @@ const CreateUser = () => {
       await setDoc(doc(db, 'users', newUser.uid), {
         email: formData.email,
         role: formData.role,
+        emailVerified: formData.role === 'admin' ? true : false, // Admins are automatically verified
         createdAt: new Date().toISOString(),
         createdBy: currentUser.uid, // Track who created this user
         createdByEmail: currentUser.email
@@ -164,6 +171,7 @@ const CreateUser = () => {
                 type="email"
                 id="email"
                 name="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter Your Email"
@@ -187,6 +195,7 @@ const CreateUser = () => {
                 type="password"
                 id="password"
                 name="password"
+                autoComplete="new-password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="At least 6 characters"

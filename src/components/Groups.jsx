@@ -17,7 +17,10 @@ import {
   arrayUnion,
   arrayRemove
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { Users, Plus, Search, X, Loader, Globe, UserPlus, Mail, CheckCircle, XCircle } from 'lucide-react';
 
 const Groups = ({ setActiveView, setSelectedGroup }) => {
@@ -39,6 +42,9 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
   useEffect(() => {
     if (!user) return;
 
+    setLoading(true);
+    
+    // Use query with where clause for members
     const q = query(
       collection(db, 'groups'),
       where('members', 'array-contains', user.uid),
@@ -57,12 +63,40 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       },
       (error) => {
         console.error('Error fetching groups:', error);
+        // Show user-friendly error message
+        if (error.code === 'failed-precondition') {
+          showError('Groups index is missing. Please create a Firestore index for groups.members or contact support.');
+          // Fallback: try fetching all groups and filter client-side
+          const fallbackQ = query(collection(db, 'groups'), limit(50));
+          const fallbackUnsubscribe = onSnapshot(
+            fallbackQ,
+            (fallbackSnapshot) => {
+              const allGroups = fallbackSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              const filteredGroups = allGroups.filter(group => group.members?.includes(user.uid));
+              setGroups(filteredGroups);
+              setLoading(false);
+            },
+            (fallbackError) => {
+              console.error('Error with fallback query:', fallbackError);
+              showError('Failed to load groups. Please try again.');
+              setLoading(false);
+            }
+          );
+          return () => fallbackUnsubscribe();
+        } else if (error.code === 'permission-denied') {
+          showError('Permission denied. You may not have permission to view groups.');
+        } else {
+          showError('Failed to load groups. Please try again.');
+        }
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, showError]);
 
   // Fetch all groups for browsing (when modal is open)
   useEffect(() => {
@@ -89,13 +123,17 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       },
       (error) => {
         console.error('Error fetching all groups:', error);
-        showError('Failed to load groups. Please try again.');
+        if (error.code === 'permission-denied') {
+          showError('Permission denied. You may not have permission to browse groups.');
+        } else {
+          showError('Failed to load groups. Please try again.');
+        }
         setAllGroups([]);
       }
     );
 
     return () => unsubscribe();
-  }, [user, showBrowseModal]);
+  }, [user, showBrowseModal, showError]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -248,10 +286,20 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
+        style={{
+          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `1rem`,
+          paddingLeft: `calc(1.5rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1.5rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">Groups</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white">Groups</h2>
             <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Create and join study groups</p>
           </div>
           <div className="flex gap-2">
@@ -276,11 +324,22 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 5
+        }}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <label htmlFor="groups-search" className="sr-only">Search groups</label>
           <input
             type="text"
+            id="groups-search"
+            name="groups-search"
             placeholder="Search groups..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -290,7 +349,14 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
       </div>
 
       {/* Groups List */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4">
+      <div 
+        className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch"
+        style={{
+          paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`,
+          paddingBottom: `calc(0.5rem + env(safe-area-inset-bottom, 0px) * 0.5)`
+        }}
+      >
         {filteredGroups.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center animate-fade-in">
@@ -361,8 +427,17 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
       {/* Create Group Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
+          style={{
+            paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
+            paddingBottom: `calc(0.25rem + env(safe-area-inset-bottom, 0px) * 0.3)`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          }}
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">Create New Group</h3>
               <button
@@ -374,11 +449,13 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             </div>
             <form onSubmit={handleCreateGroup} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="group-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Group Name *
                 </label>
                 <input
                   type="text"
+                  id="group-name"
+                  name="groupName"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="Enter group name"
@@ -388,10 +465,12 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="group-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description (optional)
                 </label>
                 <textarea
+                  id="group-description"
+                  name="groupDescription"
                   value={newGroupDescription}
                   onChange={(e) => setNewGroupDescription(e.target.value)}
                   placeholder="Enter group description"
@@ -434,8 +513,23 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
       {/* Browse Groups Modal */}
       {showBrowseModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowBrowseModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
+          style={{
+            paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))`,
+            paddingBottom: `calc(0.25rem + env(safe-area-inset-bottom, 0px) * 0.3)`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          }}
+          onClick={() => setShowBrowseModal(false)}
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full flex flex-col"
+            style={{
+              maxHeight: `calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2rem)`
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">Browse Groups</h3>
               <button
@@ -450,8 +544,11 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <label htmlFor="browse-groups-search" className="sr-only">Search groups</label>
                 <input
                   type="text"
+                  id="browse-groups-search"
+                  name="browse-groups-search"
                   placeholder="Search groups..."
                   value={browseSearchTerm}
                   onChange={(e) => setBrowseSearchTerm(e.target.value)}
@@ -461,7 +558,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             </div>
 
             {/* Groups List */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4 overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch">
               {allGroups.length === 0 ? (
                 <div className="text-center py-8">
                   <Loader className="animate-spin mx-auto text-indigo-600 dark:text-indigo-400 mb-4" size={48} />

@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole, isUserOnline } from '../utils/helpers';
+import { useCall } from '../context/CallContext';
+// Use window globals to avoid import/export issues
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
+const isUserOnline = typeof window !== 'undefined' && window.__isUserOnline 
+  ? window.__isUserOnline 
+  : (userData) => userData?.isOnline === true;
 import { 
   collection, 
   addDoc, 
@@ -18,14 +25,24 @@ import {
   getDocs,
   limit
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail } from 'lucide-react';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail, Paperclip, Smile, File, Image as ImageIcon, Phone, Video } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
-import { checkToxicity } from '../utils/toxicityChecker';
+import FileUpload from './FileUpload';
+import EmojiPicker from './EmojiPicker';
+import ImagePreview from './ImagePreview';
+// Use window globals to avoid import/export issues
+const checkToxicity = typeof window !== 'undefined' && window.__checkToxicity 
+  ? window.__checkToxicity 
+  : () => Promise.resolve({ isToxic: false });
 
 const PrivateChat = () => {
   const { user, userRole } = useAuth();
   const { success, error: showError } = useToast();
+  const { startCall, isCallingAvailable } = useCall();
   const [availableUsers, setAvailableUsers] = useState([]); // List of admins (for students) or students (for admins)
   const [selectedChatId, setSelectedChatId] = useState(null); // Current chat ID
   const [selectedUser, setSelectedUser] = useState(null); // The other user in the chat
@@ -47,6 +64,10 @@ const PrivateChat = () => {
   const [emailToAdd, setEmailToAdd] = useState(''); // Email to search/add
   const [searchingUser, setSearchingUser] = useState(false); // Loading state for user search
   const [chatSummaries, setChatSummaries] = useState({}); // Store last message for each chat
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Generate chat ID from two user IDs (sorted to ensure consistency)
@@ -103,50 +124,93 @@ const PrivateChat = () => {
           return;
         }
 
-        // Fetch user data for all participants
+        // Fetch user data for all participants using batch queries (more efficient than individual getDoc calls)
+        // Firestore 'in' queries are limited to 10 items, so we need to batch them
         const users = [];
         const names = {};
         const profiles = {};
         const online = {};
         const summaries = {};
 
-        await Promise.all(
-          Array.from(userIds).map(async (userId) => {
-            try {
-              const userDoc = await getDoc(doc(db, 'users', userId));
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
-                users.push({
-                  id: userDoc.id,
-                  ...userData
-                });
-                
-                // Extract name with fallback priority
-                names[userDoc.id] = userData.name || 
-                                    userData.studentEmail?.split('@')[0] || 
-                                    userData.email?.split('@')[0] || 
-                                    userData.personalEmail?.split('@')[0] ||
-                                    userDoc.id.substring(0, 8);
-                profiles[userDoc.id] = userData;
-                online[userDoc.id] = {
-                  isOnline: userData.isOnline || false,
-                  lastSeen: userData.lastSeen || null
+        const userIdsArray = Array.from(userIds);
+        
+        // Batch fetch users in groups of 10 (Firestore 'in' query limit)
+        const batchSize = 10;
+        for (let i = 0; i < userIdsArray.length; i += batchSize) {
+          const batch = userIdsArray.slice(i, i + batchSize);
+          
+          try {
+            // Use 'in' query to fetch multiple users at once (1 read per batch instead of N reads)
+            const usersQuery = query(
+              collection(db, 'users'),
+              where('__name__', 'in', batch)
+            );
+            
+            const usersSnapshot = await getDocs(usersQuery);
+            usersSnapshot.docs.forEach(userDoc => {
+              const userData = userDoc.data();
+              users.push({
+                id: userDoc.id,
+                ...userData
+              });
+              
+              // Extract name with fallback priority
+              names[userDoc.id] = userData.name || 
+                                  userData.studentEmail?.split('@')[0] || 
+                                  userData.email?.split('@')[0] || 
+                                  userData.personalEmail?.split('@')[0] ||
+                                  userDoc.id.substring(0, 8);
+              profiles[userDoc.id] = userData;
+              online[userDoc.id] = {
+                isOnline: userData.isOnline || false,
+                lastSeen: userData.lastSeen || null
+              };
+              
+              // Store chat summary
+              if (chatDataMap[userDoc.id]) {
+                summaries[userDoc.id] = {
+                  lastMessage: chatDataMap[userDoc.id].lastMessage,
+                  lastMessageTime: chatDataMap[userDoc.id].lastMessageTime,
+                  hasUnread: false
                 };
-                
-                // Store chat summary
-                if (chatDataMap[userId]) {
-                  summaries[userId] = {
-                    lastMessage: chatDataMap[userId].lastMessage,
-                    lastMessageTime: chatDataMap[userId].lastMessageTime,
-                    hasUnread: false
-                  };
-                }
               }
-            } catch (error) {
-              console.error(`Error fetching user ${userId}:`, error);
+            });
+          } catch (error) {
+            console.error(`Error fetching user batch ${i}-${i + batchSize}:`, error);
+            // Fallback to individual fetches only if batch query fails
+            for (const userId of batch) {
+              try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  users.push({
+                    id: userDoc.id,
+                    ...userData
+                  });
+                  names[userDoc.id] = userData.name || 
+                                      userData.studentEmail?.split('@')[0] || 
+                                      userData.email?.split('@')[0] || 
+                                      userData.personalEmail?.split('@')[0] ||
+                                      userDoc.id.substring(0, 8);
+                  profiles[userDoc.id] = userData;
+                  online[userDoc.id] = {
+                    isOnline: userData.isOnline || false,
+                    lastSeen: userData.lastSeen || null
+                  };
+                  if (chatDataMap[userDoc.id]) {
+                    summaries[userDoc.id] = {
+                      lastMessage: chatDataMap[userDoc.id].lastMessage,
+                      lastMessageTime: chatDataMap[userDoc.id].lastMessageTime,
+                      hasUnread: false
+                    };
+                  }
+                }
+              } catch (individualError) {
+                console.error(`Error fetching user ${userId}:`, individualError);
+              }
             }
-          })
-        );
+          }
+        }
 
         // Sort users by last message time (most recent first)
         users.sort((a, b) => {
@@ -661,7 +725,7 @@ const PrivateChat = () => {
   // Send message
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending || !selectedChatId) {
+    if ((!newMessage.trim() && !attachedFile) || sending || !selectedChatId) {
       if (!selectedChatId) {
         showError('Please select a chat first.');
       }
@@ -670,10 +734,11 @@ const PrivateChat = () => {
 
     setSending(true);
     try {
-      // Check toxicity using Gemini AI (with fallback)
-      const toxicityResult = await checkToxicity(newMessage.trim(), true);
+      // Check toxicity using Gemini AI (with fallback) - only if there's text
+      const textToCheck = newMessage.trim() || '';
+      const toxicityResult = textToCheck ? await checkToxicity(textToCheck, true) : { isToxic: false, confidence: 0, reason: '', method: 'none' };
       const isToxic = toxicityResult.isToxic;
-      const displayText = isToxic ? '[REDACTED BY AI]' : newMessage.trim();
+      const displayText = isToxic ? '[REDACTED BY AI]' : textToCheck;
       
       // Calculate expiration time if disappearing messages is enabled
       let expiresAt = null;
@@ -686,7 +751,7 @@ const PrivateChat = () => {
       const messageData = {
         userId: user.uid,
         userEmail: user.email,
-        text: newMessage.trim(),
+        text: textToCheck,
         displayText: displayText,
         toxic: isToxic,
         toxicityConfidence: toxicityResult.confidence,
@@ -696,6 +761,19 @@ const PrivateChat = () => {
           [user.uid]: serverTimestamp() // Sender has seen their own message
         }
       };
+
+      // Add file attachment if present
+      if (attachedFile) {
+        messageData.attachment = {
+          url: attachedFile.url,
+          name: attachedFile.name,
+          type: attachedFile.type,
+          size: attachedFile.size
+        };
+        // Also add legacy fields for compatibility
+        messageData.fileUrl = attachedFile.url;
+        messageData.fileName = attachedFile.name;
+      }
 
       if (expiresAt) {
         messageData.expiresAt = expiresAt;
@@ -866,14 +944,25 @@ const PrivateChat = () => {
   // If no chat selected, show list of available users
   if (!selectedChatId) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6">
+      <div className="h-screen h-[100dvh] flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div 
+          className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-4 md:py-6"
+          style={{
+            paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
+            paddingBottom: `1rem`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+            marginTop: '0',
+            position: 'relative',
+            zIndex: 10
+          }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 Direct Messages
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Start a private conversation with any user
               </p>
             </div>
@@ -891,13 +980,16 @@ const PrivateChat = () => {
             <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
               <div className="flex items-center gap-2 mb-2">
                 <Mail size={18} className="text-indigo-600 dark:text-indigo-400" />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="private-chat-email-search" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Search user by email
                 </label>
               </div>
               <div className="flex gap-2">
                 <input
                   type="email"
+                  id="private-chat-email-search"
+                  name="email-search"
+                  autoComplete="email"
                   value={emailToAdd}
                   onChange={(e) => setEmailToAdd(e.target.value)}
                   placeholder="Enter email address..."
@@ -936,8 +1028,12 @@ const PrivateChat = () => {
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="private-chat-user-search" className="sr-only">Search users by name or email</label>
             <input
               type="text"
+              id="private-chat-user-search"
+              name="user-search"
+              autoComplete="off"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search users by name or email..."
@@ -946,7 +1042,7 @@ const PrivateChat = () => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6">
           {filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <MessageCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -1078,19 +1174,31 @@ const PrivateChat = () => {
 
   // Show chat interface
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen h-[100dvh] flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6">
-        <div className="flex items-center gap-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
+          paddingBottom: `0.75rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          marginTop: '0',
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => {
               setSelectedChatId(null);
               setSelectedUser(null);
               setMessages([]);
             }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+            aria-label="Back"
           >
-            <ArrowLeft size={20} className="text-gray-600 dark:text-gray-400" />
+            <ArrowLeft size={18} className="md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
           </button>
           <button
             onClick={() => setSelectedUserId(selectedUser.id)}
@@ -1116,7 +1224,7 @@ const PrivateChat = () => {
                     <img
                       src={profilePicture}
                       alt={displayName}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
@@ -1124,12 +1232,12 @@ const PrivateChat = () => {
                     />
                   ) : null}
                   <div 
-                    className={`w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm md:text-base font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
                   >
                     {displayName[0].toUpperCase()}
                   </div>
                   {isUserOnline(onlineUsers[selectedUser.id]) && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
                   )}
                 </>
               );
@@ -1140,7 +1248,7 @@ const PrivateChat = () => {
               onClick={() => setSelectedUserId(selectedUser.id)}
               className="text-left w-full"
             >
-              <h2 className="font-semibold text-gray-900 dark:text-white truncate">
+              <h2 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white truncate">
                 {(() => {
                   const userProfile = userProfiles[selectedUser.id] || selectedUser;
                   return userNames[selectedUser.id] || 
@@ -1155,7 +1263,7 @@ const PrivateChat = () => {
                          `User ${selectedUser.id.substring(0, 8)}`;
                 })()}
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {isUserOnline(onlineUsers[selectedUser.id]) ? 'Online' : 
                  onlineUsers[selectedUser.id]?.lastSeen ? 
                  `Last seen ${formatTime(onlineUsers[selectedUser.id].lastSeen)}` : 
@@ -1163,8 +1271,69 @@ const PrivateChat = () => {
               </p>
             </button>
           </div>
+          {/* Call Buttons */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => {
+                if (!isCallingAvailable) {
+                  showError('Calling is temporarily unavailable. Please try again later.');
+                  return;
+                }
+                const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                const displayName = userNames[selectedUser.id] || 
+                                 selectedUser.name || 
+                                 userProfile.studentEmail?.split('@')[0] || 
+                                 selectedUser.email?.split('@')[0] ||
+                                 `User ${selectedUser.id.substring(0, 8)}`;
+                startCall({ 
+                  id: selectedUser.id, 
+                  name: displayName, 
+                  email: selectedUser.email || selectedUser.studentEmail 
+                }, 'voice');
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                isCallingAvailable 
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
+              title={isCallingAvailable ? "Voice call" : "Calling unavailable"}
+              aria-label={isCallingAvailable ? "Voice call" : "Calling unavailable"}
+              disabled={!isCallingAvailable}
+            >
+              <Phone size={18} className={`${isCallingAvailable ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`} />
+            </button>
+            <button
+              onClick={() => {
+                if (!isCallingAvailable) {
+                  showError('Calling is temporarily unavailable. Please try again later.');
+                  return;
+                }
+                const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                const displayName = userNames[selectedUser.id] || 
+                                 selectedUser.name || 
+                                 userProfile.studentEmail?.split('@')[0] || 
+                                 selectedUser.email?.split('@')[0] ||
+                                 `User ${selectedUser.id.substring(0, 8)}`;
+                startCall({ 
+                  id: selectedUser.id, 
+                  name: displayName, 
+                  email: selectedUser.email || selectedUser.studentEmail 
+                }, 'video');
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                isCallingAvailable 
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
+              title={isCallingAvailable ? "Video call" : "Calling unavailable - Check configuration"}
+              aria-label={isCallingAvailable ? "Video call" : "Calling unavailable"}
+              disabled={!isCallingAvailable}
+            >
+              <Video size={18} className={`${isCallingAvailable ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`} />
+            </button>
+          </div>
           {/* Disappearing Messages Settings Button */}
-          <div className="relative disappearing-settings-container">
+          <div className="relative disappearing-settings-container flex-shrink-0">
             <button
               onClick={() => setShowDisappearingSettings(!showDisappearingSettings)}
               className={`p-2 rounded-lg transition-colors ${
@@ -1173,13 +1342,14 @@ const PrivateChat = () => {
                   : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
               }`}
               title="Disappearing Messages Settings"
+              aria-label="Disappearing Messages Settings"
             >
-              <Clock size={20} />
+              <Clock size={18} className="md:w-5 md:h-5" />
             </button>
             
             {/* Disappearing Messages Settings Dropdown */}
             {showDisappearingSettings && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4 transform transition-all duration-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-900 dark:text-white">Disappearing Messages</h3>
                   <button
@@ -1191,9 +1361,11 @@ const PrivateChat = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label htmlFor="disappearing-messages-enabled" className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
+                      id="disappearing-messages-enabled"
+                      name="disappearing-messages-enabled"
                       checked={disappearingMessagesEnabled}
                       onChange={(e) => setDisappearingMessagesEnabled(e.target.checked)}
                       className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
@@ -1203,8 +1375,10 @@ const PrivateChat = () => {
                   
                   {disappearingMessagesEnabled && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
+                      <label htmlFor="disappearing-messages-duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
                       <select
+                        id="disappearing-messages-duration"
+                        name="disappearing-messages-duration"
                         value={disappearingMessagesDuration}
                         onChange={(e) => setDisappearingMessagesDuration(Number(e.target.value))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -1296,8 +1470,11 @@ const PrivateChat = () => {
                           }}
                           className="flex gap-2"
                         >
+                          <label htmlFor={`private-edit-message-${message.id}`} className="sr-only">Edit message</label>
                           <input
                             type="text"
+                            id={`private-edit-message-${message.id}`}
+                            name={`private-edit-message-${message.id}`}
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
                             className="flex-1 bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
@@ -1322,6 +1499,36 @@ const PrivateChat = () => {
                         </form>
                       ) : (
                         <>
+                          {/* Attachment Display */}
+                          {message.attachment && (
+                            <div className="mb-2">
+                              {message.attachment.type?.startsWith('image/') ? (
+                                <div
+                                  onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
+                                  className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
+                                >
+                                  <img
+                                    src={message.attachment.url}
+                                    alt={message.attachment.name}
+                                    className="max-w-full max-h-64 object-contain"
+                                  />
+                                </div>
+                              ) : (
+                                <a
+                                  href={message.attachment.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                  <File size={20} className="text-indigo-600 dark:text-indigo-400" />
+                                  <span className="text-sm font-medium">{message.attachment.name}</span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    ({(message.attachment.size / 1024).toFixed(1)} KB)
+                                  </span>
+                                </a>
+                              )}
+                            </div>
+                          )}
                           <p className="text-sm whitespace-pre-wrap break-words">
                             {message.displayText || message.text}
                           </p>
@@ -1378,30 +1585,121 @@ const PrivateChat = () => {
       </div>
 
       {/* Message Input */}
-      <form onSubmit={sendMessage} className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 md:p-6">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-            disabled={sending}
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || sending}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {sending ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : (
-              <Send size={20} />
-            )}
-            <span className="hidden md:inline">Send</span>
-          </button>
-        </div>
-      </form>
+      <div 
+        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 md:p-6"
+        style={{
+          paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
+          paddingTop: `1rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+        }}
+      >
+        {/* File Preview */}
+        {attachedFile && (
+          <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {attachedFile.type?.startsWith('image/') ? (
+                <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              ) : (
+                <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {attachedFile.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {(attachedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAttachedFile(null)}
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+            >
+              <X size={16} className="text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
+        )}
+
+        <form 
+          onSubmit={sendMessage} 
+          className="flex gap-2 relative"
+        >
+          <div className="flex-1 relative">
+            <label htmlFor="private-chat-message-input" className="sr-only">Type a message</label>
+            <input
+              type="text"
+              id="private-chat-message-input"
+              name="message"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+              disabled={sending}
+            />
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
+            {/* File Upload */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowFileUpload(!showFileUpload)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Upload file"
+              >
+                <Paperclip size={20} />
+              </button>
+              {showFileUpload && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <FileUpload
+                    onFileUpload={(file) => {
+                      setAttachedFile(file);
+                      setShowFileUpload(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Emoji Picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Add emoji"
+              >
+                <Smile size={20} />
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                      setNewMessage(prev => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={(!newMessage.trim() && !attachedFile) || sending}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              {sending ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Send size={20} />
+              )}
+              <span className="hidden md:inline">Send</span>
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* User Profile Popup */}
       {selectedUserId && (

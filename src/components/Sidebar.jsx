@@ -1,15 +1,46 @@
+import { useState, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings } from 'lucide-react';
-import Logo from './Logo';
+import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon } from 'lucide-react';
+// Use window.__LogoComponent directly to avoid import/export issues
+const Logo = typeof window !== 'undefined' && window.__LogoComponent 
+  ? window.__LogoComponent 
+  : () => <div>Logo</div>; // Fallback placeholder
 
-const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
+const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
   const { userRole } = useAuth();
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
-  const handleNavClick = (view) => {
+  // Minimum swipe distance
+  const minSwipeDistance = 50;
+
+  const handleNavClick = useCallback((view) => {
     setActiveView(view);
     // Close sidebar on mobile after navigation
     if (window.innerWidth < 768) {
+      onClose();
+    }
+  }, [setActiveView, onClose]);
+
+  // Handle touch events for swipe to close
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    
+    // Close sidebar on left swipe
+    if (isLeftSwipe && isOpen && window.innerWidth < 768) {
       onClose();
     }
   };
@@ -25,17 +56,29 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
       )}
       
       {/* Sidebar */}
-      <div className={`
-        fixed md:static
-        top-0 left-0
-        w-64 bg-gray-900 dark:bg-gray-900 text-white 
-        flex flex-col h-screen border-r border-gray-800
-        z-50
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
-        {/* Mobile Close Button */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
+      <div 
+        className={`
+          fixed md:static
+          top-0 left-0
+          w-full md:w-64 bg-gray-900 dark:bg-gray-900 text-white 
+          flex flex-col h-screen h-[100dvh] border-r border-gray-800
+          z-50
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          maxHeight: '100dvh',
+          height: '100dvh'
+        }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Mobile Header - Always visible on mobile */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0"
+             style={{ paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))` }}>
           <Logo size="small" showText={true} />
           <button
             onClick={onClose}
@@ -46,14 +89,16 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
           </button>
         </div>
         
-        <div className="hidden md:block p-6 border-b border-gray-800 flex-shrink-0">
+        {/* Desktop Header - Always visible on desktop */}
+        <div className="hidden md:block p-6 border-b border-gray-800 flex-shrink-0"
+             style={{ paddingTop: `calc(1.5rem + env(safe-area-inset-top, 0px))` }}>
           <Logo size="small" showText={true} className="mb-2" />
           <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
             {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
           </p>
         </div>
 
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch">
         {!isAdminRole(userRole) ? (
           <>
             <button
@@ -101,6 +146,50 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
               <span>Private Chat</span>
             </button>
             <button
+              onClick={() => handleNavClick('activity')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'activity'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Activity size={20} />
+              <span>Activity</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('scheduler')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'scheduler'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Calendar size={20} />
+              <span>Scheduler</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('saved')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'saved'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Bookmark size={20} />
+              <span>Saved</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('gallery')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'gallery'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <ImageIcon size={20} />
+              <span>Gallery</span>
+            </button>
+            <button
               onClick={() => handleNavClick('settings')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
                 activeView === 'settings'
@@ -135,6 +224,17 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
             >
               <FileText size={20} />
               <span>Audit Logs</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('analytics')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'analytics'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <BarChart3 size={20} />
+              <span>Analytics</span>
             </button>
             <button
               onClick={() => handleNavClick('users')}
@@ -186,6 +286,8 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose }) => {
     </div>
     </>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;

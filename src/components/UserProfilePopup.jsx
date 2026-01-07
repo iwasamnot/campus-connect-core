@@ -1,9 +1,18 @@
 import { useState, useEffect } from 'react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 import { X, User, Mail, Phone, Calendar, GraduationCap, MapPin, FileText, Image, Circle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isAdminRole, isUserOnline } from '../utils/helpers';
+// Use window globals to avoid import/export issues
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
+const isUserOnline = typeof window !== 'undefined' && window.__isUserOnline 
+  ? window.__isUserOnline 
+  : (userData) => userData?.isOnline === true;
 
 const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
   const { user, userRole } = useAuth();

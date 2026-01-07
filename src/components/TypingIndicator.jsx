@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, doc, onSnapshot, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 
 // Hook for managing typing indicators
-export const useTypingIndicator = (chatId, chatType = 'global') => {
+// CRITICAL: Declare useTypingIndicator as a top-level const before exporting
+const useTypingIndicator = (chatId, chatType = 'global') => {
   const { user } = useAuth();
   const [typingUsers, setTypingUsers] = useState({});
 
@@ -43,6 +47,9 @@ export const useTypingIndicator = (chatId, chatType = 'global') => {
 
   return typingUsers;
 };
+
+// Export the declared hook
+export { useTypingIndicator };
 
 // Typing indicator component
 const TypingIndicator = ({ typingUsers, userNames }) => {

@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
-export const useTheme = () => {
+// CRITICAL: Declare useTheme as a top-level const before exporting
+const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
@@ -10,7 +11,11 @@ export const useTheme = () => {
   return context;
 };
 
-export const ThemeProvider = ({ children }) => {
+// Export the declared function
+export { useTheme };
+
+// CRITICAL: Declare ThemeProvider as a top-level const (no export keyword here)
+const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
     // Check localStorage first, then system preference
     if (typeof window === 'undefined') return false;
@@ -20,6 +25,14 @@ export const ThemeProvider = ({ children }) => {
       return saved === 'true';
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  const [themeStyle, setThemeStyle] = useState(() => {
+    // Check localStorage for theme style preference
+    if (typeof window === 'undefined') return 'fun';
+    
+    const saved = localStorage.getItem('themeStyle');
+    return saved || 'fun';
   });
 
   useEffect(() => {
@@ -35,19 +48,35 @@ export const ThemeProvider = ({ children }) => {
       body.classList.remove('dark');
     }
     
+    // Apply theme style class
+    root.classList.remove('theme-fun', 'theme-minimal');
+    root.classList.add(`theme-${themeStyle}`);
+    body.classList.remove('theme-fun', 'theme-minimal');
+    body.classList.add(`theme-${themeStyle}`);
+    
     // Save to localStorage
     localStorage.setItem('darkMode', darkMode.toString());
-  }, [darkMode]);
+    localStorage.setItem('themeStyle', themeStyle);
+  }, [darkMode, themeStyle]);
 
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
   };
 
+  const changeThemeStyle = (style) => {
+    setThemeStyle(style);
+  };
+
   const value = {
     darkMode,
-    toggleDarkMode
+    themeStyle,
+    toggleDarkMode,
+    changeThemeStyle
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
+
+// Export the declared component
+export { ThemeProvider };
 

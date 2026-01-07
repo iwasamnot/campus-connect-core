@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle } from 'lucide-react';
-import Logo from './Logo';
+// Import Logo directly - it's in main bundle so no code-splitting issues
+import Logo from '../components/Logo.jsx';
+import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
+import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
+import { handleError } from '../utils/errorHandler';
+import { keyboard } from '../utils/accessibility';
 
 const Login = () => {
   const { register, login, resetPassword, resendVerificationEmail } = useAuth();
@@ -20,37 +25,50 @@ const Login = () => {
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
 
-  // Validate student email format: must start with "s20" and contain "@sistc"
-  const validateStudentEmail = (email) => {
-    if (!email) return false;
-    const emailLower = email.toLowerCase();
-    return emailLower.startsWith('s20') && emailLower.includes('@sistc');
-  };
+  // Memoized validation functions using imported utilities
+  const validateStudentEmail = useCallback((email) => {
+    return isValidStudentEmail(email);
+  }, []);
 
-  const handleEmailAuth = async (e) => {
+  const validateAdminEmail = useCallback((email) => {
+    return isValidAdminEmail(email);
+  }, []);
+
+  const handleEmailAuth = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     
     try {
       if (mode === 'register') {
-        // Only allow student registration with valid email format
-        if (!name.trim()) {
-          setError('Please enter your full name.');
+        // Sanitize and validate name
+        const sanitizedName = sanitizeText(name);
+        const nameValidation = validateName(sanitizedName);
+        if (!nameValidation.isValid) {
+          setError(nameValidation.errors[0]);
           setLoading(false);
           return;
         }
         
-        // Validate email format
-        if (!validateStudentEmail(email)) {
-          setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in). Only students can register.');
+        // Sanitize and validate email
+        const sanitizedEmail = sanitizeEmail(email);
+        if (!validateStudentEmail(sanitizedEmail)) {
+          setError('Invalid email address. Only students with valid email addresses can register.');
           setLoading(false);
           return;
         }
         
         // Check email confirmation
-        if (email !== confirmEmail) {
+        if (sanitizedEmail !== sanitizeEmail(confirmEmail)) {
           setError('Email addresses do not match. Please confirm your email.');
+          setLoading(false);
+          return;
+        }
+        
+        // Validate password
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+          setError(passwordValidation.errors[0]);
           setLoading(false);
           return;
         }
@@ -62,52 +80,44 @@ const Login = () => {
           return;
         }
         
-        if (password.length < 6) {
-          setError('Password must be at least 6 characters long.');
-          setLoading(false);
-          return;
-        }
-        await register(name.trim(), email, password, 'student');
-        // Show success message about email verification
+        await register(sanitizedName, sanitizedEmail, password, 'student');
         setEmailVerificationSent(true);
         success('Registration successful! Please check your email to verify your account before logging in.');
       } else {
-        // Validate email format for login as well
-        if (!validateStudentEmail(email)) {
-          setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in). Only students can access this platform.');
+        // Sanitize email
+        const sanitizedEmail = sanitizeEmail(email);
+        const isStudentEmail = validateStudentEmail(sanitizedEmail);
+        const isAdminEmail = validateAdminEmail(sanitizedEmail);
+        
+        if (!isStudentEmail && !isAdminEmail) {
+          setError('Invalid email address. Please use a valid student or admin email.');
           setLoading(false);
           return;
         }
-        await login(email, password);
+        await login(sanitizedEmail, password);
       }
     } catch (err) {
-      let errorMessage = 'An error occurred. Please try again.';
-      if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already registered. Please login instead.';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address.';
-      } else if (err.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email. Please create an account first.';
-        if (email === 'admin@admin.com') {
-          errorMessage += ' Admin account needs to be created in Firebase Console. See ADMIN_SETUP.md for instructions.';
+      const { message } = handleError(err, 'Login/Register', (errorMessage) => {
+        setError(errorMessage);
+      });
+      
+      // Special handling for email verification
+      if (err.code === 'auth/email-not-verified' || err.code === 'EMAIL_NOT_VERIFIED') {
+        if (validateAdminEmail(email)) {
+          setError('Admin login error. Please contact support if this issue persists.');
+        } else {
+          setError('Please verify your email address before logging in. Check your inbox for the verification email.');
+          setEmailVerificationSent(true);
         }
-      } else if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password.';
-      } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'Password is too weak.';
-      } else if (err.code === 'auth/network-request-failed') {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else if (err.code === 'auth/email-not-verified') {
-        errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification email.';
-        setEmailVerificationSent(true);
+      } else {
+        setError(message);
       }
-      setError(errorMessage);
-      showError(errorMessage);
-      console.error('Login error:', err);
+      
+      showError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [mode, name, email, confirmEmail, password, confirmPassword, register, login, success, showError, validateStudentEmail, validateAdminEmail]);
 
   const handlePasswordReset = async (e) => {
     e.preventDefault();
@@ -117,10 +127,13 @@ const Login = () => {
       return;
     }
 
-    // Validate email format for password reset
-    if (!validateStudentEmail(email)) {
-      setError('Email must start with "s20" and contain "@sistc" (e.g., s20xxxxx@sistc.edu.in).');
-      showError('Email must start with "s20" and contain "@sistc".');
+    // Validate email format for password reset - allow both student and admin emails
+    const isStudentEmail = validateStudentEmail(email);
+    const isAdminEmail = validateAdminEmail(email);
+    
+    if (!isStudentEmail && !isAdminEmail) {
+      setError('Invalid email address. Please use a valid student or admin email.');
+      showError('Invalid email address.');
       return;
     }
 
@@ -250,7 +263,7 @@ const Login = () => {
         <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="register-name" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <User className="inline mr-2" size={16} />
                   Full Name
                 </label>
@@ -258,6 +271,9 @@ const Login = () => {
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="text"
+                    id="register-name"
+                    name="name"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
@@ -269,7 +285,7 @@ const Login = () => {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-black dark:text-white mb-2">
+              <label htmlFor="login-email" className="block text-sm font-medium text-black dark:text-white mb-2">
                 <Mail className="inline mr-2" size={16} />
                 Email
               </label>
@@ -277,6 +293,9 @@ const Login = () => {
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                 <input
                   type="email"
+                  id="login-email"
+                  name="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter Your Email"
@@ -288,7 +307,7 @@ const Login = () => {
             </div>
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="register-confirm-email" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Confirm Email
                 </label>
@@ -296,6 +315,9 @@ const Login = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="email"
+                    id="register-confirm-email"
+                    name="confirmEmail"
+                    autoComplete="email"
                     value={confirmEmail}
                     onChange={(e) => setConfirmEmail(e.target.value)}
                     placeholder="Confirm your email"
@@ -318,7 +340,7 @@ const Login = () => {
 
             {mode !== 'reset' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="login-password" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <Lock className="inline mr-2" size={16} />
                   Password
                 </label>
@@ -326,6 +348,9 @@ const Login = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="password"
+                    id="login-password"
+                    name="password"
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
@@ -340,7 +365,7 @@ const Login = () => {
 
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="register-confirm-password" className="block text-sm font-medium text-black dark:text-white mb-2">
                   <Lock className="inline mr-2" size={16} />
                   Confirm Password
                 </label>
@@ -348,6 +373,9 @@ const Login = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black dark:text-white opacity-50" size={20} />
                   <input
                     type="password"
+                    id="register-confirm-password"
+                    name="confirmPassword"
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"

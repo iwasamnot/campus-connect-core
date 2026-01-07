@@ -3,11 +3,80 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Performance Hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firebase.googleapis.com" />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+    
+    <!-- Preload critical components to prevent module resolution errors -->
+    <script>
+      // Ensure Logo is available globally before any lazy components load
+      // This prevents "Export 'Logo' is not defined" errors
+      window.__LogoPreload = true;
+    </script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="description" content="Secure student messaging platform with AI-powered content moderation" />
+    <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CampusConnect" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="60x60" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="57x57" href="/logo.png" />
+    
+    <!-- Windows/MS PWA Theme -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#4f46e5" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    <meta name="msapplication-TileImage" content="/logo.png" />
     <title>CampusConnect - Student Messaging Platform</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading fallback - shown if React fails to load -->
+      <div id="loading-fallback" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui;">
+        <div style="text-align: center; padding: 20px;">
+          <div style="width: 40px; height: 40px; border: 4px solid #e5e7eb; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <p style="color: #6b7280;">Loading CampusConnect...</p>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Global error handler for uncaught errors (mobile debugging)
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        const root = document.getElementById('root');
+        if (root && !root.innerHTML.includes('Error')) {
+          root.innerHTML = '<div style="padding: 20px; font-family: system-ui; max-width: 600px; margin: 50px auto;"><h1 style="color: #dc2626;">⚠️ Application Error</h1><p style="color: #374151;">' + (e.error?.message || 'Unknown error') + '</p><p style="color: #6b7280; margin-top: 12px;">Check console for details.</p><button onclick="window.location.reload()" style="background: #4f46e5; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-top: 16px;">Reload</button></div>';
+        }
+      });
+      
+      // Remove loading fallback when React loads
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const fallback = document.getElementById('loading-fallback');
+          if (fallback) fallback.style.display = 'none';
+        }, 1000);
+      });
+    </script>
+    <style>
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

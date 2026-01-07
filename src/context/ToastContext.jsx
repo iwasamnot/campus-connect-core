@@ -3,7 +3,8 @@ import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 
 const ToastContext = createContext();
 
-export const useToast = () => {
+// CRITICAL: Declare useToast as a top-level const before exporting
+const useToast = () => {
   const context = useContext(ToastContext);
   if (!context) {
     throw new Error('useToast must be used within a ToastProvider');
@@ -11,7 +12,11 @@ export const useToast = () => {
   return context;
 };
 
-export const ToastProvider = ({ children }) => {
+// Export the declared function
+export { useToast };
+
+// CRITICAL: Declare ToastProvider as a top-level const before exporting
+const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
   const showToast = useCallback((message, type = 'info', duration = 3000) => {
@@ -100,4 +105,7 @@ export const ToastProvider = ({ children }) => {
     </ToastContext.Provider>
   );
 };
+
+// Export the declared component
+export { ToastProvider };
 

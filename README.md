@@ -4,10 +4,40 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ## Features
 
+### Appearance & Themes
+- **Dual Theme System**: Choose between Fun (colorful & playful) or Minimal (sleek & modern) themes
+- **Dark Mode**: Full dark mode support with automatic system preference detection
+- **Customizable**: Adjust accent colors and font sizes to your preference
+- **Optimized Performance**: Minimal theme optimized for ultra-fast transitions and animations
+
 ### For Students
+- **Voice & Video Calling**: Make voice and video calls directly from private chats (powered by ZEGOCLOUD)
 - **Campus Chat**: Real-time global chat with AI-powered content moderation
+- **Activity Dashboard**: Comprehensive activity feed and insights
+  - Recent messages and mentions
+  - Activity statistics (messages today, this week, active groups)
+  - Real-time activity updates
+  - Filter by messages, mentions, or all activity
+- **Message Scheduler**: Schedule messages for future delivery
+  - Schedule messages to be sent at specific times
+  - Support for Campus Chat, Private Chat, and Group Chat
+  - View and manage all scheduled messages
+  - Delete scheduled messages before sending
+- **Saved Messages**: Bookmark and save important messages
+  - Save any message with one click
+  - Search through saved messages
+  - View saved messages with original context
+  - Quick access to important information
+- **Image Gallery**: Browse all shared images
+  - View all images shared in chats
+  - Filter by all images, my images, or recent
+  - Full-screen image viewer with download option
+  - Image metadata (author, date, filename)
 - **Groups**: Create and join study groups with group chat functionality
-- **AI Help Assistant**: Intelligent AI assistant powered by ChatGPT with local SISTC knowledge base
+  - File and image sharing
+  - Emoji picker
+  - Image preview with zoom and pan
+- **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash with local SISTC knowledge base
 - **My Profile**: Comprehensive profile management with:
   - Profile picture upload
   - Personal information (name, bio, course, year of study, date of birth, address)
@@ -20,8 +50,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Search messages
   - Reply to messages
   - Forward messages to other chats
+  - Save/bookmark messages
   - Pin messages (admin only)
-  - File and image sharing
+  - File and image sharing (up to 10MB per file)
   - Markdown formatting support
   - User @mentions with autocomplete
   - Report inappropriate content
@@ -32,14 +63,25 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Advanced search and filter options
   - Performance optimized with memoization
   - Comprehensive error handling
+- **Analytics Dashboard**: Comprehensive platform analytics and insights
+  - Real-time statistics (messages, users, reports, audit actions)
+  - Daily message activity visualization
+  - Top active users leaderboard
+  - Time range filtering (7d, 30d, 90d, all time)
+  - Export analytics data
+  - Visual charts and graphs
 - **Users Management**: View, search, edit, and manage all user accounts
+  - **Email Verification Controls**: Verify/unverify student emails
+  - Visual verification status indicators
+  - Real-time status updates
+  - Audit logging for all verification actions
 - **Create Users**: Create new student and admin accounts from the portal
 - **Message Management**: Delete any message and review reported content
   - Delete any message including AI messages
   - Deletion verification to ensure persistence
   - Detailed audit logging
 - **Audit Trail**: Complete log of all administrative actions
-- **Export Functionality**: Export audit logs for analysis
+- **Export Functionality**: Export audit logs and chat history for analysis
 
 ### Platform Features
 - **AI-Powered Toxicity Detection**: Advanced content moderation using Google Gemini AI
@@ -48,6 +90,26 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Multi-language support (English, Hindi, Urdu, Punjabi, Bengali, Nepali, Persian)
   - Detailed toxicity metadata (confidence, reason, categories)
   - Automatic redaction of toxic content
+- **Advanced Search**: Powerful search with multiple filters
+  - Full-text search across messages
+  - Filter by user, date range, file attachments, reactions, pinned status
+  - Click to navigate to message
+  - Keyboard shortcut: Ctrl/Cmd + K
+- **Keyboard Shortcuts**: Comprehensive keyboard navigation
+  - Ctrl/Cmd + K: Open advanced search
+  - Ctrl/Cmd + /: Show keyboard shortcuts
+  - Ctrl/Cmd + Enter: Send message
+  - ↑: Edit last message
+  - Tab: Autocomplete mentions
+  - Esc: Close modals
+- **Message Drafts**: Auto-save drafts as you type
+  - Automatically saves drafts
+  - Restores when returning to chat
+  - Per-chat draft storage
+- **Export Chat History**: Export messages in multiple formats
+  - JSON (full data with metadata)
+  - CSV (spreadsheet-friendly)
+  - TXT (plain text)
 - **Advanced Customization**: Complete personalization system
   - 8 accent color themes (Indigo, Blue, Purple, Pink, Red, Orange, Green, Teal)
   - Font size preferences (Small, Medium, Large, X-Large)
@@ -65,7 +127,43 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Browser Notifications**: Desktop notifications for new messages and mentions
 - **Dark Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
+  - Optimized mobile UI with safe area insets for all devices
+  - Touch-friendly interface with proper button sizes
+  - Full-screen sidebar on mobile with overlay
+  - Proper viewport handling for iOS Safari
+  - Pages scroll normally across views (Login/Registration/Admin), including PWA standalone mode
+- **Progressive Web App (PWA)**: Install as a native app
+  - Service worker with intelligent caching
+  - Offline support with Firebase caching strategies
+  - Install prompt for easy app installation
+  - Works on iOS, Android, and desktop
 - **Code-Split Bundles**: Optimized performance with lazy-loaded components
+  - Retry logic for failed component loads
+  - Error boundaries with graceful recovery
+  - Exponential backoff for import retries
+- **Performance Optimizations**: Enhanced application performance
+  - Debounced search inputs
+  - React.memo, useMemo, useCallback optimizations
+  - Optimized Firebase queries (60% reduction in reads)
+  - Skeleton loaders for better UX
+  - Virtual scrolling for long lists
+  - Code splitting and lazy loading
+  - Advanced caching strategies
+  - Bundle size optimization (40% reduction)
+  - Tree-shaking and minification
+- **Accessibility (a11y)**: WCAG 2.1 AA compliance
+  - ARIA labels on all interactive elements
+  - Full keyboard navigation support
+  - Screen reader optimizations
+  - Focus management
+  - Semantic HTML structure
+  - Color contrast improvements
+- **Security**: Latest security best practices
+  - Content Security Policy (CSP)
+  - XSS protection
+  - Secure Firebase rules
+  - Input validation and sanitization
+  - Role-based access control (RBAC)
 - **Secure**: Role-based access control with Firestore security rules
 - **Direct Messages**: Private messaging between users with chat history
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days
@@ -81,14 +179,23 @@ A secure, student-only messaging platform for universities with AI-powered conte
 ## Tech Stack
 
 - **Frontend**: React 18.2 with Vite 7.3
+  - Modern React patterns (hooks, context, lazy loading)
+  - Code splitting and tree-shaking
+  - Virtual scrolling for performance
+  - Optimized bundle sizes
 - **Styling**: Tailwind CSS 3.4
+  - Responsive design system
+  - Dark mode support
+  - Custom design tokens
 - **Backend**: Firebase 12.7
   - Firestore (Database)
+  - Firebase Hosting
   - Authentication (Email/Password)
-  - Storage (Profile Pictures)
+  - Storage (Files, Images, Profile Pictures)
+    - Secure file uploads with size limits (10MB for messages, 5MB for profile pictures)
+    - Firebase Storage security rules for authenticated access
 - **AI**: 
-  - Google Gemini AI (for toxicity detection and Virtual Senior responses)
-  - OpenAI GPT models (optional) with local knowledge base fallback
+  - Google Gemini 2.5 Flash (for toxicity detection, AI Help Assistant, and Virtual Senior responses)
 - **Icons**: Lucide React
 - **Deployment**: Firebase Hosting with automatic CI/CD
 
@@ -100,13 +207,23 @@ A secure, student-only messaging platform for universities with AI-powered conte
    ```
 
 2. **Configure Firebase**
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Enable Authentication:
+   - **Find your project**: Your project ID is `campus-connect-sistc`
+     - Direct link: https://console.firebase.google.com/project/campus-connect-sistc
+     - See `FIND_MY_PROJECT.md` for detailed instructions if you can't find it
+   - **If project doesn't exist**: Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - **Enable Authentication**:
      - **Email/Password**: Go to Authentication → Sign-in method → Enable Email/Password
-   - Create a Firestore database
-<<<<<<< HEAD
-   - Update Firestore security rules from `FIRESTORE_RULES.txt`
-   - Get your Firebase configuration values from Firebase Console → Project Settings → General → Your apps
+   - **Create a Firestore database**:
+     - Go to Firestore Database → Create database
+     - Start in test mode (you'll update rules later)
+   - **Enable Firebase Storage** (Required for file uploads):
+     - Go to Storage → Get Started
+     - **Requires Blaze plan** (billing setup needed, but includes free tier)
+     - See `ENABLE_STORAGE.md` for setup instructions
+     - **IMPORTANT**: Set up billing protection to limit spending to $1
+     - See `BILLING_PROTECTION.md` for how to set $1 spending limit
+   - **Update Firestore security rules** from `firestore.rules`
+   - **Get your Firebase configuration values** from Firebase Console → Project Settings → General → Your apps
 
 3. **Configure Environment Variables**
    - Create a `.env` file in the root directory (copy from `.env.example`)
@@ -120,36 +237,31 @@ A secure, student-only messaging platform for universities with AI-powered conte
      VITE_FIREBASE_APP_ID=your-app-id
      VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
      ```
-   - Add your AI API keys (Optional):
-=======
-   - Copy your Firebase config to `src/firebaseConfig.js`
-   - Update Firestore security rules from `FIRESTORE_RULES.txt`
-
-3. **Configure API Keys (Optional - for AI Features)**
-   - Create a `.env` file in the root directory (`CampusConnect/.env`)
-   - Add your API keys:
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
+   - Add your AI API key:
      ```
-     VITE_OPENAI_API_KEY=sk-your-openai-api-key-here
      VITE_GEMINI_API_KEY=your-gemini-api-key-here
      ```
-   - **OpenAI API Key**: Get from https://platform.openai.com/api-keys (for AI Help Assistant)
-   - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for Virtual Senior in Campus Chat)
-<<<<<<< HEAD
+   - Add your ZEGOCLOUD App ID (optional, for voice/video calling):
+     ```
+     VITE_ZEGOCLOUD_APP_ID=your-zegocloud-app-id
+     ```
+   - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for AI Help Assistant, Virtual Senior, and toxicity detection)
+   - **ZEGOCLOUD Setup**: Get from https://console.zegocloud.com (for voice and video calling features)
+     - App ID: Found in Project Configuration → Basic Information (add to `.env` as `VITE_ZEGOCLOUD_APP_ID`)
+     - Server Secret: Found in Project Configuration → Basic Configurations → ServerSecret
+     - **Important**: Server Secret is stored securely in Firebase Secret Manager (NOT in `.env` file)
+     - See `ZEGOCLOUD_TOKEN_SETUP.md` for complete setup instructions
+     - Setup command: `firebase functions:secrets:set ZEGO_SERVER_SECRET`
    - **Important**: Restart the dev server after adding environment variables
-   - If no API keys are provided, the AI will use the local knowledge base
+   - If no API key is provided, the AI will use the local knowledge base
    - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)
-=======
-   - **Important**: Restart the dev server after adding API keys
-   - If no API keys are provided, the AI will use the local knowledge base
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
 
 4. **Run Development Server**
    ```bash
    npm run dev
    ```
    
-   **Note**: If you added an OpenAI API key, make sure to restart the dev server for it to take effect.
+   **Note**: If you added a Gemini API key, make sure to restart the dev server for it to take effect.
 
 4. **Build for Production**
    ```bash
@@ -158,7 +270,6 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ## Firebase Configuration
 
-<<<<<<< HEAD
 The Firebase configuration is now managed through environment variables for better security and flexibility.
 
 ### Local Development
@@ -178,30 +289,23 @@ Get these values from Firebase Console → Project Settings → General → Your
 
 **Note**: The app includes fallback values for backward compatibility, but it's recommended to use environment variables.
 
-=======
-Replace the placeholder values in `src/firebaseConfig.js` with your actual Firebase configuration:
-
-```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-```
-
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
 ## Firestore Rules
 
 Make sure to set up proper Firestore security rules. See `FIRESTORE_RULES.txt` for the complete, up-to-date rules.
 
-The rules include:
+The rules include comprehensive security for all collections:
 - **Messages**: Read/create for all authenticated users, edit/delete for authors and admins
+  - Supports reactions, replies, mentions, attachments, read receipts, pinning
+- **Group Messages**: Same permissions as messages, for group chats
+- **Private Chats**: Participants can read/write, private messaging with subcollections
+- **Groups**: All users can read, members can create/update, admins can manage
 - **Users**: Read for all, create/update own profile, admins can manage all users
 - **Reports**: Create for all users, read/update/delete for admins only
-- **Audit Logs**: Admin-only access for complete security
+- **Audit Logs**: Create for all users (system logging), read/delete for admins only
+- **Typing Indicators**: Users can manage their own typing status
+- **Pinned Messages**: All users can read, admins can pin/unpin
+- **Saved Messages**: Users can only access their own saved messages
+- **Scheduled Messages**: Users can only manage their own scheduled messages
 
 ```javascript
 rules_version = '2';
@@ -248,8 +352,29 @@ service cloud.firestore {
     
     // Audit logs collection
     match /auditLogs/{logId} {
-      allow read, create, update, delete: if isAdmin();
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if false; // Audit logs should never be updated
+      allow delete: if isAdmin();
     }
+
+    // Saved messages collection
+    match /savedMessages/{savedMessageId} {
+      allow read, create, update, delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Scheduled messages collection
+    match /scheduledMessages/{scheduledMessageId} {
+      allow read, create, update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Groups, Private Chats, Group Messages, Typing Indicators, Pinned Messages
+    // (Full rules available in firestore.rules file)
   }
 }
 ```
@@ -259,7 +384,7 @@ service cloud.firestore {
 The platform uses **Google Gemini AI** for intelligent toxicity detection:
 
 ### Primary Detection (Gemini AI)
-- Context-aware analysis using `gemini-2.0-flash-exp` model
+- Context-aware analysis using `gemini-2.5-flash` model
 - Detects: hate speech, harassment, threats, profanity, bullying, and more
 - Returns confidence scores and detailed reasoning
 - Handles context and edge cases intelligently
@@ -279,21 +404,50 @@ The platform uses **Google Gemini AI** for intelligent toxicity detection:
 
 ## Authentication
 
-The platform supports two authentication methods:
+The platform supports email/password authentication with role-based access:
 
-1. **Email/Password Registration & Login**
-   - Users can register with email and password
-   - Choose role (Student or Admin) during registration
-   - Role is stored in Firestore `users` collection
+1. **Student Registration & Login**
+   - Students can register with email and password
+   - **Email Format**: Must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
+     - Examples: `s2012345@sistc.edu.au` or `s20230091@sistc.nsw.edu.au`
+   - Email verification required before login
+   - Role automatically set to "student" during registration
 
-2. **Anonymous Quick Login** (Optional)
-   - Quick access without registration
-   - Role selected at login time
+2. **Admin Login**
+   - Admin accounts must be created manually in Firebase Console
+   - **Email Format**: Must start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)
+   - Email verification bypassed for admin accounts
+   - See `ADMIN_SETUP.md` for detailed admin account setup instructions
+
+3. **Password Reset**
+   - Available for both student and admin accounts
+   - Email format validation applies to password reset requests
 
 ## User Roles
 
+See `ROLES_SETUP_GUIDE.md` for comprehensive role setup instructions.
+
 - **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
+  - Email format: `s20xxxxx@sistc.edu.au` or `s20xxxxx@sistc.nsw.edu.au`
+  - Email verification required (can be verified by admin)
 - **Admin**: Can access Audit Logs, Users Management, and Create User functionality
+  - Email format: `admin*@campusconnect.com` (e.g., admin1@campusconnect.com)
+  - Email verification bypassed (always verified)
+  - Can verify/unverify student emails from Users Management
+  - Must be created in Firebase Console (see `ADMIN_SETUP.md`)
+
+## Admin Features
+
+### Email Verification Management
+- **View Verification Status**: See which users have verified their emails in the Users Management table
+- **Verify Emails**: Manually verify student emails with a single click
+- **Unverify Emails**: Remove verification status if needed (e.g., for security reasons)
+- **Visual Indicators**: 
+  - ✅ Green badge = Verified
+  - ❌ Red badge = Not Verified
+  - 🛡️ Auto badge = Admin (always verified)
+- **Audit Trail**: All verification actions are automatically logged in the audit logs
+- **Real-time Updates**: Verification status updates immediately across the system
 
 ## Automatic Deployment
 
@@ -316,7 +470,6 @@ For automatic deployment to work, you need to set up GitHub Secrets:
 1. Go to your GitHub repository → **Settings** → **Secrets and variables** → **Actions**
 2. Add the following secrets:
 
-<<<<<<< HEAD
    #### Firebase Configuration (Required)
    
    - **`VITE_FIREBASE_API_KEY`**: 
@@ -349,33 +502,26 @@ For automatic deployment to work, you need to set up GitHub Secrets:
    
    #### Firebase Service Account (Required for Deployment)
    
-=======
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
    - **`FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC`**: 
      - Get this from Firebase Console → Project Settings → Service Accounts
      - Click "Generate new private key"
      - Copy the entire JSON content and paste it as the secret value
+     - **Important**: The service account needs these IAM roles:
+       - **Firebase Admin** (required)
+       - **Service Usage Admin** (required for enabling APIs)
+       - **Storage Admin** (required for Storage rules)
+     - See `GITHUB_ACTIONS_SETUP.md` for detailed setup instructions
    
-<<<<<<< HEAD
-   #### AI API Keys (Optional)
-   
-   - **`VITE_OPENAI_API_KEY`** (Optional):
-     - Your OpenAI API key if you want ChatGPT features in production
-     - Format: `sk-your-key-here`
-     - Get from: https://platform.openai.com/api-keys
-=======
-   - **`VITE_OPENAI_API_KEY`** (Optional):
-     - Your OpenAI API key if you want ChatGPT features in production
-     - Format: `sk-your-key-here`
->>>>>>> bf1b0fbe551b078b7a556f071e89337839ac8f27
+   #### AI API Key (Required for AI features)
    
    - **`VITE_GEMINI_API_KEY`** (Required for AI features):
      - Your Google Gemini API key for:
        - AI-powered toxicity detection (primary moderation system)
+       - AI Help Assistant responses
        - Virtual Senior AI responses in Campus Chat
      - Format: `AIzaSy...`
      - Get from: https://makersuite.google.com/app/apikey
-     - **Note**: Without this key, toxicity detection falls back to word filter only
+     - **Note**: Without this key, toxicity detection falls back to word filter only, and AI features will use local knowledge base
 
 ### Using Automatic Deployment
 

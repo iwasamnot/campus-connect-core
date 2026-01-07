@@ -5,7 +5,8 @@ import { useAuth } from './AuthContext';
 
 const PresenceContext = createContext();
 
-export const usePresence = () => {
+// CRITICAL: Declare usePresence as a top-level const before exporting
+const usePresence = () => {
   const context = useContext(PresenceContext);
   if (!context) {
     throw new Error('usePresence must be used within a PresenceProvider');
@@ -13,7 +14,11 @@ export const usePresence = () => {
   return context;
 };
 
-export const PresenceProvider = ({ children }) => {
+// Export the declared function
+export { usePresence };
+
+// CRITICAL: Declare PresenceProvider as a top-level const before exporting
+const PresenceProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
@@ -80,4 +85,7 @@ export const PresenceProvider = ({ children }) => {
     </PresenceContext.Provider>
   );
 };
+
+// Export the declared component
+export { PresenceProvider };
 

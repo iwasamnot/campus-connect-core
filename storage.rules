@@ -1,0 +1,73 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role != null &&
+        (firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin1');
+    }
+    
+    // Messages folder - STRICT LIMITS to stay within free tier
+    match /messages/{fileName} {
+      // Allow authenticated users to read any message file
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 5MB per file (reduced from 10MB to save storage)
+      // Free tier: 5GB total storage, 1GB/day downloads, 20,000 operations/day
+      allow write: if isAuthenticated() && 
+        request.resource.size < 5 * 1024 * 1024; // 5MB max
+      
+      // Allow admins to delete files
+      allow delete: if isAdmin();
+    }
+    
+    // Profile pictures folder - STRICT LIMITS
+    match /profile-pictures/{userId}/{fileName} {
+      // Allow authenticated users to read any profile picture
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 2MB for profile pictures (reduced from 5MB)
+      // Users should compress images before uploading
+      allow write: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.size < 2 * 1024 * 1024; // 2MB max
+      
+      // Allow users to delete their own profile picture, or admins to delete any
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+    
+    // Group files folder - STRICT LIMITS
+    match /group-files/{groupId}/{fileName} {
+      // Allow authenticated users to read group files
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 5MB per file (reduced from 10MB)
+      allow write: if isAuthenticated() && 
+        request.resource.size < 5 * 1024 * 1024; // 5MB max
+      
+      // Allow admins to delete group files
+      allow delete: if isAdmin();
+    }
+    
+    // Private chat files folder - STRICT LIMITS
+    match /private-chat-files/{chatId}/{fileName} {
+      // Allow authenticated users to read private chat files
+      allow read: if isAuthenticated();
+      
+      // STRICT LIMIT: Max 5MB per file (reduced from 10MB)
+      allow write: if isAuthenticated() && 
+        request.resource.size < 5 * 1024 * 1024; // 5MB max
+      
+      // Allow admins to delete private chat files
+      allow delete: if isAdmin();
+    }
+  }
+}
+

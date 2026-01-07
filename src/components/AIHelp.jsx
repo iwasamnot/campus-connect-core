@@ -2,19 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
-import { AI_CONFIG } from '../config/aiConfig';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-// Debug: Log API key status (remove in production)
-if (import.meta.env.DEV) {
-  console.log('AI Config Status:', {
-    hasOpenAI: !!AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '',
-    openaiLength: AI_CONFIG.openaiApiKey?.length || 0,
-    hasGemini: !!(import.meta.env.VITE_GEMINI_API_KEY?.trim()),
-    geminiLength: import.meta.env.VITE_GEMINI_API_KEY?.trim()?.length || 0,
-    geminiKeyPreview: import.meta.env.VITE_GEMINI_API_KEY?.trim() ? import.meta.env.VITE_GEMINI_API_KEY.trim().substring(0, 10) + '...' : 'not set'
-  });
-}
 
 // Enhanced SISTC Knowledge Base with more detailed information
 const SISTC_KNOWLEDGE_BASE = {
@@ -365,63 +354,118 @@ const AIHelp = () => {
             threshold: HarmBlockThreshold.BLOCK_NONE,
           },
         ],
-        systemInstruction: 'You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). You provide accurate, helpful information about SISTC courses, campuses, applications, and student services. Be concise, friendly, and professional. Format your responses with markdown for better readability.',
+        systemInstruction: `You are an intelligent, knowledgeable, and empathetic AI assistant for Sydney International School of Technology and Commerce (SISTC). Your role is to provide comprehensive, accurate, and helpful information to students, prospective students, and visitors.
+
+**Your Capabilities:**
+- Provide detailed information about SISTC courses, programs, campuses, and student services
+- Answer questions about applications, admissions, fees, and requirements
+- Offer guidance on student life, support services, and resources
+- Help with general academic and university-related questions
+- Maintain context from conversation history to provide coherent, relevant responses
+
+**Your Approach:**
+- Be thorough but concise - provide complete information without unnecessary verbosity
+- Use a friendly, professional, and approachable tone
+- Structure your responses clearly with headings, lists, and formatting when helpful
+- If asked about SISTC-specific information, prioritize accuracy and reference the knowledge base provided
+- For general questions, use your knowledge while maintaining relevance to the educational context
+- Show empathy and understanding when addressing student concerns or questions
+- If you don't know something, be honest and suggest where they might find the information
+
+**Response Format:**
+- Use markdown formatting (headings, lists, bold, italic) for better readability
+- Break down complex topics into clear sections
+- Use bullet points or numbered lists for step-by-step information
+- Include relevant details, examples, or practical advice when appropriate`,
       });
       return model;
     } catch (error) {
-      console.error('Error initializing Gemini:', error);
+      console.error('Error initializing Gemini model:', error);
       return null;
     }
   };
 
-  // Call Gemini AI
-  const callGemini = async (question, localContext) => {
+  // Call Gemini AI with conversation history
+  const callGemini = async (question, localContext, conversationHistory = []) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     if (!apiKey || apiKey === '') {
-      console.warn('AIHelp: Gemini API key not found in callGemini');
       return null;
     }
 
     const model = getGeminiModel(selectedGeminiModel);
     if (!model) {
-      console.warn('AIHelp: Gemini model not available after initialization');
       return null;
     }
 
     try {
-      const prompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
-You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
+      // Build conversation history for context
+      const historyContext = conversationHistory.length > 0 
+        ? `\n\n**Conversation History:**\n${conversationHistory.slice(-6).map((msg, idx) => {
+            if (msg.type === 'user') {
+              return `User: ${msg.content}`;
+            } else {
+              return `Assistant: ${msg.content.substring(0, 200)}...`;
+            }
+          }).join('\n\n')}\n\n`
+        : '';
 
-Use the following local knowledge base information as reference:
-${localContext ? `\n${localContext}\n` : ''}
+      const prompt = `**Context Information:**
 
-If the question is about SISTC specifically, prioritize and use the knowledge base information provided above.
-For general questions or if the knowledge base doesn't have the answer, use your general knowledge.
-Be concise, friendly, and professional. Format your responses with markdown for better readability.
+Use the following SISTC knowledge base information as your primary reference for SISTC-specific questions:
+${localContext ? `\n${localContext}\n` : '\nNo specific knowledge base context available. Use your general knowledge about universities and student services.\n'}
 
-Question: ${question}`;
+${historyContext}
 
-      console.log('AIHelp: Calling Gemini with model:', selectedGeminiModel);
-      console.log('AIHelp: Question length:', question.length);
-      const result = await model.generateContent(prompt);
+**Current Question:**
+${question}
+
+**Instructions:**
+- If the question is about SISTC specifically, prioritize the knowledge base information provided above
+- Maintain continuity with the conversation history if relevant
+- For general questions or if the knowledge base doesn't fully cover the topic, supplement with your knowledge
+- Provide comprehensive, well-structured answers that are thorough yet concise
+- Use markdown formatting for better readability
+- Be helpful, empathetic, and professional in your responses`;
+
+      // Build chat history for Gemini (last 6 messages for context)
+      const chatHistory = conversationHistory.slice(-6).map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      }));
+
+      // Use chat history if available, otherwise just use the prompt
+      const result = await (chatHistory.length > 0 
+        ? model.generateContent({
+            contents: [...chatHistory, { role: 'user', parts: [{ text: prompt }] }]
+          })
+        : model.generateContent(prompt)
+      );
+      
       const response = await result.response;
       const text = response.text();
-      console.log('AIHelp: Gemini response received, length:', text?.length || 0);
       if (text && text.trim()) {
-        console.log('AIHelp: ✅ Gemini response preview:', text.substring(0, 150) + '...');
         return text.trim();
       } else {
-        console.warn('AIHelp: ⚠️ Gemini returned empty text');
         return null;
       }
     } catch (error) {
-      console.error('AIHelp: ❌ Error calling Gemini:', error);
-      console.error('AIHelp: Error name:', error.name);
-      console.error('AIHelp: Error message:', error.message);
-      if (error.stack) {
-        console.error('AIHelp: Error stack:', error.stack);
+      console.error('Error calling Gemini:', error);
+      
+      // Check if it's an API blocked error (403 with API_KEY_SERVICE_BLOCKED)
+      if (error.message && (
+        error.message.includes('403') || 
+        error.message.includes('API_KEY_SERVICE_BLOCKED') ||
+        error.message.includes('SERVICE_DISABLED') ||
+        error.message.includes('blocked')
+      )) {
+        console.warn('⚠️ Gemini API is blocked or disabled. This usually means:');
+        console.warn('   1. The API key has restrictions that block the Generative Language API');
+        console.warn('   2. The API is not enabled in the Google Cloud project');
+        console.warn('   3. The API key service is blocked for this project');
+        console.warn('💡 The AI Help feature will fall back to the local knowledge base.');
+        console.warn('   To fix: Check API key restrictions in Google Cloud Console');
       }
-      // Return null instead of throwing so it can fall back gracefully
+      
       return null;
     }
   };
@@ -431,79 +475,27 @@ Question: ${question}`;
   }, [messages]);
 
 
-  // Hybrid AI: Try Gemini first, then ChatGPT, then fallback to local knowledge base
+  // Intelligent AI: Use Gemini with conversation history, fallback to local knowledge base
   const getHybridAIResponse = async (question) => {
     // Always get local knowledge base answer first for context
     const localAnswer = ai.current.processQuestion(question);
     
-    // Priority 1: Try Gemini if API key is available
+    // Build conversation history from messages (excluding the system message)
+    const conversationHistory = messages
+      .filter(msg => msg.id !== 1) // Exclude the initial greeting
+      .slice(-10) // Keep last 10 messages for context
+      .map(msg => ({
+        type: msg.type === 'bot' ? 'bot' : 'user',
+        content: msg.content
+      }));
+    
+    // Try Gemini if API key is available
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-    console.log('AIHelp: Checking Gemini API key...', {
-      hasKey: !!geminiApiKey,
-      keyLength: geminiApiKey?.length || 0,
-      keyPreview: geminiApiKey ? geminiApiKey.substring(0, 10) + '...' : 'not set'
-    });
     
     if (geminiApiKey && geminiApiKey !== '') {
-      console.log('AIHelp: Attempting to use Gemini AI with model:', selectedGeminiModel);
-      const geminiAnswer = await callGemini(question, localAnswer);
+      const geminiAnswer = await callGemini(question, localAnswer, conversationHistory);
       if (geminiAnswer && geminiAnswer.trim() !== '') {
-        console.log('AIHelp: ✅ Gemini AI response received successfully, length:', geminiAnswer.length);
-        console.log('AIHelp: ✅ Using Gemini response (not falling back)');
-        return geminiAnswer; // Return Gemini answer if successful
-      } else {
-        console.warn('AIHelp: ⚠️ Gemini returned empty or null response, falling back to ChatGPT or local...');
-      }
-    } else {
-      console.log('AIHelp: ⚠️ Gemini API key not found, skipping Gemini and trying ChatGPT or local...');
-    }
-    
-    // Priority 2: Try ChatGPT if API key is available
-    if (AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '') {
-      try {
-        const systemPrompt = `You are a helpful AI assistant for Sydney International School of Technology and Commerce (SISTC). 
-You provide accurate, helpful information about SISTC courses, campuses, applications, and student services.
-
-Use the following local knowledge base information as reference:
-${localAnswer ? `\n${localAnswer}\n` : ''}
-
-If the question is about SISTC specifically, prioritize and use the knowledge base information provided above.
-For general questions or if the knowledge base doesn't have the answer, use your general knowledge.
-Be concise, friendly, and professional. Format your responses with markdown for better readability.`;
-
-        const messages = [
-          { role: 'system', content: systemPrompt },
-          ...ai.current.context.slice(-3).map(ctx => ({
-            role: 'user',
-            content: ctx.question
-          })),
-          { role: 'user', content: question }
-        ];
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${AI_CONFIG.openaiApiKey}`
-          },
-          body: JSON.stringify({
-            model: AI_CONFIG.model || 'gpt-4o-mini',
-            messages: messages,
-            temperature: AI_CONFIG.temperature,
-            max_tokens: AI_CONFIG.maxTokens
-          })
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const chatGPTAnswer = data.choices[0]?.message?.content || null;
-          if (chatGPTAnswer) {
-            return chatGPTAnswer; // Return ChatGPT answer if successful
-          }
-        }
-      } catch (error) {
-        console.error('OpenAI API error:', error);
-        // Fall through to local answer
+        return geminiAnswer;
       }
     }
     
@@ -528,16 +520,11 @@ Be concise, friendly, and professional. Format your responses with markdown for 
     setLoading(true);
 
     try {
-      // Use hybrid model: Gemini first, then ChatGPT, then local knowledge base
-      console.log('AIHelp: Getting AI response for question:', question);
       const answer = await getHybridAIResponse(question);
 
       if (!answer || answer.trim() === '') {
-        console.warn('AIHelp: No answer generated, using fallback');
         throw new Error('No answer generated');
       }
-
-      console.log('AIHelp: Using AI response, length:', answer.length);
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
@@ -546,12 +533,10 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
-      console.error('AIHelp: AI Error:', err);
-      console.error('AIHelp: Error details:', err.message);
+      console.error('Error getting AI response:', err);
       
       // Final fallback to local knowledge base
       try {
-        console.log('AIHelp: Using local knowledge base fallback');
         const fallbackAnswer = ai.current.processQuestion(question);
         const botMessage = {
           id: Date.now() + 1,
@@ -561,7 +546,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         };
         setMessages(prev => [...prev, botMessage]);
       } catch (fallbackErr) {
-        console.error('AIHelp: Fallback error:', fallbackErr);
+        console.error('Fallback error:', fallbackErr);
         const errorBotMessage = {
           id: Date.now() + 1,
           type: 'bot',
@@ -649,7 +634,17 @@ Be concise, friendly, and professional. Format your responses with markdown for 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `0.75rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
           <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex-shrink-0">
@@ -657,17 +652,17 @@ Be concise, friendly, and professional. Format your responses with markdown for 
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
+                <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
                 <Sparkles className="text-indigo-500 hidden sm:block" size={20} />
-                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '' && (
+                {import.meta.env.VITE_GEMINI_API_KEY?.trim() && (
                   <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full">
-                    ChatGPT
+                    Gemini AI
                   </span>
                 )}
               </div>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                {AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== ''
-                  ? 'Hybrid AI: Powered by ChatGPT enhanced with SISTC knowledge base'
+                {import.meta.env.VITE_GEMINI_API_KEY?.trim()
+                  ? 'Intelligent AI: Powered by Google Gemini enhanced with SISTC knowledge base'
                   : 'Intelligent answers about SISTC courses, campuses, and more'}
               </p>
             </div>
@@ -692,7 +687,7 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -745,10 +740,21 @@ Be concise, friendly, and professional. Format your responses with markdown for 
       </div>
 
       {/* Input Area */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+        style={{
+          paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
+          paddingTop: `0.75rem`,
+          paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
+        }}
+      >
         <form onSubmit={handleSend} className="flex gap-2 md:gap-3">
+          <label htmlFor="ai-help-input" className="sr-only">Ask about SISTC</label>
           <input
             type="text"
+            id="ai-help-input"
+            name="ai-help-message"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about SISTC..."
@@ -767,18 +773,10 @@ Be concise, friendly, and professional. Format your responses with markdown for 
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
           {(() => {
             const hasGemini = !!(import.meta.env.VITE_GEMINI_API_KEY?.trim());
-            const hasOpenAI = AI_CONFIG.openaiApiKey && AI_CONFIG.openaiApiKey.trim() !== '';
             if (hasGemini) {
               return (
                 <>
-                  Hybrid AI: Gemini ({geminiModels.find(m => m.value === selectedGeminiModel)?.label}) + SISTC Knowledge Base • 
-                  <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
-                </>
-              );
-            } else if (hasOpenAI) {
-              return (
-                <>
-                  Hybrid AI: ChatGPT + SISTC Knowledge Base • 
+                  Intelligent AI: Google Gemini 2.5 Flash + SISTC Knowledge Base • 
                   <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
                 </>
               );

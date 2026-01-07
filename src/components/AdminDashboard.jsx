@@ -769,12 +769,22 @@ const AdminDashboard = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `0.75rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3 md:mb-4">
           <div className="flex items-center gap-2 md:gap-3">
             <Logo size="small" showText={false} />
             <div>
-              <h2 className="text-lg md:text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
               <p className="text-xs md:text-sm text-black dark:text-white opacity-70">
                 Manage messages, reports, and audit logs
               </p>
@@ -975,8 +985,11 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="admin-search-query" className="sr-only">Search messages</label>
             <input
               type="text"
+              id="admin-search-query"
+              name="search-query"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search messages..."
@@ -985,8 +998,11 @@ const AdminDashboard = () => {
           </div>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="admin-filter-user" className="sr-only">Filter by user</label>
             <input
               type="text"
+              id="admin-filter-user"
+              name="filter-user"
               value={filterUser}
               onChange={(e) => setFilterUser(e.target.value)}
               placeholder="Filter by user..."
@@ -995,8 +1011,11 @@ const AdminDashboard = () => {
           </div>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <label htmlFor="admin-filter-date" className="sr-only">Filter by date</label>
             <input
               type="date"
+              id="admin-filter-date"
+              name="filter-date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -1019,8 +1038,10 @@ const AdminDashboard = () => {
 
         {/* Sort Controls */}
         <div className="flex items-center gap-4 mt-4">
-          <label className="text-sm text-black dark:text-white">Sort by:</label>
+          <label htmlFor="admin-sort-by" className="text-sm text-black dark:text-white">Sort by:</label>
           <select
+            id="admin-sort-by"
+            name="sort-by"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -1093,7 +1114,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 overflow-x-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 overflow-x-auto">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -1173,7 +1194,7 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => handleBanUser(message.id, message.userId, message.userEmail)}
                             disabled={banning === message.id || message.userBanned}
-                            className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
                           >
                             <Ban size={14} />
                             <span>{message.userBanned ? 'Banned' : 'Ban'}</span>
@@ -1181,7 +1202,7 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => handleDeleteMessage(message.id)}
                             disabled={deleting === message.id}
-                            className="flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-500 active:bg-gray-900 dark:active:bg-gray-400 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
                           >
                             <Trash2 size={14} />
                             <span>Delete</span>

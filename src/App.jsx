@@ -1,51 +1,143 @@
 import { useAuth } from './context/AuthContext';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
+import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Menu } from 'lucide-react';
+// Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
+// CRITICAL: Import firebaseConfig in main App to ensure it's in main bundle
+// Lazy components import auth, db, etc. from firebaseConfig
+import { auth, db } from './firebaseConfig';
+// Ensure firebaseConfig is never tree-shaken
+if (false) {
+  // This code never runs but ensures firebaseConfig is included in bundle
+  console.log(auth, db);
+}
+// CRITICAL: Import Logo in main App to ensure it's ALWAYS in the main bundle
+// Lazy components use window.__LogoComponent directly (set in main.jsx)
+// This prevents export errors when lazy-loaded components need Logo
+import Logo from './components/Logo';
 
-// Code-split large components for better performance with error handling
-const ChatArea = lazy(() => import('./components/ChatArea').catch(err => {
-  console.error('Error loading ChatArea:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Chat Area. Please refresh the page.</div> };
+// Store Logo globally for lazy components (also set in main.jsx for redundancy)
+// Lazy components access Logo via window.__LogoComponent to avoid import/export issues
+if (typeof window !== 'undefined') {
+  window.__AppLogo = Logo;
+  window.__LogoComponent = Logo;
+}
+
+// Error fallback component with retry logic
+const ErrorFallback = ({ componentName, onRetry }) => {
+  const [retrying, setRetrying] = useState(false);
+  
+  const handleRetry = () => {
+    setRetrying(true);
+    // Clear module cache and retry
+    if (onRetry) {
+      onRetry();
+    } else {
+      // Force reload after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
+  };
+  
+  return (
+    <div className="flex items-center justify-center min-h-[400px] p-6">
+      <div className="text-center max-w-md">
+        <div className="text-red-600 dark:text-red-400 mb-4">
+          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Unable to Load {componentName}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          There was an error loading this component. This might be a temporary network issue.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={handleRetry}
+            disabled={retrying}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+          >
+            {retrying ? 'Retrying...' : 'Retry'}
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Retry function for failed imports with exponential backoff
+const retryImport = (importFn, retries = 3, delay = 1000) => {
+  return new Promise((resolve, reject) => {
+    const attempt = (remaining, currentDelay) => {
+      importFn()
+        .then((module) => {
+          console.log('Import successful');
+          resolve(module);
+        })
+        .catch((error) => {
+          console.error(`Import failed (${retries - remaining + 1}/${retries}):`, error);
+          if (remaining > 0) {
+            const nextDelay = currentDelay * 1.5; // Exponential backoff
+            console.warn(`Retrying in ${nextDelay}ms...`);
+            setTimeout(() => attempt(remaining - 1, nextDelay), currentDelay);
+          } else {
+            console.error('Import failed after all retries:', error);
+            reject(error);
+          }
+        });
+    };
+    attempt(retries, delay);
+  });
+};
+
+// Code-split large components for better performance with improved error handling
+const createLazyComponent = (importFn, componentName) => {
+  return lazy(async () => {
+    try {
+      return await retryImport(importFn, 3, 1000);
+    } catch (err) {
+      console.error(`Error loading ${componentName} after retries:`, err);
+      // Return a component that shows error but allows retry
+      // IMPORTANT: Must return a module-like object with default export
+      return { 
+        default: () => <ErrorFallback componentName={componentName} />
+      };
+    }
+  });
+};
+
+const ChatArea = createLazyComponent(() => import('./components/ChatArea'), 'Chat Area');
+const AdminDashboard = createLazyComponent(() => import('./components/AdminDashboard'), 'Admin Dashboard');
+const StudentProfile = createLazyComponent(() => import('./components/StudentProfile'), 'Student Profile');
+const UsersManagement = createLazyComponent(() => import('./components/UsersManagement'), 'Users Management');
+const CreateUser = createLazyComponent(() => import('./components/CreateUser'), 'Create User');
+const AIHelp = createLazyComponent(() => import('./components/AIHelp'), 'AI Help');
+const Groups = createLazyComponent(() => import('./components/Groups'), 'Groups');
+const GroupChat = createLazyComponent(() => import('./components/GroupChat'), 'Group Chat');
+const PrivateChat = createLazyComponent(() => import('./components/PrivateChat'), 'Private Chat');
+const Settings = createLazyComponent(() => import('./components/Settings'), 'Settings');
+const AdminAnalytics = createLazyComponent(() => import('./components/AdminAnalytics'), 'Admin Analytics');
+const KeyboardShortcuts = lazy(() => import('./components/KeyboardShortcuts').catch(() => {
+  return { default: () => null };
 }));
-const AdminDashboard = lazy(() => import('./components/AdminDashboard').catch(err => {
-  console.error('Error loading AdminDashboard:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Admin Dashboard. Please refresh the page.</div> };
-}));
-const StudentProfile = lazy(() => import('./components/StudentProfile').catch(err => {
-  console.error('Error loading StudentProfile:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Student Profile. Please refresh the page.</div> };
-}));
-const UsersManagement = lazy(() => import('./components/UsersManagement').catch(err => {
-  console.error('Error loading UsersManagement:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Users Management. Please refresh the page.</div> };
-}));
-const CreateUser = lazy(() => import('./components/CreateUser').catch(err => {
-  console.error('Error loading CreateUser:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Create User. Please refresh the page.</div> };
-}));
-const AIHelp = lazy(() => import('./components/AIHelp').catch(err => {
-  console.error('Error loading AIHelp:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading AI Help. Please refresh the page.</div> };
-}));
-const Groups = lazy(() => import('./components/Groups').catch(err => {
-  console.error('Error loading Groups:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Groups. Please refresh the page.</div> };
-}));
-const GroupChat = lazy(() => import('./components/GroupChat').catch(err => {
-  console.error('Error loading GroupChat:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Group Chat. Please refresh the page.</div> };
-}));
-const PrivateChat = lazy(() => import('./components/PrivateChat').catch(err => {
-  console.error('Error loading PrivateChat:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Private Chat. Please refresh the page.</div> };
-}));
-const Settings = lazy(() => import('./components/Settings').catch(err => {
-  console.error('Error loading Settings:', err);
-  return { default: () => <div className="p-4 text-red-600">Error loading Settings. Please refresh the page.</div> };
+const ActivityDashboard = createLazyComponent(() => import('./components/ActivityDashboard'), 'Activity Dashboard');
+const MessageScheduler = createLazyComponent(() => import('./components/MessageScheduler'), 'Message Scheduler');
+const SavedMessages = createLazyComponent(() => import('./components/SavedMessages'), 'Saved Messages');
+const ImageGallery = createLazyComponent(() => import('./components/ImageGallery'), 'Image Gallery');
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
+  return { default: () => null };
 }));
 
 // Loading component for lazy-loaded routes
@@ -72,6 +164,20 @@ function App() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hasSetDefaultView, setHasSetDefaultView] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Track window size for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      // Close sidebar when switching from mobile to desktop
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Set default view based on user role (only on initial load)
   useEffect(() => {
@@ -98,31 +204,52 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <>
+      <CallModal />
+      <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900 md:flex-row">
+      {/* Skip to main content link for accessibility */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
       <Sidebar 
         activeView={activeView} 
         setActiveView={setActiveView}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      <div className="flex-1 overflow-hidden relative">
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 hover:shadow-xl"
-          aria-label="Open menu"
-        >
-          <Menu size={24} />
-        </button>
+      <div 
+        id="main-content" 
+        className="flex-1 overflow-y-auto overflow-x-hidden relative w-full"
+        onTouchStart={(e) => {
+          // Swipe from left edge to open menu (only on mobile, when sidebar is closed)
+          if (isMobile && !sidebarOpen && e.touches[0].clientX < 30) {
+            setSidebarOpen(true);
+          }
+        }}
+      >
+        {/* Swipe indicator on mobile - subtle hint */}
+        {!sidebarOpen && isMobile && (
+          <div 
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-20 w-1 h-20 bg-indigo-600/20 dark:bg-indigo-400/20 rounded-r-full transition-opacity duration-300"
+            style={{
+              left: '0px',
+              animation: 'pulse 3s infinite'
+            }}
+            aria-hidden="true"
+          />
+        )}
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>
               {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
               {activeView === 'audit' && <ErrorBoundary><div className="page-transition"><AdminDashboard /></div></ErrorBoundary>}
+              {activeView === 'analytics' && <ErrorBoundary><div className="page-transition"><AdminAnalytics /></div></ErrorBoundary>}
               {activeView === 'users' && <ErrorBoundary><div className="page-transition"><UsersManagement /></div></ErrorBoundary>}
               {activeView === 'create-user' && <ErrorBoundary><div className="page-transition"><CreateUser /></div></ErrorBoundary>}
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              <KeyboardShortcuts />
+              <PWAInstallPrompt />
             </>
           ) : (
             <>
@@ -154,12 +281,19 @@ function App() {
                 </ErrorBoundary>
               )}
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
+              {activeView === 'activity' && <ErrorBoundary><div className="page-transition"><ActivityDashboard /></div></ErrorBoundary>}
+              {activeView === 'scheduler' && <ErrorBoundary><div className="page-transition"><MessageScheduler /></div></ErrorBoundary>}
+              {activeView === 'saved' && <ErrorBoundary><div className="page-transition"><SavedMessages /></div></ErrorBoundary>}
+              {activeView === 'gallery' && <ErrorBoundary><div className="page-transition"><ImageGallery /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              <KeyboardShortcuts />
+              <PWAInstallPrompt />
             </>
           )}
         </Suspense>
       </div>
     </div>
+    </>
   );
 }
 

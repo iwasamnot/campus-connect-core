@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole, isUserOnline } from '../utils/helpers';
+// Use window globals to avoid import/export issues
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
+const isUserOnline = typeof window !== 'undefined' && window.__isUserOnline 
+  ? window.__isUserOnline 
+  : (userData) => userData?.isOnline === true;
 import { 
   collection, 
   addDoc, 
@@ -19,10 +25,19 @@ import {
   arrayUnion,
   limit
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader } from 'lucide-react';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader, Mail, Paperclip, Smile, File, Image as ImageIcon } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
-import { checkToxicity } from '../utils/toxicityChecker';
+import FileUpload from './FileUpload';
+import EmojiPicker from './EmojiPicker';
+import ImagePreview from './ImagePreview';
+// Use window globals to avoid import/export issues
+const checkToxicity = typeof window !== 'undefined' && window.__checkToxicity 
+  ? window.__checkToxicity 
+  : () => Promise.resolve({ isToxic: false });
 
 const GroupChat = ({ group, onBack, setActiveView }) => {
   const { user, userRole } = useAuth();
@@ -45,6 +60,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   const [removingMember, setRemovingMember] = useState(null);
   const [joinRequests, setJoinRequests] = useState([]);
   const [processingRequest, setProcessingRequest] = useState(null);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Fetch user names, profiles, and online status
@@ -132,6 +151,11 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   useEffect(() => {
     if (!group?.id) return;
 
+    let unsubscribe = null;
+    let fallbackUnsubscribe = null;
+    let useFallback = false;
+
+    // Try the indexed query first
     const q = query(
       collection(db, 'groupMessages'),
       where('groupId', '==', group.id),
@@ -139,16 +163,67 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       limit(50) // Reduced to 50 messages for Spark free plan (was 100)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setMessages(messagesData);
-    });
+    // Fallback query function
+    const setupFallbackQuery = () => {
+      if (useFallback) return; // Prevent multiple fallback setups
+      useFallback = true;
+      
+      console.warn('GroupChat: Using fallback query (index building or missing).');
+      const fallbackQuery = query(
+        collection(db, 'groupMessages'),
+        where('groupId', '==', group.id),
+        limit(100) // Get more messages since we'll filter client-side
+      );
+      
+      fallbackUnsubscribe = onSnapshot(
+        fallbackQuery,
+        (snapshot) => {
+          const messagesData = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }))
+            .filter(msg => msg.timestamp) // Only messages with timestamps
+            .sort((a, b) => {
+              const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
+              const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
+              return aTime - bTime;
+            })
+            .slice(0, 50); // Limit to 50 most recent
+          setMessages(messagesData);
+        },
+        (fallbackError) => {
+          console.error('GroupChat: Fallback query also failed:', fallbackError);
+          showError('Failed to load messages. Please refresh the page.');
+        }
+      );
+    };
 
-    return () => unsubscribe();
-  }, [group?.id]); // Only depend on group.id to prevent unnecessary re-subscriptions
+    unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const messagesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMessages(messagesData);
+      },
+      (error) => {
+        console.error('GroupChat: Error fetching messages:', error);
+        if (error.code === 'failed-precondition') {
+          // Index is missing or still building - use fallback
+          setupFallbackQuery();
+        } else {
+          showError('Failed to load messages. Please refresh the page.');
+        }
+      }
+    );
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+      if (fallbackUnsubscribe) fallbackUnsubscribe();
+    };
+  }, [group?.id, showError]); // Include showError in dependencies
 
   // Mark messages as read (separate effect to prevent infinite loops)
   // DISABLED by default for Spark free plan - read receipts are expensive
@@ -201,20 +276,53 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending) return;
+    e.stopPropagation();
+    
+    console.log('GroupChat: sendMessage called', { 
+      newMessage: newMessage.trim(), 
+      attachedFile: !!attachedFile, 
+      sending, 
+      groupId: group?.id 
+    });
+    
+    if ((!newMessage.trim() && !attachedFile) || sending) {
+      console.log('GroupChat: Message send blocked - no content or already sending');
+      return;
+    }
 
-    // Check toxicity using Gemini AI (with fallback)
-    const toxicityResult = await checkToxicity(newMessage.trim(), true);
+    if (!group?.id) {
+      console.error('GroupChat: No group ID');
+      showError('Group not found. Please try refreshing the page.');
+      return;
+    }
+
+    // Check toxicity using Gemini AI (with fallback) - only if there's text
+    // Wrap in try-catch to ensure it never blocks message sending
+    const textToCheck = newMessage.trim() || '';
+    let toxicityResult = { isToxic: false, confidence: 0, reason: '', method: 'none' };
+    try {
+      toxicityResult = textToCheck ? await checkToxicity(textToCheck, true) : toxicityResult;
+    } catch (error) {
+      console.warn('GroupChat: Toxicity check failed, allowing message anyway:', error);
+      // Use fallback - allow message to send
+      if (textToCheck) {
+        try {
+          toxicityResult = await checkToxicity(textToCheck, false); // Force fallback
+        } catch (fallbackError) {
+          console.warn('GroupChat: Even fallback failed, sending message without toxicity check');
+        }
+      }
+    }
     const isToxic = toxicityResult.isToxic;
-    const displayText = isToxic ? '[REDACTED BY AI]' : newMessage.trim();
+    const displayText = isToxic ? '[REDACTED BY AI]' : textToCheck;
 
     setSending(true);
     try {
-      await addDoc(collection(db, 'groupMessages'), {
+      const messageData = {
         groupId: group.id,
         userId: user.uid,
         userEmail: user.email,
-        text: newMessage.trim(),
+        text: textToCheck,
         displayText: displayText,
         toxic: isToxic,
         toxicityConfidence: toxicityResult.confidence,
@@ -225,10 +333,30 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
         readBy: {
           [user.uid]: serverTimestamp() // Sender has seen their own message
         }
-      });
+      };
+
+      // Add file attachment if present
+      if (attachedFile) {
+        messageData.attachment = {
+          url: attachedFile.url,
+          name: attachedFile.name,
+          type: attachedFile.type,
+          size: attachedFile.size
+        };
+        // Also add legacy fields for compatibility
+        messageData.fileUrl = attachedFile.url;
+        messageData.fileName = attachedFile.name;
+      }
+
+      console.log('GroupChat: Sending message to Firestore', messageData);
+      const docRef = await addDoc(collection(db, 'groupMessages'), messageData);
+      console.log('GroupChat: Message sent successfully, ID:', docRef.id);
+      
       setNewMessage('');
+      setAttachedFile(null);
+      success('Message sent!');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('GroupChat: Error sending message:', error);
       const errorMessage = error.code === 'permission-denied'
         ? 'Permission denied. You may not have permission to send messages in this group.'
         : error.code === 'not-found'
@@ -586,7 +714,17 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Chat Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `0.75rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -597,7 +735,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
               <ArrowLeft size={20} className="text-indigo-600 dark:text-indigo-400" />
             </button>
             <div>
-              <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">{group.name}</h2>
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">{group.name}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {group.members?.length || 0} member(s)
                 {group.admins?.includes(user?.uid) && (
@@ -654,7 +792,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full animate-fade-in">
             <img 
@@ -746,8 +884,11 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                   
                   {editing === message.id ? (
                     <div className="flex gap-2">
+                      <label htmlFor={`group-edit-message-${message.id}`} className="sr-only">Edit message</label>
                       <input
                         type="text"
+                        id={`group-edit-message-${message.id}`}
+                        name={`group-edit-message-${message.id}`}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
                         className="flex-1 px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -779,6 +920,36 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                     </div>
                   ) : (
                     <>
+                      {/* Attachment Display */}
+                      {message.attachment && (
+                        <div className="mb-2">
+                          {message.attachment.type?.startsWith('image/') ? (
+                            <div
+                              onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
+                              className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
+                            >
+                              <img
+                                src={message.attachment.url}
+                                alt={message.attachment.name}
+                                className="max-w-full max-h-64 object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <a
+                              href={message.attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                              <File size={20} className="text-indigo-600 dark:text-indigo-400" />
+                              <span className="text-sm font-medium">{message.attachment.name}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                ({(message.attachment.size / 1024).toFixed(1)} KB)
+                              </span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                       <div className="text-sm">
                         {message.displayText || message.text}
                       </div>
@@ -820,27 +991,27 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                   )}
 
                   {/* Action buttons */}
-                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 sm:gap-1.5 scale-90 sm:scale-100 origin-center">
                     {canEdit && (
                       <button
                         onClick={() => {
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 rounded-full"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title="Edit message"
                       >
-                        <Edit2 size={14} />
+                        <Edit2 size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                     {canDelete && (
                       <button
                         onClick={() => handleDeleteMessage(message.id)}
                         disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-red-600 hover:bg-red-700 text-white p-1 sm:p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title="Delete message"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                   </div>
@@ -853,24 +1024,124 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       </div>
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4">
-        <form onSubmit={sendMessage} className="flex gap-2 md:gap-3">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-            disabled={sending}
-          />
-          <button
-            type="submit"
-            disabled={sending || !newMessage.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
-          >
-            <Send size={18} className="md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Send</span>
-          </button>
+      <div 
+        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+        style={{
+          paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
+          paddingTop: `0.75rem`,
+          paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
+        }}
+      >
+        {/* File Preview */}
+        {attachedFile && (
+          <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {attachedFile.type?.startsWith('image/') ? (
+                <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              ) : (
+                <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {attachedFile.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {(attachedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAttachedFile(null)}
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+            >
+              <X size={16} className="text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
+          <div className="flex-1 relative">
+            <label htmlFor="group-chat-message-input" className="sr-only">Type your message</label>
+            <input
+              type="text"
+              id="group-chat-message-input"
+              name="message"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+              disabled={sending}
+            />
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
+            {/* File Upload */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowFileUpload(!showFileUpload)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Upload file"
+              >
+                <Paperclip size={20} />
+              </button>
+              {showFileUpload && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <FileUpload
+                    onFileUpload={(file) => {
+                      setAttachedFile(file);
+                      setShowFileUpload(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Emoji Picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Add emoji"
+              >
+                <Smile size={20} />
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                      setNewMessage(prev => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={sending || (!newMessage.trim() && !attachedFile)}
+              onClick={(e) => {
+                console.log('GroupChat: Send button clicked', { 
+                  sending, 
+                  hasMessage: !!newMessage.trim(), 
+                  hasFile: !!attachedFile 
+                });
+                if (sending || (!newMessage.trim() && !attachedFile)) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
+            >
+              <Send size={18} className="md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Send</span>
+            </button>
+          </div>
         </form>
       </div>
 
@@ -901,7 +1172,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                 <X size={24} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-6 py-4">
               {group.members && group.members.length > 0 ? (
                 <div className="space-y-2">
                   {group.members.map((memberId) => {

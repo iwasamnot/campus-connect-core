@@ -1,7 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { isAdminRole, isUserOnline } from '../utils/helpers';
+// Use window globals to avoid import/export issues in production builds
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
+const isUserOnline = typeof window !== 'undefined' && window.__isUserOnline 
+  ? window.__isUserOnline 
+  : (userData) => userData?.isOnline === true;
 import { 
   collection, 
   addDoc, 
@@ -19,18 +25,36 @@ import {
   getDocs,
   getDoc
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward } from 'lucide-react';
-import Logo from './Logo';
+// Use window.__firebaseDb to avoid import/export issues in production builds
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark } from 'lucide-react';
+import ImagePreview from './ImagePreview';
+// Use window.__LogoComponent directly to avoid import/export issues
+// This is set in main.jsx and App.jsx before any lazy components load
+const Logo = typeof window !== 'undefined' && window.__LogoComponent 
+  ? window.__LogoComponent 
+  : () => <div>Logo</div>; // Fallback placeholder
 import UserProfilePopup from './UserProfilePopup';
 import TypingIndicator, { useTypingIndicator } from './TypingIndicator';
 import EmojiPicker from './EmojiPicker';
 import FileUpload from './FileUpload';
 import MentionAutocomplete from './MentionAutocomplete';
+import AdvancedSearch from './AdvancedSearch';
+// Use window globals to avoid import/export issues
+const saveDraft = typeof window !== 'undefined' && window.__saveDraft ? window.__saveDraft : () => {};
+const getDraft = typeof window !== 'undefined' && window.__getDraft ? window.__getDraft : () => null;
+const clearDraft = typeof window !== 'undefined' && window.__clearDraft ? window.__clearDraft : () => {};
+const exportMessagesToJSON = typeof window !== 'undefined' && window.__exportMessagesToJSON ? window.__exportMessagesToJSON : () => {};
+const exportMessagesToCSV = typeof window !== 'undefined' && window.__exportMessagesToCSV ? window.__exportMessagesToCSV : () => {};
+const exportMessagesToTXT = typeof window !== 'undefined' && window.__exportMessagesToTXT ? window.__exportMessagesToTXT : () => {};
+const saveMessage = typeof window !== 'undefined' && window.__saveMessage ? window.__saveMessage : () => {};
+const parseMarkdown = typeof window !== 'undefined' && window.__parseMarkdown ? window.__parseMarkdown : (text) => text;
+const hasMarkdown = typeof window !== 'undefined' && window.__hasMarkdown ? window.__hasMarkdown : () => false;
+const notificationService = typeof window !== 'undefined' && window.__notificationService ? window.__notificationService : { show: () => {} };
+const checkToxicity = typeof window !== 'undefined' && window.__checkToxicity ? window.__checkToxicity : () => Promise.resolve({ isToxic: false });
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-import { parseMarkdown, hasMarkdown } from '../utils/markdown';
-import notificationService from '../utils/notifications';
-import { checkToxicity } from '../utils/toxicityChecker';
 import { usePreferences } from '../context/PreferencesContext';
 
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
@@ -47,6 +71,8 @@ const ChatArea = ({ setActiveView }) => {
   const [editText, setEditText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [lastMessageTime, setLastMessageTime] = useState(0);
   const [reporting, setReporting] = useState(null);
   const [reportReason, setReportReason] = useState('');
@@ -68,13 +94,64 @@ const ChatArea = ({ setActiveView }) => {
   const [showMentions, setShowMentions] = useState(false); // Show mention autocomplete
   const [forwardingMessage, setForwardingMessage] = useState(null); // Message to forward
   const [showForwardModal, setShowForwardModal] = useState(false); // Show forward modal
+  const [previewImage, setPreviewImage] = useState(null); // Image preview state { url, name }
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
+  const CHAT_ID = 'global'; // For drafts
   
   // Typing indicator (for global chat, chatId can be 'global')
   const typingUsers = useTypingIndicator('global', 'global');
+  
+  // Load draft on mount
+  useEffect(() => {
+    const draft = getDraft(CHAT_ID);
+    if (draft) {
+      setNewMessage(draft);
+    }
+  }, []);
+  
+  // Save draft on message change (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      saveDraft(CHAT_ID, newMessage);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [newMessage]);
+  
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl/Cmd + K for advanced search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowAdvancedSearch(true);
+      }
+      // Ctrl/Cmd + Enter to send
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !sending) {
+        e.preventDefault();
+        if (newMessage.trim()) {
+          handleSendMessage(e);
+        }
+      }
+      // Up arrow to edit last message
+      if (e.key === 'ArrowUp' && !newMessage.trim() && messageInputRef.current === document.activeElement) {
+        const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
+        if (userMessages.length > 0) {
+          const lastMessage = userMessages[userMessages.length - 1];
+          if (!lastMessage.edited) {
+            e.preventDefault();
+            setEditing(lastMessage.id);
+            setEditText(lastMessage.text);
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [newMessage, sending, messages, user]);
   
   // Fetch pinned messages (with proper index: pinned ASC, pinnedAt DESC)
   useEffect(() => {
@@ -243,33 +320,39 @@ const ChatArea = ({ setActiveView }) => {
   }, [messages]);
 
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
-  useEffect(() => {
-    mountedRef.current = true;
-    const q = query(
+  // Optimized: Memoize query to prevent recreation
+  const messagesQuery = useMemo(() => {
+    return query(
       collection(db, 'messages'),
       orderBy('timestamp', 'desc'),
-      limit(50) // Reduced to 50 messages for Spark free plan (was 100)
+      limit(30) // Reduced to 30 messages for better performance
     );
+  }, []);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    
     const unsubscribe = onSnapshot(
-      q,
+      messagesQuery,
       (snapshot) => {
+        if (!mountedRef.current) return;
+        
         try {
           const messagesData = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
           }));
           
-          // Deduplicate messages by ID to prevent duplicates
-          const uniqueMessages = messagesData.reduce((acc, message) => {
-            if (!acc.find(m => m.id === message.id)) {
-              acc.push(message);
+          // Deduplicate messages by ID to prevent duplicates (use Map for O(1) lookup)
+          const messageMap = new Map();
+          messagesData.forEach(message => {
+            if (!messageMap.has(message.id)) {
+              messageMap.set(message.id, message);
             }
-            return acc;
-          }, []);
+          });
           
-          // Sort by timestamp to ensure correct order
-          uniqueMessages.sort((a, b) => {
+          // Convert to array and sort by timestamp
+          const uniqueMessages = Array.from(messageMap.values()).sort((a, b) => {
             const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
             const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
             return aTime - bTime;
@@ -298,7 +381,7 @@ const ChatArea = ({ setActiveView }) => {
       mountedRef.current = false;
       unsubscribe();
     };
-  }, [user?.uid, showError]); // Include showError but it's stable from context
+  }, [messagesQuery, showError]); // Use memoized query
 
   // Mark messages as read and send notifications (separate effect to prevent infinite loops)
   // OPTIMIZED: Read receipts are expensive - only update if explicitly enabled AND with longer delays
@@ -386,6 +469,18 @@ const ChatArea = ({ setActiveView }) => {
       return text.trim();
     } catch (error) {
       console.error('Error calling Gemini:', error);
+      
+      // Check if it's an API blocked error (403 with API_KEY_SERVICE_BLOCKED)
+      if (error.message && (
+        error.message.includes('403') || 
+        error.message.includes('API_KEY_SERVICE_BLOCKED') ||
+        error.message.includes('SERVICE_DISABLED') ||
+        error.message.includes('blocked')
+      )) {
+        console.warn('⚠️ Gemini API is blocked or disabled. AI Help feature will be unavailable.');
+        console.warn('💡 To fix: Check API key restrictions in Google Cloud Console');
+      }
+      
       return null;
     }
   };
@@ -487,6 +582,9 @@ const ChatArea = ({ setActiveView }) => {
           type: attachedFile.type,
           size: attachedFile.size
         };
+        // Also add legacy fields for compatibility
+        messageData.fileUrl = attachedFile.url;
+        messageData.fileName = attachedFile.name;
       }
 
       // Add mentions
@@ -510,6 +608,7 @@ const ChatArea = ({ setActiveView }) => {
       }
 
       setNewMessage('');
+      clearDraft(CHAT_ID);
       setAttachedFile(null);
       setReplyingTo(null);
       setLastMessageTime(now);
@@ -741,13 +840,7 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
-  const filteredMessages = searchQuery
-    ? messages.filter(msg => 
-        (msg.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         msg.displayText?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         msg.userName?.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : messages;
+  const filteredMessages = messages; // Advanced search handles filtering
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
@@ -793,14 +886,25 @@ const ChatArea = ({ setActiveView }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-screen h-[100dvh] w-full bg-gray-50 dark:bg-gray-900">
       {/* Chat Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+      <div 
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        style={{
+          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+          paddingBottom: `0.75rem`,
+          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          marginTop: '0',
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             <Logo size="small" showText={false} />
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">Campus Chat</h2>
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">Campus Chat</h2>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Connect with your campus community</p>
             </div>
           </div>
@@ -875,43 +979,61 @@ const ChatArea = ({ setActiveView }) => {
                 AI Help ON
               </span>
             )}
-            <button
-              onClick={() => setShowSearch(!showSearch)}
-              className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
-              title="Search messages"
-            >
-              <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
-            </button>
+            <div className="relative flex items-center gap-2">
+              <button
+                onClick={() => setShowAdvancedSearch(true)}
+                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                title="Advanced Search (Ctrl/Cmd + K)"
+              >
+                <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                  title="Export chat history"
+                >
+                  <Download size={20} className="text-indigo-600 dark:text-indigo-400" />
+                </button>
+                {showExportMenu && (
+                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[180px]">
+                    <button
+                      onClick={() => {
+                        exportMessagesToJSON(messages, 'campus-chat-history');
+                        setShowExportMenu(false);
+                        success('Chat history exported as JSON');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Export as JSON
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportMessagesToCSV(messages, 'campus-chat-history');
+                        setShowExportMenu(false);
+                        success('Chat history exported as CSV');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Export as CSV
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportMessagesToTXT(messages, 'campus-chat-history');
+                        setShowExportMenu(false);
+                        success('Chat history exported as TXT');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Export as TXT
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         
-        {showSearch && (
-          <div className="mt-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search messages..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-600"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-            {searchQuery && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Found {filteredMessages.length} message(s)
-              </p>
-            )}
-          </div>
-        )}
       </div>
 
           {/* Pinned Messages Section */}
@@ -941,7 +1063,7 @@ const ChatArea = ({ setActiveView }) => {
           )}
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
         {filteredMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full animate-fade-in">
             <img 
@@ -974,6 +1096,7 @@ const ChatArea = ({ setActiveView }) => {
 
             return (
               <div
+                id={`message-${message.id}`}
                 key={message.id}
                 className={`flex items-start gap-2 ${
                   isAuthor ? 'justify-end' : 'justify-start'
@@ -990,6 +1113,7 @@ const ChatArea = ({ setActiveView }) => {
                         src={profilePicture} 
                         alt={userNames[message.userId] || 'User'} 
                         className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                        loading="lazy"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextSibling.style.display = 'flex';
@@ -1010,6 +1134,7 @@ const ChatArea = ({ setActiveView }) => {
                       ? 'bg-indigo-600 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
                   }`}
+                  style={{ position: 'relative' }}
                 >
                     <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -1052,8 +1177,11 @@ const ChatArea = ({ setActiveView }) => {
                   
                   {editing === message.id ? (
                     <div className="flex gap-2">
+                      <label htmlFor={`edit-message-${message.id}`} className="sr-only">Edit message</label>
                       <input
                         type="text"
+                        id={`edit-message-${message.id}`}
+                        name={`edit-message-${message.id}`}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
                         className="flex-1 px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -1167,18 +1295,19 @@ const ChatArea = ({ setActiveView }) => {
                   {message.attachment && (
                     <div className="mb-2">
                       {message.attachment.type?.startsWith('image/') ? (
-                        <a
-                          href={message.attachment.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity"
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
+                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 active:opacity-75 transition-opacity cursor-pointer touch-action-manipulation w-full text-left p-0"
+                          aria-label="View image"
                         >
                           <img
                             src={message.attachment.url}
                             alt={message.attachment.name}
-                            className="max-w-full max-h-64 object-contain"
+                            className="max-w-full max-h-64 object-contain pointer-events-none"
+                            loading="lazy"
                           />
-                        </a>
+                        </button>
                       ) : (
                         <a
                           href={message.attachment.url}
@@ -1208,24 +1337,45 @@ const ChatArea = ({ setActiveView }) => {
                     />
                   )}
 
-                  {/* Action buttons */}
-                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  {/* Action buttons - hidden by default, show on hover only */}
+                  <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex pointer-events-none group-hover:pointer-events-auto transition-all duration-200 flex-row gap-1 sm:gap-1.5 touch-action-none z-20 scale-90 sm:scale-100 origin-center">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await saveMessage(user.uid, { ...message, chatType: 'global' });
+                          success('Message saved!');
+                        } catch (error) {
+                          if (error.message === 'Message already saved') {
+                            showError('Message already saved');
+                          } else {
+                            showError('Failed to save message');
+                          }
+                        }
+                      }}
+                      className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                      title="Save message"
+                      aria-label="Save message"
+                    >
+                      <Bookmark size={10} className="sm:w-3 sm:h-3" />
+                    </button>
                     {preferences.allowMessageForwarding && (
                       <button
                         onClick={() => handleForwardMessage(message.id)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
+                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title="Forward message"
+                        aria-label="Forward message"
                       >
-                        <Forward size={14} />
+                        <Forward size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                     {!isAuthor && (
                       <button
                         onClick={() => setReplyingTo(message)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
+                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title="Reply to message"
+                        aria-label="Reply to message"
                       >
-                        <Reply size={14} />
+                        <Reply size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                     {isAdminRole(userRole) && (
@@ -1252,14 +1402,15 @@ const ChatArea = ({ setActiveView }) => {
                             showError('Failed to pin message');
                           }
                         }}
-                        className={`p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 ${
+                        className={`p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center ${
                           pinnedMessages.includes(message.id)
-                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-                            : 'bg-gray-600 hover:bg-gray-700 text-white'
+                            ? 'bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white'
+                            : 'bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white'
                         }`}
                         title={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
+                        aria-label={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
                       >
-                        <Pin size={14} />
+                        <Pin size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                     {canEdit && (
@@ -1268,33 +1419,36 @@ const ChatArea = ({ setActiveView }) => {
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-1 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
+                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title="Edit message"
+                        aria-label="Edit message"
                       >
-                        <Edit2 size={14} />
+                        <Edit2 size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                     {canDelete && (
                       <button
                         onClick={() => handleDeleteMessage(message.id, message.userId, isAIMessage)}
                         disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 disabled:transform-none"
+                        className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-1 sm:p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                         title={isAIMessage ? "Delete AI message (Admin only)" : "Delete message"}
+                        aria-label={isAIMessage ? "Delete AI message" : "Delete message"}
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
                     {!isAuthor && (
                       <div className="relative">
                         <button
                           onClick={() => setReporting(reporting === message.id ? null : message.id)}
-                          className="bg-orange-600 hover:bg-orange-700 text-white p-1 rounded-full"
+                          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
                           title="Report message"
+                          aria-label="Report message"
                         >
-                          <Flag size={14} />
+                          <Flag size={10} className="sm:w-3 sm:h-3" />
                         </button>
                         {reporting === message.id && (
-                          <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px]">
+                          <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px] touch-action-none">
                             <textarea
                               value={reportReason}
                               onChange={(e) => setReportReason(e.target.value)}
@@ -1305,7 +1459,7 @@ const ChatArea = ({ setActiveView }) => {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleReportMessage(message.id)}
-                                className="flex-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded"
+                                className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs rounded transition-colors touch-action-manipulation"
                               >
                                 Report
                               </button>
@@ -1314,7 +1468,7 @@ const ChatArea = ({ setActiveView }) => {
                                   setReporting(null);
                                   setReportReason('');
                                 }}
-                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+                                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs rounded transition-colors touch-action-manipulation"
                               >
                                 Cancel
                               </button>
@@ -1325,10 +1479,10 @@ const ChatArea = ({ setActiveView }) => {
                     )}
                   </div>
 
-                  {/* Reaction picker */}
+                  {/* Reaction picker - always visible on touch, hover on desktop */}
                   {!isAuthor && (
-                    <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex gap-1">
+                    <div className="mt-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 touch-action-none">
                         {EMOJI_REACTIONS.map((emoji) => {
                           const reactionKey = `${message.id}-${emoji}`;
                           const isReacting = reacting.has(reactionKey);
@@ -1337,12 +1491,13 @@ const ChatArea = ({ setActiveView }) => {
                               key={emoji}
                               onClick={() => !isReacting && handleReaction(message.id, emoji)}
                               disabled={isReacting}
-                              className={`p-1 rounded transition-all ${
-                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-200 dark:hover:bg-indigo-700'
+                              className={`p-2 rounded transition-colors touch-action-manipulation ${
+                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-200 dark:hover:bg-indigo-700 active:bg-indigo-300 dark:active:bg-indigo-600'
                               } ${
                                 userReaction === emoji ? 'bg-indigo-200 dark:bg-indigo-800' : ''
                               }`}
                               title="Add reaction"
+                              aria-label={`Add ${emoji} reaction`}
                             >
                               {emoji}
                             </button>
@@ -1365,7 +1520,14 @@ const ChatArea = ({ setActiveView }) => {
           )}
 
           {/* Message Input */}
-          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4">
+          <div 
+            className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+            style={{
+              paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
+              paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+              paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
+            }}
+          >
             {/* Reply Preview */}
             {replyingTo && (
               <div className="mb-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between animate-slide-in-down">
@@ -1418,9 +1580,12 @@ const ChatArea = ({ setActiveView }) => {
 
             <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
               <div className="flex-1 relative">
+                <label htmlFor="chat-message-input" className="sr-only">Type a message</label>
                 <input
                   ref={messageInputRef}
                   type="text"
+                  id="chat-message-input"
+                  name="chat-message"
                   value={newMessage}
                   onChange={async (e) => {
                     setNewMessage(e.target.value);
@@ -1665,6 +1830,39 @@ const ChatArea = ({ setActiveView }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Advanced Search Modal */}
+      {showAdvancedSearch && (
+        <AdvancedSearch
+          messages={messages}
+          users={Object.values(userProfiles).map(profile => ({
+            id: profile.id || Object.keys(userProfiles).find(key => userProfiles[key] === profile),
+            name: profile.name || profile.email?.split('@')[0] || 'Unknown',
+            email: profile.email
+          }))}
+          onSelectMessage={(message) => {
+            // Scroll to message
+            const messageElement = document.getElementById(`message-${message.id}`);
+            if (messageElement) {
+              messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              messageElement.classList.add('ring-2', 'ring-indigo-500', 'ring-opacity-75');
+              setTimeout(() => {
+                messageElement.classList.remove('ring-2', 'ring-indigo-500', 'ring-opacity-75');
+              }, 2000);
+            }
+          }}
+          onClose={() => setShowAdvancedSearch(false)}
+        />
+      )}
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <ImagePreview
+          imageUrl={previewImage.url}
+          imageName={previewImage.name}
+          onClose={() => setPreviewImage(null)}
+        />
       )}
     </div>
   );

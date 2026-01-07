@@ -2,15 +2,354 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Screen reader only class for accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus visible styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip to main content link */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #4f46e5;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 100;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+/* PWA Install Prompt Animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
 :root {
   --accent-color: #6366f1;
   --accent-color-dark: #818cf8;
   --base-font-size: 1rem;
 }
 
+/* Minimal Theme Styles - Ultra Modern & Clean */
+.theme-minimal {
+  --minimal-radius: 0px; /* Sharp corners - completely flat */
+  --minimal-border: 1px solid rgba(0, 0, 0, 0.06);
+  --minimal-border-dark: 1px solid rgba(255, 255, 255, 0.08);
+  --minimal-shadow: none;
+  --minimal-shadow-lg: none;
+  --minimal-accent: #1e293b; /* slate-800 - darker, more contrast */
+  --minimal-accent-hover: #0f172a; /* slate-900 */
+  --minimal-bg: #ffffff;
+  --minimal-bg-secondary: #f1f5f9; /* slate-100 - lighter background */
+  --minimal-text: #0f172a; /* slate-900 */
+  --minimal-text-secondary: #64748b; /* slate-500 */
+}
+
+.dark.theme-minimal {
+  --minimal-border: 1px solid rgba(255, 255, 255, 0.08);
+  --minimal-border-dark: 1px solid rgba(255, 255, 255, 0.12);
+  --minimal-shadow: none;
+  --minimal-shadow-lg: none;
+  --minimal-accent: #cbd5e1; /* slate-300 - good contrast */
+  --minimal-accent-hover: #e2e8f0; /* slate-200 */
+  --minimal-bg: #0f172a; /* slate-900 */
+  --minimal-bg-secondary: #1e293b; /* slate-800 */
+  --minimal-text: #f8fafc; /* slate-50 - bright text */
+  --minimal-text-secondary: #94a3b8; /* slate-400 */
+}
+
+/* Minimal theme - remove ALL rounded corners (except essential UI elements) */
+.theme-minimal .rounded-lg,
+.theme-minimal .rounded-xl,
+.theme-minimal .rounded-2xl,
+.theme-minimal .rounded-md,
+.theme-minimal .rounded {
+  border-radius: 0 !important;
+}
+
+/* Keep rounded-full only for toggles/switches */
+.theme-minimal input[type="checkbox"],
+.theme-minimal .rounded-full {
+  border-radius: 9999px !important;
+}
+
+/* Minimal theme - ultra-clean borders */
+.theme-minimal .border-gray-200,
+.theme-minimal .border-gray-300,
+.theme-minimal .border {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  border-width: 1px !important;
+}
+
+.dark.theme-minimal .border-gray-700,
+.dark.theme-minimal .border-gray-600,
+.dark.theme-minimal .border {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-width: 1px !important;
+}
+
+/* Minimal theme - remove ALL shadows */
+.theme-minimal .shadow-lg,
+.theme-minimal .shadow-xl,
+.theme-minimal .shadow-2xl,
+.theme-minimal .shadow,
+.theme-minimal .shadow-md,
+.theme-minimal * {
+  box-shadow: none !important;
+}
+
+/* Minimal theme - flat backgrounds, more contrast */
+/* Keep ALL action button colors - don't override to grey */
+.theme-minimal .bg-indigo-600,
+.theme-minimal .bg-indigo-700 {
+  background-color: #6366f1 !important; /* Keep original indigo */
+}
+
+.dark.theme-minimal .bg-indigo-600,
+.dark.theme-minimal .bg-indigo-700 {
+  background-color: #6366f1 !important; /* Keep original indigo in dark mode too */
+}
+
+.theme-minimal .bg-purple-600,
+.theme-minimal .bg-purple-700 {
+  background-color: #9333ea !important; /* Keep original purple */
+}
+
+.theme-minimal .bg-blue-600,
+.theme-minimal .bg-blue-700 {
+  background-color: #2563eb !important; /* Keep original blue */
+}
+
+.theme-minimal .bg-green-600,
+.theme-minimal .bg-green-700 {
+  background-color: #16a34a !important; /* Keep original green */
+}
+
+.theme-minimal .bg-orange-600,
+.theme-minimal .bg-orange-700 {
+  background-color: #ea580c !important; /* Keep original orange */
+}
+
+.theme-minimal .bg-yellow-600,
+.theme-minimal .bg-yellow-700 {
+  background-color: #ca8a04 !important; /* Keep original yellow */
+}
+
+.theme-minimal .bg-red-600,
+.theme-minimal .bg-red-700 {
+  background-color: #dc2626 !important; /* Keep original red */
+}
+
+/* Keep hover states for action buttons */
+.theme-minimal .hover\:bg-indigo-700:hover {
+  background-color: #4f46e5 !important;
+}
+
+.theme-minimal .hover\:bg-purple-700:hover {
+  background-color: #7e22ce !important;
+}
+
+.theme-minimal .hover\:bg-blue-700:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.theme-minimal .hover\:bg-green-700:hover {
+  background-color: #15803d !important;
+}
+
+.theme-minimal .hover\:bg-orange-700:hover {
+  background-color: #c2410c !important;
+}
+
+.theme-minimal .hover\:bg-yellow-700:hover {
+  background-color: #a16207 !important;
+}
+
+.theme-minimal .hover\:bg-red-700:hover {
+  background-color: #b91c1c !important;
+}
+
+.theme-minimal .hover\:bg-indigo-700:hover,
+.theme-minimal .hover\:bg-blue-700:hover,
+.theme-minimal .hover\:bg-indigo-600:hover {
+  background-color: var(--minimal-accent-hover) !important;
+}
+
+.theme-minimal .text-indigo-600,
+.theme-minimal .text-indigo-400,
+.theme-minimal .text-blue-600,
+.theme-minimal .text-purple-600,
+.theme-minimal .text-pink-600 {
+  color: var(--minimal-accent) !important;
+}
+
+.theme-minimal .border-indigo-600,
+.theme-minimal .border-indigo-400,
+.theme-minimal .border-blue-600 {
+  border-color: var(--minimal-accent) !important;
+}
+
+.theme-minimal .bg-indigo-50,
+.theme-minimal .bg-blue-50,
+.theme-minimal .bg-purple-50,
+.theme-minimal .bg-indigo-100 {
+  background-color: var(--minimal-bg-secondary) !important;
+}
+
+.dark.theme-minimal .bg-indigo-900\/20,
+.dark.theme-minimal .bg-indigo-900\/30,
+.dark.theme-minimal .bg-indigo-900\/50 {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+.theme-minimal .text-indigo-700,
+.theme-minimal .text-indigo-300 {
+  color: var(--minimal-text) !important;
+}
+
+.dark.theme-minimal .text-indigo-300,
+.dark.theme-minimal .text-indigo-400 {
+  color: var(--minimal-accent) !important;
+}
+
+/* Minimal theme - remove ALL hover scale/transform effects */
+.theme-minimal button:hover,
+.theme-minimal .hover\:scale-110:hover,
+.theme-minimal .hover\:scale-105:hover,
+.theme-minimal .hover\:scale-\[1\.02\]:hover {
+  transform: none !important;
+}
+
+/* Minimal theme - flat card hover (no transform, no shadow) */
+.theme-minimal .card-hover:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background-color: var(--minimal-bg-secondary) !important;
+}
+
+/* Minimal theme - fastest transitions (near instant) */
+.theme-minimal *,
+.theme-minimal button,
+.theme-minimal a,
+.theme-minimal input,
+.theme-minimal textarea,
+.theme-minimal select,
+.theme-minimal div,
+.theme-minimal span,
+.theme-minimal p {
+  transition: background-color 0.05s ease, color 0.05s ease, border-color 0.05s ease !important;
+}
+
+/* Minimal theme - instant animations */
+.theme-minimal .animate-fade-in,
+.theme-minimal .animate-slide-in-down,
+.theme-minimal .animate-slide-in-up,
+.theme-minimal .animate-slide-in-right,
+.theme-minimal .animate-slide-in-left {
+  animation-duration: 0.1s !important;
+}
+
+/* Minimal theme - text selection colors */
+.theme-minimal ::selection {
+  background-color: rgba(30, 41, 59, 0.3); /* slate-800 with opacity for light mode */
+  color: inherit;
+}
+
+.theme-minimal ::-moz-selection {
+  background-color: rgba(30, 41, 59, 0.3);
+  color: inherit;
+}
+
+.dark.theme-minimal ::selection {
+  background-color: #cbd5e1; /* slate-300 - solid light color for better contrast */
+  color: #0f172a; /* slate-900 - dark text on light selection background */
+}
+
+.dark.theme-minimal ::-moz-selection {
+  background-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* Minimal theme - cleaner backgrounds */
+.theme-minimal .bg-white,
+.theme-minimal .bg-gray-50 {
+  background-color: var(--minimal-bg) !important;
+}
+
+.dark.theme-minimal .bg-gray-800,
+.dark.theme-minimal .bg-gray-900,
+.dark.theme-minimal .bg-white {
+  background-color: var(--minimal-bg) !important;
+}
+
+.theme-minimal .bg-gray-50 {
+  background-color: var(--minimal-bg-secondary) !important;
+}
+
+.dark.theme-minimal .bg-gray-900,
+.dark.theme-minimal .bg-gray-950 {
+  background-color: var(--minimal-bg) !important;
+}
+
+.dark.theme-minimal .bg-gray-800,
+.dark.theme-minimal .bg-gray-700 {
+  background-color: var(--minimal-bg-secondary) !important;
+}
+
+/* Minimal theme - text colors */
+.dark.theme-minimal .text-white,
+.dark.theme-minimal .text-gray-100,
+.dark.theme-minimal .text-gray-50 {
+  color: var(--minimal-text) !important;
+}
+
+.dark.theme-minimal .text-gray-400,
+.dark.theme-minimal .text-gray-500 {
+  color: var(--minimal-text-secondary) !important;
+}
+
+.theme-minimal .text-gray-900 {
+  color: var(--minimal-text) !important;
+}
+
+.theme-minimal .text-gray-600,
+.theme-minimal .text-gray-500 {
+  color: var(--minimal-text-secondary) !important;
+}
+
 /* Responsive improvements */
 @media (max-width: 640px) {
-  /* Mobile optimizations */
   .mobile-hidden {
     display: none;
   }
@@ -21,7 +360,24 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Global smooth transitions for all interactive elements */
+/* Swipe gesture indicator animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Smooth horizontal scroll for tables */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Global smooth transitions */
 button, a, input, textarea, select {
   transition: all 0.2s ease-in-out;
 }
@@ -41,10 +397,20 @@ button, a, input, textarea, select {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+/* Minimal theme - faster card transitions */
+.theme-minimal .card-hover {
+  transition: background-color 0.05s ease !important;
+}
+
 /* Smooth button press effect */
 button:active {
   transform: scale(0.98);
   transition: transform 0.1s ease-in-out;
+}
+
+/* Minimal theme - instant button press */
+.theme-minimal button:active {
+  transition: transform 0.05s ease-in-out !important;
 }
 
 /* Smooth input focus */
@@ -161,6 +527,15 @@ input:focus, textarea:focus, select:focus {
   background: #475569;
 }
 
+.theme-minimal ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0;
+}
+
+.dark.theme-minimal ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
@@ -169,10 +544,42 @@ input:focus, textarea:focus, select:focus {
   background: #64748b;
 }
 
+.theme-minimal ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark.theme-minimal ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: var(--base-font-size);
+  height: 100%;
+  height: -webkit-fill-available; /* iOS Safari fix */
+  width: 100%;
+  overscroll-behavior: none;
+  background-color: #ffffff;
+  transition: background-color 0.1s ease;
+}
+
+.dark html {
+  background-color: #111827;
+}
+
+.theme-minimal html {
+  background-color: var(--minimal-bg);
+  transition: background-color 0.05s ease !important;
+}
+
+.dark.theme-minimal html {
+  background-color: var(--minimal-bg);
 }
 
 body {
@@ -181,17 +588,63 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.1s ease, color 0.1s ease;
   font-size: var(--base-font-size);
+  height: 100%;
+  width: 100%;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
 }
 
-html {
-  font-size: var(--base-font-size);
+.dark body {
+  background-color: #111827;
+}
+
+.theme-minimal body {
+  background-color: var(--minimal-bg);
+  transition: background-color 0.05s ease, color 0.05s ease !important;
+}
+
+.dark.theme-minimal body {
+  background-color: var(--minimal-bg);
+}
+
+/* Allow text selection in inputs and textareas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 #root {
   width: 100%;
-  height: 100vh;
+  /* Don't hard-lock the app to the viewport.
+     Allow pages (login/admin/etc) to scroll naturally when content exceeds the viewport. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available; /* iOS Safari fix */
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+  background-color: #ffffff;
+  transition: background-color 0.1s ease;
+}
+
+.dark #root {
+  background-color: #111827;
+}
+
+.theme-minimal #root {
+  background-color: var(--minimal-bg);
+  transition: background-color 0.05s ease !important;
+}
+
+.dark.theme-minimal #root {
+  background-color: var(--minimal-bg);
 }
 
 /* Ensure dark mode works */
@@ -236,3 +689,243 @@ html {
   color: var(--accent-color) !important;
 }
 
+/* Safe area insets for devices with notches */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Touch and PWA optimizations */
+@media (max-width: 768px), (hover: none), (pointer: coarse) {
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Disable problematic hover effects on touch devices - but preserve essential styling */
+  /* Only disable transforms, scales, and opacity changes that cause "sticky" hover */
+  button:not(nav button):hover,
+  a:not(nav a):hover,
+  .hover\:scale-110:hover,
+  .hover\:scale-105:hover,
+  .hover\:scale-\[1\.02\]:hover {
+    transform: none !important;
+  }
+  
+  /* Disable opacity hover changes that cause sticky states */
+  .hover\:opacity-70:hover,
+  .hover\:opacity-100:hover,
+  .hover\:opacity-90:hover,
+  .group:hover .group-hover\:opacity-100:not(nav *) {
+    opacity: revert !important;
+  }
+  
+  /* Disable underline hover on touch */
+  .hover\:underline:hover {
+    text-decoration: revert !important;
+  }
+  
+  /* Show action buttons always on touch devices */
+  .opacity-0.group-hover\:opacity-100,
+  .md\:opacity-0.md\:group-hover\:opacity-100,
+  .group-hover\:opacity-100 {
+    opacity: 1 !important;
+  }
+  
+  /* Preserve sidebar menu button backgrounds and functionality */
+  nav button,
+  nav a {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Ensure sidebar is visible and clickable */
+  nav,
+  .sidebar,
+  [class*="Sidebar"] {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Scrollable containers */
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-x;
+  }
+
+  /* Lock body when sidebar is open */
+  body.sidebar-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Full screen sidebar with safe area */
+  .fixed.w-full {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  /* Fixed elements respect safe areas - but don't add padding to all fixed elements */
+  /* Only add padding where needed, not globally */
+
+  /* Top bar spacing for safe area - ensure buttons are touchable */
+  .fixed.top-4 {
+    top: calc(1rem + env(safe-area-inset-top, 0px)) !important;
+  }
+  
+  .fixed.top-0 {
+    top: env(safe-area-inset-top, 0px) !important;
+  }
+  
+  /* Headers with safe area - ensure they're below status bar */
+  /* Note: Individual components now handle this with inline styles for better control */
+  
+  /* Input areas with safe area - ensure they're above home indicator */
+  .border-t.bg-white,
+  .border-t.dark\\:bg-gray-800 {
+    padding-bottom: max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3)) !important;
+  }
+  
+  /* Ensure no negative margins that could cause overlap */
+  .bg-white.border-b,
+  .dark\\:bg-gray-800.border-b {
+    margin-top: 0 !important;
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* Ensure headers and titles are always visible */
+  header,
+  [class*="Header"],
+  h1, h2, h3, h4, h5, h6 {
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* Ensure sidebar content is visible */
+  nav,
+  .sidebar nav {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Ensure sidebar container has solid background - target by position and background class */
+  div.fixed.top-0.left-0[class*="bg-gray-900"],
+  div.fixed[class*="bg-gray-900"][class*="border-r"] {
+    background-color: rgb(17 24 39) !important; /* gray-900 */
+    opacity: 1 !important;
+    background-image: none !important;
+  }
+  
+  /* Ensure sidebar menu buttons are clickable and visible */
+  nav button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
+    opacity: 1 !important;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Active state backgrounds - ensure they're visible */
+  nav button.bg-indigo-600 {
+    background-color: rgb(79 70 229) !important; /* indigo-600 */
+    opacity: 1 !important;
+  }
+  
+  /* Additional PWA hover fixes - disable problematic hover effects in standalone mode */
+  @media (display-mode: standalone) {
+    /* Only disable transforms and scales, preserve backgrounds for navigation */
+    button:not(nav button):hover,
+    a:not(nav a):hover {
+      transform: none !important;
+    }
+    
+    /* Preserve sidebar functionality */
+    nav button,
+    nav a {
+      pointer-events: auto !important;
+    }
+  }
+  
+  /* Fix for PWA viewport issues */
+  @media (display-mode: standalone) {
+    /* PWA specific fixes - ensure content is visible */
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+    }
+    
+    #root {
+      height: 100%;
+      height: 100dvh;
+      /* Keep body locked (prevents bounce) but allow the app to scroll */
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    
+    /* Ensure headers are visible in PWA */
+    header,
+    [class*="Header"],
+    .bg-white.border-b,
+    .dark\\:bg-gray-800.border-b {
+      position: relative;
+      z-index: 100;
+    }
+    
+    /* Ensure sidebar is visible */
+    .fixed.w-full {
+      z-index: 50;
+    }
+    
+    /* Ensure navigation items are visible */
+    nav button,
+    nav a {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Ensure titles and headings are visible */
+    h1, h2, h3, h4, h5, h6 {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  /* Fix for iOS Safari - use fill-available but don't add padding */
+  @supports (-webkit-touch-callout: none) {
+    html {
+      height: -webkit-fill-available;
+    }
+    
+    body {
+      min-height: -webkit-fill-available;
+    }
+    
+    #root {
+      min-height: -webkit-fill-available;
+      height: -webkit-fill-available;
+    }
+    
+    .h-screen {
+      height: -webkit-fill-available;
+    }
+  }
+}

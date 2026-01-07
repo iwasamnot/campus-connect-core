@@ -13,7 +13,9 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
+// CRITICAL: Declare useAuth as a top-level const before exporting
+// This ensures the export binding refers to a top-level declared variable
+const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -21,7 +23,11 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
+// Export the declared function
+export { useAuth };
+
+// CRITICAL: Declare AuthProvider as a top-level const before exporting
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null); // 'student' or 'admin'
   const [loading, setLoading] = useState(true);
@@ -110,8 +116,10 @@ export const AuthProvider = ({ children }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
       
-      // Send email verification
-      await sendEmailVerification(newUser);
+      // Send email verification only for students (admins don't need verification)
+      if (role !== 'admin') {
+        await sendEmailVerification(newUser);
+      }
       
       // Store user data in Firestore
       await setDoc(doc(db, 'users', newUser.uid), {
@@ -119,7 +127,7 @@ export const AuthProvider = ({ children }) => {
         email: email,
         studentEmail: email, // Set registration email as default student email
         role: role,
-        emailVerified: false,
+        emailVerified: role === 'admin' ? true : false, // Admins are automatically verified
         createdAt: new Date().toISOString()
       });
 
@@ -134,18 +142,49 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      // Check if it's an admin email format before attempting login
+      const isAdminEmail = email && email.toLowerCase().trim().startsWith('admin') && email.toLowerCase().trim().includes('@campusconnect');
+      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const loggedInUser = userCredential.user;
       
       // Reload user to get latest emailVerified status
       await loggedInUser.reload();
       
-      // Check if email is verified
-      if (!loggedInUser.emailVerified) {
-        // Update Firestore emailVerified status
-        await setDoc(doc(db, 'users', loggedInUser.uid), {
-          emailVerified: false
-        }, { merge: true });
+      // Fetch user role from Firestore first to check if user is admin
+      const userDoc = await getDoc(doc(db, 'users', loggedInUser.uid));
+      let userRole = 'student';
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.role) {
+          userRole = userData.role;
+        }
+      }
+      
+      // If email format suggests admin or role is admin, treat as admin
+      const isAdmin = userRole === 'admin' || isAdminEmail;
+      
+      // Get current Firestore emailVerified status (may have been manually set by admin)
+      let firestoreEmailVerified = false;
+      let adminVerified = false; // Track if admin manually verified
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        firestoreEmailVerified = userData.emailVerified === true; // Preserve admin-verified status
+        adminVerified = userData.adminVerified === true; // Check if admin manually verified
+      }
+      
+      // Check if email is verified (skip for admin accounts)
+      // Use Firestore emailVerified if it exists (admin may have verified it), otherwise use Firebase Auth status
+      const isEmailVerified = isAdmin ? true : (firestoreEmailVerified || loggedInUser.emailVerified);
+      
+      if (!isEmailVerified && !isAdmin) {
+        // Only update Firestore if it's not already set (don't overwrite admin verification)
+        if (!firestoreEmailVerified) {
+          await setDoc(doc(db, 'users', loggedInUser.uid), {
+            emailVerified: false
+          }, { merge: true });
+        }
         
         // Sign out the user since email is not verified
         await firebaseSignOut(auth);
@@ -157,34 +196,72 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Update emailVerified status in Firestore
-      await setDoc(doc(db, 'users', loggedInUser.uid), {
-        emailVerified: true
-      }, { merge: true });
+      // CRITICAL: NEVER overwrite emailVerified if admin manually verified it
+      // Only update if:
+      // 1. User is admin (always verified)
+      // 2. NOT admin-verified AND Firebase Auth says verified (user verified via email)
+      // 3. NOT admin-verified AND email not verified (set to false)
       
-      // Fetch user role from Firestore
-      const userDoc = await getDoc(doc(db, 'users', loggedInUser.uid));
+      if (isAdmin) {
+        // Admins are always verified - update to true
+        await setDoc(doc(db, 'users', loggedInUser.uid), {
+          emailVerified: true
+        }, { merge: true });
+      } else if (adminVerified || firestoreEmailVerified === true) {
+        // Email is admin-verified or already verified in Firestore - DO NOT OVERWRITE
+        // This preserves admin verification - never change it
+        console.log('Preserving admin-verified email status for user:', loggedInUser.uid, 'adminVerified:', adminVerified);
+        // Do nothing - preserve the existing verified status
+      } else if (loggedInUser.emailVerified) {
+        // User verified via Firebase Auth email - update Firestore (only if not admin-verified)
+        await setDoc(doc(db, 'users', loggedInUser.uid), {
+          emailVerified: true
+        }, { merge: true });
+      } else {
+        // Email not verified - only update if not already verified
+        // Don't overwrite if it's already true
+        if (firestoreEmailVerified !== true) {
+          await setDoc(doc(db, 'users', loggedInUser.uid), {
+            emailVerified: false
+          }, { merge: true });
+        }
+      }
+      
+      // Set user role
       if (userDoc.exists()) {
         const userData = userDoc.data();
         if (userData.role) {
           setUserRole(userData.role);
           localStorage.setItem('userRole', userData.role);
         } else {
-          // If role field doesn't exist, default to student
-          console.warn('User document exists but no role found. Defaulting to student.');
-          setUserRole('student');
-          localStorage.setItem('userRole', 'student');
+          // If role field doesn't exist but email suggests admin, set as admin
+          if (isAdminEmail) {
+            await setDoc(doc(db, 'users', loggedInUser.uid), {
+              role: 'admin',
+              emailVerified: true
+            }, { merge: true });
+            setUserRole('admin');
+            localStorage.setItem('userRole', 'admin');
+          } else {
+            console.warn('User document exists but no role found. Defaulting to student.');
+            setUserRole('student');
+            localStorage.setItem('userRole', 'student');
+          }
         }
       } else {
-        // If no user document found, create one with student role
-        console.warn('No user document found in Firestore. Creating one with student role.');
+        // If no user document found, check if it's an admin email and create accordingly
+        const emailLower = loggedInUser.email ? loggedInUser.email.toLowerCase() : '';
+        const isStudentEmail = emailLower.startsWith('s20') && (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
+        const defaultRole = isAdminEmail ? 'admin' : (isStudentEmail ? 'student' : 'student');
+        console.warn(`No user document found in Firestore. Creating one with ${defaultRole} role.`);
         await setDoc(doc(db, 'users', loggedInUser.uid), {
           email: loggedInUser.email,
-          role: 'student',
-          emailVerified: loggedInUser.emailVerified,
+          role: defaultRole,
+          emailVerified: isAdminEmail ? true : loggedInUser.emailVerified, // Admins are automatically verified
           createdAt: new Date().toISOString()
         });
-        setUserRole('student');
-        localStorage.setItem('userRole', 'student');
+        setUserRole(defaultRole);
+        localStorage.setItem('userRole', defaultRole);
       }
 
       setUser(loggedInUser);
@@ -208,6 +285,14 @@ export const AuthProvider = ({ children }) => {
       if (!user) {
         throw new Error('No user logged in');
       }
+      // Check if user is admin - admins don't need email verification
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.role === 'admin') {
+          throw new Error('Admin accounts do not require email verification.');
+        }
+      }
       await sendEmailVerification(user);
     } catch (error) {
       console.error('Error sending verification email:', error);
@@ -230,4 +315,7 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// Export the declared component
+export { AuthProvider };
 
