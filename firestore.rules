@@ -372,5 +372,101 @@ service cloud.firestore {
       // Only admins can delete contact messages
       allow delete: if isAdmin();
     }
+    
+    // Polls collection (for Campus Chat)
+    match /polls/{pollId} {
+      // Allow authenticated users to read polls
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to create polls
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow poll creator or admins to update polls (voting, closing)
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      
+      // Allow poll creator or admins to delete polls
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+    
+    // Group polls collection
+    match /groupPolls/{pollId} {
+      // Allow authenticated users to read polls
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to create polls in groups
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow poll creator or admins to update polls
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      
+      // Allow poll creator or admins to delete polls
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+    
+    // Quick replies / Message templates collection
+    match /quickReplies/{templateId} {
+      // Allow users to read their own templates
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow authenticated users to create their own templates
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to update their own templates
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow users to delete their own templates
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // User status updates collection
+    match /userStatus/{statusId} {
+      // Allow authenticated users to read status updates
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to create their own status updates
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to update their own status updates
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow users to delete their own status updates
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Admin announcements collection
+    match /announcements/{announcementId} {
+      // Allow authenticated users to read announcements
+      allow read: if isAuthenticated();
+      
+      // Only admins can create announcements
+      allow create: if isAdmin();
+      
+      // Only admins can update announcements
+      allow update: if isAdmin();
+      
+      // Only admins can delete announcements
+      allow delete: if isAdmin();
+    }
   }
 }
