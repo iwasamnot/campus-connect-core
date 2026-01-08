@@ -175,10 +175,10 @@ const AdminContactMessages = () => {
   }, [contactMessages]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
       {/* Header */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4 animate-slide-down-fade"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
@@ -207,29 +207,30 @@ const AdminContactMessages = () => {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <div className="flex-1 relative animate-slide-right-fade">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-transform duration-300 hover:scale-110" size={20} />
             <input
               type="text"
               placeholder="Search by name, email, subject, or message..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all duration-300 hover:border-indigo-400 focus:scale-[1.02]"
             />
           </div>
 
           {/* Status Filter */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter size={18} className="text-gray-600 dark:text-gray-400" />
-            {['all', 'new', 'read', 'replied', 'resolved'].map((status) => (
+          <div className="flex items-center gap-2 flex-wrap animate-slide-left-fade">
+            <Filter size={18} className="text-gray-600 dark:text-gray-400 transition-transform duration-300 hover:rotate-180" />
+            {['all', 'new', 'read', 'replied', 'resolved'].map((status, index) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 capitalize transform hover:scale-105 active:scale-95 stagger-item ${
                   statusFilter === status
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-indigo-600 text-white animate-spring shadow-lg'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
                 {status} {statusCounts[status] > 0 && `(${statusCounts[status]})`}
               </button>

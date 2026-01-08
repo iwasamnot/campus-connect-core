@@ -63,8 +63,8 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
           w-full md:w-64 bg-gray-900 dark:bg-gray-900 text-white 
           flex flex-col h-screen h-[100dvh] border-r border-gray-800
           z-[70]
-          transform transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          transform transition-transform duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
+          ${isOpen ? 'translate-x-0 animate-slide-in-left' : '-translate-x-full md:translate-x-0'}
         `}
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -98,18 +98,18 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
           </p>
         </div>
 
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch animate-fade-in">
         {!isAdminRole(userRole) ? (
           <>
             <button
               onClick={() => handleNavClick('chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1) transform hover:scale-105 active:scale-95 stagger-item ${
                 activeView === 'chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-spring'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md hover:animate-glow'
               }`}
             >
-              <MessageSquare size={20} />
+              <MessageSquare size={20} className="transition-transform duration-300 hover:rotate-12" />
               <span>Campus Chat</span>
             </button>
             <button

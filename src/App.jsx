@@ -244,25 +244,25 @@ function App() {
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
-              {activeView === 'audit' && <ErrorBoundary><div className="page-transition"><AdminDashboard /></div></ErrorBoundary>}
-              {activeView === 'analytics' && <ErrorBoundary><div className="page-transition"><AdminAnalytics /></div></ErrorBoundary>}
-              {activeView === 'users' && <ErrorBoundary><div className="page-transition"><UsersManagement /></div></ErrorBoundary>}
-              {activeView === 'create-user' && <ErrorBoundary><div className="page-transition"><CreateUser /></div></ErrorBoundary>}
-              {activeView === 'contact-messages' && <ErrorBoundary><div className="page-transition"><AdminContactMessages /></div></ErrorBoundary>}
-              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'audit' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-up-fade"><AdminDashboard /></div></ErrorBoundary>}
+              {activeView === 'analytics' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-left-fade"><AdminAnalytics /></div></ErrorBoundary>}
+              {activeView === 'users' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-down-fade"><UsersManagement /></div></ErrorBoundary>}
+              {activeView === 'create-user' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><CreateUser /></div></ErrorBoundary>}
+              {activeView === 'contact-messages' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-up-fade"><AdminContactMessages /></div></ErrorBoundary>}
+              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><PrivateChat /></div></ErrorBoundary>}
+              {activeView === 'settings' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />
               <PWAInstallPrompt />
             </>
           ) : (
             <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
-              {activeView === 'ai-help' && <ErrorBoundary><div className="page-transition"><AIHelp /></div></ErrorBoundary>}
-              {activeView === 'profile' && <ErrorBoundary><div className="page-transition"><StudentProfile /></div></ErrorBoundary>}
+              {activeView === 'chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'ai-help' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-left-fade"><AIHelp /></div></ErrorBoundary>}
+              {activeView === 'profile' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><StudentProfile /></div></ErrorBoundary>}
               {activeView === 'groups' && (
                 <ErrorBoundary>
-                  <div className="page-transition">
+                  <div className="page-transition-enhanced animate-slide-up-fade">
                     <Groups 
                       setActiveView={setActiveView} 
                       setSelectedGroup={setSelectedGroup}
@@ -272,7 +272,7 @@ function App() {
               )}
               {activeView === 'group-chat' && (
                 <ErrorBoundary>
-                  <div className="page-transition">
+                  <div className="page-transition-enhanced animate-slide-right-fade">
                     <GroupChat 
                       group={selectedGroup}
                       setActiveView={setActiveView}
@@ -284,12 +284,12 @@ function App() {
                   </div>
                 </ErrorBoundary>
               )}
-              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
-              {activeView === 'activity' && <ErrorBoundary><div className="page-transition"><ActivityDashboard /></div></ErrorBoundary>}
-              {activeView === 'scheduler' && <ErrorBoundary><div className="page-transition"><MessageScheduler /></div></ErrorBoundary>}
-              {activeView === 'saved' && <ErrorBoundary><div className="page-transition"><SavedMessages /></div></ErrorBoundary>}
-              {activeView === 'gallery' && <ErrorBoundary><div className="page-transition"><ImageGallery /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><PrivateChat /></div></ErrorBoundary>}
+              {activeView === 'activity' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-down-fade"><ActivityDashboard /></div></ErrorBoundary>}
+              {activeView === 'scheduler' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-left-fade"><MessageScheduler /></div></ErrorBoundary>}
+              {activeView === 'saved' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-up-fade"><SavedMessages /></div></ErrorBoundary>}
+              {activeView === 'gallery' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><ImageGallery /></div></ErrorBoundary>}
+              {activeView === 'settings' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />
               <PWAInstallPrompt />
             </>

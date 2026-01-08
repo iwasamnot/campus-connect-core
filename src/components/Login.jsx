@@ -164,7 +164,7 @@ const Login = () => {
   return (
     // Use a dedicated scroll container for Login/Register on mobile/PWA.
     // This prevents the viewport from getting "stuck" in standalone mode when the keyboard opens.
-    <div className="h-screen h-[100dvh] overflow-y-auto bg-white dark:bg-gray-900">
+    <div className="h-screen h-[100dvh] overflow-y-auto bg-white dark:bg-gray-900 animate-fade-in">
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 relative">
       {/* Dark Mode Toggle Button */}
       <button
@@ -173,7 +173,7 @@ const Login = () => {
           e.stopPropagation();
           toggleDarkMode();
         }}
-        className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50 hover:border-indigo-400 dark:hover:border-indigo-500"
+        className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50 hover:border-indigo-400 dark:hover:border-indigo-500 animate-spring"
         aria-label="Toggle dark mode"
         type="button"
       >
@@ -184,14 +184,14 @@ const Login = () => {
         )}
       </button>
 
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <Logo size="large" className="mb-4" />
-          <p className="text-black dark:text-white mt-2 font-medium">Secure Student Messaging Platform</p>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md animate-zoom-in">
+        <div className="text-center mb-8 animate-slide-down-fade">
+          <Logo size="large" className="mb-4 animate-bounce-in" />
+          <p className="text-black dark:text-white mt-2 font-medium animate-slide-up-fade">Secure Student Messaging Platform</p>
         </div>
 
         {/* Toggle between Login and Register */}
-        <div className="flex mb-6 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-1 gap-1">
+        <div className="flex mb-6 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-1 gap-1 animate-slide-left-fade">
           <button
             onClick={() => {
               setMode('login');
@@ -200,9 +200,9 @@ const Login = () => {
               setConfirmPassword('');
               setEmailVerificationSent(false);
             }}
-            className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-300 transform hover:scale-105 active:scale-95 ${
               mode === 'login'
-                ? 'bg-indigo-600 text-white shadow-lg'
+                ? 'bg-indigo-600 text-white shadow-lg animate-spring'
                 : 'bg-transparent text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800/50'
             }`}
           >
@@ -216,9 +216,9 @@ const Login = () => {
               setConfirmPassword('');
               setEmailVerificationSent(false);
             }}
-            className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 rounded-md font-bold text-base transition-all duration-300 transform hover:scale-105 active:scale-95 ${
               mode === 'register'
-                ? 'bg-indigo-600 text-white shadow-lg'
+                ? 'bg-indigo-600 text-white shadow-lg animate-spring'
                 : 'bg-transparent text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800/50'
             }`}
           >
@@ -227,14 +227,14 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm flex items-start gap-2">
-            <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm flex items-start gap-2 animate-slide-right-fade animate-shake">
+            <AlertCircle size={18} className="mt-0.5 flex-shrink-0 animate-wiggle" />
             <div className="flex-1">{error}</div>
           </div>
         )}
 
         {emailVerificationSent && (
-          <div className="mb-4 p-4 bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm">
+          <div className="mb-4 p-4 bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm animate-slide-up-fade">
             <div className="flex items-start gap-2 mb-2">
               <CheckCircle size={18} className="mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -405,7 +405,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] animate-slide-up-fade hover:animate-glow"
             >
               {loading ? (
                 <>

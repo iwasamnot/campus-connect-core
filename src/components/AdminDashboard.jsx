@@ -1125,7 +1125,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Table */}
-      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 overflow-x-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 overflow-x-auto overflow-x-scroll" style={{ WebkitOverflowScrolling: 'touch' }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -1143,7 +1143,8 @@ const AdminDashboard = () => {
         ) : (
           <>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="overflow-x-auto overflow-x-scroll" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}>
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" style={{ minWidth: '600px' }}>
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
@@ -1224,6 +1225,7 @@ const AdminDashboard = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Pagination */}
