@@ -1595,25 +1595,30 @@ const ChatArea = ({ setActiveView }) => {
 
                   {/* Action buttons - hidden by default, show on hover only */}
                   <div 
-                    className="message-actions absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover/message:opacity-100 invisible group-hover/message:visible transition-all duration-300 flex flex-row gap-1 sm:gap-1.5 z-30 scale-95 sm:scale-100 origin-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+                    className="message-actions absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover/message:opacity-100 invisible group-hover/message:visible pointer-events-none group-hover/message:pointer-events-auto transition-all duration-300 flex flex-row gap-1 sm:gap-1.5 z-30 scale-95 sm:scale-100 origin-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
                     onMouseEnter={(e) => {
-                      // Keep visible when hovering over buttons
+                      // Keep visible when hovering over buttons container
                       e.currentTarget.classList.add('show-actions');
                       e.currentTarget.style.opacity = '1';
                       e.currentTarget.style.visibility = 'visible';
+                      e.currentTarget.style.pointerEvents = 'auto';
                     }}
                     onMouseLeave={(e) => {
-                      // Check if parent is still being hovered
-                      const parent = e.currentTarget.closest('.group/message');
-                      if (!parent?.matches(':hover')) {
-                        e.currentTarget.classList.remove('show-actions');
-                        e.currentTarget.style.opacity = '';
-                        e.currentTarget.style.visibility = '';
-                      }
+                      // Small delay to allow moving to buttons
+                      setTimeout(() => {
+                        const parent = e.currentTarget.closest('.group/message');
+                        if (parent && !parent.matches(':hover') && !e.currentTarget.matches(':hover')) {
+                          e.currentTarget.classList.remove('show-actions');
+                          e.currentTarget.style.opacity = '';
+                          e.currentTarget.style.visibility = '';
+                          e.currentTarget.style.pointerEvents = '';
+                        }
+                      }, 150);
                     }}
                   >
                     <button
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
                         try {
                           await saveMessage(user.uid, { ...message, chatType: 'global' });
                           success('Message saved!');
@@ -1625,62 +1630,72 @@ const ChatArea = ({ setActiveView }) => {
                           }
                         }
                       }}
-                      className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                      className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                       title="Save message"
                       aria-label="Save message"
                     >
-                      <Bookmark size={10} className="sm:w-3 sm:h-3" />
+                      <Bookmark size={14} />
                     </button>
                     {preferences.allowMessageForwarding && (
                       <button
-                        onClick={() => handleForwardMessage(message.id)}
-                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleForwardMessage(message.id);
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                         title="Forward message"
                         aria-label="Forward message"
                       >
-                        <Forward size={10} className="sm:w-3 sm:h-3" />
+                        <Forward size={14} />
                       </button>
                     )}
                     <button
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
                         const messageText = message.displayText || message.text || '';
-                        const messageUrl = `${window.location.origin}${window.location.pathname}?message=${message.id}`;
                         await shareMessage(messageText, message.id);
                       }}
-                      className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                      className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                       title="Share message"
                       aria-label="Share message via Web Share API"
                     >
-                      <Share2 size={10} className="sm:w-3 sm:h-3" />
+                      <Share2 size={14} />
                     </button>
                     {!message.isVoice && (
                       <button
-                        onClick={() => handleTranslateMessage(message.id, message.displayText || message.text || '')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTranslateMessage(message.id, message.displayText || message.text || '');
+                        }}
                         disabled={translating.has(message.id)}
-                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                         title="Translate message"
                         aria-label="Translate message"
                       >
                         {translating.has(message.id) ? (
                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                         ) : (
-                          <Languages size={10} className="sm:w-3 sm:h-3" />
+                          <Languages size={14} />
                         )}
                       </button>
                     )}
                     {!isAuthor && (
                       <button
-                        onClick={() => setReplyingTo(message)}
-                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReplyingTo(message);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                         title="Reply to message"
                         aria-label="Reply to message"
                       >
-                        <Reply size={10} className="sm:w-3 sm:h-3" />
+                        <Reply size={14} />
                       </button>
                     )}
                     {isAdminRole(userRole) && (
                       <button
-                        onClick={async () => {
+                        onClick={async (e) => {
+                          e.stopPropagation();
                           try {
                             const isPinned = pinnedMessages.includes(message.id);
                             if (isPinned) {
@@ -1702,7 +1717,7 @@ const ChatArea = ({ setActiveView }) => {
                             showError('Failed to pin message');
                           }
                         }}
-                        className={`p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center ${
+                        className={`p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px] ${
                           pinnedMessages.includes(message.id)
                             ? 'bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white'
                             : 'bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white'
@@ -1710,42 +1725,49 @@ const ChatArea = ({ setActiveView }) => {
                         title={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
                         aria-label={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
                       >
-                        <Pin size={10} className="sm:w-3 sm:h-3" />
+                        <Pin size={14} />
                       </button>
                     )}
                     {canEdit && (
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditing(message.id);
                           setEditText(message.text);
                         }}
-                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                         title="Edit message"
                         aria-label="Edit message"
                       >
-                        <Edit2 size={10} className="sm:w-3 sm:h-3" />
+                        <Edit2 size={14} />
                       </button>
                     )}
                     {canDelete && (
                       <button
-                        onClick={() => handleDeleteMessage(message.id, message.userId, isAIMessage)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteMessage(message.id, message.userId, isAIMessage);
+                        }}
                         disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-1 sm:p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                        className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                         title={isAIMessage ? "Delete AI message (Admin only)" : "Delete message"}
                         aria-label={isAIMessage ? "Delete AI message" : "Delete message"}
                       >
-                        <Trash2 size={10} className="sm:w-3 sm:h-3" />
+                        <Trash2 size={14} />
                       </button>
                     )}
                     {!isAuthor && (
                       <div className="relative">
                         <button
-                          onClick={() => setReporting(reporting === message.id ? null : message.id)}
-                          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReporting(reporting === message.id ? null : message.id);
+                          }}
+                          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
                           title="Report message"
                           aria-label="Report message"
                         >
-                          <Flag size={10} className="sm:w-3 sm:h-3" />
+                          <Flag size={14} />
                         </button>
                         {reporting === message.id && (
                           <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px] touch-action-none">
