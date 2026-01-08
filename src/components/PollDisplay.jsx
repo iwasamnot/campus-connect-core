@@ -50,11 +50,14 @@ const PollDisplay = ({ poll, pollId, collectionName }) => {
         success('Vote removed');
       } else {
         // Add vote
+        const votersList = poll.voters || [];
+        const shouldAddVoter = poll.allowMultiple || !votersList.includes(user.uid);
+        
         await updateDoc(pollRef, {
           [`options.${optionIndex}.votes`]: (option.votes || 0) + 1,
           [`options.${optionIndex}.voters`]: arrayUnion(user.uid),
           totalVotes: totalVotes + 1,
-          voters: poll.allowMultiple ? arrayUnion(user.uid) : (poll.voters || []).includes(user.uid) ? poll.voters : arrayUnion(user.uid)
+          ...(shouldAddVoter && { voters: arrayUnion(user.uid) })
         });
         success('Vote recorded!');
       }

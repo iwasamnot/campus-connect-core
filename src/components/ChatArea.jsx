@@ -149,7 +149,7 @@ const ChatArea = ({ setActiveView }) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !sending) {
         e.preventDefault();
         if (newMessage.trim()) {
-          handleSendMessage(e);
+          sendMessage(e);
         }
       }
       // Up arrow to edit last message
