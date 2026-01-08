@@ -20,11 +20,12 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText, MessageSquare, X } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
   ? window.__LogoComponent 
   : () => <div>Logo</div>; // Fallback placeholder
+import AdminQueryBox from './AdminQueryBox';
 
 const AdminDashboard = () => {
   const { user, userRole } = useAuth();
@@ -47,6 +48,9 @@ const AdminDashboard = () => {
   const [deletedMessageIds, setDeletedMessageIds] = useState(new Set()); // Track deleted messages
   const deletedMessageIdsRef = useRef(new Set()); // Ref to track deleted messages without causing re-renders
   const messagesPerPage = 50;
+  const [queryText, setQueryText] = useState(''); // Query box input
+  const [queryResult, setQueryResult] = useState(null); // Query result
+  const [showQueryBox, setShowQueryBox] = useState(false); // Show/hide query box
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -605,8 +609,173 @@ const AdminDashboard = () => {
     return new Date(timestamp).toLocaleString();
   };
 
+  // Process admin queries
+  const processQuery = () => {
+    if (!queryText.trim()) {
+      setQueryResult(null);
+      return;
+    }
+
+    const query = queryText.toLowerCase().trim();
+    let result = null;
+
+    // Who sent the last message?
+    if (query.includes('last message') || query.includes('who sent') || query.includes('last sender')) {
+      if (allMessages.length > 0) {
+        // Messages are sorted by timestamp desc, so first one is the most recent
+        const lastMessage = allMessages[0];
+        const timestamp = formatTimestamp(lastMessage.timestamp);
+        result = {
+          type: 'info',
+          title: 'Last Message',
+          content: `The last message was sent by **${lastMessage.userName || lastMessage.userEmail || 'Unknown'}** (${lastMessage.userEmail || 'No email'}) at ${timestamp}.`,
+          details: {
+            message: lastMessage.text || lastMessage.displayText || 'N/A',
+            userId: lastMessage.userId,
+            isToxic: lastMessage.toxic ? 'Yes' : 'No',
+            isBanned: lastMessage.userBanned ? 'Yes' : 'No'
+          }
+        };
+      } else {
+        result = {
+          type: 'info',
+          title: 'Last Message',
+          content: 'No messages found in the system.'
+        };
+      }
+    }
+    // Most active user
+    else if (query.includes('most active') || query.includes('active user') || query.includes('who sent most')) {
+      const userCounts = {};
+      allMessages.forEach(msg => {
+        const userId = msg.userId;
+        if (userId) {
+          userCounts[userId] = {
+            count: (userCounts[userId]?.count || 0) + 1,
+            userName: msg.userName || msg.userEmail || 'Unknown',
+            userEmail: msg.userEmail || 'No email'
+          };
+        }
+      });
+
+      const sortedUsers = Object.entries(userCounts)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 5);
+
+      if (sortedUsers.length > 0) {
+        const topUser = sortedUsers[0][1];
+        result = {
+          type: 'info',
+          title: 'Most Active User',
+          content: `**${topUser.userName}** (${topUser.userEmail}) has sent the most messages with **${topUser.count}** messages.`,
+          details: {
+            topUsers: sortedUsers.map(([userId, data]) => ({
+              name: data.userName,
+              email: data.userEmail,
+              count: data.count
+            }))
+          }
+        };
+      } else {
+        result = {
+          type: 'info',
+          title: 'Most Active User',
+          content: 'No message data available.'
+        };
+      }
+    }
+    // Total messages
+    else if (query.includes('total message') || query.includes('how many message') || query.includes('message count')) {
+      const total = allMessages.length;
+      const toxicCount = allMessages.filter(m => m.toxic).length;
+      const bannedCount = allMessages.filter(m => m.userBanned).length;
+      result = {
+        type: 'info',
+        title: 'Message Statistics',
+        content: `Total messages: **${total}**\nToxic messages: **${toxicCount}**\nBanned users: **${bannedCount}**`,
+        details: {
+          total,
+          toxic: toxicCount,
+          banned: bannedCount,
+          normal: total - toxicCount
+        }
+      };
+    }
+    // Recent messages
+    else if (query.includes('recent message') || query.includes('latest message') || query.includes('last few')) {
+      // Messages are already sorted desc, so take first 5
+      const recent = allMessages.slice(0, 5);
+      if (recent.length > 0) {
+        result = {
+          type: 'info',
+          title: 'Recent Messages',
+          content: `Showing the last **${recent.length}** messages:`,
+          details: {
+            messages: recent.map(msg => ({
+              user: msg.userName || msg.userEmail || 'Unknown',
+              text: (msg.text || msg.displayText || 'N/A').substring(0, 50) + '...',
+              timestamp: formatTimestamp(msg.timestamp),
+              toxic: msg.toxic ? 'Yes' : 'No'
+            }))
+          }
+        };
+      } else {
+        result = {
+          type: 'info',
+          title: 'Recent Messages',
+          content: 'No recent messages found.'
+        };
+      }
+    }
+    // Toxic messages count
+    else if (query.includes('toxic') || query.includes('flagged')) {
+      const toxicMessages = allMessages.filter(m => m.toxic);
+      result = {
+        type: 'warning',
+        title: 'Toxic Messages',
+        content: `Found **${toxicMessages.length}** toxic messages out of **${allMessages.length}** total messages.`,
+        details: {
+          count: toxicMessages.length,
+          percentage: allMessages.length > 0 ? ((toxicMessages.length / allMessages.length) * 100).toFixed(2) : 0
+        }
+      };
+    }
+    // Banned users
+    else if (query.includes('banned') || query.includes('ban')) {
+      const bannedMessages = allMessages.filter(m => m.userBanned);
+      const bannedUsers = new Set(bannedMessages.map(m => m.userId));
+      result = {
+        type: 'warning',
+        title: 'Banned Users',
+        content: `Found **${bannedUsers.size}** banned user(s) with **${bannedMessages.length}** messages from banned users.`,
+        details: {
+          userCount: bannedUsers.size,
+          messageCount: bannedMessages.length
+        }
+      };
+    }
+    // Default - show help
+    else {
+      result = {
+        type: 'help',
+        title: 'Query Help',
+        content: 'Try asking questions like:\n• "Who sent the last message?"\n• "Most active user"\n• "Total messages"\n• "Recent messages"\n• "Toxic messages"\n• "Banned users"',
+        details: null
+      };
+    }
+
+    setQueryResult(result);
+  };
+
+  // Handle query input
+  const handleQuerySubmit = (e) => {
+    e.preventDefault();
+    processQuery();
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    // Use full-height of the app content area (prevents 100vh issues in PWA).
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div 
         className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
@@ -653,8 +822,172 @@ const AdminDashboard = () => {
               <Download size={18} />
               <span className="hidden sm:inline">Export CSV</span>
             </button>
+            <button
+              onClick={() => setShowQueryBox(!showQueryBox)}
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
+            >
+              <MessageSquare size={18} />
+              <span className="hidden sm:inline">Query</span>
+            </button>
           </div>
         </div>
+
+        {/* Query Box */}
+        {showQueryBox && (
+          <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2">
+                <MessageSquare size={18} />
+                Admin Query Box
+              </h3>
+              <button
+                onClick={() => {
+                  setShowQueryBox(false);
+                  setQueryText('');
+                  setQueryResult(null);
+                }}
+                className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleQuerySubmit} className="flex gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={18} />
+                <input
+                  type="text"
+                  value={queryText}
+                  onChange={(e) => {
+                    setQueryText(e.target.value);
+                    if (e.target.value.trim()) {
+                      processQuery();
+                    } else {
+                      setQueryResult(null);
+                    }
+                  }}
+                  placeholder="Ask questions like: 'Who sent the last message?', 'Most active user', 'Total messages'..."
+                  className="w-full pl-10 pr-4 py-2 border border-purple-300 dark:border-purple-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                Query
+              </button>
+            </form>
+            
+            {/* Query Results */}
+            {queryResult && (
+              <div className={`mt-4 p-4 rounded-lg border ${
+                queryResult.type === 'warning' 
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                  : queryResult.type === 'help'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                  : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              }`}>
+                <h4 className={`font-semibold mb-2 ${
+                  queryResult.type === 'warning'
+                    ? 'text-red-800 dark:text-red-200'
+                    : queryResult.type === 'help'
+                    ? 'text-blue-800 dark:text-blue-200'
+                    : 'text-green-800 dark:text-green-200'
+                }`}>
+                  {queryResult.title}
+                </h4>
+                <div className={`text-sm whitespace-pre-line ${
+                  queryResult.type === 'warning'
+                    ? 'text-red-700 dark:text-red-300'
+                    : queryResult.type === 'help'
+                    ? 'text-blue-700 dark:text-blue-300'
+                    : 'text-green-700 dark:text-green-300'
+                }`}>
+                  {queryResult.content.split('**').map((part, i) => 
+                    i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                  )}
+                </div>
+                
+                {/* Additional Details */}
+                {queryResult.details && (
+                  <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+                    {queryResult.details.topUsers && (
+                      <div>
+                        <p className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Top 5 Active Users:</p>
+                        <div className="space-y-1">
+                          {queryResult.details.topUsers.map((user, idx) => (
+                            <div key={idx} className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="font-medium">{idx + 1}. {user.name}</span> - {user.email} ({user.count} messages)
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {queryResult.details.messages && (
+                      <div>
+                        <p className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Recent Messages:</p>
+                        <div className="space-y-1">
+                          {queryResult.details.messages.map((msg, idx) => (
+                            <div key={idx} className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                              <div className="font-medium">{msg.user}</div>
+                              <div className="text-gray-600 dark:text-gray-400">{msg.text}</div>
+                              <div className="text-gray-500 dark:text-gray-500 text-xs mt-1">
+                                {msg.timestamp} • {msg.toxic === 'Yes' ? '⚠️ Toxic' : '✓ Clean'}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {queryResult.details.message && (
+                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                        <p className="font-semibold mb-1">Message Content:</p>
+                        <p className="text-gray-700 dark:text-gray-300">{queryResult.details.message}</p>
+                        <div className="mt-2 space-y-1 text-gray-600 dark:text-gray-400">
+                          <p>User ID: {queryResult.details.userId}</p>
+                          <p>Toxic: {queryResult.details.isToxic}</p>
+                          <p>Banned: {queryResult.details.isBanned}</p>
+                        </div>
+                      </div>
+                    )}
+                    {queryResult.details.total !== undefined && (
+                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <p className="font-semibold">Total Messages</p>
+                            <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{queryResult.details.total}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Toxic Messages</p>
+                            <p className="text-lg font-bold text-red-600 dark:text-red-400">{queryResult.details.toxic}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Normal Messages</p>
+                            <p className="text-lg font-bold text-green-600 dark:text-green-400">{queryResult.details.normal}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Banned Users</p>
+                            <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{queryResult.details.banned}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {queryResult.details.percentage !== undefined && (
+                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                        <p>Toxic Message Percentage: <span className="font-bold">{queryResult.details.percentage}%</span></p>
+                      </div>
+                    )}
+                    {queryResult.details.userCount !== undefined && (
+                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                        <p>Banned Users: <span className="font-bold">{queryResult.details.userCount}</span></p>
+                        <p>Messages from Banned Users: <span className="font-bold">{queryResult.details.messageCount}</span></p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -735,6 +1068,9 @@ const AdminDashboard = () => {
             Showing {paginatedMessages.length} of {filteredMessages.length} messages
           </span>
         </div>
+
+        {/* Always-visible admin query box (answers: last online, last message, online count, etc.) */}
+        <AdminQueryBox />
       </div>
 
       {/* Reports Panel */}

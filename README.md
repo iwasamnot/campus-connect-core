@@ -131,6 +131,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Touch-friendly interface with proper button sizes
   - Full-screen sidebar on mobile with overlay
   - Proper viewport handling for iOS Safari
+  - Pages scroll normally across views (Login/Registration/Admin), including PWA standalone mode
 - **Progressive Web App (PWA)**: Install as a native app
   - Service worker with intelligent caching
   - Offline support with Firebase caching strategies

@@ -143,7 +143,7 @@ const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catc
 
 // Loading component for lazy-loaded routes
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
+  <div className="flex items-center justify-center h-screen h-[100dvh] bg-gray-50 dark:bg-gray-900 animate-fade-in">
     <div className="text-center">
       <img 
         src="/logo.png" 
@@ -191,7 +191,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
@@ -207,7 +207,9 @@ function App() {
   return (
     <>
       <CallModal />
-      <div className="flex h-screen h-[100dvh] h-[100vh] overflow-hidden w-full bg-white dark:bg-gray-900 md:flex-row">
+      {/* IMPORTANT: Avoid forcing 100vh on mobile/PWA (causes "locked" viewport and jumpy layouts).
+          Use h-screen as fallback, but prefer 100dvh where supported. */}
+      <div className="flex h-screen h-[100dvh] overflow-hidden w-full bg-white dark:bg-gray-900 md:flex-row">
       {/* Skip to main content link for accessibility */}
       <a href="#main-content" className="skip-to-main">
         Skip to main content
@@ -220,7 +222,7 @@ function App() {
       />
       <div 
         id="main-content" 
-        className="flex-1 overflow-hidden relative w-full"
+        className="flex-1 overflow-y-auto relative w-full"
         onTouchStart={(e) => {
           // Swipe from left edge to open menu (only on mobile, when sidebar is closed)
           if (isMobile && !sidebarOpen && e.touches[0].clientX < 30) {

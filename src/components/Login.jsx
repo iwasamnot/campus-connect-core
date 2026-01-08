@@ -162,7 +162,10 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4 relative">
+    // Use a dedicated scroll container for Login/Register on mobile/PWA.
+    // This prevents the viewport from getting "stuck" in standalone mode when the keyboard opens.
+    <div className="h-screen h-[100dvh] overflow-y-auto bg-white dark:bg-gray-900">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 relative">
       {/* Dark Mode Toggle Button */}
       <button
         onClick={(e) => {
@@ -468,6 +471,7 @@ const Login = () => {
       {showContactForm && (
         <ContactForm onClose={() => setShowContactForm(false)} />
       )}
+    </div>
     </div>
   );
 };

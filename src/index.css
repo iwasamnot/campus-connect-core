@@ -622,6 +622,8 @@ input, textarea, [contenteditable] {
 
 #root {
   width: 100%;
+  /* Keep a single scroll container (views handle their own scrolling).
+     This prevents "stuck" scroll / weird viewport jumps in mobile PWA. */
   height: 100vh;
   height: 100dvh;
   height: -webkit-fill-available; /* iOS Safari fix */
