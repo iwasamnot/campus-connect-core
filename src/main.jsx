@@ -136,19 +136,24 @@ if (typeof window !== 'undefined') {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // VitePWA plugin will auto-register, but we can add custom handling here
-    navigator.serviceWorker.ready.then(() => {
+    navigator.serviceWorker.ready.then((registration) => {
       console.log('Service Worker ready');
       
       // Register background sync for offline actions
-      if ('sync' in self.registration) {
-        // Background sync is available
-        console.log('Background Sync API available');
-      }
-      
-      // Register periodic background sync for cache updates
-      if ('periodicSync' in self.registration) {
-        // Periodic sync is available
-        console.log('Periodic Background Sync API available');
+      try {
+        if (registration && 'sync' in registration) {
+          // Background sync is available
+          console.log('Background Sync API available');
+        }
+        
+        // Register periodic background sync for cache updates
+        if (registration && 'periodicSync' in registration) {
+          // Periodic sync is available
+          console.log('Periodic Background Sync API available');
+        }
+      } catch (error) {
+        // Background sync APIs might not be supported
+        console.log('Background Sync APIs not available:', error.message);
       }
     }).catch(err => {
       console.error('Service Worker registration failed:', err);

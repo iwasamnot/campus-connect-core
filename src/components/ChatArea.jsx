@@ -112,9 +112,11 @@ const ChatArea = ({ setActiveView }) => {
   const [translations, setTranslations] = useState({}); // Translated messages cache
   const [showSummarization, setShowSummarization] = useState(false); // Show summarization
   const [conversationSummary, setConversationSummary] = useState(null); // Conversation summary
+  const [openMenuId, setOpenMenuId] = useState(null); // Track which message's menu is open
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
+  const menuRefs = useRef({}); // Refs for each menu
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
   const CHAT_ID = 'global'; // For drafts
   
@@ -1311,17 +1313,6 @@ const ChatArea = ({ setActiveView }) => {
                     actionButtons.classList.add('show-actions');
                   }
                 }}
-                onMouseLeave={(e) => {
-                  // Hide buttons when leaving, but with delay to allow clicking
-                  const actionButtons = e.currentTarget.querySelector('.message-actions');
-                  if (actionButtons) {
-                    setTimeout(() => {
-                      if (!actionButtons.matches(':hover')) {
-                        actionButtons.classList.remove('show-actions');
-                      }
-                    }, 100);
-                  }
-                }}
               >
                 {/* Profile Picture - Only show for other users */}
                 {!isAuthor && (
@@ -1593,182 +1584,203 @@ const ChatArea = ({ setActiveView }) => {
                     </div>
                   )}
 
-                  {/* Action buttons - hidden by default, show on hover only */}
+                  {/* 3-dots menu button - appears on hover */}
                   <div 
-                    className="message-actions absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover/message:opacity-100 invisible group-hover/message:visible pointer-events-none group-hover/message:pointer-events-auto transition-all duration-300 flex flex-row gap-1 sm:gap-1.5 z-30 scale-95 sm:scale-100 origin-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
-                    onMouseEnter={(e) => {
-                      // Keep visible when hovering over buttons container
-                      e.currentTarget.classList.add('show-actions');
-                      e.currentTarget.style.opacity = '1';
-                      e.currentTarget.style.visibility = 'visible';
-                      e.currentTarget.style.pointerEvents = 'auto';
+                    ref={(el) => {
+                      if (el) menuRefs.current[message.id] = el;
                     }}
-                    onMouseLeave={(e) => {
-                      // Small delay to allow moving to buttons
-                      setTimeout(() => {
-                        const parent = e.currentTarget.closest('.group/message');
-                        if (parent && !parent.matches(':hover') && !e.currentTarget.matches(':hover')) {
-                          e.currentTarget.classList.remove('show-actions');
-                          e.currentTarget.style.opacity = '';
-                          e.currentTarget.style.visibility = '';
-                          e.currentTarget.style.pointerEvents = '';
-                        }
-                      }, 150);
-                    }}
+                    className="absolute -top-1 right-0 opacity-0 group-hover/message:opacity-100 invisible group-hover/message:visible transition-all duration-200 z-30"
                   >
                     <button
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation();
-                        try {
-                          await saveMessage(user.uid, { ...message, chatType: 'global' });
-                          success('Message saved!');
-                        } catch (error) {
-                          if (error.message === 'Message already saved') {
-                            showError('Message already saved');
-                          } else {
-                            showError('Failed to save message');
-                          }
-                        }
+                        setOpenMenuId(openMenuId === message.id ? null : message.id);
                       }}
-                      className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                      title="Save message"
-                      aria-label="Save message"
+                      className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors touch-action-manipulation"
+                      title="More options"
+                      aria-label="More options"
                     >
-                      <Bookmark size={14} />
+                      <MoreVertical size={16} className="text-gray-600 dark:text-gray-400" />
                     </button>
-                    {preferences.allowMessageForwarding && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleForwardMessage(message.id);
-                        }}
-                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                        title="Forward message"
-                        aria-label="Forward message"
+                    
+                    {/* Dropdown menu */}
+                    {openMenuId === message.id && (
+                      <div 
+                        className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 min-w-[180px] z-40"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <Forward size={14} />
-                      </button>
-                    )}
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        const messageText = message.displayText || message.text || '';
-                        await shareMessage(messageText, message.id);
-                      }}
-                      className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                      title="Share message"
-                      aria-label="Share message via Web Share API"
-                    >
-                      <Share2 size={14} />
-                    </button>
-                    {!message.isVoice && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTranslateMessage(message.id, message.displayText || message.text || '');
-                        }}
-                        disabled={translating.has(message.id)}
-                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                        title="Translate message"
-                        aria-label="Translate message"
-                      >
-                        {translating.has(message.id) ? (
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                        ) : (
-                          <Languages size={14} />
+                        {/* Menu items */}
+                        {!isAuthor && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReplyingTo(message);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                          >
+                            <Reply size={16} />
+                            Reply
+                          </button>
                         )}
-                      </button>
-                    )}
-                    {!isAuthor && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setReplyingTo(message);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                        title="Reply to message"
-                        aria-label="Reply to message"
-                      >
-                        <Reply size={14} />
-                      </button>
-                    )}
-                    {isAdminRole(userRole) && (
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const isPinned = pinnedMessages.includes(message.id);
-                            if (isPinned) {
-                              await updateDoc(doc(db, 'messages', message.id), {
-                                pinned: false
-                              });
-                              setPinnedMessages(prev => prev.filter(id => id !== message.id));
-                              success('Message unpinned');
-                            } else {
-                              await updateDoc(doc(db, 'messages', message.id), {
-                                pinned: true,
-                                pinnedAt: serverTimestamp()
-                              });
-                              setPinnedMessages(prev => [...prev, message.id]);
-                              success('Message pinned');
-                            }
-                          } catch (error) {
-                            console.error('Error pinning message:', error);
-                            showError('Failed to pin message');
-                          }
-                        }}
-                        className={`p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px] ${
-                          pinnedMessages.includes(message.id)
-                            ? 'bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white'
-                            : 'bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white'
-                        }`}
-                        title={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
-                        aria-label={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
-                      >
-                        <Pin size={14} />
-                      </button>
-                    )}
-                    {canEdit && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditing(message.id);
-                          setEditText(message.text);
-                        }}
-                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                        title="Edit message"
-                        aria-label="Edit message"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteMessage(message.id, message.userId, isAIMessage);
-                        }}
-                        disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                        title={isAIMessage ? "Delete AI message (Admin only)" : "Delete message"}
-                        aria-label={isAIMessage ? "Delete AI message" : "Delete message"}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                    {!isAuthor && (
-                      <div className="relative">
+                        
                         <button
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            setReporting(reporting === message.id ? null : message.id);
+                            try {
+                              await saveMessage(user.uid, { ...message, chatType: 'global' });
+                              success('Message saved!');
+                              setOpenMenuId(null);
+                            } catch (error) {
+                              if (error.message === 'Message already saved') {
+                                showError('Message already saved');
+                              } else {
+                                showError('Failed to save message');
+                              }
+                            }
                           }}
-                          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white p-2 rounded-full transition-all touch-action-manipulation shadow-md flex items-center justify-center min-w-[32px] min-h-[32px]"
-                          title="Report message"
-                          aria-label="Report message"
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
                         >
-                          <Flag size={14} />
+                          <Bookmark size={16} />
+                          Save
                         </button>
+                        
+                        {preferences.allowMessageForwarding && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleForwardMessage(message.id);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                          >
+                            <Forward size={16} />
+                            Forward
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const messageText = message.displayText || message.text || '';
+                            await shareMessage(messageText, message.id);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                        >
+                          <Share2 size={16} />
+                          Share
+                        </button>
+                        
+                        {!message.isVoice && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTranslateMessage(message.id, message.displayText || message.text || '');
+                              setOpenMenuId(null);
+                            }}
+                            disabled={translating.has(message.id)}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {translating.has(message.id) ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-gray-400"></div>
+                                Translating...
+                              </>
+                            ) : (
+                              <>
+                                <Languages size={16} />
+                                Translate
+                              </>
+                            )}
+                          </button>
+                        )}
+                        
+                        {isAdminRole(userRole) && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                const isPinned = pinnedMessages.includes(message.id);
+                                if (isPinned) {
+                                  await updateDoc(doc(db, 'messages', message.id), {
+                                    pinned: false
+                                  });
+                                  setPinnedMessages(prev => prev.filter(id => id !== message.id));
+                                  success('Message unpinned');
+                                } else {
+                                  await updateDoc(doc(db, 'messages', message.id), {
+                                    pinned: true,
+                                    pinnedAt: serverTimestamp()
+                                  });
+                                  setPinnedMessages(prev => [...prev, message.id]);
+                                  success('Message pinned');
+                                }
+                                setOpenMenuId(null);
+                              } catch (error) {
+                                console.error('Error pinning message:', error);
+                                showError('Failed to pin message');
+                              }
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                          >
+                            <Pin size={16} />
+                            {pinnedMessages.includes(message.id) ? 'Unpin' : 'Pin'}
+                          </button>
+                        )}
+                        
+                        {canEdit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditing(message.id);
+                              setEditText(message.text);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                          >
+                            <Edit2 size={16} />
+                            Edit
+                          </button>
+                        )}
+                        
+                        {canDelete && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMessage(message.id, message.userId, isAIMessage);
+                              setOpenMenuId(null);
+                            }}
+                            disabled={deleting === message.id}
+                            className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Trash2 size={16} />
+                            {isAIMessage ? "Delete (Admin)" : "Delete"}
+                          </button>
+                        )}
+                        
+                        {!isAuthor && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReporting(reporting === message.id ? null : message.id);
+                              if (reporting === message.id) {
+                                setOpenMenuId(null);
+                              }
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                          >
+                            <Flag size={16} />
+                            {reporting === message.id ? 'Cancel Report' : 'Report'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Report form - shown separately if reporting */}
+                  {reporting === message.id && (
+                    <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 z-40 min-w-[250px]">
                         {reporting === message.id && (
                           <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px] touch-action-none">
                             <textarea

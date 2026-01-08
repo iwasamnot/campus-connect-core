@@ -39,24 +39,36 @@ export const measureWebVitals = () => {
   
   try {
     // Import web-vitals
-    import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
-      // Cumulative Layout Shift (CLS) - Visual stability (target: < 0.1)
-      onCLS(reportWebVitals);
+    import('web-vitals').then((vitals) => {
+      if (!vitals || typeof vitals !== 'object') {
+        console.warn('Web Vitals: Invalid module export');
+        return;
+      }
       
-      // First Input Delay (FID) - Interactivity (deprecated in favor of INP, target: < 100ms)
-      onFID(reportWebVitals);
+      const { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } = vitals;
       
-      // First Contentful Paint (FCP) - Loading performance (target: < 1.8s)
-      onFCP(reportWebVitals);
+      // Check each function exists before calling
+      if (typeof onCLS === 'function') {
+        onCLS(reportWebVitals);
+      }
       
-      // Largest Contentful Paint (LCP) - Loading performance (target: < 2.5s)
-      onLCP(reportWebVitals);
+      if (typeof onFID === 'function') {
+        onFID(reportWebVitals);
+      }
       
-      // Time to First Byte (TTFB) - Server response time (target: < 800ms)
-      onTTFB(reportWebVitals);
+      if (typeof onFCP === 'function') {
+        onFCP(reportWebVitals);
+      }
       
-      // Interaction to Next Paint (INP) - Interactivity (new in 2024, target: < 200ms)
-      if (onINP) {
+      if (typeof onLCP === 'function') {
+        onLCP(reportWebVitals);
+      }
+      
+      if (typeof onTTFB === 'function') {
+        onTTFB(reportWebVitals);
+      }
+      
+      if (typeof onINP === 'function') {
         onINP(reportWebVitals);
       }
     }).catch(error => {
