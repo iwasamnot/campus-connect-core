@@ -458,6 +458,28 @@
   }
 }
 
+/* Fix for message action buttons hover issue */
+.message-actions.show-actions,
+.message-actions:has(button:hover),
+.group/message:hover .message-actions {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Keep action buttons visible on touch devices */
+@media (hover: none) {
+  .message-actions {
+    opacity: 0.7 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  
+  .group/message:active .message-actions {
+    opacity: 1 !important;
+  }
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;

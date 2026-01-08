@@ -1301,9 +1301,27 @@ const ChatArea = ({ setActiveView }) => {
               <div
                 id={`message-${message.id}`}
                 key={message.id}
-                className={`flex items-start gap-2 ${
+                className={`flex items-start gap-2 group/message relative ${
                   isAuthor ? 'justify-end' : 'justify-start'
                 }`}
+                onMouseEnter={(e) => {
+                  // Keep buttons visible when hovering
+                  const actionButtons = e.currentTarget.querySelector('.message-actions');
+                  if (actionButtons) {
+                    actionButtons.classList.add('show-actions');
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  // Hide buttons when leaving, but with delay to allow clicking
+                  const actionButtons = e.currentTarget.querySelector('.message-actions');
+                  if (actionButtons) {
+                    setTimeout(() => {
+                      if (!actionButtons.matches(':hover')) {
+                        actionButtons.classList.remove('show-actions');
+                      }
+                    }, 100);
+                  }
+                }}
               >
                 {/* Profile Picture - Only show for other users */}
                 {!isAuthor && (
@@ -1332,7 +1350,7 @@ const ChatArea = ({ setActiveView }) => {
                 )}
 
                 <div
-                    className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg relative group ${
+                    className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg relative ${
                     isAuthor
                       ? 'bg-indigo-600 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
@@ -1576,7 +1594,24 @@ const ChatArea = ({ setActiveView }) => {
                   )}
 
                   {/* Action buttons - hidden by default, show on hover only */}
-                  <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex pointer-events-none group-hover:pointer-events-auto transition-all duration-200 flex-row gap-1 sm:gap-1.5 touch-action-none z-20 scale-90 sm:scale-100 origin-center">
+                  <div 
+                    className="message-actions absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover/message:opacity-100 invisible group-hover/message:visible transition-all duration-300 flex flex-row gap-1 sm:gap-1.5 z-30 scale-95 sm:scale-100 origin-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+                    onMouseEnter={(e) => {
+                      // Keep visible when hovering over buttons
+                      e.currentTarget.classList.add('show-actions');
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.visibility = 'visible';
+                    }}
+                    onMouseLeave={(e) => {
+                      // Check if parent is still being hovered
+                      const parent = e.currentTarget.closest('.group/message');
+                      if (!parent?.matches(':hover')) {
+                        e.currentTarget.classList.remove('show-actions');
+                        e.currentTarget.style.opacity = '';
+                        e.currentTarget.style.visibility = '';
+                      }
+                    }}
+                  >
                     <button
                       onClick={async () => {
                         try {
