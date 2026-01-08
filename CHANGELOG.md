@@ -1,5 +1,90 @@
 # Changelog
 
+## [7.0.0] - 2024-12-XX
+
+### Major Update: Major New Functionalities
+
+This update introduces major new features that significantly enhance the messaging and collaboration capabilities of CampusConnect.
+
+#### Polls & Surveys
+- **Poll Creator Component**: Create polls with multiple options
+  - Support for 2-10 options per poll
+  - Configurable settings (multiple votes, anonymous voting, duration)
+  - Duration options: 1 day, 3 days, 7 days, 30 days
+  - Real-time vote counting
+  - Visual progress bars for each option
+  - Winner highlighting
+- **Poll Display Component**: Interactive poll viewing and voting
+  - Real-time vote updates
+  - Visual progress indicators
+  - Anonymous and public voting modes
+  - Expiry date tracking
+  - Vote/Unvote functionality
+  - Support for multiple votes per user (configurable)
+- **Integration**: Polls can be created in Campus Chat and Group Chats
+- **Firestore Rules**: Added security rules for polls and groupPolls collections
+
+#### Voice Messages
+- **Voice Recorder Component**: Record and send voice messages
+  - MediaRecorder API integration
+  - Audio/webm codec support
+  - 5-minute recording limit
+  - Real-time recording timer
+  - Preview and playback before sending
+  - Delete and re-record functionality
+  - Microphone permission handling
+- **Voice Message Component**: Display and play voice messages
+  - Audio player with play/pause controls
+  - Progress bar showing playback position
+  - Duration display
+  - Download functionality
+  - Responsive design with mobile support
+- **Storage**: Voice messages stored in Firebase Storage
+- **Format**: WebM audio format with Opus codec
+
+#### Quick Replies / Message Templates
+- **Quick Replies Component**: Create and manage message templates
+  - Create, edit, delete templates
+  - Template name and text
+  - Quick access from message input
+  - Personal template library per user
+  - Real-time sync across devices
+- **Use Cases**: Meeting reminders, common responses, announcements
+- **Storage**: Personal templates stored in Firestore quickReplies collection
+- **Privacy**: Users can only access their own templates
+
+#### AI Message Translation
+- **Translation Utilities**: AI-powered message translation
+  - Uses Google Gemini 2.5 Flash for translation
+  - Support for 14+ languages
+  - Auto-detect source language
+  - Translate individual messages or entire conversations
+  - Fallback to original text on error
+
+#### AI Conversation Summarization
+- **Summarization Utilities**: AI-powered conversation summaries
+  - Uses Google Gemini 2.5 Flash for summarization
+  - Configurable summary length
+  - Extract key points from conversations
+  - Generate meeting notes with structured format
+  - Action items extraction
+  - Participant tracking
+
+#### Firestore Security Rules
+- **Polls Collection**: Rules for polls and groupPolls
+- **Quick Replies Collection**: Rules for message templates
+- **User Status Collection**: Rules for status updates (infrastructure)
+- **Announcements Collection**: Rules for admin announcements (infrastructure)
+
+### Breaking Changes
+None. All new features are additive and backward compatible.
+
+### Migration Notes
+- New Firestore collections: polls, groupPolls, quickReplies, userStatus, announcements
+- Firestore security rules updated
+- Voice messages require Firebase Storage permissions
+- AI features require VITE_GEMINI_API_KEY (optional, graceful fallbacks)
+
 ## [6.0.0] - 2024-12-XX
 
 ### Major Update: Latest Modern Features Following Global Standards
