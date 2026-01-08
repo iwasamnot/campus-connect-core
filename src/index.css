@@ -460,8 +460,7 @@
 
 /* Fix for message action buttons hover issue */
 .message-actions.show-actions,
-.message-actions:has(button:hover),
-.group/message:hover .message-actions {
+.message-actions:has(button:hover) {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
@@ -475,7 +474,7 @@
     pointer-events: auto !important;
   }
   
-  .group/message:active .message-actions {
+  .message-actions:active {
     opacity: 1 !important;
   }
 }

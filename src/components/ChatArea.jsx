@@ -1811,7 +1811,6 @@ const ChatArea = ({ setActiveView }) => {
                       </div>
                     </div>
                   )}
-                  </div>
 
                   {/* Reaction picker - always visible on touch, hover on desktop */}
                   {!isAuthor && (
