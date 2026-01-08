@@ -1781,36 +1781,36 @@ const ChatArea = ({ setActiveView }) => {
                   {/* Report form - shown separately if reporting */}
                   {reporting === message.id && (
                     <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 z-40 min-w-[250px]">
-                        {reporting === message.id && (
-                          <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px] touch-action-none">
-                            <textarea
-                              value={reportReason}
-                              onChange={(e) => setReportReason(e.target.value)}
-                              placeholder="Reason for reporting..."
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
-                              rows={3}
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleReportMessage(message.id)}
-                                className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs rounded transition-colors touch-action-manipulation"
-                              >
-                                Report
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setReporting(null);
-                                  setReportReason('');
-                                }}
-                                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs rounded transition-colors touch-action-manipulation"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                      <textarea
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                        placeholder="Reason for reporting..."
+                        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
+                        rows={3}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            handleReportMessage(message.id);
+                            setOpenMenuId(null);
+                          }}
+                          className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs rounded transition-colors touch-action-manipulation"
+                        >
+                          Report
+                        </button>
+                        <button
+                          onClick={() => {
+                            setReporting(null);
+                            setReportReason('');
+                            setOpenMenuId(null);
+                          }}
+                          className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white text-xs rounded transition-colors touch-action-manipulation"
+                        >
+                          Cancel
+                        </button>
                       </div>
-                    )}
+                    </div>
+                  )}
                   </div>
 
                   {/* Reaction picker - always visible on touch, hover on desktop */}
