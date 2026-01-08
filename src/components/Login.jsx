@@ -2,9 +2,10 @@ import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react';
 // Import Logo directly - it's in main bundle so no code-splitting issues
 import Logo from '../components/Logo.jsx';
+import ContactForm from '../components/ContactForm';
 import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
 import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
 import { handleError } from '../utils/errorHandler';
@@ -24,6 +25,7 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
 
   // Memoized validation functions using imported utilities
   const validateStudentEmail = useCallback((email) => {
@@ -445,8 +447,27 @@ const Login = () => {
             ? 'Remember your password? Switch to Login mode.'
             : "Don't have an account? Switch to Register mode."}
         </p>
+
+        {/* Contact Admin Button */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setShowContactForm(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium"
+          >
+            <MessageSquare size={18} />
+            <span>Contact Admin</span>
+          </button>
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+            Not a user? Send a message to the administrator
+          </p>
+        </div>
         
       </div>
+
+      {/* Contact Form Modal */}
+      {showContactForm && (
+        <ContactForm onClose={() => setShowContactForm(false)} />
+      )}
     </div>
   );
 };

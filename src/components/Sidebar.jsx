@@ -1,7 +1,7 @@
 import { useState, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon } from 'lucide-react';
+import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
   ? window.__LogoComponent 
@@ -62,7 +62,7 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
           top-0 left-0
           w-full md:w-64 bg-gray-900 dark:bg-gray-900 text-white 
           flex flex-col h-screen h-[100dvh] border-r border-gray-800
-          z-50
+          z-[70]
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
@@ -268,6 +268,17 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
             >
               <MessageCircle size={20} />
               <span>Private Chat</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('contact-messages')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+                activeView === 'contact-messages'
+                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Mail size={20} />
+              <span>Contact Messages</span>
             </button>
             <button
               onClick={() => handleNavClick('settings')}

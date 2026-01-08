@@ -120,6 +120,7 @@ const createLazyComponent = (importFn, componentName) => {
 
 const ChatArea = createLazyComponent(() => import('./components/ChatArea'), 'Chat Area');
 const AdminDashboard = createLazyComponent(() => import('./components/AdminDashboard'), 'Admin Dashboard');
+const AdminContactMessages = createLazyComponent(() => import('./components/AdminContactMessages'), 'Admin Contact Messages');
 const StudentProfile = createLazyComponent(() => import('./components/StudentProfile'), 'Student Profile');
 const UsersManagement = createLazyComponent(() => import('./components/UsersManagement'), 'Users Management');
 const CreateUser = createLazyComponent(() => import('./components/CreateUser'), 'Create User');
@@ -246,6 +247,7 @@ function App() {
               {activeView === 'analytics' && <ErrorBoundary><div className="page-transition"><AdminAnalytics /></div></ErrorBoundary>}
               {activeView === 'users' && <ErrorBoundary><div className="page-transition"><UsersManagement /></div></ErrorBoundary>}
               {activeView === 'create-user' && <ErrorBoundary><div className="page-transition"><CreateUser /></div></ErrorBoundary>}
+              {activeView === 'contact-messages' && <ErrorBoundary><div className="page-transition"><AdminContactMessages /></div></ErrorBoundary>}
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
               {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />

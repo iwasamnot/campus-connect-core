@@ -352,5 +352,25 @@ service cloud.firestore {
         resource.data.from == request.auth.uid
       );
     }
+
+    // Contact messages collection (messages from non-users to admin)
+    match /contactMessages/{messageId} {
+      // Only admins can read contact messages
+      allow read: if isAdmin();
+      
+      // Allow anyone (including non-authenticated users) to create contact messages
+      allow create: if request.resource.data.name != null &&
+                     request.resource.data.email != null &&
+                     request.resource.data.message != null &&
+                     request.resource.data.timestamp != null &&
+                     request.resource.data.status == 'new' &&
+                     request.resource.data.isFromNonUser == true;
+      
+      // Only admins can update contact messages (for status changes)
+      allow update: if isAdmin();
+      
+      // Only admins can delete contact messages
+      allow delete: if isAdmin();
+    }
   }
 }
