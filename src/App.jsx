@@ -167,6 +167,40 @@ function App() {
   const [hasSetDefaultView, setHasSetDefaultView] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  // Handle Web Share Target API (when app is launched via share)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Check if app was launched via share target
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedTitle = urlParams.get('title');
+    const sharedText = urlParams.get('text');
+    const sharedUrl = urlParams.get('url');
+    
+    if (sharedTitle || sharedText || sharedUrl) {
+      // Handle shared content (could open in chat, create message, etc.)
+      console.log('Shared content received:', { sharedTitle, sharedText, sharedUrl });
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  // Handle File System Access API (when files are opened)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Listen for file open events
+    const handleFileOpen = (event) => {
+      if (event.detail?.files) {
+        // Handle opened files
+        console.log('Files opened:', event.detail.files);
+      }
+    };
+    
+    window.addEventListener('fileopened', handleFileOpen);
+    return () => window.removeEventListener('fileopened', handleFileOpen);
+  }, []);
+
   // Track window size for mobile detection
   useEffect(() => {
     const handleResize = () => {
@@ -188,6 +222,24 @@ function App() {
       setHasSetDefaultView(true);
     }
   }, [userRole, hasSetDefaultView]);
+
+  // Handle Web Share Target API (when app is launched via share)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Check if app was launched via share target
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedTitle = urlParams.get('title');
+    const sharedText = urlParams.get('text');
+    const sharedUrl = urlParams.get('url');
+    
+    if (sharedTitle || sharedText || sharedUrl) {
+      // Handle shared content (could open in chat, create message, etc.)
+      console.log('Shared content received:', { sharedTitle, sharedText, sharedUrl });
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   if (loading) {
     return (

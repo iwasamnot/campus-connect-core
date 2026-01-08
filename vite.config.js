@@ -21,7 +21,7 @@ export default defineConfig({
       manifest: {
         name: 'CampusConnect - Student Messaging Platform',
         short_name: 'CampusConnect',
-        description: 'Secure student messaging platform with AI-powered content moderation',
+        description: 'Secure student messaging platform with AI-powered content moderation, real-time chat, group messaging, and intelligent AI assistant',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',
@@ -30,6 +30,32 @@ export default defineConfig({
         start_url: '/',
         id: '/',
         categories: ['education', 'social', 'communication'],
+        share_target: {
+          action: '/',
+          method: 'GET',
+          enctype: 'application/x-www-form-urlencoded',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url'
+          }
+        },
+        file_handlers: [
+          {
+            action: '/',
+            accept: {
+              'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+              'text/*': ['.txt', '.md'],
+              'application/pdf': ['.pdf']
+            }
+          }
+        ],
+        protocol_handlers: [
+          {
+            protocol: 'web+campusconnect',
+            url: '/?url=%s'
+          }
+        ],
         icons: [
           {
             src: '/logo.png',

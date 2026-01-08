@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { AlertTriangle } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
@@ -17,6 +17,37 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
+    
+    // Enhanced error reporting (can be extended to send to analytics)
+    if (typeof window !== 'undefined') {
+      const errorReport = {
+        message: error?.message || 'Unknown error',
+        stack: error?.stack,
+        componentStack: errorInfo?.componentStack,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+      };
+      
+      // Log to console in structured format
+      console.error('Error Report:', errorReport);
+      
+      // Send to error tracking service if available
+      if (window.gtag) {
+        window.gtag('event', 'exception', {
+          description: errorReport.message,
+          fatal: true,
+          error_category: 'React Error Boundary'
+        });
+      }
+      
+      // Store error for retry mechanism
+      try {
+        sessionStorage.setItem('lastError', JSON.stringify(errorReport));
+      } catch (e) {
+        // Ignore storage errors
+      }
+    }
   }
 
   render() {

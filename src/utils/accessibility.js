@@ -1,9 +1,10 @@
 /**
  * Accessibility utilities for keyboard navigation and screen readers
+ * WCAG 2.2 AA compliance utilities
  */
 
 /**
- * Focus management utilities
+ * Focus management utilities (WCAG 2.1 SC 2.4.3, 2.4.7)
  */
 export const focusManagement = {
   /**
@@ -59,15 +60,17 @@ export const focusManagement = {
 };
 
 /**
- * ARIA utilities
+ * ARIA utilities (WCAG 2.1 SC 4.1.2)
  */
 export const aria = {
   /**
-   * Announce message to screen readers
+   * Announce message to screen readers (WCAG 2.1 SC 4.1.3)
    * @param {string} message - Message to announce
    * @param {string} priority - Priority: 'polite' or 'assertive'
    */
   announce: (message, priority = 'polite') => {
+    if (typeof document === 'undefined') return;
+    
     const announcement = document.createElement('div');
     announcement.setAttribute('role', 'status');
     announcement.setAttribute('aria-live', priority);
@@ -78,18 +81,48 @@ export const aria = {
     document.body.appendChild(announcement);
     
     setTimeout(() => {
-      document.body.removeChild(announcement);
+      if (document.body.contains(announcement)) {
+        document.body.removeChild(announcement);
+      }
     }, 1000);
   },
   
   /**
-   * Get ARIA label for button
+   * Get ARIA label for button (WCAG 2.1 SC 4.1.2)
    * @param {string} action - Action description
    * @param {string} context - Context (optional)
    * @returns {string} - ARIA label
    */
   getButtonLabel: (action, context = '') => {
     return context ? `${action} ${context}` : action;
+  },
+  
+  /**
+   * Create ARIA label for icon-only buttons (WCAG 2.1 SC 4.1.2)
+   * @param {string} action - Action description
+   * @returns {object} - ARIA attributes object
+   */
+  getIconButtonProps: (action) => ({
+    'aria-label': action,
+    'role': 'button',
+    'tabIndex': 0
+  }),
+  
+  /**
+   * Get ARIA description for complex controls
+   * @param {string} description - Description text
+   * @param {string} id - Unique ID for describedby
+   * @returns {object} - ARIA attributes
+   */
+  getDescribedBy: (description, id) => {
+    if (!description) return {};
+    
+    const descId = `desc-${id}`;
+    return {
+      'aria-describedby': descId,
+      descriptionId: descId,
+      description
+    };
   }
 };
 

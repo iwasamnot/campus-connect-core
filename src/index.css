@@ -355,6 +355,109 @@
   }
 }
 
+/* Modern CSS Features - Container Queries (when supported) */
+@supports (container-type: inline-size) {
+  .container-query {
+    container-type: inline-size;
+  }
+  
+  @container (min-width: 768px) {
+    .container-md\:grid {
+      display: grid;
+    }
+  }
+}
+
+/* Modern CSS :has() selector support */
+@supports selector(:has(*)) {
+  /* Card with button hover effect */
+  .card:has(button:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Form field with error */
+  .form-group:has(input:invalid) {
+    border-color: #ef4444;
+  }
+  
+  /* Navigation item with active child */
+  nav:has(.active) {
+    /* Styles for active navigation */
+  }
+}
+
+/* CSS Nesting (when supported) */
+@supports (selector(&)) {
+  .modern-button {
+    & :hover {
+      transform: scale(1.05);
+    }
+    
+    & :active {
+      transform: scale(0.95);
+    }
+    
+    & :disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* Color-scheme support for better dark mode */
+@supports (color-scheme: dark light) {
+  :root {
+    color-scheme: light;
+  }
+  
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+/* Scroll-driven animations (experimental but modern) */
+@supports (animation-timeline: scroll()) {
+  .scroll-animate {
+    animation: fadeIn linear;
+    animation-timeline: scroll();
+    animation-range: 0% 50%;
+  }
+}
+
+/* View transitions API support (Chrome 111+) */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.3s;
+  }
+}
+
+/* Backdrop filter support for modern glassmorphism */
+@supports (backdrop-filter: blur(10px)) {
+  .glass-effect {
+    backdrop-filter: blur(10px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .dark .glass-effect {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Modern focus-visible support for better keyboard navigation */
+@supports selector(:focus-visible) {
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+  
+  *:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;

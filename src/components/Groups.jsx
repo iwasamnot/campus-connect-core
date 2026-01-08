@@ -305,7 +305,8 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
           <div className="flex gap-2">
             <button
               onClick={() => setShowBrowseModal(true)}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm transform hover:scale-105 active:scale-95"
+              aria-label="Browse available groups"
             >
               <Globe size={18} />
               <span className="hidden sm:inline">Browse Groups</span>
@@ -313,7 +314,8 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm transform hover:scale-105 active:scale-95"
+              aria-label="Create a new group"
             >
               <Plus size={18} />
               <span className="hidden sm:inline">Create Group</span>

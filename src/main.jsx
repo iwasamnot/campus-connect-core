@@ -43,6 +43,8 @@ import { checkToxicity } from './utils/toxicityChecker.js'
 import { debounce } from './utils/debounce.js'
 import { keyboard } from './utils/accessibility.js'
 import { calculateVisibleRange, getVisibleItems, calculateTotalHeight, calculateOffset } from './utils/virtualScroll.js'
+import { measureWebVitals, observePerformance } from './utils/webVitals.js'
+import { getCurrentLanguage, setLanguage } from './utils/i18n.js'
 
 // Register Logo in the registry so lazy-loaded components can access it
 // Note: Logo is also registered in App.jsx, but we register it here too for safety
@@ -108,12 +110,46 @@ if (false) {
   console.log(_logoRef, _logoNamedRef);
 }
 
+// Initialize internationalization
+if (typeof window !== 'undefined') {
+  const currentLang = getCurrentLanguage();
+  setLanguage(currentLang);
+  
+  // Listen for language changes
+  window.addEventListener('languagechange', () => {
+    // Re-initialize on language change
+    const newLang = getCurrentLanguage();
+    setLanguage(newLang);
+  });
+}
+
+// Measure Core Web Vitals for performance monitoring
+if (typeof window !== 'undefined') {
+  // Measure Web Vitals after page load
+  window.addEventListener('load', () => {
+    measureWebVitals();
+    observePerformance();
+  });
+}
+
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // VitePWA plugin will auto-register, but we can add custom handling here
     navigator.serviceWorker.ready.then(() => {
       console.log('Service Worker ready');
+      
+      // Register background sync for offline actions
+      if ('sync' in self.registration) {
+        // Background sync is available
+        console.log('Background Sync API available');
+      }
+      
+      // Register periodic background sync for cache updates
+      if ('periodicSync' in self.registration) {
+        // Periodic sync is available
+        console.log('Periodic Background Sync API available');
+      }
     }).catch(err => {
       console.error('Service Worker registration failed:', err);
     });

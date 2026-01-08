@@ -29,7 +29,8 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2 } from 'lucide-react';
+import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
 // Use window.__LogoComponent directly to avoid import/export issues
 // This is set in main.jsx and App.jsx before any lazy components load
@@ -1368,6 +1369,18 @@ const ChatArea = ({ setActiveView }) => {
                         <Forward size={10} className="sm:w-3 sm:h-3" />
                       </button>
                     )}
+                    <button
+                      onClick={async () => {
+                        const messageText = message.displayText || message.text || '';
+                        const messageUrl = `${window.location.origin}${window.location.pathname}?message=${message.id}`;
+                        await shareMessage(messageText, message.id);
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                      title="Share message"
+                      aria-label="Share message via Web Share API"
+                    >
+                      <Share2 size={10} className="sm:w-3 sm:h-3" />
+                    </button>
                     {!isAuthor && (
                       <button
                         onClick={() => setReplyingTo(message)}
@@ -1662,6 +1675,7 @@ const ChatArea = ({ setActiveView }) => {
                     onClick={() => setShowFileUpload(!showFileUpload)}
                     className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     title="Upload file"
+                    aria-label="Upload file or image"
                   >
                     <Paperclip size={20} />
                   </button>
@@ -1684,6 +1698,9 @@ const ChatArea = ({ setActiveView }) => {
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                     className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     title="Add emoji"
+                    aria-label="Open emoji picker"
+                    aria-expanded={showEmojiPicker}
+                    aria-haspopup="listbox"
                   >
                     <Smile size={20} />
                   </button>
