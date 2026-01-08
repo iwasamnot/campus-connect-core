@@ -25,11 +25,12 @@ import {
   getDocs,
   getDoc
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 // Use window.__firebaseDb to avoid import/export issues in production builds
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2 } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy } from 'lucide-react';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
 // Use window.__LogoComponent directly to avoid import/export issues
@@ -43,6 +44,13 @@ import EmojiPicker from './EmojiPicker';
 import FileUpload from './FileUpload';
 import MentionAutocomplete from './MentionAutocomplete';
 import AdvancedSearch from './AdvancedSearch';
+import PollCreator from './PollCreator';
+import PollDisplay from './PollDisplay';
+import VoiceRecorder from './VoiceRecorder';
+import VoiceMessage from './VoiceMessage';
+import QuickReplies from './QuickReplies';
+import { translateText } from '../utils/aiTranslation';
+import { summarizeConversation } from '../utils/aiSummarization';
 // Use window globals to avoid import/export issues
 const saveDraft = typeof window !== 'undefined' && window.__saveDraft ? window.__saveDraft : () => {};
 const getDraft = typeof window !== 'undefined' && window.__getDraft ? window.__getDraft : () => null;
@@ -96,6 +104,14 @@ const ChatArea = ({ setActiveView }) => {
   const [forwardingMessage, setForwardingMessage] = useState(null); // Message to forward
   const [showForwardModal, setShowForwardModal] = useState(false); // Show forward modal
   const [previewImage, setPreviewImage] = useState(null); // Image preview state { url, name }
+  const [showPollCreator, setShowPollCreator] = useState(false); // Show poll creator
+  const [polls, setPolls] = useState([]); // List of polls in chat
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false); // Show voice recorder
+  const [showQuickReplies, setShowQuickReplies] = useState(false); // Show quick replies
+  const [translating, setTranslating] = useState(new Set()); // Messages being translated
+  const [translations, setTranslations] = useState({}); // Translated messages cache
+  const [showSummarization, setShowSummarization] = useState(false); // Show summarization
+  const [conversationSummary, setConversationSummary] = useState(null); // Conversation summary
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
@@ -816,6 +832,174 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
+  // Handle poll creation
+  const handleCreatePoll = async (pollData) => {
+    if (!user?.uid || !db) return;
+    
+    try {
+      await addDoc(collection(db, 'polls'), {
+        ...pollData,
+        userId: user.uid,
+        userName: userNames[user.uid] || user.email?.split('@')[0] || 'User',
+        chatType: 'campus',
+        chatId: 'global',
+        createdAt: serverTimestamp(),
+        expiresAt: pollData.expiresAt || serverTimestamp()
+      });
+      success('Poll created successfully!');
+      setShowPollCreator(false);
+    } catch (error) {
+      console.error('Error creating poll:', error);
+      showError('Failed to create poll. Please try again.');
+    }
+  };
+
+  // Handle voice message sending
+  const handleSendVoiceMessage = async (audioBlob, duration) => {
+    if (!user?.uid || !db) return;
+    
+    const storage = typeof window !== 'undefined' && window.__firebaseStorage 
+      ? window.__firebaseStorage 
+      : null;
+    
+    if (!storage) {
+      showError('Storage not available');
+      return;
+    }
+    
+    try {
+      setSending(true);
+      
+      // Upload audio to Firebase Storage
+      const timestamp = Date.now();
+      const fileName = `voice_${timestamp}.webm`;
+      const storageRef = ref(storage, `voice-messages/${fileName}`);
+      await uploadBytes(storageRef, audioBlob);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Get user name
+      let userName = userNames[user.uid] || user.email?.split('@')[0] || 'User';
+      
+      // Save voice message to Firestore
+      await addDoc(collection(db, 'messages'), {
+        text: 'Voice message',
+        displayText: '🎤 Voice message',
+        isVoice: true,
+        voiceUrl: downloadURL,
+        voiceDuration: duration,
+        attachment: {
+          url: downloadURL,
+          name: fileName,
+          type: 'audio/webm',
+          size: audioBlob.size
+        },
+        toxic: false,
+        isAI: false,
+        userId: user.uid,
+        userName: userName,
+        userEmail: user.email || null,
+        timestamp: serverTimestamp(),
+        reactions: {},
+        edited: false,
+        readBy: {
+          [user.uid]: serverTimestamp()
+        }
+      });
+      
+      success('Voice message sent!');
+      setLastMessageTime(Date.now());
+    } catch (error) {
+      console.error('Error sending voice message:', error);
+      showError('Failed to send voice message. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Handle quick reply selection
+  const handleQuickReplySelect = (templateText) => {
+    setNewMessage(templateText);
+    setShowQuickReplies(false);
+    if (messageInputRef.current) {
+      messageInputRef.current.focus();
+    }
+  };
+
+  // Handle message translation
+  const handleTranslateMessage = async (messageId, messageText, targetLang = 'en') => {
+    if (translating.has(messageId)) return;
+    
+    setTranslating(prev => new Set(prev).add(messageId));
+    
+    try {
+      const translatedText = await translateText(messageText, targetLang);
+      setTranslations(prev => ({
+        ...prev,
+        [messageId]: translatedText
+      }));
+      success('Message translated!');
+    } catch (error) {
+      console.error('Error translating message:', error);
+      showError('Failed to translate message. Please try again.');
+    } finally {
+      setTranslating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(messageId);
+        return newSet;
+      });
+    }
+  };
+
+  // Handle conversation summarization
+  const handleSummarizeConversation = async () => {
+    if (messages.length === 0) {
+      showError('No messages to summarize.');
+      return;
+    }
+    
+    try {
+      setShowSummarization(true);
+      const summary = await summarizeConversation(messages, 150);
+      setConversationSummary(summary);
+      success('Conversation summarized!');
+    } catch (error) {
+      console.error('Error summarizing conversation:', error);
+      showError('Failed to summarize conversation. Please try again.');
+      setShowSummarization(false);
+    }
+  };
+
+  // Fetch polls for campus chat
+  useEffect(() => {
+    if (!db) return;
+    
+    const q = query(
+      collection(db, 'polls'),
+      where('chatType', '==', 'campus'),
+      where('chatId', '==', 'global'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+    
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const pollsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPolls(pollsData);
+      },
+      (error) => {
+        if (error.code !== 'failed-precondition') {
+          console.error('Error fetching polls:', error);
+        }
+      }
+    );
+    
+    return () => unsubscribe();
+  }, []);
+
   const handleReportMessage = async (messageId) => {
     if (!reportReason.trim()) {
       showError('Please provide a reason for reporting this message.');
@@ -988,6 +1172,15 @@ const ChatArea = ({ setActiveView }) => {
               >
                 <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
               </button>
+              <button
+                onClick={handleSummarizeConversation}
+                disabled={messages.length === 0 || showSummarization}
+                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                title="Summarize conversation"
+                aria-label="Summarize conversation"
+              >
+                <FileText size={20} className="text-indigo-600 dark:text-indigo-400" />
+              </button>
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(!showExportMenu)}
@@ -1080,7 +1273,16 @@ const ChatArea = ({ setActiveView }) => {
             </p>
           </div>
         ) : (
-          filteredMessages.map((message) => {
+          <>
+            {/* Display Polls */}
+            {polls.length > 0 && polls.slice(0, 5).map((poll) => (
+              <div key={poll.id} className="mb-4 px-2">
+                <PollDisplay poll={poll} pollId={poll.id} collectionName="polls" />
+              </div>
+            ))}
+            
+            {/* Display Messages */}
+            {filteredMessages.map((message) => {
             const isAuthor = message.userId === user?.uid;
             const isAdmin = isAdminRole(userRole);
             const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
@@ -1292,8 +1494,15 @@ const ChatArea = ({ setActiveView }) => {
                     </div>
                   )}
 
+                  {/* Voice Message Display */}
+                  {message.isVoice && message.voiceUrl && (
+                    <div className="mb-2">
+                      <VoiceMessage message={message} isOwnMessage={isAuthor} />
+                    </div>
+                  )}
+
                   {/* Attachment Display */}
-                  {message.attachment && (
+                  {message.attachment && !message.isVoice && (
                     <div className="mb-2">
                       {message.attachment.type?.startsWith('image/') ? (
                         <button
@@ -1309,6 +1518,13 @@ const ChatArea = ({ setActiveView }) => {
                             loading="lazy"
                           />
                         </button>
+                      ) : message.attachment.type?.startsWith('audio/') ? (
+                        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                          <audio controls className="w-full">
+                            <source src={message.attachment.url} type={message.attachment.type} />
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
                       ) : (
                         <a
                           href={message.attachment.url}
@@ -1327,15 +1543,36 @@ const ChatArea = ({ setActiveView }) => {
                   )}
 
                   {/* Message Text with Markdown */}
-                  {message.displayText && (
-                    <p 
-                      className="text-sm whitespace-pre-wrap break-words"
-                      dangerouslySetInnerHTML={{
-                        __html: hasMarkdown(message.displayText) 
-                          ? parseMarkdown(message.displayText)
-                          : message.displayText.replace(/\n/g, '<br />')
-                      }}
-                    />
+                  {message.displayText && !message.isVoice && (
+                    <div>
+                      {translations[message.id] ? (
+                        <div>
+                          <p 
+                            className="text-sm whitespace-pre-wrap break-words mb-1"
+                            dangerouslySetInnerHTML={{
+                              __html: hasMarkdown(message.displayText) 
+                                ? parseMarkdown(message.displayText)
+                                : message.displayText.replace(/\n/g, '<br />')
+                            }}
+                          />
+                          <div className="mt-2 pt-2 border-t border-gray-300 dark:border-gray-600">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Translated:</p>
+                            <p className="text-sm whitespace-pre-wrap break-words italic">
+                              {translations[message.id]}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p 
+                          className="text-sm whitespace-pre-wrap break-words"
+                          dangerouslySetInnerHTML={{
+                            __html: hasMarkdown(message.displayText) 
+                              ? parseMarkdown(message.displayText)
+                              : message.displayText.replace(/\n/g, '<br />')
+                          }}
+                        />
+                      )}
+                    </div>
                   )}
 
                   {/* Action buttons - hidden by default, show on hover only */}
@@ -1381,6 +1618,21 @@ const ChatArea = ({ setActiveView }) => {
                     >
                       <Share2 size={10} className="sm:w-3 sm:h-3" />
                     </button>
+                    {!message.isVoice && (
+                      <button
+                        onClick={() => handleTranslateMessage(message.id, message.displayText || message.text || '')}
+                        disabled={translating.has(message.id)}
+                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
+                        title="Translate message"
+                        aria-label="Translate message"
+                      >
+                        {translating.has(message.id) ? (
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                        ) : (
+                          <Languages size={10} className="sm:w-3 sm:h-3" />
+                        )}
+                      </button>
+                    )}
                     {!isAuthor && (
                       <button
                         onClick={() => setReplyingTo(message)}
@@ -1522,7 +1774,8 @@ const ChatArea = ({ setActiveView }) => {
                 </div>
               </div>
             );
-          })
+          })}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -1690,6 +1943,39 @@ const ChatArea = ({ setActiveView }) => {
                     </div>
                   )}
                 </div>
+
+                {/* Poll Creator */}
+                <button
+                  type="button"
+                  onClick={() => setShowPollCreator(true)}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Create poll"
+                  aria-label="Create a poll"
+                >
+                  <BarChart3 size={20} />
+                </button>
+
+                {/* Voice Recorder */}
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceRecorder(true)}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Record voice message"
+                  aria-label="Record a voice message"
+                >
+                  <Mic size={20} />
+                </button>
+
+                {/* Quick Replies */}
+                <button
+                  type="button"
+                  onClick={() => setShowQuickReplies(true)}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Quick replies"
+                  aria-label="Open quick replies templates"
+                >
+                  <MessageSquare size={20} />
+                </button>
 
                 {/* Emoji Picker */}
                 <div className="relative">
@@ -1880,6 +2166,84 @@ const ChatArea = ({ setActiveView }) => {
           imageName={previewImage.name}
           onClose={() => setPreviewImage(null)}
         />
+      )}
+
+      {/* Poll Creator Modal */}
+      {showPollCreator && (
+        <PollCreator
+          onClose={() => setShowPollCreator(false)}
+          onPollCreate={handleCreatePoll}
+          chatType="campus"
+          chatId="global"
+        />
+      )}
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          onSend={handleSendVoiceMessage}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
+
+      {/* Quick Replies Modal */}
+      {showQuickReplies && (
+        <QuickReplies
+          onSelect={handleQuickReplySelect}
+          onClose={() => setShowQuickReplies(false)}
+        />
+      )}
+
+      {/* Conversation Summarization Modal */}
+      {showSummarization && conversationSummary && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                  <FileText size={24} />
+                  Conversation Summary
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowSummarization(false);
+                    setConversationSummary(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="prose dark:prose-invert max-w-none">
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                  {conversationSummary}
+                </p>
+              </div>
+              <div className="mt-6 flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(conversationSummary);
+                    success('Summary copied to clipboard!');
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Copy size={18} />
+                  Copy Summary
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSummarization(false);
+                    setConversationSummary(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

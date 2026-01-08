@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Play, Pause, Trash2, Send } from 'lucide-react';
+import { Mic, Square, Play, Pause, Trash2, Send, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 /**
@@ -140,7 +140,16 @@ const VoiceRecorder = ({ onSend, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Voice Message</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">Voice Message</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
         {/* Recording Controls */}
         {!audioBlob ? (
@@ -225,15 +234,6 @@ const VoiceRecorder = ({ onSend, onClose }) => {
             </div>
           </div>
         )}
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          aria-label="Close"
-        >
-          <span className="sr-only">Close</span>
-        </button>
       </div>
     </div>
   );
