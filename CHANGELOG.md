@@ -10,6 +10,22 @@
   - Direct navigation to login or registration forms
   - Responsive design for all screen sizes
 
+### Fixed
+- **Landing Page Issues**: Fixed duplicate CampusConnect text display
+  - Removed duplicate text from Logo component on landing page
+  - Single, beautiful gradient text for CampusConnect branding
+  - Fixed scrolling issues by removing fixed height constraints
+  - Improved page layout with proper overflow handling
+
+### Enhanced
+- **Landing Page Design**: Optimized and beautified landing page
+  - Added gradient background (subtle indigo to purple)
+  - Gradient text effect for CampusConnect title
+  - Smooth animations and transitions
+  - Enhanced button designs with hover effects and shimmer animations
+  - Better spacing and typography
+  - Improved dark mode support
+
 ### Changed
 - **Landing Page Flow**: Simplified user entry point
   - Landing page now shows before authentication
