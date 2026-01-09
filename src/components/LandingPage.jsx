@@ -4,21 +4,26 @@ import Logo from './Logo';
 const LandingPage = ({ onLogin, onRegister }) => {
   return (
     <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/30 dark:from-gray-900 dark:via-indigo-950/20 dark:to-purple-950/20">
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
-        <div className="text-center w-full max-w-4xl mx-auto">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 py-12">
+        <div className="text-center w-full max-w-5xl mx-auto">
           {/* Logo - without text */}
-          <div className="mb-8 flex justify-center animate-fade-in">
+          <div className="mb-10 flex justify-center animate-fade-in">
             <Logo size="large" showText={false} />
           </div>
           
-          {/* CampusConnect Text - Single, Beautiful, with proper wrapping */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 dark:from-indigo-400 dark:via-purple-400 dark:to-indigo-400 mb-6 animate-slide-down-fade leading-tight break-words overflow-visible">
-            <span className="block">CampusConnect</span>
-          </h1>
+          {/* Dual Heading - Split Text Effect */}
+          <div className="mb-6 animate-slide-down-fade">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-extrabold text-gray-900 dark:text-white mb-2 leading-[1.1] tracking-tight">
+              <span className="block">Your campus</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 dark:from-indigo-400 dark:via-purple-400 dark:to-indigo-400">
+                connected anywhere
+              </span>
+            </h1>
+          </div>
           
           {/* Subtitle */}
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-xl mx-auto animate-slide-up-fade px-4">
-            Connect with your campus community
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto animate-slide-up-fade px-4">
+            CampusConnect is the most intuitive student messaging platform. Connect with your campus community from any device.
           </p>
           
           {/* Action Buttons */}
