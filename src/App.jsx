@@ -1,5 +1,6 @@
 import { useAuth } from './context/AuthContext';
 import Login from './components/Login';
+import LandingPage from './components/LandingPage';
 import Sidebar from './components/Sidebar';
 import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
@@ -166,6 +167,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hasSetDefaultView, setHasSetDefaultView] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showLogin, setShowLogin] = useState(false);
 
   // Handle Web Share Target API (when app is launched via share)
   useEffect(() => {
@@ -253,7 +255,10 @@ function App() {
   }
 
   if (!user || !userRole) {
-    return <Login />;
+    if (showLogin) {
+      return <Login onBack={() => setShowLogin(false)} />;
+    }
+    return <LandingPage onGetStarted={() => setShowLogin(true)} />;
   }
 
   return (

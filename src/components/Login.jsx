@@ -11,7 +11,7 @@ import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName 
 import { handleError } from '../utils/errorHandler';
 import { keyboard } from '../utils/accessibility';
 
-const Login = () => {
+const Login = ({ onBack }) => {
   const { register, login, resetPassword, resendVerificationEmail } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const { success, error: showError } = useToast();
@@ -166,28 +166,47 @@ const Login = () => {
     // This prevents the viewport from getting "stuck" in standalone mode when the keyboard opens.
     <div className="h-screen h-[100dvh] overflow-y-auto bg-white dark:bg-gray-900 animate-fade-in">
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 relative">
-      {/* Dark Mode Toggle Button */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggleDarkMode();
-        }}
-        className="absolute top-4 right-4 p-3 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50 hover:border-indigo-400 dark:hover:border-indigo-500 animate-spring"
-        aria-label="Toggle dark mode"
-        type="button"
-      >
-        {darkMode ? (
-          <Sun className="text-yellow-500 dark:text-yellow-400" size={24} />
-        ) : (
-          <Moon className="text-black dark:text-white" size={24} />
-        )}
-      </button>
+      {/* Navigation Bar */}
+      <div className="absolute top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Logo size="medium" />
+            <span className="text-xl font-bold text-gray-900 dark:text-white">CampusConnect</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleDarkMode();
+              }}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle dark mode"
+              type="button"
+            >
+              {darkMode ? (
+                <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
+              )}
+            </button>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
+              >
+                Back
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md animate-zoom-in">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md animate-zoom-in mt-20">
         <div className="text-center mb-8 animate-slide-down-fade">
           <Logo size="large" className="mb-4 animate-bounce-in" />
-          <p className="text-black dark:text-white mt-2 font-medium animate-slide-up-fade">Secure Student Messaging Platform</p>
+          <h1 className="text-2xl font-bold text-black dark:text-white mt-2 mb-2">Welcome Back</h1>
+          <p className="text-gray-600 dark:text-gray-400 animate-slide-up-fade">Sign in to continue to CampusConnect</p>
         </div>
 
         {/* Toggle between Login and Register */}
