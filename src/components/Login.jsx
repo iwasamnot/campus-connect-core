@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -11,11 +11,16 @@ import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName 
 import { handleError } from '../utils/errorHandler';
 import { keyboard } from '../utils/accessibility';
 
-const Login = ({ onBack }) => {
+const Login = ({ onBack, initialMode = 'login' }) => {
   const { register, login, resetPassword, resendVerificationEmail } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const { success, error: showError } = useToast();
-  const [mode, setMode] = useState('login'); // 'login' or 'register' or 'reset'
+  const [mode, setMode] = useState(initialMode); // 'login' or 'register' or 'reset'
+  
+  // Update mode when initialMode changes
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');

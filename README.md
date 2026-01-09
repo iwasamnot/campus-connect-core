@@ -4,6 +4,12 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ## Features
 
+### Landing Page
+- **Clean Minimal Design**: Simple, elegant landing page with CampusConnect branding
+- **Quick Access**: Direct Register and Login buttons with icons for easy navigation
+- **Modern UI**: Centered layout with logo and clear call-to-action buttons
+- **Responsive**: Works beautifully on all devices
+
 ### Appearance & Themes
 - **Dual Theme System**: Choose between Fun (colorful & playful) or Minimal (sleek & modern) themes
 - **Dark Mode**: Full dark mode support with automatic system preference detection

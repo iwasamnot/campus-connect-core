@@ -168,6 +168,7 @@ function App() {
   const [hasSetDefaultView, setHasSetDefaultView] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showLogin, setShowLogin] = useState(false);
+  const [loginMode, setLoginMode] = useState('login'); // 'login' or 'register'
 
   // Handle Web Share Target API (when app is launched via share)
   useEffect(() => {
@@ -256,9 +257,20 @@ function App() {
 
   if (!user || !userRole) {
     if (showLogin) {
-      return <Login onBack={() => setShowLogin(false)} />;
+      return <Login onBack={() => setShowLogin(false)} initialMode={loginMode} />;
     }
-    return <LandingPage onGetStarted={() => setShowLogin(true)} />;
+    return (
+      <LandingPage 
+        onLogin={() => {
+          setLoginMode('login');
+          setShowLogin(true);
+        }}
+        onRegister={() => {
+          setLoginMode('register');
+          setShowLogin(true);
+        }}
+      />
+    );
   }
 
   return (

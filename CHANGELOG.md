@@ -1,5 +1,28 @@
 # Changelog
 
+## [7.1.0] - 2025-01-XX
+
+### Added
+- **Clean Landing Page**: Redesigned landing page with minimal, elegant design
+  - Simple centered layout with CampusConnect logo and branding
+  - Two prominent action buttons: Register and Login with icons
+  - Clean, modern aesthetic focused on user experience
+  - Direct navigation to login or registration forms
+  - Responsive design for all screen sizes
+
+### Changed
+- **Landing Page Flow**: Simplified user entry point
+  - Landing page now shows before authentication
+  - Separate Register and Login buttons for clear user choice
+  - Login component accepts initialMode prop for direct form display
+  - Improved navigation between landing page and authentication forms
+
+### Technical Improvements
+- Updated App.jsx to handle separate login/register flows
+- Enhanced Login component with initialMode support
+- Simplified LandingPage component for better performance
+- Updated branding and meta tags in index.html
+
 ## [7.0.0] - 2024-12-XX
 
 ### Major Update: Major New Functionalities
