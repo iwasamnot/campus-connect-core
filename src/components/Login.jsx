@@ -200,7 +200,12 @@ const Login = ({ onBack, initialMode = 'login' }) => {
         ))}
       </div>
 
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 relative z-10">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 relative z-10 safe-area-inset" style={{
+        paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 1rem)`,
+        paddingBottom: `max(1rem, env(safe-area-inset-bottom, 0px) + 1rem)`,
+        paddingLeft: `max(1rem, env(safe-area-inset-left, 0px) + 1rem)`,
+        paddingRight: `max(1rem, env(safe-area-inset-right, 0px) + 1rem)`
+      }}>
         {/* Minimal Navigation Bar */}
         <div className="absolute top-0 left-0 right-0 z-50 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">

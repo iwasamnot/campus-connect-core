@@ -7,12 +7,42 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        'xs': '320px',
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+        '3xl': '1920px',
+        // PWA breakpoints
+        'portrait': {'raw': '(orientation: portrait)'},
+        'landscape': {'raw': '(orientation: landscape)'},
+        'touch': {'raw': '(hover: none) and (pointer: coarse)'},
+        'hover': {'raw': '(hover: hover)'},
+        'motion': {'raw': '(prefers-reduced-motion: no-preference)'},
+        'dark-mode': {'raw': '(prefers-color-scheme: dark)'},
+      },
       colors: {
         'accent': 'var(--accent-color)',
         'accent-dark': 'var(--accent-color-dark)',
       },
       fontSize: {
         'base': 'var(--base-font-size)',
+        'xs': ['0.75rem', { lineHeight: '1rem' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'base': ['1rem', { lineHeight: '1.5rem' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+      },
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
       },
       animation: {
         'fade-in': 'fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)',

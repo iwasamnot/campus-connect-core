@@ -38,8 +38,13 @@ const LandingPage = ({ onLogin, onRegister }) => {
         ))}
       </div>
 
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 py-12 relative z-10">
-        <div className="text-center w-full max-w-4xl mx-auto">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-4 sm:px-6 py-12 relative z-10 safe-area-inset">
+        <div className="text-center w-full max-w-4xl mx-auto" style={{
+          paddingTop: `max(3rem, env(safe-area-inset-top, 0px) + 1rem)`,
+          paddingBottom: `max(3rem, env(safe-area-inset-bottom, 0px) + 1rem)`,
+          paddingLeft: `max(1rem, env(safe-area-inset-left, 0px) + 1rem)`,
+          paddingRight: `max(1rem, env(safe-area-inset-right, 0px) + 1rem)`
+        }}>
           {/* Logo - Minimal */}
           <div className="mb-16 flex justify-center">
             <div className="animate-float-slow">
