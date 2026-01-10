@@ -93,7 +93,7 @@ const ChatArea = ({ setActiveView }) => {
   const [reacting, setReacting] = useState(new Set()); // Track reactions in progress to prevent duplicates
   const [aiHelpMode, setAiHelpMode] = useState(false); // Toggle for AI Help mode
   const [waitingForAI, setWaitingForAI] = useState(false); // Track if waiting for AI response
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-pro'); // Default model
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default model (recommended: fast & free)
   const [showModelSelector, setShowModelSelector] = useState(false); // Show model selector dropdown
   const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Show emoji picker
   const [showFileUpload, setShowFileUpload] = useState(false); // Show file upload
@@ -218,7 +218,7 @@ const ChatArea = ({ setActiveView }) => {
     { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
     { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
     { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
-    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Paid - Standard Model', free: false },
+    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 1.5 Flash instead', free: false },
   ];
 
   // Initialize Gemini AI with selected model
@@ -230,8 +230,10 @@ const ChatArea = ({ setActiveView }) => {
     
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
+      // Use the selected model, fallback to gemini-1.5-flash if model not found
+      const modelToUse = modelName || 'gemini-1.5-flash';
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-2.5-flash',
+        model: modelToUse,
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -254,7 +256,17 @@ const ChatArea = ({ setActiveView }) => {
       });
       return model;
     } catch (error) {
-      console.error('Error initializing Gemini:', error);
+      console.error('Error initializing Gemini model:', error);
+      // Fallback to gemini-1.5-flash if the selected model fails
+      if (modelName !== 'gemini-1.5-flash') {
+        try {
+          const genAI = new GoogleGenerativeAI(apiKey);
+          return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        } catch (fallbackError) {
+          console.error('Fallback model also failed:', fallbackError);
+          return null;
+        }
+      }
       return null;
     }
   };

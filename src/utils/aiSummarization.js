@@ -24,12 +24,12 @@ export const summarizeConversation = async (messages, maxLength = 100) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    // Use a stable model name - try gemini-pro first, fallback to gemini-1.5-pro
+    // Use gemini-1.5-flash (fast, free, recommended) with fallback to gemini-1.5-pro
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-pro not available, trying gemini-1.5-pro:', modelError);
+      console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', modelError);
       model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     }
 
@@ -101,12 +101,12 @@ export const extractKeyPoints = async (messages) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    // Use a stable model name - try gemini-pro first, fallback to gemini-1.5-pro
+    // Use gemini-1.5-flash (fast, free, recommended) with fallback to gemini-1.5-pro
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-pro not available, trying gemini-1.5-pro:', modelError);
+      console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', modelError);
       model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     }
 
@@ -181,12 +181,12 @@ export const generateMeetingNotes = async (messages, title = null) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    // Use a stable model name - try gemini-pro first, fallback to gemini-1.5-pro
+    // Use gemini-1.5-flash (fast, free, recommended) with fallback to gemini-1.5-pro
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-pro not available, trying gemini-1.5-pro:', modelError);
+      console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', modelError);
       model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     }
 
