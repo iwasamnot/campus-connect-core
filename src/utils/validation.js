@@ -36,7 +36,7 @@ export const isValidAdminEmail = (email) => {
   if (!email || typeof email !== 'string') return false;
   
   const emailLower = email.toLowerCase().trim();
-  return emailLower.startsWith('admin') && emailLower.includes('@sistc.app');
+  return emailLower === 'admin@sistc.app';
 };
 
 /**

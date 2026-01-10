@@ -104,25 +104,45 @@ const Login = ({ onBack, initialMode = 'login' }) => {
           return;
         }
         await login(sanitizedEmail, password);
+        // Login successful - clear any errors
+        setError(null);
       }
     } catch (err) {
-      const { message } = handleError(err, 'Login/Register', (errorMessage) => {
-        setError(errorMessage);
-      });
+      console.error('Login/Register error:', err);
+      let errorMessage = 'An error occurred. Please try again.';
       
-      // Special handling for email verification
+      // Handle specific Firebase auth errors
       if (err.code === 'auth/email-not-verified' || err.code === 'EMAIL_NOT_VERIFIED') {
-        if (validateAdminEmail(email)) {
-          setError('Admin login error. Please contact support if this issue persists.');
+        if (validateAdminEmail(sanitizeEmail(email))) {
+          errorMessage = 'Admin login error. Please contact support if this issue persists.';
         } else {
-          setError('Please verify your email address before logging in. Check your inbox for the verification email.');
+          errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification email.';
           setEmailVerificationSent(true);
         }
+      } else if (err.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email address. Please register first.';
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        errorMessage = 'Incorrect password. Please try again or reset your password.';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format. Please check your email and try again.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later or reset your password.';
+      } else if (err.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (err.code === 'auth/user-disabled') {
+        errorMessage = 'This account has been disabled. Please contact support.';
+      } else if (err.message) {
+        errorMessage = err.message;
       } else {
-        setError(message);
+        // Fallback to handleError for other errors
+        const { message } = handleError(err, 'Login/Register', (errorMsg) => {
+          return errorMsg;
+        });
+        if (message) errorMessage = message;
       }
       
-      showError(message);
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -233,25 +253,37 @@ const Login = ({ onBack, initialMode = 'login' }) => {
           >
             <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
               <motion.button
-                onClick={onBack || (() => window.history.back())}
+                onClick={onBack || (() => {
+                  if (window.history.length > 1) {
+                    window.history.back();
+                  } else {
+                    // Fallback: use the showLogin state change
+                    if (typeof onBack === 'function') {
+                      onBack();
+                    } else {
+                      // Force navigation to landing page
+                      window.location.href = '/';
+                    }
+                  }
+                })}
                 whileHover={{ scale: 1.05, x: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors rounded-lg hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
                 type="button"
               >
                 <svg
-                  width="16"
-                  height="16"
+                  width="18"
+                  height="18"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
-                <span>Back</span>
+                <span className="text-sm">Back</span>
               </motion.button>
               <div className="flex items-center gap-2">
                 <Logo size="small" showText={false} />
@@ -264,7 +296,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                 }}
                 whileHover={{ scale: 1.1, rotate: 15 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors"
+                className="p-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg shadow-md hover:shadow-lg transition-all"
                 aria-label="Toggle dark mode"
                 type="button"
               >
@@ -280,9 +312,38 @@ const Login = ({ onBack, initialMode = 'login' }) => {
 
         {/* Animated Form Container */}
         <ScaleIn delay={0.3} duration={0.6}>
-          <div className="bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 rounded-2xl p-6 md:p-8 w-full max-w-md mx-auto">
+          <div className="bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 rounded-2xl p-6 md:p-8 w-full max-w-3xl mx-auto">
             <StaggerContainer staggerDelay={0.1} initialDelay={0.4}>
               <StaggerItem>
+                {/* Back Button Inside Form - Always Visible */}
+                <div className="mb-4 flex justify-start">
+                  <button
+                    onClick={onBack || (() => {
+                      if (window.history.length > 1) {
+                        window.history.back();
+                      } else {
+                        window.location.href = '/';
+                      }
+                    })}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                    type="button"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    <span>Back to Home</span>
+                  </button>
+                </div>
+                
                 <div className="text-center mb-6">
                   <motion.div
                     className="mb-4 flex justify-center"
@@ -563,13 +624,41 @@ const Login = ({ onBack, initialMode = 'login' }) => {
               </StaggerItem>
             </StaggerContainer>
 
+            {/* Back to Landing Page Button */}
+            <button
+              onClick={onBack || (() => {
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  window.location.href = '/';
+                }
+              })}
+              className="w-full mt-4 mb-2 flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+              type="button"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span>Back to Home</span>
+            </button>
+
             {mode !== 'reset' && (
               <button
                 onClick={() => {
                   setMode('reset');
                   setError(null);
                 }}
-                className="w-full mt-4 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-light transition-colors"
+                className="w-full mt-2 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                type="button"
               >
                 Forgot password?
               </button>
