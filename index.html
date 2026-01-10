@@ -31,7 +31,7 @@
       window.__ReactPreload = true;
     </script>
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover, minimum-scale=0.5" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover, minimum-scale=0.5, shrink-to-fit=no" />
     <meta name="description" content="Your campus connected anywhere. CampusConnect is the most intuitive student messaging platform - connect with your campus community from any device." />
     <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)" />
@@ -87,13 +87,20 @@
     }
     </script>
     
-    <!-- PWA Meta Tags - Optimized for all screen sizes -->
+    <!-- PWA Meta Tags - Optimized for all screen sizes and devices -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="CampusConnect" />
+    <meta name="apple-touch-fullscreen" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="telephone=no, email=no, address=no" />
     <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="msapplication-navbutton-color" content="#4f46e5" />
+    <meta name="application-name" content="CampusConnect" />
+    <!-- Prevent iOS Safari from changing text size -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Prevent zoom on input focus (iOS) -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/logo.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/logo.png" />

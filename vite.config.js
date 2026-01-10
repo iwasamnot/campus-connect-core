@@ -39,13 +39,19 @@ export default defineConfig({
         short_name: 'CampusConnect',
         description: 'Secure student messaging platform with AI-powered content moderation, real-time chat, group messaging, and intelligent AI assistant',
         theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        background_color: '#050505', // Dark background for better splash screen
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
         orientation: 'any', // Support both portrait and landscape
         scope: '/',
         start_url: '/',
         id: '/',
+        lang: 'en',
+        dir: 'ltr',
         categories: ['education', 'social', 'communication'],
+        edge_side_panel: {
+          preferred_width: 400
+        },
         share_target: {
           action: '/',
           method: 'GET',
@@ -75,15 +81,81 @@ export default defineConfig({
         icons: [
           {
             src: '/logo.png',
+            sizes: '48x48',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '72x72',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '128x128',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '144x144',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '152x152',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '167x167',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
             src: '/logo.png',
+            sizes: '256x256',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '384x384',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          },
+          {
+            src: '/logo.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any'
           }
         ],
         shortcuts: [
@@ -104,11 +176,18 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
-        maximumFileSizeToCacheInBytes: 5000000, // 5 MB - increased to accommodate ZEGOCLOUD SDK (2.16 MB)
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,webp}'],
+        maximumFileSizeToCacheInBytes: 10000000, // 10 MB - increased for better mobile caching
         cleanupOutdatedCaches: true,
         skipWaiting: true, // Immediately activate new service worker
         clientsClaim: true, // Take control of all clients immediately
+        // Optimize for mobile networks
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/],
+        // Better offline support for mobile
+        offlineGoogleAnalytics: false,
+        // Optimize cache for mobile devices
+        cacheId: 'campusconnect-v1',
         runtimeCaching: [
           {
             // CRITICAL: Handle JS module requests BEFORE navigateFallback
