@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Mic, Square, Play, Pause, Trash2, Send, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -138,17 +139,26 @@ const VoiceRecorder = ({ onSend, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] max-w-md w-full p-6 backdrop-blur-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white">Voice Message</h2>
-          <button
+          <h2 className="text-xl font-bold text-white text-glow">Voice Message</h2>
+          <motion.button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            whileHover={{ scale: 1.05, rotate: 90 }}
+            whileTap={{ scale: 0.95 }}
+            className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
             aria-label="Close"
           >
             <X size={24} />
-          </button>
+          </motion.button>
         </div>
 
         {/* Recording Controls */}
@@ -169,10 +179,10 @@ const VoiceRecorder = ({ onSend, onClose }) => {
             </div>
 
             <div className="text-center">
-              <p className="text-lg font-semibold text-gray-800 dark:text-white">
+              <p className="text-lg font-semibold text-white">
                 {formatTime(recordingTime)}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-white/60 mt-1">
                 {isRecording ? 'Recording...' : 'Tap to start recording'}
               </p>
             </div>
@@ -188,28 +198,31 @@ const VoiceRecorder = ({ onSend, onClose }) => {
             />
 
             <div className="flex items-center gap-4">
-              <button
+              <motion.button
                 onClick={playRecording}
-                className="w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-              </button>
+              </motion.button>
 
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-800 dark:text-white">
+                  <span className="text-sm font-medium text-white/80">
                     {formatTime(duration)} / {formatTime(Math.floor(audioRef.current?.duration || 0))}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-indigo-600 h-2 rounded-full transition-all"
-                    style={{
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{
                       width: audioRef.current
                         ? `${(audioRef.current.currentTime / audioRef.current.duration) * 100}%`
                         : '0%'
                     }}
+                    className="bg-indigo-500 h-2 rounded-full transition-all"
                   />
                 </div>
               </div>
@@ -217,24 +230,28 @@ const VoiceRecorder = ({ onSend, onClose }) => {
 
             {/* Actions */}
             <div className="flex gap-3">
-              <button
+              <motion.button
                 onClick={handleDelete}
-                className="flex-1 px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-600"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 px-4 py-2 text-red-400 hover:text-red-300 glass-panel border border-red-500/30 hover:border-red-500/50 rounded-xl transition-all font-medium"
               >
                 <Trash2 size={20} className="inline mr-2" />
                 Delete
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={handleSend}
-                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all font-medium shadow-lg hover:shadow-xl"
               >
                 <Send size={20} className="inline mr-2" />
                 Send
-              </button>
+              </motion.button>
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

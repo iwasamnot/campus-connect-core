@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { BarChart3, CheckCircle, Users, Clock } from 'lucide-react';
@@ -87,14 +88,18 @@ const PollDisplay = ({ poll, pollId, collectionName }) => {
   };
 
   return (
-    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 mb-2">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-panel bg-indigo-600/10 border border-indigo-500/30 rounded-xl p-4 mb-2 backdrop-blur-sm"
+    >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <BarChart3 size={18} className="text-indigo-600 dark:text-indigo-400" />
-            <h3 className="font-semibold text-gray-800 dark:text-white">{poll.question}</h3>
+            <BarChart3 size={18} className="text-indigo-400" />
+            <h3 className="font-semibold text-white">{poll.question}</h3>
           </div>
-          <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400 mt-1">
+          <div className="flex items-center gap-4 text-xs text-white/60 mt-1">
             <span className="flex items-center gap-1">
               <Users size={14} />
               {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
@@ -105,14 +110,14 @@ const PollDisplay = ({ poll, pollId, collectionName }) => {
                 {formatExpiryDate(poll.expiresAt)}
               </span>
             )}
-            {hasExpired && <span className="text-red-600 dark:text-red-400">Expired</span>}
+            {hasExpired && <span className="text-red-400">Expired</span>}
             {poll.anonymous && (
-              <span className="text-gray-500">Anonymous</span>
+              <span className="text-white/50">Anonymous</span>
             )}
           </div>
         </div>
         {hasVoted && (
-          <CheckCircle size={20} className="text-green-600 dark:text-green-400 flex-shrink-0" />
+          <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
         )}
       </div>
 
@@ -123,14 +128,16 @@ const PollDisplay = ({ poll, pollId, collectionName }) => {
           const isWinning = !hasExpired && totalVotes > 0 && (option.votes || 0) === Math.max(...poll.options.map(o => o.votes || 0));
 
           return (
-            <button
+            <motion.button
               key={index}
               onClick={() => !voting && !hasExpired && handleVote(index)}
               disabled={voting || hasExpired || (!poll.allowMultiple && hasVoted && !userVoted)}
-              className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+              whileHover={!voting && !hasExpired && (!hasVoted || poll.allowMultiple || userVoted) ? { scale: 1.02 } : {}}
+              whileTap={!voting && !hasExpired && (!hasVoted || poll.allowMultiple || userVoted) ? { scale: 0.98 } : {}}
+              className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
                 userVoted
-                  ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-100 dark:bg-indigo-900/40'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                  ? 'border-indigo-500 bg-indigo-600/30'
+                  : 'border-white/20 hover:border-indigo-500/50'
               } ${
                 hasExpired || (hasVoted && !poll.allowMultiple && !userVoted)
                   ? 'opacity-60 cursor-not-allowed'
@@ -138,32 +145,34 @@ const PollDisplay = ({ poll, pollId, collectionName }) => {
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className={`font-medium ${userVoted ? 'text-indigo-900 dark:text-indigo-100' : 'text-gray-800 dark:text-white'}`}>
+                <span className={`font-medium ${userVoted ? 'text-white' : 'text-white/90'}`}>
                   {option.text}
-                  {userVoted && <CheckCircle size={16} className="inline ml-2 text-indigo-600 dark:text-indigo-400" />}
+                  {userVoted && <CheckCircle size={16} className="inline ml-2 text-indigo-400" />}
                   {isWinning && totalVotes > 0 && (
-                    <span className="ml-2 text-xs bg-yellow-400 dark:bg-yellow-600 text-yellow-900 dark:text-yellow-100 px-2 py-0.5 rounded">Winner</span>
+                    <span className="ml-2 text-xs bg-yellow-500/30 border border-yellow-500/50 text-yellow-300 px-2 py-0.5 rounded-lg font-medium">Winner</span>
                   )}
                 </span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-white/70">
                   {percentage}% ({option.votes || 0})
                 </span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                <div
+              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${percentage}%` }}
+                  transition={{ duration: 0.5 }}
                   className={`h-full transition-all duration-300 ${
                     userVoted
-                      ? 'bg-indigo-600 dark:bg-indigo-400'
-                      : 'bg-indigo-400 dark:bg-indigo-500'
+                      ? 'bg-indigo-500'
+                      : 'bg-indigo-400'
                   }`}
-                  style={{ width: `${percentage}%` }}
                 />
               </div>
-            </button>
+            </motion.button>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Play, Pause, Download, Mic } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 // Use window.__firebaseStorage to avoid import/export issues
@@ -67,39 +68,41 @@ const VoiceMessage = ({ message, isOwnMessage }) => {
   };
 
   return (
-    <div className={`flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800 ${
-      isOwnMessage ? 'bg-indigo-100 dark:bg-indigo-900/30' : ''
-    }`}>
-      <button
+    <motion.div
+      whileHover={{ scale: 1.01, y: -2 }}
+      className={`flex items-center gap-3 p-3 glass-panel bg-indigo-600/10 rounded-xl border border-indigo-500/30 backdrop-blur-sm ${
+        isOwnMessage ? 'bg-indigo-600/20 border-indigo-500/50' : ''
+      }`}
+    >
+      <motion.button
         onClick={togglePlay}
-        className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-          isOwnMessage
-            ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-        } flex-shrink-0`}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-indigo-600 hover:bg-indigo-700 text-white flex-shrink-0 shadow-lg hover:shadow-xl"
         aria-label={isPlaying ? 'Pause voice message' : 'Play voice message'}
       >
         {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-      </button>
+      </motion.button>
 
       <audio ref={audioRef} src={message.voiceUrl} preload="metadata" />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <Mic size={16} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Voice Message</span>
+          <Mic size={16} className="text-indigo-400 flex-shrink-0" />
+          <span className="text-xs font-medium text-white/70">Voice Message</span>
         </div>
         
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-1">
-          <div
-            className="bg-indigo-600 h-2 rounded-full transition-all"
-            style={{
+        <div className="w-full bg-white/10 rounded-full h-2 mb-1">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{
               width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%'
             }}
+            className="bg-indigo-500 h-2 rounded-full transition-all"
           />
         </div>
 
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between text-xs text-white/60">
           <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
           {message.voiceDuration && (
             <span>{formatTime(message.voiceDuration)}</span>
@@ -107,14 +110,16 @@ const VoiceMessage = ({ message, isOwnMessage }) => {
         </div>
       </div>
 
-      <button
+      <motion.button
         onClick={handleDownload}
-        className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="p-2 text-white/70 hover:text-white glass-panel border border-white/10 hover:border-white/20 rounded-lg transition-all flex-shrink-0"
         aria-label="Download voice message"
       >
         <Download size={18} />
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   );
 };
 
