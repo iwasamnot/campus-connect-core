@@ -13,18 +13,25 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim() || '';
  */
 export const summarizeConversation = async (messages, maxLength = 100) => {
   if (!messages || messages.length === 0) {
-    return 'No messages to summarize.';
+    throw new Error('No messages to summarize.');
   }
 
   if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
     console.warn('Gemini API key not available for summarization');
-    return 'Summarization requires API key configuration.';
+    throw new Error('Summarization requires API key configuration. Please set VITE_GEMINI_API_KEY in your environment variables.');
   }
 
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    // Use a stable model name - try gemini-pro first, fallback to gemini-1.5-pro
+    let model;
+    try {
+      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    } catch (modelError) {
+      console.warn('gemini-pro not available, trying gemini-1.5-pro:', modelError);
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    }
 
     // Format messages for summarization
     const conversationText = messages
@@ -55,10 +62,24 @@ Summary:`;
     const response = await result.response;
     const summary = response.text().trim();
 
-    return summary || 'Unable to generate summary.';
+    if (!summary || summary.trim() === '') {
+      throw new Error('Empty summary received from AI.');
+    }
+
+    return summary;
   } catch (error) {
     console.error('Summarization error:', error);
-    return 'Failed to generate summary. Please try again later.';
+    
+    // Check for specific error types
+    if (error.message && error.message.includes('API key')) {
+      throw new Error('API key is invalid or missing. Please check your VITE_GEMINI_API_KEY configuration.');
+    } else if (error.message && error.message.includes('quota') || error.message && error.message.includes('429')) {
+      throw new Error('API quota exceeded. Please try again later.');
+    } else if (error.message && error.message.includes('blocked') || error.message && error.message.includes('403')) {
+      throw new Error('API access is blocked. Please check your API key permissions in Google Cloud Console.');
+    }
+    
+    throw new Error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
   }
 };
 
@@ -80,7 +101,14 @@ export const extractKeyPoints = async (messages) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    // Use a stable model name - try gemini-pro first, fallback to gemini-1.5-pro
+    let model;
+    try {
+      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    } catch (modelError) {
+      console.warn('gemini-pro not available, trying gemini-1.5-pro:', modelError);
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    }
 
     const conversationText = messages
       .filter(msg => !msg.isAI && (msg.text || msg.displayText))
@@ -153,7 +181,14 @@ export const generateMeetingNotes = async (messages, title = null) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    // Use a stable model name - try gemini-pro first, fallback to gemini-1.5-pro
+    let model;
+    try {
+      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    } catch (modelError) {
+      console.warn('gemini-pro not available, trying gemini-1.5-pro:', modelError);
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    }
 
     const conversationText = messages
       .filter(msg => !msg.isAI && (msg.text || msg.displayText))

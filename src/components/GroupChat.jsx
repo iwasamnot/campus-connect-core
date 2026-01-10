@@ -706,14 +706,14 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
   if (!group) {
     return (
-      <div className="flex items-center justify-center h-screen bg-transparent">
+      <div className="flex items-center justify-center h-full min-h-[400px] bg-transparent">
         <p className="text-white/60 font-medium">No group selected</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-transparent">
+    <div className="flex flex-col h-full min-h-0 bg-transparent relative overflow-hidden">
       {/* Chat Header */}
       <div 
         className="glass-panel border-b border-white/10 backdrop-blur-xl px-4 md:px-6 py-3 md:py-4"
@@ -793,9 +793,9 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4 min-h-0" style={{ minHeight: '400px' }}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+          <div className="flex flex-col items-center justify-center min-h-[400px] animate-fade-in">
             <img 
               src="/logo.png" 
               alt="CampusConnect Logo" 
@@ -1162,13 +1162,14 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
       {/* Members Modal */}
       {showMembersModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowMembersModal(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[90] p-4" onClick={() => setShowMembersModal(false)} style={{ zIndex: 9990 }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             className="glass-panel border border-white/10 rounded-[2rem] shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col backdrop-blur-xl" onClick={(e) => e.stopPropagation()}
+            style={{ zIndex: 9991 }}
           >
             <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-bold text-white text-glow">Group Members</h3>

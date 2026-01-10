@@ -261,8 +261,18 @@ const ChatArea = ({ setActiveView }) => {
 
   // Fetch all users to get names and profile data (limited to prevent quota exhaustion)
   // Using one-time read instead of real-time listener to reduce reads
+  // OPTIMIZED: Added ref to prevent multiple simultaneous fetches
+  const fetchingUsersRef = useRef(false);
+  
   useEffect(() => {
+    // Prevent multiple simultaneous fetches (fixes triple loading issue)
+    if (fetchingUsersRef.current) {
+      console.log('ChatArea - User fetch already in progress, skipping...');
+      return;
+    }
+    
     let mounted = true;
+    fetchingUsersRef.current = true;
     
     const fetchUsers = async () => {
       try {
@@ -272,7 +282,10 @@ const ChatArea = ({ setActiveView }) => {
         );
         
         const snapshot = await getDocs(q);
-        if (!mounted) return;
+        if (!mounted) {
+          fetchingUsersRef.current = false;
+          return;
+        }
         
         const users = {};
         const names = {};
@@ -318,21 +331,29 @@ const ChatArea = ({ setActiveView }) => {
           names: names,
           userIds: Object.keys(names)
         });
+        
+        fetchingUsersRef.current = false;
       } catch (error) {
         console.error('ChatArea - Error fetching users:', error);
+        fetchingUsersRef.current = false;
       }
     };
     
     fetchUsers();
     
     // Refresh users every 5 minutes instead of real-time
-    const intervalId = setInterval(fetchUsers, 5 * 60 * 1000);
+    const intervalId = setInterval(() => {
+      if (!fetchingUsersRef.current) {
+        fetchUsers();
+      }
+    }, 5 * 60 * 1000);
     
     return () => {
       mounted = false;
+      fetchingUsersRef.current = false;
       clearInterval(intervalId);
     };
-  }, []);
+  }, []); // Empty deps - only run once on mount
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -962,13 +983,21 @@ const ChatArea = ({ setActiveView }) => {
     
     try {
       setShowSummarization(true);
+      setConversationSummary(null); // Reset previous summary
       const summary = await summarizeConversation(messages, 150);
-      setConversationSummary(summary);
-      success('Conversation summarized!');
+      
+      // If we get here, summary was successful
+      if (summary && summary.trim() !== '') {
+        setConversationSummary(summary);
+        success('Conversation summarized successfully!');
+      } else {
+        throw new Error('Empty summary received');
+      }
     } catch (error) {
       console.error('Error summarizing conversation:', error);
-      showError('Failed to summarize conversation. Please try again.');
+      showError(error.message || 'Failed to summarize conversation. Please ensure the Gemini API key is configured and try again.');
       setShowSummarization(false);
+      setConversationSummary(null);
     }
   };
 
@@ -1292,64 +1321,75 @@ const ChatArea = ({ setActiveView }) => {
           )}
 
           {/* Messages Area - Fluid.so aesthetic */}
-          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent">
-        {filteredMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in">
-            <img 
-              src="/logo.png" 
-              alt="CampusConnect Logo" 
-              className="w-24 h-24 mb-4 opacity-50 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
-                              <p className="text-white/60 text-center">
-                    {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
-                  </p>
-          </div>
-        ) : (
-          <>
-            {/* Display Polls */}
-            {polls.length > 0 && polls.slice(0, 5).map((poll) => (
-              <div key={poll.id} className="mb-4 px-2">
-                <PollDisplay poll={poll} pollId={poll.id} collectionName="polls" />
+          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent" style={{ minHeight: '400px' }}>
+            {filteredMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+                <img 
+                  src="/logo.png" 
+                  alt="CampusConnect Logo" 
+                  className="w-24 h-24 mb-4 opacity-50 object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                <p className="text-white/60 text-center">
+                  {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
+                </p>
               </div>
-            ))}
-            
-            {/* Display Messages */}
-            {filteredMessages.map((message) => {
-            const isAuthor = message.userId === user?.uid;
-            const isAdmin = isAdminRole(userRole);
-            const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
-            const canEdit = isAuthor && !message.edited;
-            // Allow admins to delete AI messages, or users to delete their own messages
-            const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
-            const userReaction = message.reactions?.[user.uid];
-            const reactionCounts = message.reactions ? Object.values(message.reactions).reduce((acc, emoji) => {
-              acc[emoji] = (acc[emoji] || 0) + 1;
-              return acc;
-            }, {}) : {};
-            const userProfile = userProfiles[message.userId] || {};
-            const profilePicture = userProfile.profilePicture;
+            ) : (
+              <>
+                {/* Display Polls */}
+                {polls.length > 0 && polls.slice(0, 5).map((poll) => (
+                  <div key={poll.id} className="mb-4 px-2">
+                    <PollDisplay poll={poll} pollId={poll.id} collectionName="polls" />
+                  </div>
+                ))}
+                
+                {/* Display Messages */}
+                {filteredMessages.map((message) => {
+                  const isAuthor = message.userId === user?.uid;
+                  const isAdmin = isAdminRole(userRole);
+                  const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
+                  const canEdit = isAuthor && !message.edited;
+                  // Allow admins to delete AI messages, or users to delete their own messages
+                  const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
+                  const userReaction = message.reactions?.[user.uid];
+                  const reactionCounts = message.reactions ? Object.values(message.reactions).reduce((acc, emoji) => {
+                    acc[emoji] = (acc[emoji] || 0) + 1;
+                    return acc;
+                  }, {}) : {};
+                  const userProfile = userProfiles[message.userId] || {};
+                  const profilePicture = userProfile.profilePicture;
 
-            return (
-              <motion.div
-                id={`message-${message.id}`}
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className={`flex items-start gap-2 group/message relative ${
-                  isAuthor ? 'justify-end' : 'justify-start'
-                }`}
-                onMouseEnter={(e) => {
-                  // Keep buttons visible when hovering
-                  const actionButtons = e.currentTarget.querySelector('.message-actions');
-                  if (actionButtons) {
-                    actionButtons.classList.add('show-actions');
-                  }
-                }}
-              >
+                  return (
+                    <motion.div
+                      id={`message-${message.id}`}
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={`flex items-start gap-2 group/message relative ${
+                        isAuthor ? 'justify-end' : 'justify-start'
+                      }`}
+                      onMouseEnter={(e) => {
+                        // Show menu button on hover
+                        const actionButtons = e.currentTarget.querySelector('.message-menu-button');
+                        if (actionButtons) {
+                          actionButtons.classList.remove('opacity-0', 'invisible');
+                          actionButtons.classList.add('opacity-100', 'visible');
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        // Hide menu button when not hovering (unless menu is open)
+                        if (openMenuId !== message.id) {
+                          const actionButtons = e.currentTarget.querySelector('.message-menu-button');
+                          if (actionButtons) {
+                            actionButtons.classList.remove('opacity-100', 'visible');
+                            actionButtons.classList.add('opacity-0', 'invisible');
+                          }
+                        }
+                      }}
+                    >
                 {/* Profile Picture - Only show for other users */}
                 {!isAuthor && (
                   <button
@@ -1383,7 +1423,8 @@ const ChatArea = ({ setActiveView }) => {
                               : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
                           }`}
                   style={{ position: 'relative' }}
-                  whileHover={{ y: -2 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
                 >
                     <div className="flex items-center justify-between mb-1">
@@ -1621,14 +1662,14 @@ const ChatArea = ({ setActiveView }) => {
                       )}
                     </div>
                   )}
-                  </motion.div>
-
                   {/* 3-dots menu button - appears on hover */}
                   <div 
                     ref={(el) => {
                       if (el) menuRefs.current[message.id] = el;
                     }}
-                    className="absolute -top-1 right-0 opacity-0 group-hover/message:opacity-100 invisible group-hover/message:visible transition-all duration-200 z-30"
+                    className={`message-menu-button absolute -top-1 -right-1 opacity-0 invisible transition-all duration-200 z-30 ${
+                      openMenuId === message.id ? 'opacity-100 visible' : ''
+                    } group-hover/message:opacity-100 group-hover/message:visible`}
                   >
                     <motion.button
                       onClick={(e) => {
@@ -1842,54 +1883,54 @@ const ChatArea = ({ setActiveView }) => {
                         )}
                       </motion.div>
                     )}
-                  </div>
-                  
-                        {/* Report form - Fluid.so aesthetic */}
-                        {reporting === message.id && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl p-4 z-40 min-w-[250px]"
+                    
+                    {/* Report form - Fluid.so aesthetic */}
+                    {reporting === message.id && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl p-4 z-40 min-w-[250px]"
+                      >
+                        <textarea
+                          value={reportReason}
+                          onChange={(e) => setReportReason(e.target.value)}
+                          placeholder="Reason for reporting..."
+                          className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 mb-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-white/10 transition-all duration-300"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <motion.button
+                            onClick={() => {
+                              handleReportMessage(message.id);
+                              setOpenMenuId(null);
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium"
                           >
-                            <textarea
-                              value={reportReason}
-                              onChange={(e) => setReportReason(e.target.value)}
-                              placeholder="Reason for reporting..."
-                              className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 mb-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-white/10 transition-all duration-300"
-                              rows={3}
-                            />
-                            <div className="flex gap-2">
-                              <motion.button
-                                onClick={() => {
-                                  handleReportMessage(message.id);
-                                  setOpenMenuId(null);
-                                }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium"
-                              >
-                                Report
-                              </motion.button>
-                              <motion.button
-                                onClick={() => {
-                                  setReporting(null);
-                                  setReportReason('');
-                                  setOpenMenuId(null);
-                                }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium border border-white/10"
-                              >
-                                Cancel
-                              </motion.button>
-                            </div>
-                          </motion.div>
-                        )}
+                            Report
+                          </motion.button>
+                          <motion.button
+                            onClick={() => {
+                              setReporting(null);
+                              setReportReason('');
+                              setOpenMenuId(null);
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium border border-white/10"
+                          >
+                            Cancel
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
 
                   {/* Reaction picker - always visible on touch, hover on desktop */}
                   {!isAuthor && (
-                    <div className="mt-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <div className="mt-2 opacity-100 md:opacity-0 md:group-hover/message:opacity-100 transition-opacity">
                       <div className="flex gap-1 touch-action-none">
                         {EMOJI_REACTIONS.map((emoji) => {
                           const reactionKey = `${message.id}-${emoji}`;
@@ -1914,13 +1955,14 @@ const ChatArea = ({ setActiveView }) => {
                       </div>
                     </div>
                   )}
+                  </motion.div>
                 </motion.div>
-            );
-          })}
-          </>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+                  );
+                })}
+              </>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
 
           {/* Typing Indicator */}
           {Object.keys(typingUsers).length > 0 && (

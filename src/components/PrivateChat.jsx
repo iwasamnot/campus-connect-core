@@ -1083,7 +1083,7 @@ const PrivateChat = () => {
               )}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2" style={{ minHeight: filteredUsers.length === 0 ? '200px' : '300px' }}>
               {filteredUsers.map((otherUser, index) => {
                 const userProfile = userProfiles[otherUser.id] || otherUser;
                 const profilePicture = userProfile.profilePicture || otherUser.profilePicture;
@@ -1202,7 +1202,7 @@ const PrivateChat = () => {
 
   // Show chat interface - Fluid.so aesthetic
   return (
-    <div className="h-screen h-[100dvh] flex flex-col bg-transparent relative overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-transparent relative overflow-hidden">
       {/* Header - Fluid.so aesthetic */}
       <FadeIn delay={0.1}>
         <motion.div

@@ -1267,13 +1267,11 @@ input:focus, textarea:focus, select:focus {
   text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
 }
 
-/* Message hover lift effect */
+/* Message hover lift effect - Handled by Framer Motion */
 .message-item {
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.message-item:hover {
-  transform: translateY(-2px);
+  /* Framer Motion handles the hover transform, so we only add a subtle scale effect */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Send button shimmer effect */
