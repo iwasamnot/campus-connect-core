@@ -48,29 +48,29 @@ const ErrorFallback = ({ componentName, onRetry }) => {
   
   return (
     <div className="flex items-center justify-center min-h-[400px] p-6">
-      <div className="text-center max-w-md">
-        <div className="text-red-600 dark:text-red-400 mb-4">
+      <div className="text-center max-w-md glass-panel border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl">
+        <div className="text-red-400 mb-4">
           <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-lg font-semibold text-white mb-2 text-glow">
           Unable to Load {componentName}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-white/60 mb-4">
           There was an error loading this component. This might be a temporary network issue.
         </p>
         <div className="flex gap-3 justify-center">
           <button
             onClick={handleRetry}
             disabled={retrying}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all shadow-lg hover:shadow-xl"
           >
             {retrying ? 'Retrying...' : 'Retry'}
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors"
+            className="px-4 py-2 glass-panel border border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all"
           >
             Refresh Page
           </button>
@@ -147,13 +147,13 @@ const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catc
 
 // Loading component - Minimal Fluid Design
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center h-screen h-[100dvh] bg-white dark:bg-gray-900 relative overflow-hidden">
+  <div className="flex items-center justify-center h-screen h-[100dvh] bg-transparent relative overflow-hidden">
     {/* Fluid Background */}
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {Array.from({ length: 6 }, (_, i) => (
         <div
           key={i}
-          className="absolute rounded-full bg-gradient-to-br from-indigo-200/20 via-purple-200/15 to-pink-200/20 dark:from-indigo-900/15 dark:via-purple-900/10 dark:to-pink-900/15 blur-3xl"
+          className="absolute rounded-full bg-gradient-to-br from-indigo-200/20 via-purple-200/15 to-pink-200/20 blur-3xl"
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
@@ -167,10 +167,10 @@ const LoadingSpinner = () => (
     </div>
     <div className="text-center relative z-10">
       <div className="w-16 h-16 mx-auto mb-6 relative">
-        <div className="absolute inset-0 rounded-full border-4 border-indigo-200/30 dark:border-indigo-800/30"></div>
-        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-600 dark:border-t-indigo-400 animate-spin"></div>
+        <div className="absolute inset-0 rounded-full border-4 border-indigo-400/30"></div>
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-400 animate-spin"></div>
       </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400 font-light">Loading...</p>
+      <p className="text-sm text-white/60 font-light">Loading...</p>
     </div>
     <style>{`
       @keyframes float-particles {
@@ -328,7 +328,7 @@ function App() {
         {/* Swipe indicator on mobile - subtle hint */}
         {!sidebarOpen && isMobile && (
           <div 
-            className="fixed left-0 top-1/2 -translate-y-1/2 z-20 w-1 h-20 bg-indigo-600/20 dark:bg-indigo-400/20 rounded-r-full transition-opacity duration-300"
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-20 w-1 h-20 bg-indigo-600/20 rounded-r-full transition-opacity duration-300"
             style={{
               left: '0px',
               animation: 'pulse 3s infinite'

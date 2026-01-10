@@ -247,12 +247,7 @@ export default defineConfig({
           /\.mjs$/,
           /\.css$/,
           /\/assets\//
-        ],
-        // Exclude JS, CSS, and assets from being served as HTML
-        // This prevents "Expected a JavaScript module but got text/html" errors
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true
+        ]
       },
       devOptions: {
         enabled: true,
