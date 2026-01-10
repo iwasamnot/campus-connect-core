@@ -20,6 +20,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
+import { motion } from 'framer-motion';
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText, MessageSquare, X } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
@@ -775,10 +776,12 @@ const AdminDashboard = () => {
 
   return (
     // Use full-height of the app content area (prevents 100vh issues in PWA).
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-transparent">
       {/* Header */}
-      <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-panel border-b border-white/10 backdrop-blur-xl px-4 md:px-6 py-3 md:py-4"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
@@ -792,64 +795,78 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-2 md:gap-3">
             <Logo size="small" showText={false} />
             <div>
-              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-black dark:text-white">Admin Dashboard</h2>
-              <p className="text-xs md:text-sm text-black dark:text-white opacity-70">
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-white text-glow">Admin Dashboard</h2>
+              <p className="text-xs md:text-sm text-white/60">
                 Manage messages, reports, and audit logs
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button
+            <motion.button
               onClick={() => setShowReports(!showReports)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl"
             >
               <AlertTriangle size={18} />
               <span className="hidden sm:inline">Reports</span>
               <span className="sm:hidden">({reports.filter(r => r.status === 'pending').length})</span>
               <span className="hidden sm:inline">({reports.filter(r => r.status === 'pending').length})</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={() => setShowAuditLogs(!showAuditLogs)}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl text-sm"
             >
               <FileText size={18} />
               <span className="hidden sm:inline">Audit Logs</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={exportToCSV}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl text-sm"
             >
               <Download size={18} />
               <span className="hidden sm:inline">Export CSV</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={() => setShowQueryBox(!showQueryBox)}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl text-sm"
             >
               <MessageSquare size={18} />
               <span className="hidden sm:inline">Query</span>
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Query Box */}
         {showQueryBox && (
-          <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-4 glass-panel bg-purple-600/20 border border-purple-500/30 rounded-[2rem] backdrop-blur-xl"
+          >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2">
+              <h3 className="font-semibold text-purple-300 flex items-center gap-2 text-glow">
                 <MessageSquare size={18} />
                 Admin Query Box
               </h3>
-              <button
+              <motion.button
                 onClick={() => {
                   setShowQueryBox(false);
                   setQueryText('');
                   setQueryResult(null);
                 }}
-                className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200"
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
+                className="text-purple-400 hover:text-purple-300 transition-colors"
               >
                 <X size={18} />
-              </button>
+              </motion.button>
             </div>
             <form onSubmit={handleQuerySubmit} className="flex gap-2">
               <div className="flex-1 relative">
@@ -866,41 +883,47 @@ const AdminDashboard = () => {
                     }
                   }}
                   placeholder="Ask questions like: 'Who sent the last message?', 'Most active user', 'Total messages'..."
-                  className="w-full pl-10 pr-4 py-2 border border-purple-300 dark:border-purple-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-2 border border-purple-500/30 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 focus:bg-white/10 transition-all duration-300 hover:border-purple-400/50 [color-scheme:dark]"
                 />
               </div>
-              <button
+              <motion.button
                 type="submit"
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl text-sm font-medium"
               >
                 Query
-              </button>
+              </motion.button>
             </form>
             
             {/* Query Results */}
             {queryResult && (
-              <div className={`mt-4 p-4 rounded-lg border ${
-                queryResult.type === 'warning' 
-                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                  : queryResult.type === 'help'
-                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                  : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-              }`}>
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mt-4 p-4 rounded-xl border backdrop-blur-xl ${
+                  queryResult.type === 'warning' 
+                    ? 'glass-panel bg-red-600/20 border-red-500/30'
+                    : queryResult.type === 'help'
+                    ? 'glass-panel bg-blue-600/20 border-blue-500/30'
+                    : 'glass-panel bg-green-600/20 border-green-500/30'
+                }`}
+              >
                 <h4 className={`font-semibold mb-2 ${
                   queryResult.type === 'warning'
-                    ? 'text-red-800 dark:text-red-200'
+                    ? 'text-red-300'
                     : queryResult.type === 'help'
-                    ? 'text-blue-800 dark:text-blue-200'
-                    : 'text-green-800 dark:text-green-200'
+                    ? 'text-blue-300'
+                    : 'text-green-300'
                 }`}>
                   {queryResult.title}
                 </h4>
                 <div className={`text-sm whitespace-pre-line ${
                   queryResult.type === 'warning'
-                    ? 'text-red-700 dark:text-red-300'
+                    ? 'text-red-200'
                     : queryResult.type === 'help'
-                    ? 'text-blue-700 dark:text-blue-300'
-                    : 'text-green-700 dark:text-green-300'
+                    ? 'text-blue-200'
+                    : 'text-green-200'
                 }`}>
                   {queryResult.content.split('**').map((part, i) => 
                     i % 2 === 1 ? <strong key={i}>{part}</strong> : part
@@ -909,14 +932,14 @@ const AdminDashboard = () => {
                 
                 {/* Additional Details */}
                 {queryResult.details && (
-                  <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+                  <div className="mt-3 pt-3 border-t border-white/10">
                     {queryResult.details.topUsers && (
                       <div>
-                        <p className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Top 5 Active Users:</p>
+                        <p className="text-xs font-semibold mb-2 text-white/70">Top 5 Active Users:</p>
                         <div className="space-y-1">
                           {queryResult.details.topUsers.map((user, idx) => (
-                            <div key={idx} className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="font-medium">{idx + 1}. {user.name}</span> - {user.email} ({user.count} messages)
+                            <div key={idx} className="text-xs glass-panel bg-white/5 border border-white/10 p-2 rounded-xl">
+                              <span className="font-medium text-white">{idx + 1}. {user.name}</span> - <span className="text-white/60">{user.email}</span> ({user.count} messages)
                             </div>
                           ))}
                         </div>
@@ -924,13 +947,13 @@ const AdminDashboard = () => {
                     )}
                     {queryResult.details.messages && (
                       <div>
-                        <p className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Recent Messages:</p>
+                        <p className="text-xs font-semibold mb-2 text-white/70">Recent Messages:</p>
                         <div className="space-y-1">
                           {queryResult.details.messages.map((msg, idx) => (
-                            <div key={idx} className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
-                              <div className="font-medium">{msg.user}</div>
-                              <div className="text-gray-600 dark:text-gray-400">{msg.text}</div>
-                              <div className="text-gray-500 dark:text-gray-500 text-xs mt-1">
+                            <div key={idx} className="text-xs glass-panel bg-white/5 border border-white/10 p-2 rounded-xl">
+                              <div className="font-medium text-white">{msg.user}</div>
+                              <div className="text-white/60">{msg.text}</div>
+                              <div className="text-white/50 text-xs mt-1">
                                 {msg.timestamp} • {msg.toxic === 'Yes' ? '⚠️ Toxic' : '✓ Clean'}
                               </div>
                             </div>
@@ -939,10 +962,10 @@ const AdminDashboard = () => {
                       </div>
                     )}
                     {queryResult.details.message && (
-                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
-                        <p className="font-semibold mb-1">Message Content:</p>
-                        <p className="text-gray-700 dark:text-gray-300">{queryResult.details.message}</p>
-                        <div className="mt-2 space-y-1 text-gray-600 dark:text-gray-400">
+                      <div className="text-xs glass-panel bg-white/5 border border-white/10 p-2 rounded-xl">
+                        <p className="font-semibold mb-1 text-white">Message Content:</p>
+                        <p className="text-white/70">{queryResult.details.message}</p>
+                        <div className="mt-2 space-y-1 text-white/60">
                           <p>User ID: {queryResult.details.userId}</p>
                           <p>Toxic: {queryResult.details.isToxic}</p>
                           <p>Banned: {queryResult.details.isBanned}</p>
@@ -950,49 +973,49 @@ const AdminDashboard = () => {
                       </div>
                     )}
                     {queryResult.details.total !== undefined && (
-                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                      <div className="text-xs glass-panel bg-white/5 border border-white/10 p-2 rounded-xl">
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <p className="font-semibold">Total Messages</p>
-                            <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{queryResult.details.total}</p>
+                            <p className="font-semibold text-white/70">Total Messages</p>
+                            <p className="text-lg font-bold text-indigo-400">{queryResult.details.total}</p>
                           </div>
                           <div>
-                            <p className="font-semibold">Toxic Messages</p>
-                            <p className="text-lg font-bold text-red-600 dark:text-red-400">{queryResult.details.toxic}</p>
+                            <p className="font-semibold text-white/70">Toxic Messages</p>
+                            <p className="text-lg font-bold text-red-400">{queryResult.details.toxic}</p>
                           </div>
                           <div>
-                            <p className="font-semibold">Normal Messages</p>
-                            <p className="text-lg font-bold text-green-600 dark:text-green-400">{queryResult.details.normal}</p>
+                            <p className="font-semibold text-white/70">Normal Messages</p>
+                            <p className="text-lg font-bold text-green-400">{queryResult.details.normal}</p>
                           </div>
                           <div>
-                            <p className="font-semibold">Banned Users</p>
-                            <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{queryResult.details.banned}</p>
+                            <p className="font-semibold text-white/70">Banned Users</p>
+                            <p className="text-lg font-bold text-orange-400">{queryResult.details.banned}</p>
                           </div>
                         </div>
                       </div>
                     )}
                     {queryResult.details.percentage !== undefined && (
-                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
-                        <p>Toxic Message Percentage: <span className="font-bold">{queryResult.details.percentage}%</span></p>
+                      <div className="text-xs glass-panel bg-white/5 border border-white/10 p-2 rounded-xl">
+                        <p className="text-white/70">Toxic Message Percentage: <span className="font-bold text-white">{queryResult.details.percentage}%</span></p>
                       </div>
                     )}
                     {queryResult.details.userCount !== undefined && (
-                      <div className="text-xs bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
-                        <p>Banned Users: <span className="font-bold">{queryResult.details.userCount}</span></p>
-                        <p>Messages from Banned Users: <span className="font-bold">{queryResult.details.messageCount}</span></p>
+                      <div className="text-xs glass-panel bg-white/5 border border-white/10 p-2 rounded-xl">
+                        <p className="text-white/70">Banned Users: <span className="font-bold text-white">{queryResult.details.userCount}</span></p>
+                        <p className="text-white/70">Messages from Banned Users: <span className="font-bold text-white">{queryResult.details.messageCount}</span></p>
                       </div>
                     )}
                   </div>
                 )}
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
             <label htmlFor="admin-search-query" className="sr-only">Search messages</label>
             <input
               type="text"
@@ -1001,11 +1024,11 @@ const AdminDashboard = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search messages..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
             />
           </div>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
             <label htmlFor="admin-filter-user" className="sr-only">Filter by user</label>
             <input
               type="text"
@@ -1014,11 +1037,11 @@ const AdminDashboard = () => {
               value={filterUser}
               onChange={(e) => setFilterUser(e.target.value)}
               placeholder="Filter by user..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
             />
           </div>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
             <label htmlFor="admin-filter-date" className="sr-only">Filter by date</label>
             <input
               type="date"
@@ -1026,102 +1049,132 @@ const AdminDashboard = () => {
               name="filter-date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
             />
           </div>
           <div className="flex gap-2">
-            <button
+            <motion.button
               onClick={() => setShowOnlyToxic(!showOnlyToxic)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 font-medium ${
                 showOnlyToxic
-                  ? 'bg-red-600 text-white shadow-md scale-105'
-                  : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'glass-panel bg-white/5 border border-white/10 text-white hover:bg-white/10'
               }`}
             >
               <Filter size={18} />
               <span>Toxic Only</span>
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Sort Controls */}
         <div className="flex items-center gap-4 mt-4">
-          <label htmlFor="admin-sort-by" className="text-sm text-black dark:text-white">Sort by:</label>
+          <label htmlFor="admin-sort-by" className="text-sm text-white/70">Sort by:</label>
           <select
             id="admin-sort-by"
             name="sort-by"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            className="px-3 py-1 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
           >
             <option value="timestamp">Timestamp</option>
             <option value="user">User</option>
             <option value="text">Message</option>
           </select>
-          <button
+          <motion.button
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 text-white/70 hover:text-white transition-all"
           >
             {sortOrder === 'asc' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </button>
-          <span className="text-sm text-black dark:text-white opacity-70">
+          </motion.button>
+          <span className="text-sm text-white/60">
             Showing {paginatedMessages.length} of {filteredMessages.length} messages
           </span>
         </div>
 
         {/* Always-visible admin query box (answers: last online, last message, online count, etc.) */}
         <AdminQueryBox />
-      </div>
+      </motion.div>
 
       {/* Reports Panel */}
       {showReports && (
-        <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 px-6 py-4 max-h-64 overflow-y-auto">
-          <h3 className="font-semibold text-gray-800 dark:text-white mb-2">Pending Reports ({reports.filter(r => r.status === 'pending').length})</h3>
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="glass-panel bg-indigo-600/20 border-b border-indigo-500/30 backdrop-blur-xl px-6 py-4 max-h-64 overflow-y-auto"
+        >
+          <h3 className="font-semibold text-white mb-2 text-glow">Pending Reports ({reports.filter(r => r.status === 'pending').length})</h3>
           <div className="space-y-2">
             {reports.filter(r => r.status === 'pending').map(report => (
-              <div key={report.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800">
+              <motion.div 
+                key={report.id} 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ x: 4, scale: 1.02 }}
+                className="glass-panel bg-white/5 border border-white/10 p-3 rounded-xl backdrop-blur-sm"
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-black dark:text-white">Reported by: {report.reportedByEmail}</p>
-                    <p className="text-xs text-black dark:text-white opacity-80 mt-1">Reason: {report.reason}</p>
-                    <p className="text-xs text-black dark:text-white opacity-70 mt-1">{formatTimestamp(report.timestamp)}</p>
+                    <p className="text-sm font-medium text-white">Reported by: {report.reportedByEmail}</p>
+                    <p className="text-xs text-white/70 mt-1">Reason: {report.reason}</p>
+                    <p className="text-xs text-white/50 mt-1">{formatTimestamp(report.timestamp)}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <motion.button
                       onClick={() => handleResolveReport(report.id, 'resolved')}
-                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-xl transition-all"
                     >
                       Resolve
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       onClick={() => handleResolveReport(report.id, 'dismissed')}
-                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded-xl transition-all"
                     >
                       Dismiss
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
             {reports.filter(r => r.status === 'pending').length === 0 && (
-              <p className="text-sm text-black dark:text-white opacity-70">No pending reports</p>
+              <p className="text-sm text-white/60">No pending reports</p>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Audit Logs Panel */}
       {showAuditLogs && (
-        <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 px-6 py-4 max-h-64 overflow-y-auto">
-          <h3 className="font-semibold text-black dark:text-white mb-2">Recent Audit Logs ({auditLogs.length})</h3>
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="glass-panel bg-indigo-600/20 border-b border-indigo-500/30 backdrop-blur-xl px-6 py-4 max-h-64 overflow-y-auto"
+        >
+          <h3 className="font-semibold text-white mb-2 text-glow">Recent Audit Logs ({auditLogs.length})</h3>
           <div className="space-y-2">
             {auditLogs.slice(0, 10).map(log => (
-              <div key={log.id} className="bg-white dark:bg-gray-800 p-2 rounded-lg border border-indigo-200 dark:border-indigo-800 text-xs text-black dark:text-white">
+              <motion.div 
+                key={log.id} 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ x: 4, scale: 1.02 }}
+                className="glass-panel bg-white/5 border border-white/10 p-2 rounded-xl backdrop-blur-sm text-xs text-white"
+              >
                 <span className="font-medium">{log.action}</span> by {log.performedByEmail} - {formatTimestamp(log.timestamp)}
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Table */}
@@ -1129,73 +1182,79 @@ const AdminDashboard = () => {
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-              <p className="text-black dark:text-white opacity-70 text-lg">Loading messages...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto mb-4"></div>
+              <p className="text-white/60 text-lg font-medium">Loading messages...</p>
             </div>
           </div>
         ) : paginatedMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <AlertTriangle className="mx-auto text-black dark:text-white opacity-50 mb-4" size={48} />
-              <p className="text-black dark:text-white opacity-70 text-lg">No messages found</p>
+              <AlertTriangle className="mx-auto text-white/40 mb-4" size={48} />
+              <p className="text-white/60 text-lg font-medium">No messages found</p>
             </div>
           </div>
         ) : (
           <>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="glass-panel border border-white/10 rounded-[2rem] shadow-xl overflow-hidden backdrop-blur-xl">
               <div className="overflow-x-auto overflow-x-scroll" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}>
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" style={{ minWidth: '600px' }}>
-                <thead className="bg-gray-50 dark:bg-gray-700">
+                <table className="min-w-full divide-y divide-white/10" style={{ minWidth: '600px' }}>
+                <thead className="glass-panel bg-white/5 backdrop-blur-sm">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       Timestamp
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       User
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       Message
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black dark:text-white opacity-70 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="glass-panel bg-white/5 backdrop-blur-sm divide-y divide-white/10">
                   {paginatedMessages.map((message) => (
-                    <tr key={message.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white opacity-70">
+                    <motion.tr 
+                      key={message.id} 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      whileHover={{ y: -2, scale: 1.01 }}
+                      className="transition-all"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/60">
                         {formatTimestamp(message.timestamp)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         <div className="font-mono text-xs">
                           {message.userEmail || message.userName || message.userId?.substring(0, 12)}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 max-w-xs">
+                      <td className="px-6 py-4 text-sm text-white/90 max-w-xs">
                         <div className="truncate" title={message.text}>
                           {message.text}
                         </div>
                         {message.edited && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400 italic">(edited)</span>
+                          <span className="text-xs text-white/40 italic">(edited)</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           {message.toxic && (
-                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 w-fit">
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full glass-panel bg-red-600/20 border border-red-500/30 text-red-300 w-fit">
                               Toxic
                             </span>
                           )}
                           {message.userBanned ? (
-                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 w-fit">
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full glass-panel bg-red-600/20 border border-red-500/30 text-red-300 w-fit">
                               Banned
                             </span>
                           ) : (
-                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 w-fit">
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full glass-panel bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 w-fit">
                               Active
                             </span>
                           )}
@@ -1203,25 +1262,29 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex items-center gap-2">
-                          <button
+                          <motion.button
                             onClick={() => handleBanUser(message.id, message.userId, message.userEmail)}
                             disabled={banning === message.id || message.userBanned}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
                           >
                             <Ban size={14} />
                             <span>{message.userBanned ? 'Banned' : 'Ban'}</span>
-                          </button>
-                          <button
+                          </motion.button>
+                          <motion.button
                             onClick={() => handleDeleteMessage(message.id)}
                             disabled={deleting === message.id}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-500 active:bg-gray-900 dark:active:bg-gray-400 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs touch-action-manipulation"
                           >
                             <Trash2 size={14} />
                             <span>Delete</span>
-                          </button>
+                          </motion.button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -1231,23 +1294,27 @@ const AdminDashboard = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
-                <button
+                <motion.button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-indigo-200 dark:bg-indigo-700 text-black dark:text-white border-2 border-indigo-300 dark:border-indigo-600 rounded-lg hover:bg-indigo-300 dark:hover:bg-indigo-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 glass-panel bg-indigo-600/20 border border-indigo-500/30 text-white rounded-xl hover:bg-indigo-600/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Previous
-                </button>
-                <span className="text-sm text-black dark:text-white font-medium">
+                </motion.button>
+                <span className="text-sm text-white/70 font-medium">
                   Page {currentPage} of {totalPages}
                 </span>
-                <button
+                <motion.button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-indigo-200 dark:bg-indigo-700 text-black dark:text-white border-2 border-indigo-300 dark:border-indigo-600 rounded-lg hover:bg-indigo-300 dark:hover:bg-indigo-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 glass-panel bg-indigo-600/20 border border-indigo-500/30 text-white rounded-xl hover:bg-indigo-600/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Next
-                </button>
+                </motion.button>
               </div>
             )}
           </>
