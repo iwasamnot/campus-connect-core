@@ -198,19 +198,19 @@ const NearbyChat = ({ onClose }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col theme-${themeStyle} ${darkMode ? 'dark' : ''} shadow-2xl`}
+        className="glass-panel border border-white/10 rounded-[2rem] p-6 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col shadow-2xl backdrop-blur-xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
-              <Radio className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="p-2 glass-panel bg-indigo-600/20 border border-indigo-500/30 rounded-xl">
+              <Radio className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-white text-glow">
                 Nearby Chat
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-white/60">
                 Connect with students nearby
               </p>
             </div>
@@ -219,21 +219,21 @@ const NearbyChat = ({ onClose }) => {
             onClick={handleClose}
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+            className="p-2 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
             aria-label="Close"
           >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <X className="w-5 h-5" />
           </motion.button>
         </div>
 
         {/* Support Info */}
         {supportInfo && (
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-xs">
+          <div className="mb-4 p-3 glass-panel bg-blue-600/10 border border-blue-500/30 rounded-xl text-xs">
             <div className="flex items-center gap-2 mb-2">
-              <Signal className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="font-medium text-blue-900 dark:text-blue-100">Device Support:</span>
+              <Signal className="w-4 h-4 text-blue-400" />
+              <span className="font-medium text-blue-300">Device Support:</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-blue-700 dark:text-blue-300">
+            <div className="grid grid-cols-2 gap-2 text-blue-200">
               <div className="flex items-center gap-1">
                 {supportInfo.bluetooth ? (
                   <CheckCircle className="w-3 h-3" />
@@ -274,21 +274,21 @@ const NearbyChat = ({ onClose }) => {
           // Chat Interface
           <div className="flex-1 flex flex-col min-h-0">
             {/* Chat Header */}
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
               <div className="relative">
                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium">
                   {selectedUser.name?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
+                <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white/20 ${
                   connectionStatus === 'connected' ? 'bg-green-500' : 
                   connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-gray-400'
                 }`} />
               </div>
               <div className="flex-1">
-                <h3 className="font-medium text-gray-900 dark:text-white">
+                <h3 className="font-medium text-white">
                   {selectedUser.name}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-white/60">
                   {connectionStatus === 'connected' ? 'Connected' : 
                    connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
                 </p>
@@ -297,7 +297,7 @@ const NearbyChat = ({ onClose }) => {
                 onClick={handleDisconnect}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors text-sm text-gray-600 dark:text-gray-400"
+                className="p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 text-sm text-white/70 hover:text-white transition-all"
               >
                 Disconnect
               </motion.button>
@@ -306,7 +306,7 @@ const NearbyChat = ({ onClose }) => {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto space-y-3 mb-4 min-h-[200px] max-h-[400px]">
               {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
+                <div className="flex items-center justify-center h-full text-white/40 text-sm">
                   No messages yet. Start the conversation!
                 </div>
               ) : (
@@ -320,13 +320,13 @@ const NearbyChat = ({ onClose }) => {
                     <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                       message.sender?.userId === user?.uid
                         ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                        : 'bg-white/10 text-white'
                     }`}>
                       <p className="text-sm">{message.text}</p>
                       <p className={`text-xs mt-1 ${
                         message.sender?.userId === user?.uid
                           ? 'text-indigo-100'
-                          : 'text-gray-500 dark:text-gray-400'
+                          : 'text-white/60'
                       }`}>
                         {new Date(message.timestamp).toLocaleTimeString()}
                       </p>
@@ -338,7 +338,7 @@ const NearbyChat = ({ onClose }) => {
 
             {/* Message Input */}
             {connectionStatus === 'connected' && (
-              <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex gap-2 pt-3 border-t border-white/10">
                 <input
                   type="text"
                   value={messageText}
@@ -350,7 +350,7 @@ const NearbyChat = ({ onClose }) => {
                     }
                   }}
                   placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  className="flex-1 px-4 py-2 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                 />
                 <AnimatedButton
                   onClick={handleSendMessage}
@@ -406,13 +406,13 @@ const NearbyChat = ({ onClose }) => {
             <div className="flex-1 overflow-y-auto">
               {nearbyUsers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                    <Users className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                  <div className="w-16 h-16 glass-panel bg-white/10 border border-white/10 rounded-full flex items-center justify-center mb-4">
+                    <Users className="w-8 h-8 text-white/40" />
                   </div>
-                  <p className="text-gray-500 dark:text-gray-400 mb-2">
+                  <p className="text-white/60 mb-2 font-medium">
                     No nearby students found
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs">
+                  <p className="text-xs text-white/50 max-w-xs">
                     Make sure you're on the same WiFi network or hotspot, or enable Bluetooth scanning.
                   </p>
                 </div>
@@ -424,27 +424,27 @@ const NearbyChat = ({ onClose }) => {
                         onClick={() => handleConnectToUser(nearbyUser)}
                         whileHover={{ scale: 1.02, x: 5 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors border border-gray-200 dark:border-gray-700"
+                        className="w-full flex items-center gap-3 p-3 glass-panel border border-white/10 hover:border-white/20 rounded-xl transition-all"
                       >
                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
                           {nearbyUser.name?.[0]?.toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 text-left min-w-0">
-                          <p className="font-medium text-gray-900 dark:text-white truncate">
+                          <p className="font-medium text-white truncate">
                             {nearbyUser.name || 'Unknown User'}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            <p className="text-xs text-white/60 truncate">
                               {nearbyUser.email}
                             </p>
                             {nearbyUser.distance && (
-                              <span className="text-xs px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full">
+                              <span className="text-xs px-2 py-0.5 glass-panel bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 rounded-full font-medium">
                                 {nearbyUser.distance}
                               </span>
                             )}
                           </div>
                         </div>
-                        <MessageSquare className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                        <MessageSquare className="w-5 h-5 text-indigo-400 flex-shrink-0" />
                       </motion.button>
                     </StaggerItem>
                   ))}
