@@ -10,6 +10,7 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
 const storage = typeof window !== 'undefined' && window.__firebaseStorage 
   ? window.__firebaseStorage 
   : null;
+import { motion } from 'framer-motion';
 import { User, Mail, Phone, Save, Loader, Edit2, X, Image, GraduationCap, Calendar, MapPin, FileText, Upload } from 'lucide-react';
 
 const StudentProfile = () => {
@@ -201,20 +202,20 @@ const StudentProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-center h-screen bg-transparent">
         <div className="text-center">
-          <Loader className="animate-spin mx-auto text-indigo-600 mb-4" size={48} />
-          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+          <Loader className="animate-spin mx-auto text-indigo-400 mb-4" size={48} />
+          <p className="text-white/60 font-medium">Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-screen bg-transparent">
       {/* Header */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        className="glass-panel border-b border-white/10 backdrop-blur-xl px-4 md:px-6 py-3 md:py-4"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
@@ -226,17 +227,19 @@ const StudentProfile = () => {
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white">My Profile</h2>
-            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Manage your contact information</p>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white text-glow">My Profile</h2>
+            <p className="text-xs md:text-sm text-white/60">Manage your contact information</p>
           </div>
           {!editing && (
-            <button
+            <motion.button
               onClick={handleEdit}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
             >
               <Edit2 size={18} />
               <span>Edit Profile</span>
-            </button>
+            </motion.button>
           )}
         </div>
       </div>
@@ -244,15 +247,15 @@ const StudentProfile = () => {
           {/* Profile Form */}
           <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-8">
             <div className="max-w-2xl mx-auto">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-8">
+              <div className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-4 md:p-8 backdrop-blur-xl">
             {error && (
-              <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg">
+              <div className="mb-6 p-4 glass-panel bg-red-600/10 border border-red-500/30 text-red-300 rounded-xl">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="mb-6 p-4 bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400 rounded-lg">
+              <div className="mb-6 p-4 glass-panel bg-indigo-600/10 border border-indigo-500/30 text-indigo-300 rounded-xl">
                 Profile updated successfully!
               </div>
             )}
@@ -260,7 +263,7 @@ const StudentProfile = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name */}
               <div>
-                <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-name" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <User className="inline mr-2" size={16} />
                   Full Name
                 </label>
@@ -274,22 +277,22 @@ const StudentProfile = () => {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="John Doe"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your display name (will be shown in chat)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.name || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.name || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Student Email */}
               <div>
-                <label htmlFor="profile-student-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-student-email" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <Mail className="inline mr-2" size={16} />
                   Student Email
                 </label>
@@ -303,22 +306,22 @@ const StudentProfile = () => {
                       value={formData.studentEmail}
                       onChange={handleChange}
                       placeholder="student@university.edu"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your official university email address
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.studentEmail || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.studentEmail || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Personal Email */}
               <div>
-                <label htmlFor="profile-personal-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-personal-email" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <Mail className="inline mr-2" size={16} />
                   Personal Email
                 </label>
@@ -332,22 +335,22 @@ const StudentProfile = () => {
                       value={formData.personalEmail}
                       onChange={handleChange}
                       placeholder="yourname@example.com"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your personal email address (optional)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.personalEmail || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.personalEmail || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Phone Number */}
               <div>
-                <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-phone" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <Phone className="inline mr-2" size={16} />
                   Phone Number
                 </label>
@@ -361,22 +364,22 @@ const StudentProfile = () => {
                       value={formData.phoneNumber}
                       onChange={handleChange}
                       placeholder="+1 (555) 123-4567"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your contact phone number (optional)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.phoneNumber || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.phoneNumber || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Profile Picture */}
               <div>
-                <label htmlFor="profile-picture-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-picture-url" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <Image className="inline mr-2" size={16} />
                   Profile Picture
                 </label>
@@ -387,7 +390,7 @@ const StudentProfile = () => {
                         <img 
                           src={formData.profilePicture} 
                           alt="Profile preview" 
-                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                          className="w-20 h-20 rounded-full object-cover border-2 border-white/20"
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       )}
@@ -441,9 +444,9 @@ const StudentProfile = () => {
                       value={formData.profilePicture}
                       onChange={handleChange}
                       placeholder="Or enter image URL"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Upload an image or enter a URL (optional, max 5MB)
                     </p>
                   </>
@@ -457,12 +460,12 @@ const StudentProfile = () => {
                         onError={(e) => { e.target.style.display = 'none'; }}
                       />
                     ) : (
-                      <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <User size={32} className="text-gray-400 dark:text-gray-500" />
+                      <div className="w-20 h-20 rounded-full glass-panel bg-white/10 border border-white/10 flex items-center justify-center">
+                        <User size={32} className="text-white/40" />
                       </div>
                     )}
-                    <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center flex-1">
-                      {formData.profilePicture || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                    <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center flex-1 backdrop-blur-sm">
+                      {formData.profilePicture || <span className="text-white/50 italic">Not set</span>}
                     </div>
                   </div>
                 )}
@@ -470,7 +473,7 @@ const StudentProfile = () => {
 
               {/* Bio */}
               <div>
-                <label htmlFor="profile-bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-bio" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <FileText className="inline mr-2" size={16} />
                   Bio / About Me
                 </label>
@@ -484,22 +487,22 @@ const StudentProfile = () => {
                       placeholder="Tell us about yourself..."
                       rows={4}
                       maxLength={500}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 resize-none [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       {formData.bio.length}/500 characters (optional)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[100px] flex items-start">
-                    {formData.bio || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[100px] flex items-start backdrop-blur-sm">
+                    {formData.bio || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Course/Major */}
               <div>
-                <label htmlFor="profile-course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-course" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <GraduationCap className="inline mr-2" size={16} />
                   Course / Major
                 </label>
@@ -512,22 +515,22 @@ const StudentProfile = () => {
                       value={formData.course}
                       onChange={handleChange}
                       placeholder="Computer Science, Business, etc."
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your course or major (optional)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.course || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.course || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Year of Study */}
               <div>
-                <label htmlFor="profile-year-of-study" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-year-of-study" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <GraduationCap className="inline mr-2" size={16} />
                   Year of Study
                 </label>
@@ -538,30 +541,30 @@ const StudentProfile = () => {
                       name="yearOfStudy"
                       value={formData.yearOfStudy}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     >
-                      <option value="">Select year...</option>
-                      <option value="1">Year 1</option>
-                      <option value="2">Year 2</option>
-                      <option value="3">Year 3</option>
-                      <option value="4">Year 4</option>
-                      <option value="5+">Year 5+</option>
-                      <option value="Graduate">Graduate</option>
+                      <option value="" className="bg-[#1a1a1a] text-white">Select year...</option>
+                      <option value="1" className="bg-[#1a1a1a] text-white">Year 1</option>
+                      <option value="2" className="bg-[#1a1a1a] text-white">Year 2</option>
+                      <option value="3" className="bg-[#1a1a1a] text-white">Year 3</option>
+                      <option value="4" className="bg-[#1a1a1a] text-white">Year 4</option>
+                      <option value="5+" className="bg-[#1a1a1a] text-white">Year 5+</option>
+                      <option value="Graduate" className="bg-[#1a1a1a] text-white">Graduate</option>
                     </select>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your current year of study (optional)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.yearOfStudy || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.yearOfStudy || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Date of Birth */}
               <div>
-                <label htmlFor="profile-date-of-birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-date-of-birth" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <Calendar className="inline mr-2" size={16} />
                   Date of Birth
                 </label>
@@ -574,22 +577,22 @@ const StudentProfile = () => {
                       value={formData.dateOfBirth}
                       onChange={handleChange}
                       max={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your date of birth (optional)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
 
               {/* Address */}
               <div>
-                <label htmlFor="profile-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="profile-address" className="block text-sm font-semibold text-white/90 mb-2.5">
                   <MapPin className="inline mr-2" size={16} />
                   Address
                 </label>
@@ -602,15 +605,15 @@ const StudentProfile = () => {
                       onChange={handleChange}
                       placeholder="Your address..."
                       rows={2}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 resize-none [color-scheme:dark]"
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-white/60">
                       Your address (optional)
                     </p>
                   </>
                 ) : (
-                  <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white min-h-[42px] flex items-center">
-                    {formData.address || <span className="text-gray-400 dark:text-gray-500 italic">Not set</span>}
+                  <div className="px-4 py-2 glass-panel bg-white/5 border border-white/10 rounded-xl text-white min-h-[42px] flex items-center backdrop-blur-sm">
+                    {formData.address || <span className="text-white/50 italic">Not set</span>}
                   </div>
                 )}
               </div>
@@ -618,10 +621,12 @@ const StudentProfile = () => {
               {/* Action Buttons */}
               {editing && (
                 <div className="pt-4 flex gap-3">
-                  <button
+                  <motion.button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                    whileHover={!saving ? { scale: 1.02 } : {}}
+                    whileTap={!saving ? { scale: 0.98 } : {}}
+                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                   >
                     {saving ? (
                       <>
@@ -634,32 +639,34 @@ const StudentProfile = () => {
                         <span>Save Changes</span>
                       </>
                     )}
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     type="button"
                     onClick={handleCancel}
                     disabled={saving}
-                    className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    whileHover={!saving ? { scale: 1.02 } : {}}
+                    whileTap={!saving ? { scale: 0.98 } : {}}
+                    className="flex items-center justify-center gap-2 px-6 py-3 glass-panel border-2 border-indigo-500/50 text-indigo-300 font-semibold rounded-xl hover:bg-indigo-600/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <X size={20} />
                     <span>Cancel</span>
-                  </button>
+                  </motion.button>
                 </div>
               )}
             </form>
 
             {/* Current Account Info */}
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <h3 className="text-sm font-semibold text-white/90 mb-3 flex items-center">
                 <User className="mr-2" size={16} />
                 Account Information
               </h3>
-              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="space-y-2 text-sm text-white/60">
                 <p>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Login Email:</span> {user?.email || 'N/A'}
+                  <span className="font-medium text-white/90">Login Email:</span> {user?.email || 'N/A'}
                 </p>
                 <p>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">User ID:</span> {user?.uid.substring(0, 20)}...
+                  <span className="font-medium text-white/90">User ID:</span> {user?.uid.substring(0, 20)}...
                 </p>
               </div>
             </div>
