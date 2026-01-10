@@ -24,7 +24,9 @@ export const isValidStudentEmail = (email) => {
   if (!email || typeof email !== 'string') return false;
   
   const emailLower = email.toLowerCase().trim();
-  return emailLower.startsWith('s20') && emailLower.includes('@sistc.app');
+  // Accept both old domain (@sistc.nsw.edu.au) and new domain (@sistc.app) for backward compatibility
+  return emailLower.startsWith('s20') && 
+         (emailLower.includes('@sistc.app') || emailLower.includes('@sistc.nsw.edu.au'));
 };
 
 /**

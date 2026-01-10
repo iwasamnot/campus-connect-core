@@ -279,7 +279,9 @@ const AuthProvider = ({ children }) => {
         // If no user document found, create it
         // This should always work because users can create their own document
         const emailLower = loggedInUser.email ? loggedInUser.email.toLowerCase() : '';
-        const isStudentEmail = emailLower.startsWith('s20') && emailLower.includes('@sistc.app');
+        // Accept both old domain (@sistc.nsw.edu.au) and new domain (@sistc.app) for backward compatibility
+        const isStudentEmail = emailLower.startsWith('s20') && 
+                               (emailLower.includes('@sistc.app') || emailLower.includes('@sistc.nsw.edu.au'));
         finalRole = isAdminEmail ? 'admin' : (isStudentEmail ? 'student' : 'student');
         console.log(`Creating user document in Firestore with ${finalRole} role.`);
         
