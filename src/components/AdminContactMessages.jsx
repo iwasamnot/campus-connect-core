@@ -15,6 +15,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
+import { motion } from 'framer-motion';
 import { Mail, User, MessageSquare, Trash2, CheckCircle, XCircle, Eye, Clock, Search, Filter } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
@@ -155,10 +156,10 @@ const AdminContactMessages = () => {
   // Get status badge color
   const getStatusBadge = (status) => {
     const styles = {
-      new: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-      read: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-      replied: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-      resolved: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+      new: 'glass-panel bg-blue-600/20 border border-blue-500/30 text-blue-300',
+      read: 'glass-panel bg-yellow-600/20 border border-yellow-500/30 text-yellow-300',
+      replied: 'glass-panel bg-green-600/20 border border-green-500/30 text-green-300',
+      resolved: 'glass-panel bg-white/10 border border-white/10 text-white/70'
     };
     return styles[status] || styles.new;
   };
@@ -175,10 +176,10 @@ const AdminContactMessages = () => {
   }, [contactMessages]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
+    <div className="flex flex-col h-screen bg-transparent animate-fade-in">
       {/* Header */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4 animate-slide-down-fade"
+        className="glass-panel border-b border-white/10 backdrop-blur-xl px-4 md:px-6 py-3 md:py-4 animate-slide-down-fade"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
@@ -192,10 +193,10 @@ const AdminContactMessages = () => {
           <div className="flex items-center gap-2 md:gap-3">
             <Logo size="small" showText={false} />
             <div>
-              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-black dark:text-white">
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-white text-glow">
                 Contact Messages
               </h2>
-              <p className="text-xs md:text-sm text-black dark:text-white opacity-70">
+              <p className="text-xs md:text-sm text-white/60">
                 Messages from non-users
               </p>
             </div>
@@ -204,7 +205,7 @@ const AdminContactMessages = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-4">
+      <div className="glass-panel border-b border-white/10 backdrop-blur-xl px-4 md:px-6 py-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative animate-slide-right-fade">
@@ -214,13 +215,13 @@ const AdminContactMessages = () => {
               placeholder="Search by name, email, subject, or message..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all duration-300 hover:border-indigo-400 focus:scale-[1.02]"
+              className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 focus:scale-[1.02] [color-scheme:dark]"
             />
           </div>
 
           {/* Status Filter */}
           <div className="flex items-center gap-2 flex-wrap animate-slide-left-fade">
-            <Filter size={18} className="text-gray-600 dark:text-gray-400 transition-transform duration-300 hover:rotate-180" />
+            <Filter size={18} className="text-white/70 hover:text-white transition-transform duration-300 hover:rotate-180" />
             {['all', 'new', 'read', 'replied', 'resolved'].map((status, index) => (
               <button
                 key={status}
@@ -228,7 +229,7 @@ const AdminContactMessages = () => {
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 capitalize transform hover:scale-105 active:scale-95 stagger-item ${
                   statusFilter === status
                     ? 'bg-indigo-600 text-white animate-spring shadow-lg'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'glass-panel bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20'
                 }`}
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
@@ -242,19 +243,19 @@ const AdminContactMessages = () => {
       {/* Content */}
       <div className="flex-1 overflow-hidden flex">
         {/* Messages List */}
-        <div className="w-full md:w-1/2 lg:w-1/3 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+        <div className="w-full md:w-1/2 lg:w-1/3 border-r border-white/10 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
-                <p className="mt-4 text-gray-600 dark:text-gray-300">Loading messages...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto"></div>
+                <p className="mt-4 text-white/60 font-medium">Loading messages...</p>
               </div>
             </div>
           ) : filteredMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full p-8">
               <div className="text-center">
-                <Mail className="mx-auto text-gray-400 dark:text-gray-600 mb-4" size={48} />
-                <p className="text-gray-600 dark:text-gray-400">
+                <Mail className="mx-auto text-white/40 mb-4" size={48} />
+                <p className="text-white/60 font-medium">
                   {searchQuery || statusFilter !== 'all' 
                     ? 'No messages found matching your filters.' 
                     : 'No contact messages yet.'}
@@ -262,21 +263,21 @@ const AdminContactMessages = () => {
               </div>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="divide-y divide-white/10">
               {filteredMessages.map((message) => (
                 <div
                   key={message.id}
                   onClick={() => setSelectedMessage(message)}
-                  className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                    selectedMessage?.id === message.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
+                  className={`p-4 cursor-pointer glass-panel border border-white/10 hover:border-white/20 rounded-xl transition-all ${
+                    selectedMessage?.id === message.id ? 'bg-indigo-600/20 border-indigo-500/30' : ''
                   } ${message.status === 'new' ? 'border-l-4 border-blue-500' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-black dark:text-white truncate">
+                      <h3 className="font-semibold text-white truncate">
                         {message.name || 'Anonymous'}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      <p className="text-sm text-white/60 truncate">
                         {message.email}
                       </p>
                     </div>
@@ -285,14 +286,14 @@ const AdminContactMessages = () => {
                     </span>
                   </div>
                   {message.subject && (
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 truncate">
+                    <p className="text-sm font-medium text-white mb-1 truncate">
                       {message.subject}
                     </p>
                   )}
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                  <p className="text-sm text-white/60 line-clamp-2">
                     {message.message}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  <p className="text-xs text-white/50 mt-2">
                     {formatTimestamp(message.timestamp)}
                   </p>
                 </div>
@@ -302,17 +303,17 @@ const AdminContactMessages = () => {
         </div>
 
         {/* Message Detail */}
-        <div className="hidden md:flex flex-1 flex-col bg-white dark:bg-gray-800">
+        <div className="hidden md:flex flex-1 flex-col glass-panel border-l border-white/10 backdrop-blur-xl">
           {selectedMessage ? (
             <div className="flex-1 overflow-y-auto p-6">
               {/* Message Header */}
-              <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="mb-6 pb-6 border-b border-white/10">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-black dark:text-white mb-2">
+                    <h2 className="text-2xl font-bold text-white mb-2 text-glow">
                       {selectedMessage.subject || 'No Subject'}
                     </h2>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-white/60">
                       <div className="flex items-center gap-2">
                         <User size={16} />
                         <span>{selectedMessage.name || 'Anonymous'}</span>
@@ -321,7 +322,7 @@ const AdminContactMessages = () => {
                         <Mail size={16} />
                         <a 
                           href={`mailto:${selectedMessage.email}`}
-                          className="hover:text-indigo-600 dark:hover:text-indigo-400"
+                          className="hover:text-indigo-400 transition-colors"
                         >
                           {selectedMessage.email}
                         </a>
@@ -332,21 +333,21 @@ const AdminContactMessages = () => {
                     {selectedMessage.status}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-white/60">
                   Received: {formatTimestamp(selectedMessage.timestamp)}
                 </p>
                 {selectedMessage.readAt && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-white/60">
                     Read: {formatTimestamp(selectedMessage.readAt)}
                   </p>
                 )}
                 {selectedMessage.repliedAt && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-white/60">
                     Replied: {formatTimestamp(selectedMessage.repliedAt)}
                   </p>
                 )}
                 {selectedMessage.resolvedAt && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-white/60">
                     Resolved: {formatTimestamp(selectedMessage.resolvedAt)}
                   </p>
                 )}
@@ -354,9 +355,9 @@ const AdminContactMessages = () => {
 
               {/* Message Body */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Message</h3>
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                <h3 className="text-lg font-semibold text-white mb-3 text-glow">Message</h3>
+                <div className="glass-panel bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
+                  <p className="text-white/90 whitespace-pre-wrap leading-relaxed">
                     {selectedMessage.message}
                   </p>
                 </div>
@@ -414,8 +415,8 @@ const AdminContactMessages = () => {
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <MessageSquare className="mx-auto text-gray-400 dark:text-gray-600 mb-4" size={48} />
-                <p className="text-gray-600 dark:text-gray-400">Select a message to view details</p>
+                <MessageSquare className="mx-auto text-white/40 mb-4" size={48} />
+                <p className="text-white/60 font-medium">Select a message to view details</p>
               </div>
             </div>
           )}
@@ -435,7 +436,7 @@ const AdminContactMessages = () => {
                 </button>
               </div>
               <div className="p-6">
-                <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="mb-6 pb-6 border-b border-white/10">
                   <h2 className="text-2xl font-bold text-black dark:text-white mb-2">
                     {selectedMessage.subject || 'No Subject'}
                   </h2>
