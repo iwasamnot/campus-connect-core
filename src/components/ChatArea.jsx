@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 // Use window globals to avoid import/export issues in production builds
@@ -381,10 +381,48 @@ const ChatArea = ({ setActiveView }) => {
     };
   }, []); // Empty deps - only run once on mount
 
-  // Scroll to bottom when new messages arrive
+  // Optimized scroll to bottom - use requestAnimationFrame for smooth performance
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      requestAnimationFrame(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'end' });
+          // Smooth scroll with RAF for better performance
+          const target = messagesEndRef.current;
+          const start = target.parentElement?.scrollTop || 0;
+          const end = target.parentElement?.scrollHeight || 0;
+          const distance = end - start;
+          const duration = Math.min(300, Math.abs(distance) * 0.5);
+          let startTime = null;
+          
+          const animateScroll = (currentTime) => {
+            if (startTime === null) startTime = currentTime;
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = progress * (2 - progress); // ease-out
+            
+            if (target.parentElement) {
+              target.parentElement.scrollTop = start + (distance * ease);
+            }
+            
+            if (progress < 1) {
+              requestAnimationFrame(animateScroll);
+            }
+          };
+          
+          if (distance > 50) { // Only animate if significant scroll needed
+            requestAnimationFrame(animateScroll);
+          }
+        }
+      });
+    }
+  }, []);
+
+  // Scroll to bottom when new messages arrive (debounced)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const timeoutId = setTimeout(scrollToBottom, 50);
+    return () => clearTimeout(timeoutId);
+  }, [messages.length, scrollToBottom]);
 
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
   // Optimized: Memoize query to prevent recreation
@@ -1083,7 +1121,10 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
-  const filteredMessages = messages; // Advanced search handles filtering
+  // Memoize filtered messages to prevent unnecessary re-renders
+  const filteredMessages = useMemo(() => {
+    return messages;
+  }, [messages]);
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
@@ -1349,16 +1390,18 @@ const ChatArea = ({ setActiveView }) => {
 
           {/* Messages Area - Fluid.so aesthetic */}
           <div 
-            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent" 
+            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent scroll-container" 
             style={{ 
               minHeight: 0,
               flex: '1 1 auto',
               overflowY: 'auto',
               overflowX: 'hidden',
               WebkitOverflowScrolling: 'touch',
-              scrollBehavior: 'smooth',
+              scrollBehavior: 'auto', // Use auto for better performance, we handle smooth scroll with RAF
               position: 'relative',
-              zIndex: 1
+              zIndex: 1,
+              contain: 'layout style',
+              willChange: 'scroll-position'
             }}
           >
             {filteredMessages.length === 0 ? (
@@ -1401,15 +1444,16 @@ const ChatArea = ({ setActiveView }) => {
                   const profilePicture = userProfile.profilePicture;
 
                   return (
-                    <motion.div
+                    <div
                       id={`message-${message.id}`}
                       key={message.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex items-start gap-2 group/message relative ${
+                      className={`flex items-start gap-2 group/message relative gpu-accelerated ${
                         isAuthor ? 'justify-end' : 'justify-start'
                       }`}
+                      style={{ 
+                        contain: 'layout style paint',
+                        isolation: 'isolate'
+                      }}
                       onMouseEnter={(e) => {
                         // Show menu button on hover
                         const menuButton = e.currentTarget.querySelector('.message-menu-button');
@@ -1456,19 +1500,16 @@ const ChatArea = ({ setActiveView }) => {
                 )}
 
                 <div className="relative">
-                <motion.div
-                        className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer ${
+                <div
+                        className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer gpu-accelerated transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] ${
                             isAuthor
                               ? 'bg-indigo-600 text-white'
                               : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
                           }`}
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
                   style={{ 
                     transform: 'translateZ(0)', // Force GPU acceleration
-                    willChange: 'transform',
-                    backfaceVisibility: 'hidden'
+                    backfaceVisibility: 'hidden',
+                    contain: 'layout style paint'
                   }}
                 >
                     <div className="flex items-center justify-between mb-1">
@@ -1706,7 +1747,7 @@ const ChatArea = ({ setActiveView }) => {
                       )}
                     </div>
                   )}
-                  </motion.div>
+                </div>
                     {/* 3-dots menu button - appears on hover */}
                     <div 
                       ref={(el) => {
@@ -2022,7 +2063,7 @@ const ChatArea = ({ setActiveView }) => {
                     </div>
                   )}
                 </div>
-                </motion.div>
+              </div>
                   );
                 })}
               </>

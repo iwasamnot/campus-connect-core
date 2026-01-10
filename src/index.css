@@ -20,7 +20,7 @@
   -o-transform: translateZ(0);
 }
 
-/* Optimize all animated elements for GPU */
+/* Optimize all animated elements for GPU - Performance Critical */
 [class*="animate-"],
 [class*="motion-"],
 motion.div,
@@ -30,6 +30,56 @@ motion.article {
   transform: translateZ(0);
   will-change: transform, opacity;
   backface-visibility: hidden;
+  /* Only use will-change when actively animating */
+}
+
+/* Optimize Framer Motion components for performance */
+[data-framer-component] {
+  contain: layout style paint;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+/* Performance: Remove will-change after animation completes */
+@supports (animation: fade-in 0.3s) {
+  *:not(:hover):not(:active):not(:focus) {
+    will-change: auto;
+  }
+}
+
+/* Performance: Optimize message items for better rendering */
+.message-item {
+  contain: layout style paint;
+  isolation: isolate;
+  transform: translateZ(0);
+  /* Only use will-change on hover */
+  will-change: auto;
+}
+
+.message-item:hover {
+  will-change: transform;
+}
+
+/* Optimize scroll performance with passive listeners */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: auto; /* Use auto for better performance */
+}
+
+/* Optimize Framer Motion buttons - reduce animations */
+motion.button {
+  /* Only animate on interaction, not always */
+  will-change: auto;
+}
+
+motion.button:hover {
+  will-change: transform;
+}
+
+motion.button:active {
+  will-change: transform;
 }
 
 /* Remove FPS caps - use native refresh rate */
