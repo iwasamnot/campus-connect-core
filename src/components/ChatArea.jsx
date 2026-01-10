@@ -31,6 +31,7 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
   ? window.__firebaseDb 
   : null;
 import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
 // Use window.__LogoComponent directly to avoid import/export issues
@@ -1073,180 +1074,181 @@ const ChatArea = ({ setActiveView }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-full bg-white dark:bg-gray-900 relative overflow-hidden">
-      {/* Subtle Fluid Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {Array.from({ length: 4 }, (_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-gradient-to-br from-indigo-100/10 via-purple-100/8 to-pink-100/10 dark:from-indigo-900/5 dark:via-purple-900/5 dark:to-pink-900/5 blur-3xl"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${100 + Math.random() * 150}px`,
-              height: `${100 + Math.random() * 150}px`,
-              animation: `float-subtle ${15 + Math.random() * 10}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 8}s`,
-            }}
-          />
-        ))}
-      </div>
-      <style>{`
-        @keyframes float-subtle {
-          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-          50% { transform: translate(15px, -15px) scale(1.05); opacity: 0.5; }
-        }
-      `}</style>
-      {/* Chat Header */}
+    <div className="flex flex-col h-full w-full relative overflow-hidden bg-transparent">
+      {/* Chat Header - Fluid.so aesthetic */}
       <div 
-        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 md:px-6 py-3 md:py-4 relative z-10"
+        className="glass-panel border-b border-white/10 px-4 md:px-6 py-3 md:py-4 relative z-10 rounded-t-[2rem] flex-shrink-0"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
           paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
           paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
-          marginTop: '0',
-          position: 'relative',
-          zIndex: 10
         }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             <Logo size="small" showText={false} />
             <div className="min-w-0 flex-1">
-              <h2 className="text-base sm:text-lg md:text-2xl font-light text-gray-800 dark:text-white truncate">Campus Chat</h2>
-              <p className="text-xs md:text-sm text-gray-400 dark:text-gray-500 hidden sm:block font-light">Connect with your campus community</p>
+              <h2 className="text-base sm:text-lg md:text-2xl font-semibold text-white truncate text-glow">Campus Chat</h2>
+              <p className="text-xs md:text-sm text-gray-400 hidden sm:block font-medium">Connect with your campus community</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* AI Help Mode Toggle with Model Selector */}
+            <div className="flex items-center gap-2">
+            {/* AI Help Mode Toggle with Model Selector - Fluid.so aesthetic */}
             <div className="relative">
-              <button
+              <motion.button
                 onClick={() => setAiHelpMode(!aiHelpMode)}
-                className={`p-2 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`p-2 rounded-xl transition-all duration-300 ${
                   aiHelpMode
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white shadow-lg'
+                    : 'hover:bg-white/10 text-white/70 hover:text-white'
                 }`}
                 title={aiHelpMode ? 'AI Help Mode: ON - Virtual Senior will respond' : 'AI Help Mode: OFF - Click to enable'}
               >
                 <Bot size={20} />
-              </button>
+              </motion.button>
               {aiHelpMode && (
-                <button
+                <motion.button
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowModelSelector(!showModelSelector);
                   }}
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-400 rounded-full border-2 border-white dark:border-gray-800 hover:bg-indigo-500 transition-colors"
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-white/80 rounded-full border-2 border-white/90 hover:bg-white transition-colors shadow-lg"
                   title="Select Gemini Model"
                 />
               )}
-              {/* Model Selector Dropdown */}
+              {/* Model Selector Dropdown - Fluid.so aesthetic */}
               {aiHelpMode && showModelSelector && (
-                <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[250px]">
-                  <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Select Gemini Model</p>
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute top-full right-0 mt-2 glass-panel border border-white/10 rounded-xl shadow-xl z-50 min-w-[250px] overflow-hidden"
+                >
+                  <div className="p-3 border-b border-white/10">
+                    <p className="text-xs font-semibold text-white">Select Gemini Model</p>
                   </div>
                   <div className="p-2 max-h-64 overflow-y-auto">
                     {geminiModels.map((model) => (
-                      <button
+                      <motion.button
                         key={model.value}
                         onClick={() => {
                           setSelectedGeminiModel(model.value);
                           setShowModelSelector(false);
                         }}
+                        whileHover={{ x: 4 }}
+                        whileTap={{ scale: 0.98 }}
                         className={`w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors ${
                           selectedGeminiModel === model.value
-                            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            ? 'bg-white/20 text-white font-semibold'
+                            : 'hover:bg-white/10 text-white/70 hover:text-white'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">{model.label}</span>
+                              <span className="font-medium text-sm text-white">{model.label}</span>
                               {model.free && (
-                                <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded">
+                                <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">
                                   FREE
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{model.description}</p>
+                            <p className="text-xs text-white/60 mt-0.5">{model.description}</p>
                           </div>
                           {selectedGeminiModel === model.value && (
-                            <div className="w-2 h-2 bg-indigo-600 dark:bg-indigo-400 rounded-full"></div>
+                            <div className="w-2 h-2 bg-white/80 rounded-full"></div>
                           )}
                         </div>
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
             {aiHelpMode && (
-              <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hidden sm:inline">
+              <span className="text-xs text-white/70 font-medium hidden sm:inline text-glow-subtle">
                 AI Help ON
               </span>
             )}
             <div className="relative flex items-center gap-2">
-              <button
+              <motion.button
                 onClick={() => setShowAdvancedSearch(true)}
-                    className="p-2 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300"
                 title="Advanced Search (Ctrl/Cmd + K)"
               >
-                <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
-              </button>
-              <button
+                <Search size={20} className="text-white/70 hover:text-white" />
+              </motion.button>
+              <motion.button
                 onClick={handleSummarizeConversation}
                 disabled={messages.length === 0 || showSummarization}
-                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                whileHover={!showSummarization && messages.length > 0 ? { scale: 1.1 } : {}}
+                whileTap={!showSummarization && messages.length > 0 ? { scale: 0.95 } : {}}
+                className="p-2 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-300"
                 title="Summarize conversation"
                 aria-label="Summarize conversation"
               >
-                <FileText size={20} className="text-indigo-600 dark:text-indigo-400" />
-              </button>
+                <FileText size={20} className="text-white/70 hover:text-white" />
+              </motion.button>
               <div className="relative">
-                <button
+                <motion.button
                   onClick={() => setShowExportMenu(!showExportMenu)}
-                    className="p-2 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300"
                   title="Export chat history"
                 >
-                  <Download size={20} className="text-indigo-600 dark:text-indigo-400" />
-                </button>
+                  <Download size={20} className="text-white/70 hover:text-white" />
+                </motion.button>
                 {showExportMenu && (
-                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[180px]">
-                    <button
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 glass-panel border border-white/10 rounded-xl shadow-xl z-50 min-w-[180px] overflow-hidden"
+                  >
+                    <motion.button
                       onClick={() => {
                         exportMessagesToJSON(messages, 'campus-chat-history');
                         setShowExportMenu(false);
                         success('Chat history exported as JSON');
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors"
                     >
                       Export as JSON
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       onClick={() => {
                         exportMessagesToCSV(messages, 'campus-chat-history');
                         setShowExportMenu(false);
                         success('Chat history exported as CSV');
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors border-t border-white/10"
                     >
                       Export as CSV
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       onClick={() => {
                         exportMessagesToTXT(messages, 'campus-chat-history');
                         setShowExportMenu(false);
                         success('Chat history exported as TXT');
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors border-t border-white/10"
                     >
                       Export as TXT
-                    </button>
-                  </div>
+                    </motion.button>
+                  </motion.div>
                 )}
               </div>
             </div>
@@ -1255,34 +1257,42 @@ const ChatArea = ({ setActiveView }) => {
         
       </div>
 
-          {/* Pinned Messages Section */}
+          {/* Pinned Messages Section - Fluid.so aesthetic */}
           {pinnedMessages.length > 0 && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-3 md:px-6 py-2 animate-slide-in-down">
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel border-b border-yellow-500/30 bg-yellow-500/10 px-4 md:px-6 py-3 rounded-t-[2rem]"
+            >
               <div className="flex items-center gap-2 mb-2">
-                <Pin size={16} className="text-yellow-600 dark:text-yellow-400" />
-                <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Pinned Messages</h3>
+                <Pin size={16} className="text-yellow-400" />
+                <h3 className="text-sm font-semibold text-yellow-300 text-glow-subtle">Pinned Messages</h3>
               </div>
               <div className="space-y-2">
                 {messages
                   .filter(m => pinnedMessages.includes(m.id))
                   .slice(0, 3)
                   .map((message) => (
-                    <div key={message.id} className="text-xs p-2 bg-white dark:bg-gray-800 rounded border border-yellow-200 dark:border-yellow-700 card-hover">
+                    <motion.div 
+                      key={message.id} 
+                      whileHover={{ y: -2 }}
+                      className="text-xs p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-yellow-500/20 transition-all"
+                    >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{message.userName || 'User'}</span>
-                        <Pin size={12} className="text-yellow-600 dark:text-yellow-400" />
+                        <span className="font-medium text-white">{message.userName || 'User'}</span>
+                        <Pin size={12} className="text-yellow-400" />
                       </div>
-                      <p className="text-gray-600 dark:text-gray-400 truncate">
+                      <p className="text-white/70 truncate">
                         {message.displayText || message.text}
                       </p>
-                    </div>
+                    </motion.div>
                   ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+          {/* Messages Area - Fluid.so aesthetic */}
+          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent">
         {filteredMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full animate-fade-in">
             <img 
@@ -1323,9 +1333,12 @@ const ChatArea = ({ setActiveView }) => {
             const profilePicture = userProfile.profilePicture;
 
             return (
-              <div
+              <motion.div
                 id={`message-${message.id}`}
                 key={message.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
                 className={`flex items-start gap-2 group/message relative ${
                   isAuthor ? 'justify-end' : 'justify-start'
                 }`}
@@ -1363,13 +1376,15 @@ const ChatArea = ({ setActiveView }) => {
                   </button>
                 )}
 
-                <div
-                    className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg relative ${
+                <motion.div
+                    className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative ${
                     isAuthor
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
+                      : 'bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-800 dark:text-white border border-gray-200/50 dark:border-gray-700/50'
                   }`}
                   style={{ position: 'relative' }}
+                  whileHover={{ y: -2 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                 >
                     <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -1606,6 +1621,7 @@ const ChatArea = ({ setActiveView }) => {
                       )}
                     </div>
                   )}
+                  </motion.div>
 
                   {/* 3-dots menu button - appears on hover */}
                   <div 
@@ -1862,8 +1878,7 @@ const ChatArea = ({ setActiveView }) => {
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
+                </motion.div>
             );
           })}
           </>
@@ -1876,63 +1891,75 @@ const ChatArea = ({ setActiveView }) => {
             <TypingIndicator typingUsers={typingUsers} userNames={userNames} />
           )}
 
-          {/* Message Input */}
+          {/* Message Input - Fluid.so aesthetic */}
           <div 
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 px-3 md:px-6 py-3 md:py-4 relative z-10"
+            className="glass-panel border-t border-white/10 px-3 md:px-6 py-3 md:py-4 relative z-10 rounded-b-[2rem] flex-shrink-0"
             style={{
               paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
               paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
               paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
             }}
           >
-            {/* Reply Preview */}
+            {/* Reply Preview - Fluid.so aesthetic */}
             {replyingTo && (
-              <div className="mb-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between animate-slide-in-down">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-3 p-3 bg-indigo-600/20 backdrop-blur-sm border border-indigo-500/30 rounded-xl flex items-center justify-between"
+              >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Reply size={16} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                  <Reply size={16} className="text-indigo-300 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                    <p className="text-xs font-medium text-indigo-200">
                       Replying to {replyingTo.userName}
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                    <p className="text-xs text-white/60 truncate">
                       {replyingTo.text || replyingTo.displayText}
                     </p>
                   </div>
                 </div>
-                <button
+                <motion.button
                   onClick={() => setReplyingTo(null)}
-                  className="p-1 hover:bg-indigo-100 dark:hover:bg-indigo-800 rounded transition-colors flex-shrink-0"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
                 >
-                  <X size={16} className="text-indigo-600 dark:text-indigo-400" />
-                </button>
-              </div>
+                  <X size={16} className="text-white/70 hover:text-white" />
+                </motion.button>
+              </motion.div>
             )}
 
-            {/* File Preview */}
+            {/* File Preview - Fluid.so aesthetic */}
             {attachedFile && (
-              <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-3 p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-between"
+              >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {attachedFile.type?.startsWith('image/') ? (
-                    <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                    <ImageIcon size={20} className="text-white/70 flex-shrink-0" />
                   ) : (
-                    <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                    <File size={20} className="text-white/70 flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <p className="text-sm font-medium text-white truncate">
                       {attachedFile.name}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-white/60">
                       {(attachedFile.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 </div>
-                <button
+                <motion.button
                   onClick={() => setAttachedFile(null)}
-                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
                 >
-                  <X size={16} className="text-gray-600 dark:text-gray-400" />
-                </button>
-              </div>
+                  <X size={16} className="text-white/70 hover:text-white" />
+                </motion.button>
+              </motion.div>
             )}
 
             <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
@@ -1987,7 +2014,7 @@ const ChatArea = ({ setActiveView }) => {
                     }
                   }}
                   placeholder={aiHelpMode ? "Type your message... (AI Help enabled)" : "Type your message... (Use @ to mention)"}
-                  className="w-full px-4 md:px-5 py-3 text-sm md:text-base border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all duration-300"
+                  className="w-full px-4 md:px-5 py-3 text-sm md:text-base border border-white/10 rounded-full bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
                   disabled={sending || waitingForAI}
                 />
                 {/* Mention Autocomplete */}
@@ -2010,19 +2037,21 @@ const ChatArea = ({ setActiveView }) => {
                 )}
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex items-center gap-1">
+              {/* Action Buttons - Fluid.so aesthetic */}
+              <div className="flex items-center gap-2">
                 {/* File Upload */}
                 <div className="relative">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setShowFileUpload(!showFileUpload)}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
                     title="Upload file"
                     aria-label="Upload file or image"
                   >
                     <Paperclip size={20} />
-                  </button>
+                  </motion.button>
                   {showFileUpload && (
                     <div className="absolute bottom-full right-0 mb-2">
                       <FileUpload
@@ -2036,51 +2065,59 @@ const ChatArea = ({ setActiveView }) => {
                 </div>
 
                 {/* Poll Creator */}
-                <button
+                <motion.button
                   type="button"
                   onClick={() => setShowPollCreator(true)}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
                   title="Create poll"
                   aria-label="Create a poll"
                 >
                   <BarChart3 size={20} />
-                </button>
+                </motion.button>
 
                 {/* Voice Recorder */}
-                <button
+                <motion.button
                   type="button"
                   onClick={() => setShowVoiceRecorder(true)}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
                   title="Record voice message"
                   aria-label="Record a voice message"
                 >
                   <Mic size={20} />
-                </button>
+                </motion.button>
 
                 {/* Quick Replies */}
-                <button
+                <motion.button
                   type="button"
                   onClick={() => setShowQuickReplies(true)}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
                   title="Quick replies"
                   aria-label="Open quick replies templates"
                 >
                   <MessageSquare size={20} />
-                </button>
+                </motion.button>
 
                 {/* Emoji Picker */}
                 <div className="relative">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
                     title="Add emoji"
                     aria-label="Open emoji picker"
                     aria-expanded={showEmojiPicker}
                     aria-haspopup="listbox"
                   >
                     <Smile size={20} />
-                  </button>
+                  </motion.button>
                   {showEmojiPicker && (
                     <div className="absolute bottom-full right-0 mb-2 z-[100]">
                       <EmojiPicker
@@ -2105,15 +2142,23 @@ const ChatArea = ({ setActiveView }) => {
                   )}
                 </div>
 
-                {/* Send Button */}
-                <button
+                {/* Send Button - Fluid.so shimmer effect */}
+                <motion.button
                   type="submit"
                   disabled={sending || waitingForAI || (!newMessage.trim() && !attachedFile)}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 md:px-6 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 font-medium"
+                  whileHover={!sending && !waitingForAI && (newMessage.trim() || attachedFile) ? { scale: 1.05 } : {}}
+                  whileTap={!sending && !waitingForAI && (newMessage.trim() || attachedFile) ? { scale: 0.95 } : {}}
+                  className={`send-button-shimmer text-white px-5 md:px-6 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                    !sending && !waitingForAI && (newMessage.trim() || attachedFile) ? '' : 'opacity-50'
+                  }`}
                 >
                   {waitingForAI ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="rounded-full h-4 w-4 border-b-2 border-white"
+                      />
                       <span className="hidden sm:inline">AI thinking...</span>
                     </>
                   ) : (
@@ -2122,13 +2167,17 @@ const ChatArea = ({ setActiveView }) => {
                       <span className="hidden sm:inline">Send</span>
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </form>
             {aiHelpMode && (
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 text-center">
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-white/60 mt-2 text-center font-medium"
+              >
                 💡 AI Help Mode: Virtual Senior ({geminiModels.find(m => m.value === selectedGeminiModel)?.label}) will respond to your non-toxic messages
-              </p>
+              </motion.p>
             )}
           </div>
 

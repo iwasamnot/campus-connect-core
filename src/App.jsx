@@ -292,7 +292,16 @@ function App() {
       <CallModal />
       {/* IMPORTANT: Avoid forcing 100vh on mobile/PWA (causes "locked" viewport and jumpy layouts).
           Use h-screen as fallback, but prefer 100dvh where supported. */}
-      <div className="flex h-screen h-[100dvh] overflow-hidden w-full bg-white dark:bg-gray-900 md:flex-row">
+      {/* Aurora Background - Fluid.so aesthetic */}
+      <div className="aurora-background fixed inset-0 z-0">
+        <div className="aurora-blob aurora-blob-1" />
+        <div className="aurora-blob aurora-blob-2" />
+        <div className="aurora-blob aurora-blob-3" />
+        <div className="aurora-blob aurora-blob-4" />
+        <div className="aurora-blob aurora-blob-5" />
+      </div>
+      
+      <div className="flex h-screen h-[100dvh] overflow-hidden w-full relative z-10 md:flex-row p-4 gap-4">
       {/* Skip to main content link for accessibility */}
       <a href="#main-content" className="skip-to-main">
         Skip to main content
@@ -303,9 +312,12 @@ function App() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      <div 
+      <motion.div 
         id="main-content" 
-        className="flex-1 overflow-y-auto relative w-full"
+        className="flex-1 overflow-hidden relative w-full glass-panel rounded-[2rem] flex flex-col"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
         onTouchStart={(e) => {
           // Swipe from left edge to open menu (only on mobile, when sidebar is closed)
           if (isMobile && !sidebarOpen && e.touches[0].clientX < 30) {
@@ -529,7 +541,7 @@ function App() {
             )}
           </AnimatePresence>
         </Suspense>
-      </div>
+      </motion.div>
     </div>
     </>
   );

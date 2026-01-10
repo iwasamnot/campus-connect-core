@@ -21,17 +21,34 @@ service cloud.firestore {
       // Allow authenticated users to read user profiles
       allow read: if isAuthenticated();
       
-      // Allow users to create their own user document
+      // Allow users to create their own user document (can set role and emailVerified on creation)
       allow create: if isAuthenticated() && request.auth.uid == userId;
       
       // Allow users to update their own profile, or admins to update any user
-      // IMPORTANT: Users CANNOT update their own emailVerified field - only admins can
+      // IMPORTANT: 
+      // - Users can SET their role if it doesn't exist yet (first time login) OR if document doesn't exist
+      // - Users can update emailVerified from false/undefined to true (when they verify email)
+      // - Users CANNOT change their role after it's been set - only admins can
+      // - Users CANNOT change emailVerified from true to false - only admins can
       allow update: if isAuthenticated() && (
-        // User updating their own profile (but not emailVerified)
-        (request.auth.uid == userId && 
-         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified', 'role'])) ||
-        // Admin updating any user (can update emailVerified and role)
-        isAdmin()
+        // Admin updating any user (can update emailVerified and role freely)
+        isAdmin() ||
+        // User updating their own profile
+        (request.auth.uid == userId && (
+          // Allow updating fields other than role and emailVerified
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified', 'role'])) ||
+          // Allow setting role ONLY if it doesn't exist yet (first time setup during login)
+          // Check if 'role' key is not in resource.data.keys()
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
+           !('role' in resource.data)) ||
+          // Allow updating emailVerified from false/undefined to true (user verified their email)
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified']) &&
+           request.resource.data.emailVerified == true &&
+           (!('emailVerified' in resource.data) || resource.data.emailVerified == false)) ||
+          // Allow setting both role and emailVerified if role doesn't exist (first login)
+          (request.resource.data.diff(resource.data).affectedKeys().hasAll(['role', 'emailVerified']) &&
+           !('role' in resource.data))
+        ))
       );
       
       // Only admins can delete users

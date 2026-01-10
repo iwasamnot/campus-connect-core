@@ -681,15 +681,145 @@ motion.article {
   }
 }
 
-/* Backdrop filter support for modern glassmorphism */
-@supports (backdrop-filter: blur(10px)) {
+/* Aurora Background - Fluid.so aesthetic */
+@keyframes aurora-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.4;
+  }
+  33% {
+    transform: translate(30%, -30%) scale(1.1);
+    opacity: 0.6;
+  }
+  66% {
+    transform: translate(-20%, 20%) scale(0.9);
+    opacity: 0.5;
+  }
+}
+
+@keyframes aurora-float-slow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(25%, -25%) scale(1.15);
+    opacity: 0.5;
+  }
+}
+
+@keyframes aurora-float-fast {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.35;
+  }
+  25% {
+    transform: translate(-25%, 25%) scale(1.05);
+    opacity: 0.55;
+  }
+  75% {
+    transform: translate(25%, -15%) scale(0.95);
+    opacity: 0.45;
+  }
+}
+
+.aurora-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: #050505;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.aurora-blob-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #4f46e5 0%, transparent 70%);
+  top: -200px;
+  left: -200px;
+  animation: aurora-float 20s ease-in-out infinite;
+}
+
+.aurora-blob-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  animation: aurora-float-slow 25s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.aurora-blob-3 {
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: aurora-float-fast 18s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+.aurora-blob-4 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.6) 0%, transparent 70%);
+  top: 20%;
+  right: 10%;
+  animation: aurora-float 22s ease-in-out infinite;
+  animation-delay: -7s;
+}
+
+.aurora-blob-5 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.5) 0%, transparent 70%);
+  bottom: 30%;
+  left: 15%;
+  animation: aurora-float-slow 24s ease-in-out infinite;
+  animation-delay: -12s;
+}
+
+/* Glassmorphism 2.0 - Fluid.so aesthetic */
+@supports (backdrop-filter: blur(20px)) {
+  .glass-panel {
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  
   .glass-effect {
-    backdrop-filter: blur(10px) saturate(180%);
-    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    background-color: rgba(20, 20, 20, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
   
   .dark .glass-effect {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(20, 20, 20, 0.4);
+  }
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(20px)) {
+  .glass-panel {
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -1115,6 +1245,56 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
+@keyframes shimmer-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.6), 0 0 60px rgba(124, 58, 237, 0.4);
+  }
+}
+
+/* Typography & Glow Effects - Fluid.so aesthetic */
+.text-glow {
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
+
+.text-glow-strong {
+  text-shadow: 0 0 30px rgba(99, 102, 241, 0.8), 0 0 50px rgba(124, 58, 237, 0.6);
+}
+
+.text-glow-subtle {
+  text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+/* Message hover lift effect */
+.message-item {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.message-item:hover {
+  transform: translateY(-2px);
+}
+
+/* Send button shimmer effect */
+.send-button-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #6366f1 0%, #7c3aed 100%);
+  background-size: 200% 100%;
+  transition: all 0.3s ease;
+}
+
+.send-button-shimmer:hover {
+  animation: shimmer 2s linear infinite, shimmer-glow 2s ease-in-out infinite;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+}
+
+.send-button-shimmer:active {
+  transform: translateY(0) scale(0.98);
+}
+
 @keyframes skeletonPulse {
   0%, 100% {
     opacity: 1;
@@ -1208,12 +1388,12 @@ html {
   height: -webkit-fill-available; /* iOS Safari fix */
   width: 100%;
   overscroll-behavior: none;
-  background-color: #ffffff;
+  background-color: #050505; /* Deep black for aurora background */
   transition: background-color 0.1s ease;
 }
 
 .dark html {
-  background-color: #111827;
+  background-color: #050505; /* Keep deep black for aurora in dark mode */
 }
 
 .theme-minimal html {
@@ -1226,7 +1406,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -1237,13 +1417,13 @@ body {
   width: 100%;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  background-color: #ffffff;
+  background-color: #050505; /* Deep black for aurora background */
   margin: 0;
   padding: 0;
 }
 
 .dark body {
-  background-color: #111827;
+  background-color: #050505; /* Keep deep black for aurora in dark mode */
 }
 
 .theme-minimal body {
@@ -1272,12 +1452,12 @@ input, textarea, [contenteditable] {
   height: -webkit-fill-available; /* iOS Safari fix */
   overflow: hidden;
   position: relative;
-  background-color: #ffffff;
+  background-color: #050505; /* Deep black for aurora background */
   transition: background-color 0.1s ease;
 }
 
 .dark #root {
-  background-color: #111827;
+  background-color: #050505; /* Keep deep black for aurora in dark mode */
 }
 
 .theme-minimal #root {
