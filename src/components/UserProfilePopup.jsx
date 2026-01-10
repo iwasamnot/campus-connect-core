@@ -112,17 +112,34 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 overflow-y-auto"
         onClick={onClose}
-        style={{ zIndex: 9999 }}
+        style={{ 
+          zIndex: 9999,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          minHeight: '100dvh' // Dynamic viewport height for mobile (100dvh > 100vh)
+        }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="glass-panel border border-white/10 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto overscroll-contain touch-pan-y"
+          className="glass-panel border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-y-auto overscroll-contain touch-pan-y"
           onClick={(e) => e.stopPropagation()}
-          style={{ zIndex: 10000 }}
+          style={{ 
+            zIndex: 10000,
+            maxHeight: 'calc(100dvh - 2rem)', // Use dynamic viewport height for mobile
+            margin: 'auto',
+            position: 'relative'
+          }}
         >
           <div className="sticky top-0 glass-panel border-b border-white/10 px-6 py-4 flex items-center justify-between backdrop-blur-xl z-10 rounded-t-2xl">
             <h3 className="text-xl font-bold text-white text-glow">User Profile</h3>

@@ -1272,6 +1272,27 @@ input:focus, textarea:focus, select:focus {
   /* Framer Motion handles the hover transform, so we only add a subtle scale effect */
   will-change: transform;
   backface-visibility: hidden;
+  transform: translateZ(0); /* Force GPU acceleration */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure group hover works properly - use escaped selector for Tailwind group */
+.group\/message:hover .message-menu-button {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Keep menu visible when menu is open */
+.message-menu-button[class*="opacity-100"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Message container hover */
+.group\/message {
+  position: relative;
 }
 
 /* Send button shimmer effect */

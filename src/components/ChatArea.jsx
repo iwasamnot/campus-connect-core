@@ -1371,24 +1371,6 @@ const ChatArea = ({ setActiveView }) => {
                       className={`flex items-start gap-2 group/message relative ${
                         isAuthor ? 'justify-end' : 'justify-start'
                       }`}
-                      onMouseEnter={(e) => {
-                        // Show menu button on hover
-                        const actionButtons = e.currentTarget.querySelector('.message-menu-button');
-                        if (actionButtons) {
-                          actionButtons.classList.remove('opacity-0', 'invisible');
-                          actionButtons.classList.add('opacity-100', 'visible');
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        // Hide menu button when not hovering (unless menu is open)
-                        if (openMenuId !== message.id) {
-                          const actionButtons = e.currentTarget.querySelector('.message-menu-button');
-                          if (actionButtons) {
-                            actionButtons.classList.remove('opacity-100', 'visible');
-                            actionButtons.classList.add('opacity-0', 'invisible');
-                          }
-                        }
-                      }}
                     >
                 {/* Profile Picture - Only show for other users */}
                 {!isAuthor && (
@@ -1416,13 +1398,13 @@ const ChatArea = ({ setActiveView }) => {
                   </button>
                 )}
 
+                <div className="relative">
                 <motion.div
-                        className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative ${
+                        className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer ${
                             isAuthor
                               ? 'bg-indigo-600 text-white'
                               : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
                           }`}
-                  style={{ position: 'relative' }}
                   whileHover={{ y: -4, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
@@ -1662,15 +1644,30 @@ const ChatArea = ({ setActiveView }) => {
                       )}
                     </div>
                   )}
-                  {/* 3-dots menu button - appears on hover */}
-                  <div 
-                    ref={(el) => {
-                      if (el) menuRefs.current[message.id] = el;
-                    }}
-                    className={`message-menu-button absolute -top-1 -right-1 opacity-0 invisible transition-all duration-200 z-30 ${
-                      openMenuId === message.id ? 'opacity-100 visible' : ''
-                    } group-hover/message:opacity-100 group-hover/message:visible`}
-                  >
+                  </motion.div>
+                    {/* 3-dots menu button - appears on hover */}
+                    <div 
+                      ref={(el) => {
+                        if (el) menuRefs.current[message.id] = el;
+                      }}
+                      className={`message-menu-button absolute ${isAuthor ? 'top-1 -right-1' : 'top-1 -left-1'} opacity-0 invisible group-hover/message:opacity-100 group-hover/message:visible transition-all duration-200 z-30 pointer-events-auto ${
+                        openMenuId === message.id ? 'opacity-100 visible' : ''
+                      }`}
+                      onMouseEnter={(e) => {
+                        // Keep visible when hovering over button
+                        if (openMenuId !== message.id) {
+                          e.currentTarget.classList.remove('opacity-0', 'invisible');
+                          e.currentTarget.classList.add('opacity-100', 'visible');
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        // Hide when leaving button (unless menu is open)
+                        if (openMenuId !== message.id) {
+                          e.currentTarget.classList.remove('opacity-100', 'visible');
+                          e.currentTarget.classList.add('opacity-0', 'invisible');
+                        }
+                      }}
+                    >
                     <motion.button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1928,8 +1925,8 @@ const ChatArea = ({ setActiveView }) => {
                     )}
                   </div>
 
-                  {/* Reaction picker - always visible on touch, hover on desktop */}
-                  {!isAuthor && (
+                    {/* Reaction picker - always visible on touch, hover on desktop */}
+                    {!isAuthor && (
                     <div className="mt-2 opacity-100 md:opacity-0 md:group-hover/message:opacity-100 transition-opacity">
                       <div className="flex gap-1 touch-action-none">
                         {EMOJI_REACTIONS.map((emoji) => {
@@ -1955,7 +1952,7 @@ const ChatArea = ({ setActiveView }) => {
                       </div>
                     </div>
                   )}
-                  </motion.div>
+                </div>
                 </motion.div>
                   );
                 })}
