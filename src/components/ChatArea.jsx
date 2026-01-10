@@ -1515,7 +1515,7 @@ const ChatArea = ({ setActiveView }) => {
                               isReacting ? 'opacity-50 cursor-wait' : ''
                             } ${
                               userReaction === emoji
-                                ? 'bg-indigo-400 dark:bg-indigo-500'
+                                ? 'bg-indigo-500'
                                 : 'bg-indigo-600/30 text-white border border-indigo-500/50'
                             }`}
                           >
