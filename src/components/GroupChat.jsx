@@ -1036,27 +1036,27 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       >
         {/* File Preview */}
         {attachedFile && (
-          <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+          <div className="mb-2 p-2 glass-panel border border-white/10 rounded-xl flex items-center justify-between animate-slide-in-down backdrop-blur-sm">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {attachedFile.type?.startsWith('image/') ? (
-                <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                <ImageIcon size={20} className="text-indigo-400 flex-shrink-0" />
               ) : (
-                <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                <File size={20} className="text-indigo-400 flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-white truncate">
                   {attachedFile.name}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-white/60">
                   {(attachedFile.size / 1024).toFixed(1)} KB
                 </p>
               </div>
             </div>
             <button
               onClick={() => setAttachedFile(null)}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+              className="p-1 glass-panel border border-white/10 rounded-lg hover:border-white/20 text-white/70 hover:text-white transition-all flex-shrink-0"
             >
-              <X size={16} className="text-gray-600 dark:text-gray-400" />
+              <X size={16} />
             </button>
           </div>
         )}
