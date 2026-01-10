@@ -272,7 +272,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
             initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-8 md:p-10 w-full max-w-md mx-auto backdrop-blur-xl"
+            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-8 md:p-10 w-full min-w-[320px] max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl"
           >
             <StaggerContainer staggerDelay={0.08} initialDelay={0.3}>
               <StaggerItem>

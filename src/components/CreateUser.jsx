@@ -185,7 +185,7 @@ const CreateUser = () => {
             initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-            className="max-w-md mx-auto w-full glass-panel p-8 md:p-10 rounded-[2rem] shadow-2xl border border-white/10 backdrop-blur-xl"
+            className="max-w-lg md:max-w-xl lg:max-w-2xl mx-auto w-full min-w-[320px] glass-panel p-8 md:p-10 rounded-[2rem] shadow-2xl border border-white/10 backdrop-blur-xl"
           >
             <StaggerContainer staggerDelay={0.08} initialDelay={0.3}>
               {/* Header */}
