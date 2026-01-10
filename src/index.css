@@ -143,6 +143,58 @@ motion.article {
   --base-font-size: 1rem;
 }
 
+/* Fluid Theme Styles - Glassmorphism & Aurora (Default/Fluid.so aesthetic) */
+.theme-fluid {
+  --fluid-radius: 2rem; /* Very rounded corners - Fluid.so aesthetic */
+  --fluid-border: 1px solid rgba(255, 255, 255, 0.08);
+  --fluid-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --fluid-glass-bg: rgba(20, 20, 20, 0.4);
+  --fluid-blur: blur(20px);
+  --fluid-accent: #4f46e5; /* Indigo */
+  --fluid-accent-secondary: #7c3aed; /* Purple */
+  --fluid-accent-tertiary: #0ea5e9; /* Sky Blue */
+}
+
+.dark.theme-fluid {
+  --fluid-border: 1px solid rgba(255, 255, 255, 0.08);
+  --fluid-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --fluid-glass-bg: rgba(20, 20, 20, 0.4);
+  --fluid-blur: blur(20px);
+}
+
+/* Fluid theme - Enhanced rounded corners (default behavior, already in use) */
+.theme-fluid .rounded-lg {
+  border-radius: 1rem !important;
+}
+
+.theme-fluid .rounded-xl {
+  border-radius: 1.5rem !important;
+}
+
+.theme-fluid .rounded-\[2rem\] {
+  border-radius: 2rem !important;
+}
+
+.theme-fluid .rounded-2xl {
+  border-radius: 2rem !important;
+}
+
+/* Fluid theme - Glassmorphism effects (default behavior, already in use) */
+/* Note: The .glass-panel class is already defined and works with Fluid theme */
+.theme-fluid .glass-panel {
+  background: var(--fluid-glass-bg) !important;
+  backdrop-filter: var(--fluid-blur) !important;
+  -webkit-backdrop-filter: var(--fluid-blur) !important;
+  border: var(--fluid-border) !important;
+  box-shadow: var(--fluid-shadow) !important;
+}
+
+/* Fluid theme - Enhanced shadows and depth */
+.theme-fluid .shadow-xl,
+.theme-fluid .shadow-2xl {
+  box-shadow: var(--fluid-shadow) !important;
+}
+
 /* Minimal Theme Styles - Ultra Modern & Clean */
 .theme-minimal {
   --minimal-radius: 0px; /* Sharp corners - completely flat */

@@ -6,7 +6,7 @@ import { usePreferences } from '../context/PreferencesContext';
 const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
   ? window.__isAdminRole 
   : (role) => role === 'admin' || role === 'admin1';
-import { Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw, Sparkles, Minus } from 'lucide-react';
+import { Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw, Sparkles, Minus, Droplet } from 'lucide-react';
 import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
 
 const Settings = ({ setActiveView }) => {
@@ -116,11 +116,27 @@ const Settings = ({ setActiveView }) => {
                     <div>
                       <p className="font-medium text-white">Theme Style</p>
                       <p className="text-sm text-white/60">
-                        Choose between fun or minimalist design
+                        Choose your preferred design style
                       </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <motion.button
+                      onClick={() => changeThemeStyle('fluid')}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`flex-1 px-4 py-4 rounded-xl border-2 transition-all duration-300 ${
+                        themeStyle === 'fluid'
+                          ? 'border-indigo-500 bg-indigo-600/30 text-white shadow-lg'
+                          : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Droplet size={20} className="text-indigo-400" />
+                        <span className="font-medium text-sm">Fluid</span>
+                        <span className="text-xs opacity-75 text-center">Glassmorphism & Aurora</span>
+                      </div>
+                    </motion.button>
                     <motion.button
                       onClick={() => changeThemeStyle('fun')}
                       whileHover={{ scale: 1.02, y: -2 }}
@@ -134,7 +150,7 @@ const Settings = ({ setActiveView }) => {
                       <div className="flex flex-col items-center gap-2">
                         <Sparkles size={20} />
                         <span className="font-medium text-sm">Fun</span>
-                        <span className="text-xs opacity-75">Colorful & Playful</span>
+                        <span className="text-xs opacity-75 text-center">Colorful & Playful</span>
                       </div>
                     </motion.button>
                     <motion.button
@@ -150,14 +166,14 @@ const Settings = ({ setActiveView }) => {
                       <div className="flex flex-col items-center gap-2">
                         <Minus size={20} />
                         <span className="font-medium text-sm">Minimal</span>
-                        <span className="text-xs opacity-75">Sleek & Modern</span>
+                        <span className="text-xs opacity-75 text-center">Sleek & Modern</span>
                       </div>
                     </motion.button>
                   </div>
                 </div>
 
-                {/* Accent Color - only show for fun theme */}
-                {themeStyle === 'fun' && (
+                {/* Accent Color - show for fluid and fun themes */}
+                {(themeStyle === 'fun' || themeStyle === 'fluid') && (
                 <div className="pt-6 border-t border-white/10">
                   <div className="flex items-center gap-3 mb-4">
                     <Palette className="text-indigo-300" size={20} />
