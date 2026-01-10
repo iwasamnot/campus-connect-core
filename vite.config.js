@@ -10,6 +10,10 @@ export default defineConfig({
       'react-dom',
       'react/jsx-runtime',
       'react/jsx-dev-runtime',
+      // Pre-bundle animation libraries to prevent circular dependency issues
+      'framer-motion',
+      '@react-spring/web',
+      'gsap',
       // Force Logo to be pre-bundled and always available
       './src/components/Logo.jsx'
     ],
@@ -263,8 +267,11 @@ export default defineConfig({
             if (id.includes('@google/generative-ai')) {
               return 'gemini-vendor';
             }
+            // Keep animation libraries in main vendor chunk to avoid circular dependency issues
+            // Moving framer-motion, react-spring, and gsap to vendor instead of separate chunk
+            // This prevents "Cannot access 'yf' before initialization" errors
             if (id.includes('framer-motion') || id.includes('@react-spring') || id.includes('gsap')) {
-              return 'animation-vendor';
+              return 'vendor'; // Put in main vendor chunk instead of separate animation-vendor
             }
             // Other node_modules
             return 'vendor';
