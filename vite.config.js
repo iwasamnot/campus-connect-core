@@ -111,6 +111,37 @@ export default defineConfig({
         clientsClaim: true, // Take control of all clients immediately
         runtimeCaching: [
           {
+            // CRITICAL: Handle JS module requests BEFORE navigateFallback
+            // This prevents "Expected a JavaScript module but got text/html" errors
+            // When a JS file is missing (old hash), NetworkFirst will fail and return 404 instead of HTML
+            urlPattern: /\.(?:js|mjs)$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'js-modules-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day - immutable files with hash in name
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.css$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'css-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
             urlPattern: /^https:\/\/.*\.firebaseapp\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
@@ -208,7 +239,20 @@ export default defineConfig({
         ],
         navigationPreload: false, // Disabled to prevent preloadResponse cancellation errors
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/_/, /^\/admin/]
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /^\/_/,
+          /^\/admin/,
+          /\.js$/,
+          /\.mjs$/,
+          /\.css$/,
+          /\/assets\//
+        ],
+        // Exclude JS, CSS, and assets from being served as HTML
+        // This prevents "Expected a JavaScript module but got text/html" errors
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true
       },
       devOptions: {
         enabled: true,
