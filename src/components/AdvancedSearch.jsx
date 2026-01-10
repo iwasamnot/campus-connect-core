@@ -36,13 +36,26 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
   const filteredResults = useMemo(() => {
     let results = messages;
 
-    // Text search
+    // Text search - Only search displayText (respects AI moderation)
+    // Filter out toxic messages that are hidden by AI (they should not appear in search)
     if (query.trim()) {
       const searchLower = query.toLowerCase();
       results = results.filter(msg => {
-        const text = (msg.text || msg.displayText || '').toLowerCase();
+        // Skip toxic messages that are hidden - they should not appear in search
+        if (msg.toxic && msg.displayText === '[REDACTED BY AI]') {
+          return false; // Don't show hidden toxic messages in search
+        }
+        
+        // Only search displayText (the redacted version if toxic, or original if safe)
+        const text = (msg.displayText || msg.text || '').toLowerCase();
         const userName = (msg.userName || '').toLowerCase();
         return text.includes(searchLower) || userName.includes(searchLower);
+      });
+    } else {
+      // Even without search query, filter out hidden toxic messages
+      results = results.filter(msg => {
+        // Don't show toxic messages that are hidden by AI
+        return !(msg.toxic && msg.displayText === '[REDACTED BY AI]');
       });
     }
 
@@ -375,8 +388,14 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
                       )}
                     </div>
                     <p className="text-white/70 line-clamp-2 group-hover:text-white/90 transition-colors">
-                      {message.text || message.displayText || ''}
+                      {/* Always show displayText (respects AI moderation - shows [REDACTED BY AI] if toxic) */}
+                      {message.displayText || message.text || ''}
                     </p>
+                    {message.toxic && message.displayText === '[REDACTED BY AI]' && (
+                      <div className="mt-1 text-xs text-yellow-400/70 italic">
+                        ⚠️ Flagged by AI Moderation
+                      </div>
+                    )}
                     {message.fileName && (
                       <div className="mt-2 flex items-center gap-2 text-sm text-indigo-400">
                         <FileText className="w-4 h-4" />

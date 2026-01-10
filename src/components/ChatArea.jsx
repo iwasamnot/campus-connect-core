@@ -1193,29 +1193,27 @@ const ChatArea = ({ setActiveView }) => {
             <div className="flex items-center gap-2">
             {/* AI Help Mode Toggle with Model Selector - Fluid.so aesthetic */}
             <div className="relative">
-              <motion.button
+              <button
                 onClick={() => setAiHelpMode(!aiHelpMode)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className={`p-2 rounded-xl transition-all duration-300 ${
+                className={`p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 gpu-accelerated ${
                   aiHelpMode
                     ? 'bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white shadow-lg'
                     : 'hover:bg-white/10 text-white/70 hover:text-white'
                 }`}
                 title={aiHelpMode ? 'AI Help Mode: ON - Virtual Senior will respond' : 'AI Help Mode: OFF - Click to enable'}
+                style={{ transform: 'translateZ(0)' }}
               >
                 <Bot size={20} />
-              </motion.button>
+              </button>
               {aiHelpMode && (
-                <motion.button
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowModelSelector(!showModelSelector);
                   }}
-                  whileHover={{ scale: 1.15 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-white/80 rounded-full border-2 border-white/90 hover:bg-white transition-colors shadow-lg"
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-white/80 rounded-full border-2 border-white/90 hover:bg-white hover:scale-125 active:scale-100 transition-all shadow-lg gpu-accelerated"
                   title="Select Gemini Model"
+                  style={{ transform: 'translateZ(0)' }}
                 />
               )}
               {/* Model Selector Dropdown - Fluid.so aesthetic */}
@@ -1230,19 +1228,18 @@ const ChatArea = ({ setActiveView }) => {
                   </div>
                   <div className="p-2 max-h-64 overflow-y-auto">
                     {geminiModels.map((model) => (
-                      <motion.button
+                      <button
                         key={model.value}
                         onClick={() => {
                           setSelectedGeminiModel(model.value);
                           setShowModelSelector(false);
                         }}
-                        whileHover={{ x: 4 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors ${
+                        className={`w-full text-left px-3 py-2 rounded-lg mb-1 hover:translate-x-1 active:scale-[0.98] transition-all duration-200 gpu-accelerated ${
                           selectedGeminiModel === model.value
                             ? 'bg-white/20 text-white font-semibold'
                             : 'hover:bg-white/10 text-white/70 hover:text-white'
                         }`}
+                        style={{ transform: 'translateZ(0)' }}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -1260,7 +1257,7 @@ const ChatArea = ({ setActiveView }) => {
                             <div className="w-2 h-2 bg-white/80 rounded-full"></div>
                           )}
                         </div>
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
                 </motion.div>
@@ -1272,36 +1269,33 @@ const ChatArea = ({ setActiveView }) => {
               </span>
             )}
             <div className="relative flex items-center gap-2">
-              <motion.button
+              <button
                 onClick={() => setShowAdvancedSearch(true)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300"
+                className="p-2 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                 title="Advanced Search (Ctrl/Cmd + K)"
+                style={{ transform: 'translateZ(0)' }}
               >
-                <Search size={20} className="text-white/70 hover:text-white" />
-              </motion.button>
-              <motion.button
+                <Search size={20} className="text-white/70 hover:text-white transition-colors" />
+              </button>
+              <button
                 onClick={handleSummarizeConversation}
                 disabled={messages.length === 0 || showSummarization}
-                whileHover={!showSummarization && messages.length > 0 ? { scale: 1.1 } : {}}
-                whileTap={!showSummarization && messages.length > 0 ? { scale: 0.95 } : {}}
-                className="p-2 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-300"
+                className="p-2 hover:bg-white/10 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-transparent rounded-xl transition-all duration-200 gpu-accelerated"
                 title="Summarize conversation"
                 aria-label="Summarize conversation"
+                style={{ transform: 'translateZ(0)' }}
               >
-                <FileText size={20} className="text-white/70 hover:text-white" />
-              </motion.button>
+                <FileText size={20} className="text-white/70 hover:text-white transition-colors" />
+              </button>
               <div className="relative">
-                <motion.button
+                <button
                   onClick={() => setShowExportMenu(!showExportMenu)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300"
+                  className="p-2 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                   title="Export chat history"
+                  style={{ transform: 'translateZ(0)' }}
                 >
-                  <Download size={20} className="text-white/70 hover:text-white" />
-                </motion.button>
+                  <Download size={20} className="text-white/70 hover:text-white transition-colors" />
+                </button>
                 {showExportMenu && (
                   <motion.div 
                     initial={{ opacity: 0, y: -10 }}
@@ -1309,42 +1303,39 @@ const ChatArea = ({ setActiveView }) => {
                     exit={{ opacity: 0, y: -10 }}
                     className="absolute right-0 top-full mt-2 glass-panel border border-white/10 rounded-xl shadow-xl z-50 min-w-[180px] overflow-hidden"
                   >
-                    <motion.button
+                    <button
                       onClick={() => {
                         exportMessagesToJSON(messages, 'campus-chat-history');
                         setShowExportMenu(false);
                         success('Chat history exported as JSON');
                       }}
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] text-sm text-white/70 hover:text-white transition-all duration-200 gpu-accelerated"
+                      style={{ transform: 'translateZ(0)' }}
                     >
                       Export as JSON
-                    </motion.button>
-                    <motion.button
+                    </button>
+                    <button
                       onClick={() => {
                         exportMessagesToCSV(messages, 'campus-chat-history');
                         setShowExportMenu(false);
                         success('Chat history exported as CSV');
                       }}
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors border-t border-white/10"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] text-sm text-white/70 hover:text-white transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                      style={{ transform: 'translateZ(0)' }}
                     >
                       Export as CSV
-                    </motion.button>
-                    <motion.button
+                    </button>
+                    <button
                       onClick={() => {
                         exportMessagesToTXT(messages, 'campus-chat-history');
                         setShowExportMenu(false);
                         success('Chat history exported as TXT');
                       }}
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-colors border-t border-white/10"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] text-sm text-white/70 hover:text-white transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                      style={{ transform: 'translateZ(0)' }}
                     >
                       Export as TXT
-                    </motion.button>
+                    </button>
                   </motion.div>
                 )}
               </div>
@@ -1778,19 +1769,18 @@ const ChatArea = ({ setActiveView }) => {
                         }
                       }}
                     >
-                    <motion.button
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenMenuId(openMenuId === message.id ? null : message.id);
                       }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-1.5 hover:bg-white/10 rounded-full transition-colors touch-action-manipulation"
+                      className="p-1.5 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-full transition-all duration-200 touch-action-manipulation gpu-accelerated"
                       title="More options"
                       aria-label="More options"
+                      style={{ transform: 'translateZ(0)' }}
                     >
-                      <MoreVertical size={16} className="text-white/70 hover:text-white" />
-                    </motion.button>
+                      <MoreVertical size={16} className="text-white/70 hover:text-white transition-colors" />
+                    </button>
                     
                     {/* Dropdown menu - Fluid.so aesthetic */}
                     {openMenuId === message.id && (
@@ -1803,22 +1793,21 @@ const ChatArea = ({ setActiveView }) => {
                       >
                         {/* Menu items */}
                         {!isAuthor && (
-                          <motion.button
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReplyingTo(message);
                               setOpenMenuId(null);
                             }}
-                            whileHover={{ x: 4 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             <Reply size={16} />
                             Reply
-                          </motion.button>
+                          </button>
                         )}
                         
-                        <motion.button
+                        <button
                           onClick={async (e) => {
                             e.stopPropagation();
                             try {
@@ -1833,56 +1822,52 @@ const ChatArea = ({ setActiveView }) => {
                               }
                             }
                           }}
-                          whileHover={{ x: 4 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          style={{ transform: 'translateZ(0)' }}
                         >
                           <Bookmark size={16} />
                           Save
-                        </motion.button>
+                        </button>
                         
                         {preferences.allowMessageForwarding && (
-                          <motion.button
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleForwardMessage(message.id);
                               setOpenMenuId(null);
                             }}
-                            whileHover={{ x: 4 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             <Forward size={16} />
                             Forward
-                          </motion.button>
+                          </button>
                         )}
                         
-                        <motion.button
+                        <button
                           onClick={async (e) => {
                             e.stopPropagation();
                             const messageText = message.displayText || message.text || '';
                             await shareMessage(messageText, message.id);
                             setOpenMenuId(null);
                           }}
-                          whileHover={{ x: 4 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          style={{ transform: 'translateZ(0)' }}
                         >
                           <Share2 size={16} />
                           Share
-                        </motion.button>
+                        </button>
                         
                         {!message.isVoice && (
-                          <motion.button
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleTranslateMessage(message.id, message.displayText || message.text || '');
                               setOpenMenuId(null);
                             }}
                             disabled={translating.has(message.id)}
-                            whileHover={!translating.has(message.id) ? { x: 4 } : {}}
-                            whileTap={!translating.has(message.id) ? { scale: 0.98 } : {}}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-t border-white/10"
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:bg-transparent border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             {translating.has(message.id) ? (
                               <>
@@ -1899,11 +1884,11 @@ const ChatArea = ({ setActiveView }) => {
                                 Translate
                               </>
                             )}
-                          </motion.button>
+                          </button>
                         )}
                         
                         {isAdminRole(userRole) && (
-                          <motion.button
+                          <button
                             onClick={async (e) => {
                               e.stopPropagation();
                               try {
@@ -1928,51 +1913,48 @@ const ChatArea = ({ setActiveView }) => {
                                 showError('Failed to pin message');
                               }
                             }}
-                            whileHover={{ x: 4 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             <Pin size={16} />
                             {pinnedMessages.includes(message.id) ? 'Unpin' : 'Pin'}
-                          </motion.button>
+                          </button>
                         )}
                         
                         {canEdit && (
-                          <motion.button
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditing(message.id);
                               setEditText(message.text);
                               setOpenMenuId(null);
                             }}
-                            whileHover={{ x: 4 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             <Edit2 size={16} />
                             Edit
-                          </motion.button>
+                          </button>
                         )}
                         
                         {canDelete && (
-                          <motion.button
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteMessage(message.id, message.userId, isAIMessage);
                               setOpenMenuId(null);
                             }}
                             disabled={deleting === message.id}
-                            whileHover={deleting !== message.id ? { x: 4 } : {}}
-                            whileTap={deleting !== message.id ? { scale: 0.98 } : {}}
-                            className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/20 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-t border-white/10"
+                            className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:bg-transparent border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             <Trash2 size={16} />
                             {isAIMessage ? "Delete (Admin)" : "Delete"}
-                          </motion.button>
+                          </button>
                         )}
                         
                         {!isAuthor && (
-                          <motion.button
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReporting(reporting === message.id ? null : message.id);
@@ -1980,13 +1962,12 @@ const ChatArea = ({ setActiveView }) => {
                                 setOpenMenuId(null);
                               }
                             }}
-                            whileHover={{ x: 4 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-orange-400 hover:text-orange-300 hover:bg-orange-500/20 flex items-center gap-2 transition-colors border-t border-white/10"
+                            className="w-full px-4 py-2.5 text-left text-sm text-orange-400 hover:text-orange-300 hover:bg-orange-500/20 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             <Flag size={16} />
                             {reporting === message.id ? 'Cancel Report' : 'Report'}
-                          </motion.button>
+                          </button>
                         )}
                       </motion.div>
                     )}
@@ -2007,29 +1988,27 @@ const ChatArea = ({ setActiveView }) => {
                           rows={3}
                         />
                         <div className="flex gap-2">
-                          <motion.button
+                          <button
                             onClick={() => {
                               handleReportMessage(message.id);
                               setOpenMenuId(null);
                             }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium"
+                            className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-600 hover:scale-[1.02] active:scale-[0.98] text-white text-sm rounded-xl transition-all duration-200 touch-action-manipulation font-medium gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             Report
-                          </motion.button>
-                          <motion.button
+                          </button>
+                          <button
                             onClick={() => {
                               setReporting(null);
                               setReportReason('');
                               setOpenMenuId(null);
                             }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium border border-white/10"
+                            className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 hover:scale-[1.02] active:scale-[0.98] text-white/70 hover:text-white text-sm rounded-xl transition-all duration-200 touch-action-manipulation font-medium border border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
                           >
                             Cancel
-                          </motion.button>
+                          </button>
                         </div>
                       </motion.div>
                     )}
@@ -2104,14 +2083,13 @@ const ChatArea = ({ setActiveView }) => {
                     </p>
                   </div>
                 </div>
-                <motion.button
+                <button
                   onClick={() => setReplyingTo(null)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
+                  className="p-1.5 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-lg transition-all duration-200 flex-shrink-0 gpu-accelerated"
+                  style={{ transform: 'translateZ(0)' }}
                 >
-                  <X size={16} className="text-white/70 hover:text-white" />
-                </motion.button>
+                  <X size={16} className="text-white/70 hover:text-white transition-colors" />
+                </button>
               </motion.div>
             )}
 
@@ -2137,14 +2115,13 @@ const ChatArea = ({ setActiveView }) => {
                     </p>
                   </div>
                 </div>
-                <motion.button
+                <button
                   onClick={() => setAttachedFile(null)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
+                  className="p-1.5 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-lg transition-all duration-200 flex-shrink-0 gpu-accelerated"
+                  style={{ transform: 'translateZ(0)' }}
                 >
-                  <X size={16} className="text-white/70 hover:text-white" />
-                </motion.button>
+                  <X size={16} className="text-white/70 hover:text-white transition-colors" />
+                </button>
               </motion.div>
             )}
 
@@ -2227,17 +2204,16 @@ const ChatArea = ({ setActiveView }) => {
               <div className="flex items-center gap-2">
                 {/* File Upload */}
                 <div className="relative">
-                  <motion.button
+                  <button
                     type="button"
                     onClick={() => setShowFileUpload(!showFileUpload)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                     title="Upload file"
                     aria-label="Upload file or image"
+                    style={{ transform: 'translateZ(0)' }}
                   >
                     <Paperclip size={20} />
-                  </motion.button>
+                  </button>
                   {showFileUpload && (
                     <div className="absolute bottom-full right-0 mb-2">
                       <FileUpload
@@ -2251,59 +2227,55 @@ const ChatArea = ({ setActiveView }) => {
                 </div>
 
                 {/* Poll Creator */}
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowPollCreator(true)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                   title="Create poll"
                   aria-label="Create a poll"
+                  style={{ transform: 'translateZ(0)' }}
                 >
                   <BarChart3 size={20} />
-                </motion.button>
+                </button>
 
                 {/* Voice Recorder */}
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowVoiceRecorder(true)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                   title="Record voice message"
                   aria-label="Record a voice message"
+                  style={{ transform: 'translateZ(0)' }}
                 >
                   <Mic size={20} />
-                </motion.button>
+                </button>
 
                 {/* Quick Replies */}
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowQuickReplies(true)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                   title="Quick replies"
                   aria-label="Open quick replies templates"
+                  style={{ transform: 'translateZ(0)' }}
                 >
                   <MessageSquare size={20} />
-                </motion.button>
+                </button>
 
                 {/* Emoji Picker */}
                 <div className="relative">
-                  <motion.button
+                  <button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                     title="Add emoji"
                     aria-label="Open emoji picker"
                     aria-expanded={showEmojiPicker}
                     aria-haspopup="listbox"
+                    style={{ transform: 'translateZ(0)' }}
                   >
                     <Smile size={20} />
-                  </motion.button>
+                  </button>
                   {showEmojiPicker && (
                     <div className="absolute bottom-full right-0 mb-2 z-[100]">
                       <EmojiPicker
@@ -2329,14 +2301,15 @@ const ChatArea = ({ setActiveView }) => {
                 </div>
 
                 {/* Send Button - Fluid.so shimmer effect */}
-                <motion.button
+                <button
                   type="submit"
                   disabled={sending || waitingForAI || (!newMessage.trim() && !attachedFile)}
-                  whileHover={!sending && !waitingForAI && (newMessage.trim() || attachedFile) ? { scale: 1.05 } : {}}
-                  whileTap={!sending && !waitingForAI && (newMessage.trim() || attachedFile) ? { scale: 0.95 } : {}}
-                  className={`send-button-shimmer text-white px-5 md:px-6 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                    !sending && !waitingForAI && (newMessage.trim() || attachedFile) ? '' : 'opacity-50'
+                  className={`send-button-shimmer text-white px-5 md:px-6 py-2.5 rounded-full transition-all duration-200 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed gpu-accelerated ${
+                    !sending && !waitingForAI && (newMessage.trim() || attachedFile) 
+                      ? 'hover:scale-105 active:scale-95' 
+                      : 'opacity-50'
                   }`}
+                  style={{ transform: 'translateZ(0)' }}
                 >
                   {waitingForAI ? (
                     <>
@@ -2353,7 +2326,7 @@ const ChatArea = ({ setActiveView }) => {
                       <span className="hidden sm:inline">Send</span>
                     </>
                   )}
-                </motion.button>
+                </button>
               </div>
             </form>
             {aiHelpMode && (
