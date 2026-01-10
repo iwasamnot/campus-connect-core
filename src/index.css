@@ -1284,7 +1284,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* Keep menu visible when menu is open */
-.message-menu-button[class*="opacity-100"] {
+.message-menu-button.opacity-100 {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
@@ -1293,6 +1293,21 @@ input:focus, textarea:focus, select:focus {
 /* Message container hover */
 .group\/message {
   position: relative;
+}
+
+/* Ensure scrollable areas work properly */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent scroll blocking on mobile */
+@media (hover: none) and (pointer: coarse) {
+  .message-menu-button {
+    opacity: 0.6 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
 }
 
 /* Send button shimmer effect */

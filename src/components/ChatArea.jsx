@@ -1103,7 +1103,7 @@ const ChatArea = ({ setActiveView }) => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full relative overflow-hidden bg-transparent">
+    <div className="flex flex-col h-full w-full relative bg-transparent" style={{ minHeight: 0, maxHeight: '100%' }}>
       {/* Chat Header - Fluid.so aesthetic */}
       <div 
         className="glass-panel border-b border-white/10 px-4 md:px-6 py-3 md:py-4 relative z-10 rounded-t-[2rem] flex-shrink-0"
@@ -1321,7 +1321,16 @@ const ChatArea = ({ setActiveView }) => {
           )}
 
           {/* Messages Area - Fluid.so aesthetic */}
-          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent" style={{ minHeight: '400px' }}>
+          <div 
+            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent" 
+            style={{ 
+              minHeight: 0,
+              height: '100%',
+              maxHeight: '100%',
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'smooth'
+            }}
+          >
             {filteredMessages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full animate-fade-in">
                 <img 
@@ -1371,6 +1380,24 @@ const ChatArea = ({ setActiveView }) => {
                       className={`flex items-start gap-2 group/message relative ${
                         isAuthor ? 'justify-end' : 'justify-start'
                       }`}
+                      onMouseEnter={(e) => {
+                        // Show menu button on hover
+                        const menuButton = e.currentTarget.querySelector('.message-menu-button');
+                        if (menuButton && openMenuId !== message.id) {
+                          menuButton.classList.remove('opacity-0', 'invisible');
+                          menuButton.classList.add('opacity-100', 'visible');
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        // Hide menu button when not hovering (unless menu is open)
+                        if (openMenuId !== message.id) {
+                          const menuButton = e.currentTarget.querySelector('.message-menu-button');
+                          if (menuButton) {
+                            menuButton.classList.remove('opacity-100', 'visible');
+                            menuButton.classList.add('opacity-0', 'invisible');
+                          }
+                        }
+                      }}
                     >
                 {/* Profile Picture - Only show for other users */}
                 {!isAuthor && (
@@ -1408,6 +1435,11 @@ const ChatArea = ({ setActiveView }) => {
                   whileHover={{ y: -4, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
+                  style={{ 
+                    transform: 'translateZ(0)', // Force GPU acceleration
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden'
+                  }}
                 >
                     <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -1650,21 +1682,28 @@ const ChatArea = ({ setActiveView }) => {
                       ref={(el) => {
                         if (el) menuRefs.current[message.id] = el;
                       }}
-                      className={`message-menu-button absolute ${isAuthor ? 'top-1 -right-1' : 'top-1 -left-1'} opacity-0 invisible group-hover/message:opacity-100 group-hover/message:visible transition-all duration-200 z-30 pointer-events-auto ${
-                        openMenuId === message.id ? 'opacity-100 visible' : ''
+                      className={`message-menu-button absolute ${isAuthor ? 'top-1 -right-1' : 'top-1 -left-1'} opacity-0 invisible transition-all duration-200 z-30 ${
+                        openMenuId === message.id ? 'opacity-100 visible pointer-events-auto' : 'pointer-events-none'
                       }`}
+                      style={{ 
+                        pointerEvents: openMenuId === message.id ? 'auto' : 'none',
+                        transform: 'translateZ(0)', // Force GPU acceleration
+                        willChange: 'opacity, visibility'
+                      }}
                       onMouseEnter={(e) => {
                         // Keep visible when hovering over button
                         if (openMenuId !== message.id) {
-                          e.currentTarget.classList.remove('opacity-0', 'invisible');
+                          e.currentTarget.style.pointerEvents = 'auto';
+                          e.currentTarget.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
                           e.currentTarget.classList.add('opacity-100', 'visible');
                         }
                       }}
                       onMouseLeave={(e) => {
                         // Hide when leaving button (unless menu is open)
                         if (openMenuId !== message.id) {
+                          e.currentTarget.style.pointerEvents = 'none';
                           e.currentTarget.classList.remove('opacity-100', 'visible');
-                          e.currentTarget.classList.add('opacity-0', 'invisible');
+                          e.currentTarget.classList.add('opacity-0', 'invisible', 'pointer-events-none');
                         }
                       }}
                     >

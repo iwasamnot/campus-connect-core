@@ -138,7 +138,10 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
             zIndex: 10000,
             maxHeight: 'calc(100dvh - 2rem)', // Use dynamic viewport height for mobile
             margin: 'auto',
-            position: 'relative'
+            position: 'relative',
+            WebkitOverflowScrolling: 'touch',
+            scrollBehavior: 'smooth',
+            minHeight: 0 // Ensure it can shrink if needed
           }}
         >
           <div className="sticky top-0 glass-panel border-b border-white/10 px-6 py-4 flex items-center justify-between backdrop-blur-xl z-10 rounded-t-2xl">
