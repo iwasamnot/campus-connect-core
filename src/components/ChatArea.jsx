@@ -1360,7 +1360,7 @@ const ChatArea = ({ setActiveView }) => {
                       <img 
                         src={profilePicture} 
                         alt={userNames[message.userId] || 'User'} 
-                        className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                        className="w-10 h-10 rounded-full object-cover border-2 border-indigo-400/50 cursor-pointer hover:border-indigo-500 transition-colors"
                         loading="lazy"
                         onError={(e) => {
                           e.target.style.display = 'none';
@@ -1369,9 +1369,9 @@ const ChatArea = ({ setActiveView }) => {
                       />
                     ) : null}
                     <div 
-                      className={`w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors ${profilePicture ? 'hidden' : ''}`}
+                      className={`w-10 h-10 rounded-full bg-indigo-600/20 flex items-center justify-center border-2 border-indigo-400/50 cursor-pointer hover:border-indigo-500 transition-colors ${profilePicture ? 'hidden' : ''}`}
                     >
-                      <User size={20} className="text-indigo-600 dark:text-indigo-400" />
+                      <User size={20} className="text-indigo-400" />
                     </div>
                   </button>
                 )}
@@ -1516,7 +1516,7 @@ const ChatArea = ({ setActiveView }) => {
                             } ${
                               userReaction === emoji
                                 ? 'bg-indigo-400 dark:bg-indigo-500'
-                                : 'bg-indigo-100 dark:bg-indigo-700 text-black dark:text-white border border-indigo-300 dark:border-indigo-600'
+                                : 'bg-indigo-600/30 text-white border border-indigo-500/50'
                             }`}
                           >
                             {emoji} {count}
@@ -1900,9 +1900,9 @@ const ChatArea = ({ setActiveView }) => {
                               onClick={() => !isReacting && handleReaction(message.id, emoji)}
                               disabled={isReacting}
                               className={`p-2 rounded transition-colors touch-action-manipulation ${
-                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-200 dark:hover:bg-indigo-700 active:bg-indigo-300 dark:active:bg-indigo-600'
+                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-600/30 active:bg-indigo-600/40'
                               } ${
-                                userReaction === emoji ? 'bg-indigo-200 dark:bg-indigo-800' : ''
+                                userReaction === emoji ? 'bg-indigo-600/30 border border-indigo-500/50' : ''
                               }`}
                               title="Add reaction"
                               aria-label={`Add ${emoji} reaction`}
@@ -2239,30 +2239,37 @@ const ChatArea = ({ setActiveView }) => {
           setShowForwardModal(false);
           setForwardingMessage(null);
         }}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Forward Message</h3>
-              <button
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="glass-panel border border-white/10 rounded-[2rem] shadow-2xl max-w-md w-full backdrop-blur-xl" onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white text-glow">Forward Message</h3>
+              <motion.button
                 onClick={() => {
                   setShowForwardModal(false);
                   setForwardingMessage(null);
                 }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                whileHover={{ scale: 1.05, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 text-white/70 hover:text-white glass-panel border border-white/10 rounded-xl transition-all"
               >
                 <X size={24} />
-              </button>
+              </motion.button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              <div className="glass-panel bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="text-sm text-white/60 mb-1 font-medium">
                   From: {forwardingMessage.userName || 'Unknown'}
                 </p>
-                <p className="text-gray-900 dark:text-white">
+                <p className="text-white font-medium">
                   {forwardingMessage.displayText || forwardingMessage.text}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-white/90 mb-2">
                   Forward to
                 </label>
                 <div className="space-y-2">
@@ -2372,53 +2379,64 @@ const ChatArea = ({ setActiveView }) => {
 
       {/* Conversation Summarization Modal */}
       {showSummarization && conversationSummary && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowSummarization(false); setConversationSummary(null); }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="glass-panel border border-white/10 rounded-[2rem] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto backdrop-blur-xl" onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-white text-glow flex items-center gap-2">
                   <FileText size={24} />
                   Conversation Summary
                 </h2>
-                <button
+                <motion.button
                   onClick={() => {
                     setShowSummarization(false);
                     setConversationSummary(null);
                   }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.05, rotate: 90 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
                   aria-label="Close"
                 >
                   <X size={24} />
-                </button>
+                </motion.button>
               </div>
-              <div className="prose dark:prose-invert max-w-none">
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+              <div className="prose prose-invert max-w-none">
+                <p className="text-white/80 whitespace-pre-wrap leading-relaxed">
                   {conversationSummary}
                 </p>
               </div>
               <div className="mt-6 flex gap-3 justify-end">
-                <button
+                <motion.button
                   onClick={() => {
                     navigator.clipboard.writeText(conversationSummary);
                     success('Summary copied to clipboard!');
                   }}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
                 >
                   <Copy size={18} />
                   Copy Summary
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => {
                     setShowSummarization(false);
                     setConversationSummary(null);
                   }}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 glass-panel border border-white/10 text-white/80 hover:text-white hover:border-white/20 rounded-xl transition-all duration-300 font-medium"
                 >
                   Close
-                </button>
+                </motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
