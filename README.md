@@ -19,7 +19,63 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ### For Students
 - **Voice & Video Calling**: Make voice and video calls directly from private chats (powered by ZEGOCLOUD)
+  - High-quality voice and video calls
+  - Real-time communication
+  - Works on all devices
+- **Voice Messages**: Record and send voice messages
+  - Record voice messages up to 5 minutes
+  - MediaRecorder API integration with WebM/Opus codec
+  - Real-time recording timer
+  - Preview and playback before sending
+  - Delete and re-record functionality
+  - Microphone permission handling
+  - Audio player with play/pause controls and progress bar
+  - Duration display and download functionality
+  - Stored securely in Firebase Storage
+- **Polls & Surveys**: Create and participate in polls
+  - Create polls with 2-10 options
+  - Configurable settings (multiple votes, anonymous voting, duration)
+  - Duration options: 1 day, 3 days, 7 days, 30 days
+  - Real-time vote counting
+  - Visual progress bars for each option
+  - Winner highlighting
+  - Vote/Unvote functionality
+  - Support for multiple votes per user (configurable)
+  - Available in Campus Chat and Group Chats
+  - Expiry date tracking
+- **Quick Replies / Message Templates**: Create and use message templates
+  - Create, edit, and delete personal message templates
+  - Template name and text customization
+  - Quick access from message input
+  - Personal template library per user
+  - Real-time sync across devices
+  - Perfect for meeting reminders, common responses, and announcements
+- **AI Message Translation**: Translate messages in real-time
+  - AI-powered translation using Google Gemini 2.5 Flash
+  - Support for 14+ languages (English, Spanish, French, German, Chinese, Japanese, Arabic, Hindi, Urdu, Nepali, Bengali, Punjabi, Persian, and more)
+  - Auto-detect source language
+  - Translate individual messages or entire conversations
+  - Fallback to original text on error
+  - One-click translation from message menu
+- **AI Conversation Summarization**: Get AI-powered conversation summaries
+  - Uses Google Gemini 2.5 Flash for intelligent summarization
+  - Configurable summary length
+  - Extract key points from conversations
+  - Generate meeting notes with structured format
+  - Action items extraction
+  - Participant tracking
+  - Copy summary to clipboard
+  - Available from chat menu (Ctrl/Cmd + K)
 - **Campus Chat**: Real-time global chat with AI-powered content moderation
+  - Real-time messaging with all students
+  - AI-powered toxicity detection
+  - **Virtual Senior AI**: AI-powered responses in Campus Chat
+    - Toggle AI Help mode on/off
+    - Virtual Senior responds to non-toxic messages
+    - Multiple Gemini model support (gemini-1.5-flash, gemini-1.5-pro, etc.)
+    - Free and paid model options
+    - Context-aware intelligent responses
+    - Helps answer questions and provide guidance
 - **Activity Dashboard**: Comprehensive activity feed and insights
   - Recent messages and mentions
   - Activity statistics (messages today, this week, active groups)
@@ -41,28 +97,52 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Full-screen image viewer with download option
   - Image metadata (author, date, filename)
 - **Groups**: Create and join study groups with group chat functionality
+  - Create and manage study groups
+  - Browse and request to join groups
+  - View all groups (including joined groups)
+  - Invite users by email
+  - Admin approval system for group requests
+  - Member management (add, remove, leave)
+  - Group admin controls
+  - Group chat with all messaging features
   - File and image sharing
   - Emoji picker
   - Image preview with zoom and pan
-- **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash with local SISTC knowledge base
+  - Create polls in group chats
+  - Voice messages support
+  - Message scheduling for groups
+- **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash
+  - Multiple Gemini model support (gemini-pro, gemini-2.0-flash-exp, gemini-1.5-pro, etc.)
+  - Local SISTC knowledge base integration
+  - Context-aware responses
+  - Conversation history support (maintains context from last 10 messages)
+  - Virtual Senior AI mode in Campus Chat
+  - Toggle AI Help mode on/off
+  - Model selector for choosing the best AI model
+  - Free and paid model options
 - **My Profile**: Comprehensive profile management with:
   - Profile picture upload
   - Personal information (name, bio, course, year of study, date of birth, address)
   - Contact details (student email, personal email, phone number)
 - **User Presence**: See who's online and last seen timestamps
 - **Read Receipts**: Know when your messages are seen
-- **Message Features**:
-  - Edit your own messages
-  - React with emojis
-  - Search messages
-  - Reply to messages
-  - Forward messages to other chats
-  - Save/bookmark messages
-  - Pin messages (admin only)
-  - File and image sharing (up to 10MB per file)
-  - Markdown formatting support
-  - User @mentions with autocomplete
-  - Report inappropriate content
+- **Message Features**: Comprehensive messaging capabilities
+  - **Edit Messages**: Edit your own messages after sending
+  - **Emoji Reactions**: React with emojis (👍, ❤️, 😂, 😮, 😢, 🔥)
+  - **Message Search**: Advanced search across all messages
+  - **Reply to Messages**: Reply to specific messages with threading
+  - **Forward Messages**: Forward messages to Campus Chat, Direct Messages, or Group Chats
+  - **Save/Bookmark Messages**: Save important messages for quick access
+  - **Pin Messages**: Pin important messages (admin only)
+  - **File and Image Sharing**: Share files and images up to 10MB per file
+  - **Markdown Formatting**: Format messages with markdown syntax
+  - **User @mentions**: Mention users with autocomplete suggestions
+  - **Report Content**: Report inappropriate content for admin review
+  - **Voice Messages**: Send voice recordings (see Voice Messages section above)
+  - **Polls**: Create and vote on polls (see Polls & Surveys section above)
+  - **Quick Replies**: Use message templates for quick responses (see Quick Replies section above)
+  - **Translation**: Translate messages to different languages (see AI Message Translation section above)
+  - **Summarization**: Get AI-powered conversation summaries (see AI Conversation Summarization section above)
 
 ### For Admins
 - **Audit Dashboard**: Review all messages with advanced filtering and sorting
@@ -88,7 +168,25 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Deletion verification to ensure persistence
   - Detailed audit logging
 - **Audit Trail**: Complete log of all administrative actions
+  - All admin actions are logged automatically
+  - Detailed action descriptions
+  - Timestamp tracking
+  - User identification
+  - Searchable audit logs
+  - Filter by action type, user, date range
+  - Export audit logs
 - **Export Functionality**: Export audit logs and chat history for analysis
+  - Export audit logs in multiple formats (JSON, CSV, TXT)
+  - Export chat history (JSON, CSV, TXT)
+  - Filter exports by date range
+  - Comprehensive data export for analysis
+  - Analytics data export
+- **Contact Messages**: View and manage contact form submissions
+  - View messages from non-users
+  - Respond to inquiries
+  - Manage contact requests
+  - Contact form integration
+  - Message status tracking
 
 ### Platform Features
 - **AI-Powered Toxicity Detection**: Advanced content moderation using Google Gemini AI
@@ -100,8 +198,12 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Advanced Search**: Powerful search with multiple filters
   - Full-text search across messages
   - Filter by user, date range, file attachments, reactions, pinned status
+  - Filter by message type (text, image, file, voice, poll)
+  - Filter by chat type (Campus Chat, Private Chat, Group Chat)
   - Click to navigate to message
   - Keyboard shortcut: Ctrl/Cmd + K
+  - Real-time search results
+  - Search history
 - **Keyboard Shortcuts**: Comprehensive keyboard navigation
   - Ctrl/Cmd + K: Open advanced search
   - Ctrl/Cmd + /: Show keyboard shortcuts
@@ -110,9 +212,11 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Tab: Autocomplete mentions
   - Esc: Close modals
 - **Message Drafts**: Auto-save drafts as you type
-  - Automatically saves drafts
+  - Automatically saves drafts as you type (debounced)
   - Restores when returning to chat
   - Per-chat draft storage
+  - Works across all chat types (Campus Chat, Private Chat, Group Chat)
+  - Never lose your message while typing
 - **Export Chat History**: Export messages in multiple formats
   - JSON (full data with metadata)
   - CSV (spreadsheet-friendly)
@@ -132,7 +236,38 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Typing Indicators**: See when others are typing in real-time
 - **Read Receipts**: Know when your messages are read
 - **Browser Notifications**: Desktop notifications for new messages and mentions
+  - Desktop push notifications
+  - Notification permissions handling
+  - Custom notification sounds
+  - Mention notifications
+  - Group chat notifications
+- **Web Share API**: Native sharing capabilities
+  - Share messages, groups, and content
+  - Automatic clipboard fallback for unsupported browsers
+  - Integrated into message actions
+  - Share to other apps and platforms
+- **Clipboard API**: Modern clipboard operations
+  - Copy to clipboard with permission handling
+  - Read from clipboard (with permissions)
+  - Image clipboard support
+  - Legacy fallback for older browsers
+  - Copy message text, links, and content
+- **File System Access API**: Native file picker
+  - Modern file selection interface
+  - Save files with native dialog
+  - Traditional input fallback
+  - File type validation and size checks
+- **Internationalization (i18n)**: Multi-language infrastructure
+  - Support for 14+ languages (English, Spanish, French, German, Chinese, Japanese, Arabic, Hindi, Urdu, Nepali, Bengali, Punjabi, Persian, and more)
+  - RTL (Right-to-Left) support for Arabic, Urdu, Persian
+  - Locale-aware formatting (dates, times, numbers)
+  - Relative time formatting ("2 hours ago")
+  - Automatic browser language detection
+  - Translation system foundation
 - **Dark Mode**: Toggle between light and dark themes
+  - Automatic system preference detection
+  - Manual toggle option
+  - Consistent theming across all components
 - **Responsive Design**: Fully optimized for all screen sizes and devices
   - **Fluid Minimal Design**: Modern fluid animations with floating particles throughout
   - **Comprehensive Breakpoints**: 320px to 1920px+ (xs, sm, md, lg, xl, 2xl, 3xl)
@@ -201,8 +336,20 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Permissions-Policy for camera/microphone/geolocation
 - **Secure**: Role-based access control with Firestore security rules
 - **Direct Messages**: Private messaging between users with chat history
+  - One-on-one private conversations
+  - Full chat history
+  - All messaging features (voice, polls, files, etc.)
+  - Read receipts and typing indicators
+  - Voice and video calling support
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days
+  - Configure auto-delete duration
+  - Automatic cleanup of old messages
+  - Privacy-focused messaging
 - **Comprehensive Error Handling**: Detailed error messages and graceful error recovery
+  - User-friendly error messages
+  - Automatic retry logic
+  - Graceful fallbacks
+  - Error boundaries for component isolation
 - **Group Management**: Comprehensive group system
   - Browse and request to join groups
   - View all groups (including joined groups)
@@ -210,6 +357,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Admin approval system
   - Member management (add, remove, leave)
   - Group admin controls
+  - Group chat with all features
+  - Polls in groups
+  - Voice messages in groups
 
 ## Tech Stack
 
