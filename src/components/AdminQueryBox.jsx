@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   collection,
   getCountFromServer,
@@ -210,13 +211,19 @@ const AdminQueryBox = () => {
   );
 
   return (
-    <div className="mt-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-4 glass-panel border border-white/10 rounded-xl p-4 backdrop-blur-xl"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-indigo-600 dark:text-indigo-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-white">Admin Queries</h3>
+          <div className="p-1.5 glass-panel border border-white/10 rounded-lg">
+            <Sparkles size={18} className="text-indigo-400" />
+          </div>
+          <h3 className="font-semibold text-white text-glow">Admin Queries</h3>
         </div>
-        <div className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1">
+        <div className="text-xs text-white/60 flex items-center gap-1">
           <HelpCircle size={14} />
           <span className="hidden sm:inline">{hint}</span>
         </div>
@@ -236,23 +243,25 @@ const AdminQueryBox = () => {
             if (e.key === 'Enter') run(question);
           }}
           placeholder='e.g. "Who was last online?"'
-          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+          className="flex-1 px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 disabled:opacity-50"
           disabled={running}
         />
-        <button
+        <motion.button
           type="button"
           onClick={() => run(question)}
           disabled={running || !normalize(question)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+          whileHover={{ scale: running || !normalize(question) ? 1 : 1.02 }}
+          whileTap={{ scale: running || !normalize(question) ? 1 : 0.98 }}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl disabled:transform-none"
         >
           {running ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
           Run
-        </button>
+        </motion.button>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {examples.map((ex) => (
-          <button
+          <motion.button
             key={ex}
             type="button"
             onClick={() => {
@@ -260,35 +269,47 @@ const AdminQueryBox = () => {
               run(ex);
             }}
             disabled={running}
-            className="px-3 py-1.5 text-xs rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50"
+            whileHover={{ scale: running ? 1 : 1.05 }}
+            whileTap={{ scale: running ? 1 : 0.95 }}
+            className="px-3 py-1.5 text-xs rounded-full glass-panel bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 hover:border-indigo-500/50 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
           >
             {ex}
-          </button>
+          </motion.button>
         ))}
       </div>
 
       {(error || result) && (
-        <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="mt-4 border-t border-white/10 pt-3"
+        >
           {error && (
-            <div className="text-sm text-red-600 dark:text-red-400">
+            <div className="p-3 glass-panel bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl text-sm">
               {error}
             </div>
           )}
           {result && (
             <div className="text-sm">
-              <div className="font-semibold text-gray-900 dark:text-white">{result.title}</div>
-              <ul className="mt-2 space-y-1 text-gray-800 dark:text-gray-200">
+              <div className="font-semibold text-white text-glow mb-2">{result.title}</div>
+              <ul className="mt-2 space-y-1.5 text-white/80">
                 {result.lines.map((line, idx) => (
-                  <li key={idx} className="break-words">
+                  <motion.li
+                    key={idx}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="break-words p-2 glass-panel border border-white/10 rounded-lg"
+                  >
                     {line}
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
