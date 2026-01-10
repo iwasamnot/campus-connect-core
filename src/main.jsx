@@ -2,9 +2,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-// Ensure React is available globally before importing contexts
+// Ensure React is available globally BEFORE importing contexts
+// This prevents "Cannot read properties of undefined (reading 'createContext')" errors
 if (typeof window !== 'undefined') {
   window.React = React;
+  // Also ensure createContext is available
+  window.ReactCreateContext = React.createContext;
+}
+
+// CRITICAL: Verify React is available before importing contexts
+if (!React || !React.createContext) {
+  throw new Error('React is not available. This should never happen.');
 }
 
 import App from './App.jsx'
@@ -196,7 +204,24 @@ window.addEventListener('unhandledrejection', function(e) {
   }
 });
 
+// CRITICAL: Ensure React is fully loaded before rendering
+// This prevents "Cannot read properties of undefined (reading 'createContext')" errors
+if (!React || !React.createContext || !ReactDOM || !ReactDOM.createRoot) {
+  console.error('React is not fully loaded. Waiting for React to be available...');
+  // Wait a bit and retry
+  setTimeout(() => {
+    if (!React || !React.createContext || !ReactDOM || !ReactDOM.createRoot) {
+      throw new Error('React failed to load. Please refresh the page.');
+    }
+  }, 100);
+}
+
 try {
+  // Double-check React is available
+  if (!React || !React.createContext) {
+    throw new Error('React.createContext is not available. React may not be fully loaded.');
+  }
+  
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <ThemeProvider>

@@ -19,6 +19,10 @@
       // Ensure Logo is available globally before any lazy components load
       // This prevents "Export 'Logo' is not defined" errors
       window.__LogoPreload = true;
+      
+      // Ensure React is available before contexts are created
+      // This prevents "Cannot read properties of undefined (reading 'createContext')" errors
+      window.__ReactPreload = true;
     </script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover, minimum-scale=0.5" />

@@ -9,13 +9,20 @@ export default defineConfig({
       'react',
       'react-dom',
       'react/jsx-runtime',
+      'react/jsx-dev-runtime',
       // Force Logo to be pre-bundled and always available
       './src/components/Logo.jsx'
     ],
     // Ensure React is always available synchronously
     esbuildOptions: {
       jsx: 'automatic',
-    }
+      jsxFactory: 'React.createElement',
+      jsxFragment: 'React.Fragment'
+    },
+    // Force React to be pre-bundled and not split
+    force: true,
+    // Exclude React from optimization to keep it in main bundle
+    exclude: []
   },
   plugins: [
     react(),
@@ -213,6 +220,8 @@ export default defineConfig({
     target: 'es2015', // Better compatibility with service workers
     cssCodeSplit: true, // Split CSS for better caching
     rollupOptions: {
+      // Preserve entry signatures to ensure React is in main bundle
+      preserveEntrySignatures: 'strict',
       output: {
         manualChunks: (id) => {
           // CRITICAL: Keep React and React-DOM in main bundle to prevent "createContext" errors
@@ -226,7 +235,20 @@ export default defineConfig({
           // Keep React and React-DOM in main bundle (CRITICAL for contexts)
           if (id.includes('node_modules')) {
             // DO NOT split React/React-DOM - they must be in main bundle
-            if (id.includes('react') || id.includes('react-dom')) {
+            // Check for exact React packages (more comprehensive check)
+            const isReact = 
+              id.includes('node_modules/react/') ||
+              id.includes('node_modules\\react\\') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules\\react-dom\\') ||
+              id.includes('react/jsx-runtime') ||
+              id.includes('react/jsx-dev-runtime') ||
+              id.includes('react/index') ||
+              id.includes('react-dom/index') ||
+              (id.includes('react') && !id.includes('react-') && id.endsWith('.js')) ||
+              (id.includes('react-dom') && !id.includes('react-dom-') && id.endsWith('.js'));
+            
+            if (isReact) {
               return undefined; // Main bundle - React must be available immediately
             }
             if (id.includes('firebase')) {
