@@ -315,16 +315,17 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-1.5-flash'); // Default model (recommended: fast & free)
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-2.5-flash'); // Default model (latest 2026 version)
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
   // Available Gemini models
   const geminiModels = [
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Latest 2026 Model - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient', free: true },
     { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
     { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
-    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 1.5 Flash instead', free: false },
+    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 2.5 Flash instead', free: false },
   ];
 
   // Initialize Gemini AI with selected model
@@ -336,8 +337,8 @@ const AIHelp = () => {
     
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      // Use the selected model, fallback to gemini-1.5-flash if model not found
-      const modelToUse = modelName || 'gemini-1.5-flash';
+      // Use the selected model, fallback to gemini-2.5-flash if model not found
+      const modelToUse = modelName || 'gemini-2.5-flash';
       const model = genAI.getGenerativeModel({ 
         model: modelToUse,
         safetySettings: [
@@ -385,14 +386,20 @@ const AIHelp = () => {
       return model;
     } catch (error) {
       console.error('Error initializing Gemini model:', error);
-      // Fallback to gemini-1.5-flash if the selected model fails
-      if (modelName !== 'gemini-1.5-flash') {
+      // Fallback to gemini-2.5-flash, then gemini-1.5-flash if the selected model fails
+      if (modelName !== 'gemini-2.5-flash') {
         try {
           const genAI = new GoogleGenerativeAI(apiKey);
-          return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         } catch (fallbackError) {
-          console.error('Fallback model also failed:', fallbackError);
-          return null;
+          console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', fallbackError);
+          try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          } catch (secondFallbackError) {
+            console.error('Fallback models also failed:', secondFallbackError);
+            return null;
+          }
         }
       }
       return null;

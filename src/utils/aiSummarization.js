@@ -24,13 +24,18 @@ export const summarizeConversation = async (messages, maxLength = 100) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    // Use gemini-1.5-flash (fast, free, recommended) with fallback to gemini-1.5-pro
+    // Use gemini-2.5-flash (latest 2026 model) with fallback to gemini-1.5-flash
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', modelError);
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', modelError);
+      try {
+        model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      } catch (fallbackError) {
+        console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', fallbackError);
+        model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      }
     }
 
     // Format messages for summarization
@@ -101,13 +106,18 @@ export const extractKeyPoints = async (messages) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    // Use gemini-1.5-flash (fast, free, recommended) with fallback to gemini-1.5-pro
+    // Use gemini-2.5-flash (latest 2026 model) with fallback to gemini-1.5-flash
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', modelError);
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', modelError);
+      try {
+        model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      } catch (fallbackError) {
+        console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', fallbackError);
+        model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      }
     }
 
     const conversationText = messages
@@ -181,13 +191,18 @@ export const generateMeetingNotes = async (messages, title = null) => {
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    // Use gemini-1.5-flash (fast, free, recommended) with fallback to gemini-1.5-pro
+    // Use gemini-2.5-flash (latest 2026 model) with fallback to gemini-1.5-flash
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', modelError);
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', modelError);
+      try {
+        model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      } catch (fallbackError) {
+        console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', fallbackError);
+        model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      }
     }
 
     const conversationText = messages
