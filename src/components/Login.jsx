@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -10,6 +10,8 @@ import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
 import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
 import { handleError } from '../utils/errorHandler';
 import { keyboard } from '../utils/accessibility';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedButton, FadeIn, SlideIn, ScaleIn, StaggerContainer, StaggerItem, GSAPEntrance } from './AnimatedComponents';
 
 const Login = ({ onBack, initialMode = 'login' }) => {
   const { register, login, resetPassword, resendVerificationEmail } = useAuth();
@@ -182,21 +184,36 @@ const Login = ({ onBack, initialMode = 'login' }) => {
     // Use a dedicated scroll container for Login/Register on mobile/PWA.
     // This prevents the viewport from getting "stuck" in standalone mode when the keyboard opens.
     <div className="h-screen h-[100dvh] overflow-y-auto bg-white dark:bg-gray-900 relative">
-      {/* Fluid Animated Background Particles */}
+      {/* Fluid Animated Background Particles with GSAP */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        {particles.map((particle) => (
-          <div
+        {particles.map((particle, index) => (
+          <GSAPEntrance
             key={particle.id}
-            className="absolute rounded-full bg-gradient-to-br from-indigo-100/20 via-purple-100/15 to-pink-100/20 dark:from-indigo-900/15 dark:via-purple-900/10 dark:to-pink-900/15 blur-3xl"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              animation: `float-particles ${particle.duration}s ease-in-out infinite`,
-              animationDelay: `${particle.delay}s`,
-            }}
-          />
+            animationType="fadeIn"
+            duration={2 + Math.random() * 2}
+            delay={particle.delay}
+          >
+            <motion.div
+              className="absolute rounded-full bg-gradient-to-br from-indigo-100/20 via-purple-100/15 to-pink-100/20 dark:from-indigo-900/15 dark:via-purple-900/10 dark:to-pink-900/15 blur-3xl"
+              style={{
+                left: `${particle.x}%`,
+                top: `${particle.y}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+              }}
+              animate={{
+                x: [0, 30, -20, 0],
+                y: [0, -30, 20, 0],
+                scale: [1, 1.1, 0.95, 1],
+              }}
+              transition={{
+                duration: particle.duration,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: particle.delay,
+              }}
+            />
+          </GSAPEntrance>
         ))}
       </div>
 
@@ -206,90 +223,124 @@ const Login = ({ onBack, initialMode = 'login' }) => {
         paddingLeft: `max(1rem, env(safe-area-inset-left, 0px) + 1rem)`,
         paddingRight: `max(1rem, env(safe-area-inset-right, 0px) + 1rem)`
       }}>
-        {/* Minimal Navigation Bar */}
-        <div className="absolute top-0 left-0 right-0 z-50 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Logo size="small" showText={false} />
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleDarkMode();
-                }}
-                className="p-2 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-all duration-300 transform hover:scale-110"
-                aria-label="Toggle dark mode"
-                type="button"
-              >
-                {darkMode ? (
-                  <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
-                ) : (
-                  <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
-                )}
-              </button>
-              {onBack && (
-                <button
-                  onClick={onBack}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-all duration-300 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+        {/* Animated Navigation Bar */}
+        <FadeIn delay={0.1} duration={0.5}>
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="absolute top-0 left-0 right-0 z-50 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50"
+          >
+            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Logo size="small" showText={false} />
+              </div>
+              <div className="flex items-center gap-4">
+                <motion.button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleDarkMode();
+                  }}
+                  whileHover={{ scale: 1.1, rotate: 15 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors"
+                  aria-label="Toggle dark mode"
+                  type="button"
                 >
-                  Back
-                </button>
-              )}
+                  {darkMode ? (
+                    <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
+                  ) : (
+                    <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
+                  )}
+                </motion.button>
+                {onBack && (
+                  <motion.button
+                    onClick={onBack}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                  >
+                    Back
+                  </motion.button>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </FadeIn>
 
-        {/* Minimal Form Container */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-700/50 rounded-3xl p-8 w-full max-w-md pt-24 pb-8">
-          <div className="text-center mb-8">
-            <div className="mb-6 animate-float-slow">
-              <Logo size="large" showText={false} />
-            </div>
-            <h1 className="text-3xl font-light text-black dark:text-white mb-2">
-              {mode === 'register' ? 'Create Account' : mode === 'reset' ? 'Reset Password' : 'Welcome Back'}
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-light">
-              {mode === 'register' ? 'Join your campus community' : mode === 'reset' ? 'Recover your account' : 'Sign in to continue'}
-            </p>
-          </div>
+        {/* Animated Form Container */}
+        <ScaleIn delay={0.3} duration={0.6}>
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-700/50 rounded-3xl p-8 w-full max-w-md pt-24 pb-8">
+            <StaggerContainer staggerDelay={0.1} initialDelay={0.4}>
+              <StaggerItem>
+                <div className="text-center mb-8">
+                  <motion.div
+                    className="mb-6"
+                    animate={{
+                      y: [0, -15, 0],
+                    }}
+                    transition={{
+                      duration: 5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <Logo size="large" showText={false} />
+                  </motion.div>
+                  <h1 className="text-3xl font-light text-black dark:text-white mb-2">
+                    {mode === 'register' ? 'Create Account' : mode === 'reset' ? 'Reset Password' : 'Welcome Back'}
+                  </h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-light">
+                    {mode === 'register' ? 'Join your campus community' : mode === 'reset' ? 'Recover your account' : 'Sign in to continue'}
+                  </p>
+                </div>
+              </StaggerItem>
 
-        {/* Minimal Toggle between Login and Register */}
-        <div className="flex mb-8 bg-gray-100/50 dark:bg-gray-700/30 rounded-full p-1 gap-1">
-          <button
-            onClick={() => {
-              setMode('login');
-              setError(null);
-              setConfirmEmail('');
-              setConfirmPassword('');
-              setEmailVerificationSent(false);
-            }}
-            className={`flex-1 py-2.5 px-4 rounded-full font-medium text-sm transition-all duration-300 ${
-              mode === 'login'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-            }`}
-          >
-            Login
-          </button>
-          <button
-            onClick={() => {
-              setMode('register');
-              setError(null);
-              setConfirmEmail('');
-              setConfirmPassword('');
-              setEmailVerificationSent(false);
-            }}
-            className={`flex-1 py-2.5 px-4 rounded-full font-medium text-sm transition-all duration-300 ${
-              mode === 'register'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-            }`}
-          >
-            Register
-          </button>
-        </div>
+              <StaggerItem>
+                {/* Animated Toggle between Login and Register */}
+                <motion.div
+                  layout
+                  className="flex mb-8 bg-gray-100/50 dark:bg-gray-700/30 rounded-full p-1 gap-1"
+                >
+                  <motion.button
+                    onClick={() => {
+                      setMode('login');
+                      setError(null);
+                      setConfirmEmail('');
+                      setConfirmPassword('');
+                      setEmailVerificationSent(false);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex-1 py-2.5 px-4 rounded-full font-medium text-sm transition-colors ${
+                      mode === 'login'
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    Login
+                  </motion.button>
+                  <motion.button
+                    onClick={() => {
+                      setMode('register');
+                      setError(null);
+                      setConfirmEmail('');
+                      setConfirmPassword('');
+                      setEmailVerificationSent(false);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex-1 py-2.5 px-4 rounded-full font-medium text-sm transition-colors ${
+                      mode === 'register'
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    Register
+                  </motion.button>
+                </motion.div>
+              </StaggerItem>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50/80 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-full text-sm flex items-start gap-2">
@@ -462,33 +513,41 @@ const Login = ({ onBack, initialMode = 'login' }) => {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
-                  <span>Processing...</span>
-                </>
-              ) : mode === 'register' ? (
-                <>
-                  <UserPlus size={20} />
-                  <span>Create Account</span>
-                </>
-              ) : mode === 'reset' ? (
-                <>
-                  <RotateCcw size={20} />
-                  <span>Send Reset Email</span>
-                </>
-              ) : (
-                <>
-                  <LogIn size={20} />
-                  <span>Sign In</span>
-                </>
-              )}
-            </button>
+              <StaggerItem>
+                <AnimatedButton
+                  type="submit"
+                  disabled={loading}
+                  variant="default"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="rounded-full h-5 w-5 border-b-2 border-white"
+                      />
+                      <span>Processing...</span>
+                    </>
+                  ) : mode === 'register' ? (
+                    <>
+                      <UserPlus size={20} />
+                      <span>Create Account</span>
+                    </>
+                  ) : mode === 'reset' ? (
+                    <>
+                      <RotateCcw size={20} />
+                      <span>Send Reset Email</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={20} />
+                      <span>Sign In</span>
+                    </>
+                  )}
+                </AnimatedButton>
+              </StaggerItem>
+            </StaggerContainer>
           </form>
 
         {mode !== 'reset' && (

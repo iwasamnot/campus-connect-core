@@ -24,8 +24,7 @@ export const isValidStudentEmail = (email) => {
   if (!email || typeof email !== 'string') return false;
   
   const emailLower = email.toLowerCase().trim();
-  return emailLower.startsWith('s20') && 
-         (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
+  return emailLower.startsWith('s20') && emailLower.includes('@sistc.app');
 };
 
 /**
@@ -37,7 +36,7 @@ export const isValidAdminEmail = (email) => {
   if (!email || typeof email !== 'string') return false;
   
   const emailLower = email.toLowerCase().trim();
-  return emailLower.startsWith('admin') && emailLower.includes('@campusconnect');
+  return emailLower.startsWith('admin') && emailLower.includes('@sistc.app');
 };
 
 /**

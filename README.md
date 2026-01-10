@@ -6,7 +6,10 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ### Landing Page
 - **Fluid Minimal Design**: Redesigned with fluid animated particles and modern minimal aesthetic
-- **Fluid Animations**: Smooth floating particles in background with elegant motion
+- **Advanced Animations**: Smooth floating particles with GSAP continuous motion
+- **Staggered Animations**: Hero content animates in sequence for dramatic entrance
+- **Interactive Elements**: Spring physics button interactions for natural feel
+- **Animated Gradient Text**: Smooth gradient position animations
 - **Quick Access**: Direct Register and Login buttons with gradient styling and smooth transitions
 - **Modern UI**: Centered layout with glassmorphism effects and rounded-full buttons
 - **Responsive**: Optimized for all screen sizes (320px to 4K+) with safe area insets
@@ -304,6 +307,13 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Debounced and throttled inputs with React 18.3+ patterns
   - React.memo, useMemo, useCallback optimizations
   - **React 18.3+ Features**: useTransition, useDeferredValue, useId
+  - **Advanced Animation System**: GPU-accelerated animations with Framer Motion, React Spring, and GSAP
+    - Smooth page transitions with direction-based animations
+    - Physics-based spring animations for natural motion
+    - Staggered list animations for elegant entrances
+    - Scroll-triggered animations with Intersection Observer
+    - Timeline animations for complex sequences
+    - Optimized for 60fps performance
   - Optimized Firebase queries (60% reduction in reads)
   - Skeleton loaders for better UX
   - Virtual scrolling for long lists
@@ -368,7 +378,16 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Code splitting and tree-shaking
   - Virtual scrolling for performance
   - Optimized bundle sizes
-  - Fluid animations with CSS keyframes
+  - Advanced animation system with Framer Motion, React Spring, and GSAP
+- **Animations**: 
+  - **Framer Motion**: Declarative animations for React with layout animations
+  - **React Spring**: Physics-based spring animations for natural motion
+  - **GSAP**: Advanced timeline and sequence animations for complex interactions
+  - Smooth page transitions with direction-based animations
+  - Interactive hover and tap animations
+  - Staggered list animations
+  - Scroll-triggered animations with Intersection Observer
+  - GPU-accelerated performance optimizations
 - **Styling**: Tailwind CSS 3.4
   - **Fluid Minimal Design System**: Custom animations and utilities
   - **Comprehensive Responsive Breakpoints**: xs (320px) to 3xl (1920px+)
@@ -598,14 +617,14 @@ The platform supports email/password authentication with role-based access:
 
 1. **Student Registration & Login**
    - Students can register with email and password
-   - **Email Format**: Must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
-     - Examples: `s2012345@sistc.edu.au` or `s20230091@sistc.nsw.edu.au`
+   - **Email Format**: Must start with "s20" and contain "@sistc.app"
+     - Examples: `s2012345@sistc.app` or `s20230091@sistc.app`
    - Email verification required before login
    - Role automatically set to "student" during registration
 
 2. **Admin Login**
    - Admin accounts must be created manually in Firebase Console
-   - **Email Format**: Must start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)
+   - **Email Format**: Must start with "admin" and contain "@sistc.app" (e.g., admin@sistc.app)
    - Email verification bypassed for admin accounts
    - See `ADMIN_SETUP.md` for detailed admin account setup instructions
 
@@ -618,10 +637,10 @@ The platform supports email/password authentication with role-based access:
 See `ROLES_SETUP_GUIDE.md` for comprehensive role setup instructions.
 
 - **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
-  - Email format: `s20xxxxx@sistc.edu.au` or `s20xxxxx@sistc.nsw.edu.au`
+  - Email format: `s20xxxxx@sistc.app` (e.g., s2012345@sistc.app)
   - Email verification required (can be verified by admin)
 - **Admin**: Can access Audit Logs, Users Management, and Create User functionality
-  - Email format: `admin*@campusconnect.com` (e.g., admin1@campusconnect.com)
+  - Email format: `admin@sistc.app`
   - Email verification bypassed (always verified)
   - Can verify/unverify student emails from Users Management
   - Must be created in Firebase Console (see `ADMIN_SETUP.md`)

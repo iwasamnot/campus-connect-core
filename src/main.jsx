@@ -10,6 +10,7 @@ import { ToastProvider, useToast } from './context/ToastContext.jsx'
 import { PresenceProvider } from './context/PresenceContext.jsx'
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext.jsx'
 import { CallProvider, useCall } from './context/CallContext.jsx'
+import ThemeWrapper from './components/ThemeWrapper.jsx'
 
 // Keep references to prevent tree-shaking (contexts are used by lazy components)
 // Note: We can't expose hooks via window (they're React hooks), but importing them here
@@ -194,15 +195,17 @@ try {
       <ThemeProvider>
         <ErrorBoundary>
           <PreferencesProvider>
-            <AuthProvider>
-              <PresenceProvider>
-                <ToastProvider>
-                  <CallProvider>
-                    <App />
-                  </CallProvider>
-                </ToastProvider>
-              </PresenceProvider>
-            </AuthProvider>
+            <ThemeWrapper>
+              <AuthProvider>
+                <PresenceProvider>
+                  <ToastProvider>
+                    <CallProvider>
+                      <App />
+                    </CallProvider>
+                  </ToastProvider>
+                </PresenceProvider>
+              </AuthProvider>
+            </ThemeWrapper>
           </PreferencesProvider>
         </ErrorBoundary>
       </ThemeProvider>

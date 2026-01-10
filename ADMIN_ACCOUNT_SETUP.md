@@ -14,8 +14,8 @@ If you can't see the option to create a document in Firestore, follow these step
 4. Go to the **Users** tab
 5. Click **Add user** button (top of the page)
 6. Enter:
-   - **Email**: `admin@admin.com`
-   - **Password**: `admin`
+   - **Email**: `admin@sistc.app`
+   - **Password**: (set a secure password)
    - **Disable email verification** (uncheck if checked)
 7. Click **Add user**
 8. **Copy the User UID** - You'll see it in the users list (it's a long string like `abc123xyz...`)
@@ -36,10 +36,13 @@ If you can't see the option to create a document in Firestore, follow these step
 5. Add the following fields:
    - Field: `email`
      - Type: `string`
-     - Value: `admin@admin.com`
+     - Value: `admin@sistc.app`
    - Field: `role`
      - Type: `string`
      - Value: `admin`
+   - Field: `emailVerified`
+     - Type: `boolean`
+     - Value: `true`
    - Field: `createdAt`
      - Type: `string`
      - Value: `2024-01-01T00:00:00.000Z` (or current date)
@@ -51,7 +54,7 @@ If you can't create the document manually, temporarily enable admin registration
 
 1. Edit `src/components/Login.jsx`
 2. Temporarily allow admin registration by modifying the register function
-3. Register with `admin@admin.com` / `admin` and select admin role
+3. Register with `admin@sistc.app` and your password, select admin role
 4. After creating the account, remove the admin registration option again
 
 ## Method 3: Use Firebase CLI (Advanced)
@@ -59,7 +62,7 @@ If you can't create the document manually, temporarily enable admin registration
 If you have Firebase CLI installed:
 
 ```bash
-firebase firestore:set users/ADMIN_UID '{"email":"admin@admin.com","role":"admin","createdAt":"2024-01-01T00:00:00.000Z"}'
+firebase firestore:set users/ADMIN_UID '{"email":"admin@sistc.app","role":"admin","emailVerified":true,"createdAt":"2024-01-01T00:00:00.000Z"}'
 ```
 
 Replace `ADMIN_UID` with the actual UID from Authentication.
@@ -67,7 +70,7 @@ Replace `ADMIN_UID` with the actual UID from Authentication.
 ## Verify Admin Account
 
 After setup:
-1. Try logging in with `admin@admin.com` / `admin`
+1. Try logging in with `admin@sistc.app` and your password
 2. You should see the Admin Panel with:
    - Audit Logs
    - Users Management

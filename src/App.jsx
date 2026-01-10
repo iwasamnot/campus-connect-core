@@ -7,6 +7,8 @@ import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatedPage } from './components/AnimatedComponents';
 // CRITICAL: Import firebaseConfig in main App to ensure it's in main bundle
 // Lazy components import auth, db, etc. from firebaseConfig
 import { auth, db } from './firebaseConfig';
@@ -322,58 +324,200 @@ function App() {
           />
         )}
         <Suspense fallback={<LoadingSpinner />}>
-          {isAdminRole(userRole) ? (
-            <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
-              {activeView === 'audit' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-up-fade"><AdminDashboard /></div></ErrorBoundary>}
-              {activeView === 'analytics' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-left-fade"><AdminAnalytics /></div></ErrorBoundary>}
-              {activeView === 'users' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-down-fade"><UsersManagement /></div></ErrorBoundary>}
-              {activeView === 'create-user' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><CreateUser /></div></ErrorBoundary>}
-              {activeView === 'contact-messages' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-up-fade"><AdminContactMessages /></div></ErrorBoundary>}
-              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><PrivateChat /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
-              <KeyboardShortcuts />
-              <PWAInstallPrompt />
-            </>
-          ) : (
-            <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
-              {activeView === 'ai-help' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-left-fade"><AIHelp /></div></ErrorBoundary>}
-              {activeView === 'profile' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><StudentProfile /></div></ErrorBoundary>}
-              {activeView === 'groups' && (
-                <ErrorBoundary>
-                  <div className="page-transition-enhanced animate-slide-up-fade">
-                    <Groups 
-                      setActiveView={setActiveView} 
-                      setSelectedGroup={setSelectedGroup}
-                    />
-                  </div>
-                </ErrorBoundary>
-              )}
-              {activeView === 'group-chat' && (
-                <ErrorBoundary>
-                  <div className="page-transition-enhanced animate-slide-right-fade">
-                    <GroupChat 
-                      group={selectedGroup}
-                      setActiveView={setActiveView}
-                      onBack={() => {
-                        setActiveView('groups');
-                        setSelectedGroup(null);
-                      }}
-                    />
-                  </div>
-                </ErrorBoundary>
-              )}
-              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-right-fade"><PrivateChat /></div></ErrorBoundary>}
-              {activeView === 'activity' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-down-fade"><ActivityDashboard /></div></ErrorBoundary>}
-              {activeView === 'scheduler' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-left-fade"><MessageScheduler /></div></ErrorBoundary>}
-              {activeView === 'saved' && <ErrorBoundary><div className="page-transition-enhanced animate-slide-up-fade"><SavedMessages /></div></ErrorBoundary>}
-              {activeView === 'gallery' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><ImageGallery /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition-enhanced animate-zoom-in"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
-              <KeyboardShortcuts />
-              <PWAInstallPrompt />
-            </>
-          )}
+          <AnimatePresence mode="wait" initial={false}>
+            {isAdminRole(userRole) ? (
+              <>
+                {activeView === 'chat' && (
+                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideRight">
+                        <ChatArea setActiveView={setActiveView} />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'audit' && (
+                  <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideUp">
+                        <AdminDashboard />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'analytics' && (
+                  <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideLeft">
+                        <AdminAnalytics />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'users' && (
+                  <motion.div key="users" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideDown">
+                        <UsersManagement />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'create-user' && (
+                  <motion.div key="create-user" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="scale">
+                        <CreateUser />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'contact-messages' && (
+                  <motion.div key="contact-messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideUp">
+                        <AdminContactMessages />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'private-chat' && (
+                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideRight">
+                        <PrivateChat />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'settings' && (
+                  <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="scale">
+                        <Settings setActiveView={setActiveView} />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                <KeyboardShortcuts />
+                <PWAInstallPrompt />
+              </>
+            ) : (
+              <>
+                {activeView === 'chat' && (
+                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideRight">
+                        <ChatArea setActiveView={setActiveView} />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'ai-help' && (
+                  <motion.div key="ai-help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideLeft">
+                        <AIHelp />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'profile' && (
+                  <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="scale">
+                        <StudentProfile />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'groups' && (
+                  <motion.div key="groups" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideUp">
+                        <Groups 
+                          setActiveView={setActiveView} 
+                          setSelectedGroup={setSelectedGroup}
+                        />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'group-chat' && (
+                  <motion.div key="group-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideRight">
+                        <GroupChat 
+                          group={selectedGroup}
+                          setActiveView={setActiveView}
+                          onBack={() => {
+                            setActiveView('groups');
+                            setSelectedGroup(null);
+                          }}
+                        />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'private-chat' && (
+                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideRight">
+                        <PrivateChat />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'activity' && (
+                  <motion.div key="activity" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideDown">
+                        <ActivityDashboard />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'scheduler' && (
+                  <motion.div key="scheduler" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideLeft">
+                        <MessageScheduler />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'saved' && (
+                  <motion.div key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideUp">
+                        <SavedMessages />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'gallery' && (
+                  <motion.div key="gallery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="scale">
+                        <ImageGallery />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'settings' && (
+                  <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="scale">
+                        <Settings setActiveView={setActiveView} />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                <KeyboardShortcuts />
+                <PWAInstallPrompt />
+              </>
+            )}
+          </AnimatePresence>
         </Suspense>
       </div>
     </div>

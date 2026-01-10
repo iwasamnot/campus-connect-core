@@ -1,157 +1,255 @@
-/**
- * Performance Monitoring and Optimization Utilities
- * Follows Web Performance Working Group standards
- */
+// Performance utilities for GPU/CPU acceleration and uncapped FPS
+import { useEffect, useRef, useState } from 'react';
 
 /**
- * Measure performance marks
+ * Detect device refresh rate for uncapped FPS animations
+ * Returns the actual refresh rate or defaults to 60Hz
  */
-export const performanceMark = (name) => {
-  if (typeof window !== 'undefined' && window.performance && window.performance.mark) {
-    window.performance.mark(name);
-  }
-};
-
-/**
- * Measure performance between two marks
- */
-export const measurePerformance = (name, startMark, endMark) => {
-  if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
-    try {
-      window.performance.measure(name, startMark, endMark);
-      const measure = window.performance.getEntriesByName(name)[0];
-      return measure.duration;
-    } catch (error) {
-      console.warn('Performance measure failed:', error);
-      return null;
+export const detectRefreshRate = () => {
+  if (typeof window === 'undefined') return 60;
+  
+  // Try to detect refresh rate using requestAnimationFrame
+  let lastTime = performance.now();
+  let frames = 0;
+  let fps = 60; // Default fallback
+  
+  const measureFPS = () => {
+    frames++;
+    const currentTime = performance.now();
+    const elapsed = currentTime - lastTime;
+    
+    if (elapsed >= 1000) {
+      fps = Math.round((frames * 1000) / elapsed);
+      frames = 0;
+      lastTime = currentTime;
     }
-  }
-  return null;
-};
-
-/**
- * Get navigation timing
- */
-export const getNavigationTiming = () => {
-  if (typeof window === 'undefined' || !window.performance || !window.performance.timing) {
-    return null;
-  }
-  
-  const timing = window.performance.timing;
-  
-  return {
-    // DNS lookup time
-    dns: timing.domainLookupEnd - timing.domainLookupStart,
     
-    // TCP connection time
-    tcp: timing.connectEnd - timing.connectStart,
-    
-    // Request time
-    request: timing.responseStart - timing.requestStart,
-    
-    // Response time
-    response: timing.responseEnd - timing.responseStart,
-    
-    // DOM processing time
-    domProcessing: timing.domComplete - timing.domInteractive,
-    
-    // Load time
-    load: timing.loadEventEnd - timing.navigationStart,
-    
-    // Time to First Byte (TTFB)
-    ttfb: timing.responseStart - timing.navigationStart,
-    
-    // First Paint
-    firstPaint: timing.responseEnd - timing.navigationStart,
-    
-    // Interactive
-    interactive: timing.domInteractive - timing.navigationStart,
-    
-    // Complete
-    complete: timing.loadEventEnd - timing.navigationStart
+    if (fps < 60 || fps > 240) {
+      // Sanity check - clamp between 60 and 240 Hz
+      fps = Math.max(60, Math.min(240, fps));
+    }
   };
+  
+  // Quick detection (1 second)
+  const startTime = performance.now();
+  const rafId = requestAnimationFrame(function check(timestamp) {
+    measureFPS();
+    if (performance.now() - startTime < 1000) {
+      requestAnimationFrame(check);
+    }
+  });
+  
+  return fps;
 };
 
 /**
- * Monitor long tasks (blocking main thread)
+ * Get optimal frame rate based on device capabilities
  */
-export const monitorLongTasks = (callback) => {
-  if (typeof window === 'undefined' || !window.PerformanceObserver) {
-    return null;
+export const getOptimalFrameRate = () => {
+  if (typeof window === 'undefined') return 60;
+  
+  // Check for high refresh rate displays
+  if (window.screen?.refreshRate) {
+    return window.screen.refreshRate;
   }
   
-  try {
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (entry.duration > 50) { // Tasks longer than 50ms
-          callback?.(entry);
-        }
+  // Check for WebKit-specific properties
+  if (window.devicePixelRatio && window.devicePixelRatio > 2) {
+    // High DPI displays often have higher refresh rates
+    return 120;
+  }
+  
+  // Try to detect via CSS media queries
+  if (window.matchMedia('(min-resolution: 120dpi)').matches) {
+    return 120;
+  }
+  
+  // Fallback to detected refresh rate
+  return detectRefreshRate();
+};
+
+/**
+ * Hook to get device refresh rate
+ */
+export const useRefreshRate = () => {
+  const [refreshRate, setRefreshRate] = useState(60);
+  
+  useEffect(() => {
+    const detectedRate = getOptimalFrameRate();
+    setRefreshRate(detectedRate);
+    
+    // Continuously monitor (can change if user switches displays)
+    const interval = setInterval(() => {
+      const newRate = getOptimalFrameRate();
+      if (newRate !== refreshRate) {
+        setRefreshRate(newRate);
       }
-    });
+    }, 5000);
     
-    observer.observe({ entryTypes: ['longtask'] });
+    return () => clearInterval(interval);
+  }, []);
+  
+  return refreshRate;
+};
+
+/**
+ * Enable GPU acceleration for an element
+ */
+export const enableGPUAcceleration = (element) => {
+  if (!element || typeof window === 'undefined') return;
+  
+  // Force GPU layer creation
+  element.style.transform = 'translateZ(0)';
+  element.style.willChange = 'transform, opacity';
+  element.style.backfaceVisibility = 'hidden';
+  element.style.perspective = '1000px';
+  element.style.transformStyle = 'preserve-3d';
+  
+  // Optimize for compositing
+  element.style.isolation = 'isolate';
+};
+
+/**
+ * Disable GPU acceleration hints (when not needed)
+ */
+export const disableGPUAcceleration = (element) => {
+  if (!element) return;
+  
+  element.style.willChange = 'auto';
+};
+
+/**
+ * Apply GPU optimization styles to an element
+ */
+export const applyGPUOptimizations = (element, properties = ['transform', 'opacity']) => {
+  if (!element || typeof window === 'undefined') return;
+  
+  // Use transform3d to force GPU acceleration
+  element.style.transform = 'translate3d(0, 0, 0)';
+  element.style.willChange = properties.join(', ');
+  element.style.backfaceVisibility = 'hidden';
+  element.style.perspective = '1000px';
+  element.style.transformStyle = 'preserve-3d';
+  
+  // Additional optimizations
+  element.style.isolation = 'isolate';
+  element.style.contain = 'layout style paint';
+};
+
+/**
+ * Request animation frame with uncapped FPS
+ * Uses the actual refresh rate of the display
+ */
+export const requestAnimationFrameUncapped = (callback) => {
+  if (typeof window === 'undefined') return null;
+  
+  // Use native requestAnimationFrame (already syncs with refresh rate)
+  return requestAnimationFrame(callback);
+};
+
+/**
+ * Create a smooth animation loop with uncapped FPS
+ */
+export const createAnimationLoop = (callback) => {
+  let animationId = null;
+  let isRunning = false;
+  
+  const loop = (timestamp) => {
+    if (!isRunning) return;
     
-    return () => observer.disconnect();
-  } catch (error) {
-    console.warn('Long task monitoring failed:', error);
-    return null;
-  }
-};
-
-/**
- * Monitor memory usage (when available)
- */
-export const getMemoryUsage = () => {
-  if (typeof window === 'undefined' || !window.performance || !window.performance.memory) {
-    return null;
-  }
-  
-  const memory = window.performance.memory;
-  
-  return {
-    used: memory.usedJSHeapSize,
-    total: memory.totalJSHeapSize,
-    limit: memory.jsHeapSizeLimit,
-    percentage: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100
+    callback(timestamp);
+    animationId = requestAnimationFrame(loop);
   };
-};
-
-/**
- * Debounce function for performance optimization
- */
-export const debounce = (func, wait) => {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+  
+  const start = () => {
+    if (isRunning) return;
+    isRunning = true;
+    animationId = requestAnimationFrame(loop);
   };
-};
-
-/**
- * Throttle function for performance optimization
- */
-export const throttle = (func, limit) => {
-  let inThrottle;
-  return function executedFunction(...args) {
-    if (!inThrottle) {
-      func.apply(this, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+  
+  const stop = () => {
+    isRunning = false;
+    if (animationId !== null) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
     }
   };
+  
+  return { start, stop };
 };
 
-export default {
-  performanceMark,
-  measurePerformance,
-  getNavigationTiming,
-  monitorLongTasks,
-  getMemoryUsage,
-  debounce,
-  throttle
+/**
+ * Hook for GPU-accelerated animations
+ */
+export const useGPUAnimation = (enabled = true) => {
+  const ref = useRef(null);
+  
+  useEffect(() => {
+    if (!enabled || !ref.current) return;
+    
+    applyGPUOptimizations(ref.current);
+    
+    return () => {
+      if (ref.current) {
+        disableGPUAcceleration(ref.current);
+      }
+    };
+  }, [enabled]);
+  
+  return ref;
 };
 
+/**
+ * Check if device supports high refresh rate
+ */
+export const supportsHighRefreshRate = () => {
+  if (typeof window === 'undefined') return false;
+  
+  // Check for known high refresh rate indicators
+  if (window.screen?.refreshRate && window.screen.refreshRate > 60) {
+    return true;
+  }
+  
+  // Check for WebKit high refresh rate
+  if (window.devicePixelRatio >= 3) {
+    return true; // Often correlates with high refresh displays
+  }
+  
+  return false;
+};
+
+/**
+ * Get optimal animation duration based on device capabilities
+ */
+export const getOptimalDuration = (baseDuration = 0.3, multiplier = 1) => {
+  const refreshRate = getOptimalFrameRate();
+  
+  // Adjust duration based on refresh rate
+  // Higher refresh rates can handle faster animations
+  const rateMultiplier = refreshRate / 60;
+  
+  return baseDuration * multiplier / rateMultiplier;
+};
+
+/**
+ * CSS class for GPU-accelerated elements
+ */
+export const GPU_ACCELERATED_CLASS = 'gpu-accelerated';
+
+/**
+ * Add GPU acceleration class to element
+ */
+export const addGPUClass = (element) => {
+  if (element) {
+    element.classList.add(GPU_ACCELERATED_CLASS);
+  }
+};
+
+/**
+ * Remove GPU acceleration class from element
+ */
+export const removeGPUClass = (element) => {
+  if (element) {
+    element.classList.remove(GPU_ACCELERATED_CLASS);
+  }
+};

@@ -1,5 +1,133 @@
 # Changelog
 
+## [8.2.0] - 2025-01-XX
+
+### Changed: Domain Migration to sistc.app
+
+- **Domain Update**: Migrated from multiple domains to unified `sistc.app` domain
+  - Student email format: Changed from `s20xxxxx@sistc.edu.au` or `s20xxxxx@sistc.nsw.edu.au` to `s20xxxxx@sistc.app`
+  - Admin email format: Changed from `admin@campusconnect.com` to `admin@sistc.app`
+  - Updated all validation functions to use new domain format
+  - Updated all documentation with new email format examples
+
+#### Updated Files
+- `src/utils/validation.js`: Updated `isValidStudentEmail()` and `isValidAdminEmail()` functions
+- `src/context/AuthContext.jsx`: Updated email validation checks for both student and admin emails
+- `src/components/CreateUser.jsx`: Updated student email validation with new format
+- `README.md`: Updated authentication section with new email formats
+- `ROLES_SETUP_GUIDE.md`: Updated role setup examples with new email formats
+- `ADMIN_SETUP.md`: Updated admin setup instructions with new email format
+- `ADMIN_ACCOUNT_SETUP.md`: Updated admin account setup guide with new email format
+
+#### Email Format Changes
+- **Students**: `s20xxxxx@sistc.app` (e.g., `s2012345@sistc.app`)
+- **Admins**: `admin@sistc.app`
+
+### Enhanced
+- **Email Validation**: Simplified email validation to use single domain format
+- **Documentation**: Updated all documentation files to reflect new domain structure
+- **Consistency**: Unified email format across all components and documentation
+
+## [8.1.0] - 2025-01-XX
+
+### Added: Modern Animation System with Framer Motion, React Spring, and GSAP
+
+This update introduces a comprehensive modern animation system using the industry-leading animation libraries for smooth, performant, and engaging user experiences.
+
+#### Animation Libraries
+- **Framer Motion** (v10+): Declarative animations for React with powerful layout animations
+- **React Spring** (@react-spring/web): Physics-based spring animations for natural motion
+- **GSAP (GreenSock Animation Platform)**: Advanced timeline and sequence animations
+
+#### Animation Utilities (`src/utils/animations.js`)
+- **Framer Motion Variants**: Pre-configured animation variants for pages, slides, fades, scales, buttons, cards, and modals
+  - Page transition variants with custom easing
+  - Directional slide variants (left, right, up, down)
+  - Fade, scale, and staggered animation variants
+  - Modal and backdrop animation variants
+- **React Spring Hooks**: Physics-based animation hooks
+  - `useSpringNumber`: Smooth number animations (counters, progress bars)
+  - `useSpringScale`: Scale transform animations with spring physics
+  - `useSpringRotate`: Rotation animations with spring physics
+  - `useTrailAnimation`: Staggered list animations
+  - `useTransitionAnimation`: Mount/unmount transition animations
+- **GSAP Utilities**: Advanced animation utilities
+  - `useGSAPTimeline`: Timeline-based animations for complex sequences
+  - `useGSAPScrollTrigger`: Scroll-triggered animations with Intersection Observer fallback
+  - `useGSAPEntrance`: Entrance animations with multiple animation types
+  - `animateStagger`: Staggered animations for lists
+  - `smoothScrollTo`: Smooth scroll functionality
+
+#### Reusable Animated Components (`src/components/AnimatedComponents.jsx`)
+- **AnimatedPage**: Page wrapper with direction-based transitions (slideRight, slideLeft, slideUp, slideDown, scale, fade)
+- **AnimatedButton**: Interactive button with hover and tap animations
+- **SpringButton**: Physics-based button with React Spring animations
+- **AnimatedCard**: Card component with entrance and hover animations
+- **AnimatedModal**: Modal with backdrop and smooth entrance/exit animations
+- **StaggerContainer & StaggerItem**: Components for staggered list animations
+- **GSAPEntrance**: GSAP-powered entrance animations with multiple animation types
+- **AnimatedSidebar**: Sidebar with smooth slide animations
+- **FadeIn, SlideIn, ScaleIn**: Simple animation wrappers for common use cases
+
+#### Component Updates
+- **App.jsx**: Implemented smooth page transitions using Framer Motion's AnimatePresence
+  - Direction-based transitions (slideRight, slideLeft, slideUp, slideDown, scale) based on view changes
+  - Smooth exit and enter animations for all page views
+  - Optimized with `mode="wait"` for seamless transitions
+- **Sidebar.jsx**: Enhanced with modern animations
+  - Smooth slide-in/out animations with Framer Motion spring physics
+  - Staggered navigation button animations for elegant entrance
+  - Interactive hover states with scale and translate transforms
+  - Animated backdrop overlay with fade transitions
+  - Rotation animations for active navigation items
+- **Login.jsx**: Advanced animation integration
+  - Floating particle background with GSAP continuous motion
+  - Staggered form element animations for sequential entrance
+  - Animated navigation bar with fade-in effect
+  - Interactive toggle buttons with layout animations
+  - Loading spinner with rotation animation
+  - Smooth form container scale-in animation
+- **LandingPage.jsx**: Enhanced landing experience
+  - Floating particles with continuous motion using GSAP
+  - Staggered hero content animations for dramatic entrance
+  - Animated gradient text background with position animations
+  - Logo floating animation with smooth vertical motion
+  - Spring physics button interactions for natural feel
+  - Smooth entrance animations for all elements
+
+#### Animation Features
+- **Page Transitions**: Smooth directional transitions between views with custom easing
+- **Interactive Elements**: Hover, tap, and active state animations with spring physics
+- **Physics-Based Animations**: Natural spring animations using React Spring
+- **Staggered Animations**: Sequential entrance animations for lists and collections
+- **Scroll-Triggered Animations**: GSAP-powered scroll animations with Intersection Observer fallback
+- **Timeline Animations**: Complex GSAP timeline sequences for multi-step animations
+- **Performance Optimized**: GPU acceleration, efficient rendering, and optimized animation loops
+- **Accessibility**: Respects reduced motion preferences and maintains accessibility standards
+
+#### Technical Improvements
+- Created comprehensive animation utilities for consistent animations across the app
+- Implemented reusable animated components for faster development
+- Optimized animations for performance with GPU acceleration
+- Maintained backward compatibility with existing CSS-based animations
+- Added proper cleanup for GSAP animations to prevent memory leaks
+- Integrated with existing component structure without breaking changes
+
+### Enhanced
+- **User Experience**: Significantly improved with smooth, modern animations throughout the app
+- **Visual Feedback**: Enhanced interactive feedback with hover and tap animations
+- **Page Navigation**: Smooth transitions between views for better perceived performance
+- **Component Interactions**: More engaging interactions with spring physics animations
+
+### Technical Details
+- **Dependencies Added**:
+  - `framer-motion`: Latest version for React animations
+  - `@react-spring/web`: Physics-based spring animations
+  - `gsap`: Advanced animation platform for complex sequences
+- **Performance**: Animations use GPU acceleration and are optimized for 60fps
+- **Bundle Size**: Minimal impact with tree-shaking and code splitting
+- **Compatibility**: Works with all modern browsers and maintains fallbacks
+
 ## [8.0.0] - 2025-01-XX
 
 ### Major Update: Complete Website Redesign with Fluid Minimal Design & PWA Optimization

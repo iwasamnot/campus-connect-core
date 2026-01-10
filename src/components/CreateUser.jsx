@@ -39,11 +39,11 @@ const CreateUser = () => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // Validate student email format: must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
+  // Validate student email format: must start with "s20" and contain "@sistc.app"
   const validateStudentEmail = (email) => {
     if (!email) return false;
     const emailLower = email.toLowerCase();
-    return emailLower.startsWith('s20') && (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
+    return emailLower.startsWith('s20') && emailLower.includes('@sistc.app');
   };
 
   const handleSubmit = async (e) => {
@@ -62,9 +62,9 @@ const CreateUser = () => {
       return;
     }
 
-    // Validate student email format: must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
+    // Validate student email format: must start with "s20" and contain "@sistc.app"
     if (formData.role === 'student' && !validateStudentEmail(formData.email)) {
-      setError('Invalid student email address. Please use a valid student email format.');
+      setError('Invalid student email address. Please use a valid student email format (s20xxxxx@sistc.app).');
       return;
     }
 

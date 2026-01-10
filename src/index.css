@@ -2,6 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
+/* GPU Acceleration Optimizations - Uncapped FPS Support */
+.gpu-accelerated,
+[class*="gpu-"],
+[data-gpu="true"] {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  isolation: isolate;
+  contain: layout style paint;
+  /* Force GPU layer creation */
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+}
+
+/* Optimize all animated elements for GPU */
+[class*="animate-"],
+[class*="motion-"],
+motion.div,
+motion.button,
+motion.section,
+motion.article {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Remove FPS caps - use native refresh rate */
+* {
+  /* Optimize for high refresh rate displays */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Performance optimizations for animations */
+@supports (will-change: transform) {
+  .motion-safe\:gpu-accelerated {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+}
+
+/* High refresh rate optimizations */
+@media (min-resolution: 120dpi) {
+  * {
+    /* Optimize rendering for high DPI/high refresh displays */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Force GPU acceleration for transform operations */
+.transform,
+[style*="transform"] {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Optimize transitions for uncapped FPS */
+.transition-all,
+.transition-transform,
+.transition-opacity {
+  /* Use compositor-friendly properties */
+  will-change: transform, opacity;
+}
+
+/* Remove transition caps on high refresh displays */
+@media (prefers-reduced-motion: no-preference) {
+  @media (min-resolution: 120dpi) {
+    .transition-all,
+    .transition-transform,
+    .transition-opacity {
+      /* Let browser optimize for display refresh rate */
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+}
+
 /* Screen reader only class for accessibility */
 .sr-only {
   position: absolute;

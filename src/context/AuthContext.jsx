@@ -143,7 +143,7 @@ const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       // Check if it's an admin email format before attempting login
-      const isAdminEmail = email && email.toLowerCase().trim().startsWith('admin') && email.toLowerCase().trim().includes('@campusconnect');
+      const isAdminEmail = email && email.toLowerCase().trim().startsWith('admin') && email.toLowerCase().trim().includes('@sistc.app');
       
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const loggedInUser = userCredential.user;
@@ -251,7 +251,7 @@ const AuthProvider = ({ children }) => {
       } else {
         // If no user document found, check if it's an admin email and create accordingly
         const emailLower = loggedInUser.email ? loggedInUser.email.toLowerCase() : '';
-        const isStudentEmail = emailLower.startsWith('s20') && (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
+        const isStudentEmail = emailLower.startsWith('s20') && emailLower.includes('@sistc.app');
         const defaultRole = isAdminEmail ? 'admin' : (isStudentEmail ? 'student' : 'student');
         console.warn(`No user document found in Firestore. Creating one with ${defaultRole} role.`);
         await setDoc(doc(db, 'users', loggedInUser.uid), {
