@@ -22,7 +22,7 @@ const FluidBackground = ({ particleCount = 8, intensity = 'subtle' }) => {
       {particles.map((particle) => (
         <div
           key={particle.id}
-          className="absolute rounded-full bg-gradient-to-br from-indigo-200/20 via-purple-200/15 to-pink-200/20 dark:from-indigo-900/15 dark:via-purple-900/10 dark:to-pink-900/15 blur-3xl"
+          className="absolute rounded-full bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-pink-500/20 blur-3xl"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,

@@ -88,8 +88,8 @@ export const AnimatedButton = ({
   
   const buttonStyles = {
     default: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white',
-    outline: 'bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-indigo-600 dark:hover:border-indigo-400',
-    ghost: 'bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800',
+    outline: 'bg-transparent border border-white/20 text-white/80 hover:border-indigo-400 hover:text-white',
+    ghost: 'bg-transparent text-white/70 hover:bg-white/10 hover:text-white',
   };
 
   return (

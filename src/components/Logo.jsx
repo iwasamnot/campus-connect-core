@@ -46,7 +46,7 @@ const Logo = ({ size = 'default', showText = true, className = '' }) => {
       {/* Text: CAMPUSCONNECT */}
       {showText && (
         <div 
-          className={`font-bold uppercase tracking-tight ${fontSize} leading-tight text-indigo-600 dark:text-indigo-400`} 
+          className={`font-bold uppercase tracking-tight ${fontSize} leading-tight text-indigo-400`} 
           style={{ 
             fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
             letterSpacing: '-0.02em'
