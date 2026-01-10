@@ -2314,7 +2314,7 @@ const ChatArea = ({ setActiveView }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
