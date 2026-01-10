@@ -22,7 +22,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
   }, []);
 
   return (
-    <div className="min-h-screen overflow-hidden relative bg-white dark:bg-gray-900">
+    <div className="min-h-screen overflow-hidden relative bg-transparent">
       {/* Fluid Animated Background Particles with Framer Motion */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
@@ -33,7 +33,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
             delay={particle.delay}
           >
             <motion.div
-              className="absolute rounded-full bg-gradient-to-br from-indigo-200/30 via-purple-200/20 to-pink-200/30 dark:from-indigo-900/20 dark:via-purple-900/15 dark:to-pink-900/20 blur-3xl"
+              className="absolute rounded-full bg-gradient-to-br from-indigo-600/20 via-purple-600/15 to-pink-600/20 blur-3xl"
               style={{
                 left: `${particle.x}%`,
                 top: `${particle.y}%`,
@@ -89,7 +89,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="text-6xl sm:text-7xl md:text-8xl font-light text-gray-900 dark:text-white mb-4 leading-[1.1] tracking-tight"
+                className="text-6xl sm:text-7xl md:text-8xl font-light text-white mb-4 leading-[1.1] tracking-tight text-glow"
               >
                 <motion.span
                   initial={{ opacity: 0, x: -50 }}
@@ -115,7 +115,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
                       ease: "easeInOut",
                     },
                   }}
-                  className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-[length:200%_auto]"
+                  className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-[length:200%_auto]"
                 >
                   connected
                 </motion.span>
@@ -131,7 +131,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="mb-16"
             >
-              <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto font-light">
+              <p className="text-base sm:text-lg text-white/70 max-w-xl mx-auto font-light">
                 The most intuitive student messaging platform.
               </p>
             </motion.div>
@@ -161,7 +161,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
               <AnimatedButton
                 onClick={onLogin}
                 variant="outline"
-                className="flex items-center gap-3 px-10 py-4 bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-indigo-600 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium text-base rounded-full min-w-[200px] justify-center"
+                className="flex items-center gap-3 px-10 py-4 bg-transparent border border-white/20 text-white/80 hover:border-indigo-400 hover:text-indigo-300 font-medium text-base rounded-full min-w-[200px] justify-center transition-all duration-300"
               >
                 <motion.div
                   animate={{ x: [0, 5, 0] }}

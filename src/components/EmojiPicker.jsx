@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Smile, X } from 'lucide-react';
 
 const EMOJI_CATEGORIES = {
@@ -30,27 +31,32 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
   );
 
   return (
-    <div
+    <motion.div
       ref={pickerRef}
-      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-[280px] sm:w-80 max-h-[60vh] sm:max-h-96 flex flex-col animate-scale-in"
+      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+      className="glass-panel border border-white/10 rounded-xl shadow-xl w-[280px] sm:w-80 max-h-[60vh] sm:max-h-96 flex flex-col overflow-hidden"
       style={{
         maxWidth: 'calc(100vw - 2rem)',
         maxHeight: 'min(60vh, 384px)'
       }}
     >
-      {/* Header */}
-      <div className="p-2 sm:p-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-        <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white">Emoji</h3>
-        <button
+      {/* Header - Fluid.so aesthetic */}
+      <div className="p-2 sm:p-3 border-b border-white/10 flex items-center justify-between flex-shrink-0">
+        <h3 className="font-semibold text-sm sm:text-base text-white">Emoji</h3>
+        <motion.button
           onClick={onClose}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
+          className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white"
         >
-          <X size={18} className="text-gray-500 dark:text-gray-400" />
-        </button>
+          <X size={18} />
+        </motion.button>
       </div>
 
-      {/* Search */}
-      <div className="p-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+      {/* Search - Fluid.so aesthetic */}
+      <div className="p-2 border-b border-white/10 flex-shrink-0">
         <label htmlFor="emoji-search" className="sr-only">Search emojis</label>
         <input
           type="text"
@@ -59,49 +65,53 @@ const EmojiPicker = ({ onEmojiSelect, onClose, position = 'bottom' }) => {
           placeholder="Search emojis..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
         />
       </div>
 
-      {/* Categories */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto flex-shrink-0">
+      {/* Categories - Fluid.so aesthetic */}
+      <div className="flex border-b border-white/10 overflow-x-auto flex-shrink-0">
         {Object.keys(EMOJI_CATEGORIES).map((category) => (
-          <button
+          <motion.button
             key={category}
             onClick={() => {
               setSelectedCategory(category);
               setSearchQuery('');
             }}
-            className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+            whileHover={{ scale: 1.05, y: -1 }}
+            whileTap={{ scale: 0.95 }}
+            className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium whitespace-nowrap transition-all rounded-t-lg ${
               selectedCategory === category
-                ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-indigo-600/30 text-indigo-300 border-b-2 border-indigo-500/50'
+                : 'text-white/60 hover:text-white hover:bg-white/10'
             }`}
           >
             {category.split(' ')[0]}
-          </button>
+          </motion.button>
         ))}
       </div>
 
-      {/* Emoji Grid */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-3 min-h-0">
+      {/* Emoji Grid - Fluid.so aesthetic */}
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-2 sm:p-3 min-h-0">
         <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5 sm:gap-2">
           {filteredEmojis.map((emoji, index) => (
-            <button
+            <motion.button
               key={`${emoji}-${index}`}
               onClick={() => {
                 onEmojiSelect(emoji);
                 onClose();
               }}
-              className="text-xl sm:text-2xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1.5 sm:p-2 transition-colors transform hover:scale-110 active:scale-95"
+              whileHover={{ scale: 1.2, y: -2 }}
+              whileTap={{ scale: 0.9 }}
+              className="text-xl sm:text-2xl hover:bg-white/10 rounded-lg p-1.5 sm:p-2 transition-colors"
               aria-label={`Select emoji ${emoji}`}
             >
               {emoji}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
