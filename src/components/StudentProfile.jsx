@@ -456,7 +456,7 @@ const StudentProfile = () => {
                       <img 
                         src={formData.profilePicture} 
                         alt="Profile" 
-                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-white/20"
                         onError={(e) => { e.target.style.display = 'none'; }}
                       />
                     ) : (
