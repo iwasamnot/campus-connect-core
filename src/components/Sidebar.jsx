@@ -1,7 +1,7 @@
 import { useState, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail } from 'lucide-react';
+import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, StaggerContainer, StaggerItem } from './AnimatedComponents';
 // Use window.__LogoComponent directly to avoid import/export issues
@@ -200,6 +200,21 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
             </StaggerItem>
             <StaggerItem>
               <motion.button
+                onClick={() => handleNavClick('nearby')}
+                whileHover={{ scale: 1.05, x: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-colors ${
+                  activeView === 'nearby'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                }`}
+              >
+                <Radio size={18} />
+                <span className="text-sm">Nearby Chat</span>
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
                 onClick={() => handleNavClick('activity')}
                 whileHover={{ scale: 1.05, x: 5 }}
                 whileTap={{ scale: 0.95 }}
@@ -364,6 +379,21 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
               >
                 <MessageCircle size={18} />
                 <span className="text-sm">Private Chat</span>
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                onClick={() => handleNavClick('nearby')}
+                whileHover={{ scale: 1.05, x: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-colors ${
+                  activeView === 'nearby'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                }`}
+              >
+                <Radio size={18} />
+                <span className="text-sm">Nearby Chat</span>
               </motion.button>
             </StaggerItem>
             <StaggerItem>

@@ -101,17 +101,21 @@ const LandingPage = ({ onLogin, onRegister }) => {
                 </motion.span>
                 <motion.span
                   initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-[length:200%_auto]"
-                  animate={{
+                  animate={{ 
+                    opacity: 1, 
+                    x: 0,
                     backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                   }}
-                  transition={{
-                    duration: 8,
-                    repeat: Infinity,
-                    ease: "easeInOut",
+                  transition={{ 
+                    opacity: { duration: 0.8, delay: 0.4 },
+                    x: { duration: 0.8, delay: 0.4 },
+                    backgroundPosition: {
+                      duration: 8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    },
                   }}
+                  className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-[length:200%_auto]"
                 >
                   connected
                 </motion.span>

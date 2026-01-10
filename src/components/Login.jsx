@@ -342,46 +342,51 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                 </motion.div>
               </StaggerItem>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50/80 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-full text-sm flex items-start gap-2">
-            <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
-            <div className="flex-1 font-light">{error}</div>
-          </div>
-        )}
+              <StaggerItem>
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50/80 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-full text-sm flex items-start gap-2">
+                    <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 font-light">{error}</div>
+                  </div>
+                )}
+              </StaggerItem>
 
-        {emailVerificationSent && (
-          <div className="mb-4 p-4 bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 rounded-full text-sm">
-            <div className="flex items-start gap-2 mb-2">
-              <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-medium text-xs">Verification Email Sent!</p>
-                <p className="mt-1 text-xs font-light">Check your inbox to activate your account.</p>
-              </div>
-            </div>
-            {mode === 'login' && (
-              <button
-                type="button"
-                onClick={async () => {
-                  setResendingVerification(true);
-                  try {
-                    await resendVerificationEmail();
-                    success('Verification email resent! Please check your inbox.');
-                  } catch (err) {
-                    showError('Failed to resend verification email. Please try again.');
-                  } finally {
-                    setResendingVerification(false);
-                  }
-                }}
-                disabled={resendingVerification}
-                    className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-light disabled:opacity-50 transition-colors"
-              >
-                {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
-              </button>
-            )}
-          </div>
-        )}
+              <StaggerItem>
+                {emailVerificationSent && (
+                  <div className="mb-4 p-4 bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 rounded-full text-sm">
+                    <div className="flex items-start gap-2 mb-2">
+                      <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-medium text-xs">Verification Email Sent!</p>
+                        <p className="mt-1 text-xs font-light">Check your inbox to activate your account.</p>
+                      </div>
+                    </div>
+                    {mode === 'login' && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setResendingVerification(true);
+                          try {
+                            await resendVerificationEmail();
+                            success('Verification email resent! Please check your inbox.');
+                          } catch (err) {
+                            showError('Failed to resend verification email. Please try again.');
+                          } finally {
+                            setResendingVerification(false);
+                          }
+                        }}
+                        disabled={resendingVerification}
+                        className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-light disabled:opacity-50 transition-colors"
+                      >
+                        {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </StaggerItem>
 
-        <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
+              <StaggerItem>
+                <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
             {mode === 'register' && (
               <div>
                 <label htmlFor="register-name" className="block text-xs font-light text-gray-600 dark:text-gray-400 mb-2">
@@ -513,85 +518,84 @@ const Login = ({ onBack, initialMode = 'login' }) => {
               </div>
             )}
 
-              <StaggerItem>
-                <AnimatedButton
-                  type="submit"
-                  disabled={loading}
-                  variant="default"
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="rounded-full h-5 w-5 border-b-2 border-white"
-                      />
-                      <span>Processing...</span>
-                    </>
-                  ) : mode === 'register' ? (
-                    <>
-                      <UserPlus size={20} />
-                      <span>Create Account</span>
-                    </>
-                  ) : mode === 'reset' ? (
-                    <>
-                      <RotateCcw size={20} />
-                      <span>Send Reset Email</span>
-                    </>
-                  ) : (
-                    <>
-                      <LogIn size={20} />
-                      <span>Sign In</span>
-                    </>
-                  )}
-                </AnimatedButton>
+                  <AnimatedButton
+                    type="submit"
+                    disabled={loading}
+                    variant="default"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="rounded-full h-5 w-5 border-b-2 border-white"
+                        />
+                        <span>Processing...</span>
+                      </>
+                    ) : mode === 'register' ? (
+                      <>
+                        <UserPlus size={20} />
+                        <span>Create Account</span>
+                      </>
+                    ) : mode === 'reset' ? (
+                      <>
+                        <RotateCcw size={20} />
+                        <span>Send Reset Email</span>
+                      </>
+                    ) : (
+                      <>
+                        <LogIn size={20} />
+                        <span>Sign In</span>
+                      </>
+                    )}
+                  </AnimatedButton>
+                </form>
               </StaggerItem>
             </StaggerContainer>
-          </form>
 
-        {mode !== 'reset' && (
-          <button
-            onClick={() => {
-              setMode('reset');
-              setError(null);
-            }}
-            className="w-full mt-4 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-light transition-colors"
-          >
-            Forgot password?
-          </button>
-        )}
+            {mode !== 'reset' && (
+              <button
+                onClick={() => {
+                  setMode('reset');
+                  setError(null);
+                }}
+                className="w-full mt-4 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-light transition-colors"
+              >
+                Forgot password?
+              </button>
+            )}
 
-        <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8 font-light">
-          {mode === 'register' 
-            ? 'Already have an account?'
-            : mode === 'reset'
-            ? 'Remember your password?'
-            : "Don't have an account?"}
-          {' '}
-          <button
-            onClick={() => {
-              setMode(mode === 'register' ? 'login' : mode === 'reset' ? 'login' : 'register');
-              setError(null);
-            }}
-            className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-          >
-            {mode === 'register' ? 'Login' : mode === 'reset' ? 'Login' : 'Register'}
-          </button>
-        </p>
+            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8 font-light">
+              {mode === 'register' 
+                ? 'Already have an account?'
+                : mode === 'reset'
+                ? 'Remember your password?'
+                : "Don't have an account?"}
+              {' '}
+              <button
+                onClick={() => {
+                  setMode(mode === 'register' ? 'login' : mode === 'reset' ? 'login' : 'register');
+                  setError(null);
+                }}
+                className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+              >
+                {mode === 'register' ? 'Login' : mode === 'reset' ? 'Login' : 'Register'}
+              </button>
+            </p>
 
-        {/* Minimal Contact Admin */}
-        <div className="mt-8 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
-          <button
-            onClick={() => setShowContactForm(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-full transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/30 font-light"
-          >
-            <MessageSquare size={16} />
-            <span>Contact Admin</span>
-          </button>
-        </div>
-        
-      </div>
+            {/* Minimal Contact Admin */}
+            <div className="mt-8 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
+              <button
+                onClick={() => setShowContactForm(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-full transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/30 font-light"
+              >
+                <MessageSquare size={16} />
+                <span>Contact Admin</span>
+              </button>
+            </div>
+          </div>
+        </ScaleIn>
 
       {/* Contact Form Modal */}
       {showContactForm && (
@@ -628,7 +632,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
           animation: float-slow 5s ease-in-out infinite;
         }
       `}</style>
-    </div>
+      </div>
     </div>
   );
 };

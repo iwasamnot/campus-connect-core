@@ -1,5 +1,49 @@
 # Changelog
 
+## [8.3.0] - 2025-01-XX
+
+### Added: Nearby Chat Feature with Bluetooth and Hotspot Support
+
+- **Nearby Chat Component**: New peer-to-peer chat feature for connecting with nearby students
+  - Bluetooth device scanning and discovery (when Web Bluetooth API is available)
+  - Hotspot/Network proximity detection for finding students on the same WiFi network
+  - BroadcastChannel API integration for cross-tab communication
+  - WebRTC peer-to-peer messaging for direct device-to-device communication
+  - Offline messaging support when students are on the same local network
+  
+#### Features
+- **Device Discovery**: Automatically detects nearby students using multiple methods:
+  - Web Bluetooth API (requires HTTPS and supported browser)
+  - Network proximity detection (same WiFi/hotspot)
+  - BroadcastChannel for same-origin communication
+  - SessionStorage polling for cross-tab communication
+  
+- **P2P Messaging**: Direct peer-to-peer communication using WebRTC
+  - RTCPeerConnection for establishing connections
+  - DataChannel for real-time message exchange
+  - No internet connection required (works on local network)
+  
+- **User Interface**:
+  - Device support detection (shows available features)
+  - Nearby users list with connection status
+  - Real-time chat interface with message history
+  - Connection status indicators
+  - Smooth animations with GPU acceleration
+
+#### Files Added
+- `src/components/NearbyChat.jsx` - Main nearby chat component
+- `src/utils/nearbyChat.js` - Utilities for Bluetooth, network, and P2P communication
+
+#### Integration
+- Added "Nearby Chat" navigation option in Sidebar (for students)
+- Integrated with existing app routing system
+- Uses existing theme and animation system for consistency
+
+### Fixed
+- **Build Error**: Fixed JSX structure issues in `Login.jsx` (unclosed tags and mismatched containers)
+- **Duplicate Attributes**: Fixed duplicate `animate` and `transition` attributes in `LandingPage.jsx`
+- **Modal Structure**: Corrected form and container nesting in Login component
+
 ## [8.2.0] - 2025-01-XX
 
 ### Changed: Domain Migration to sistc.app

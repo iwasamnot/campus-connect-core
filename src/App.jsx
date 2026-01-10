@@ -140,6 +140,7 @@ const ActivityDashboard = createLazyComponent(() => import('./components/Activit
 const MessageScheduler = createLazyComponent(() => import('./components/MessageScheduler'), 'Message Scheduler');
 const SavedMessages = createLazyComponent(() => import('./components/SavedMessages'), 'Saved Messages');
 const ImageGallery = createLazyComponent(() => import('./components/ImageGallery'), 'Image Gallery');
+const NearbyChat = createLazyComponent(() => import('./components/NearbyChat'), 'Nearby Chat');
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
   return { default: () => null };
 }));
@@ -386,6 +387,15 @@ function App() {
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <PrivateChat />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'nearby' && (
+                  <motion.div key="nearby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideRight">
+                        <NearbyChat onClose={() => setActiveView('chat')} />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
