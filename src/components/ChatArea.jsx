@@ -1073,10 +1073,33 @@ const ChatArea = ({ setActiveView }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-screen h-[100dvh] w-full bg-white dark:bg-gray-900 relative overflow-hidden">
+      {/* Subtle Fluid Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-gradient-to-br from-indigo-100/10 via-purple-100/8 to-pink-100/10 dark:from-indigo-900/5 dark:via-purple-900/5 dark:to-pink-900/5 blur-3xl"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${100 + Math.random() * 150}px`,
+              height: `${100 + Math.random() * 150}px`,
+              animation: `float-subtle ${15 + Math.random() * 10}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 8}s`,
+            }}
+          />
+        ))}
+      </div>
+      <style>{`
+        @keyframes float-subtle {
+          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+          50% { transform: translate(15px, -15px) scale(1.05); opacity: 0.5; }
+        }
+      `}</style>
       {/* Chat Header */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 md:px-6 py-3 md:py-4 relative z-10"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
@@ -1091,8 +1114,8 @@ const ChatArea = ({ setActiveView }) => {
           <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             <Logo size="small" showText={false} />
             <div className="min-w-0 flex-1">
-              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">Campus Chat</h2>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Connect with your campus community</p>
+              <h2 className="text-base sm:text-lg md:text-2xl font-light text-gray-800 dark:text-white truncate">Campus Chat</h2>
+              <p className="text-xs md:text-sm text-gray-400 dark:text-gray-500 hidden sm:block font-light">Connect with your campus community</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1100,10 +1123,10 @@ const ChatArea = ({ setActiveView }) => {
             <div className="relative">
               <button
                 onClick={() => setAiHelpMode(!aiHelpMode)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 rounded-full transition-all duration-300 transform hover:scale-110 ${
                   aiHelpMode
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-indigo-100 dark:hover:bg-indigo-700 text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-indigo-600 dark:text-indigo-400'
                 }`}
                 title={aiHelpMode ? 'AI Help Mode: ON - Virtual Senior will respond' : 'AI Help Mode: OFF - Click to enable'}
               >
@@ -1169,7 +1192,7 @@ const ChatArea = ({ setActiveView }) => {
             <div className="relative flex items-center gap-2">
               <button
                 onClick={() => setShowAdvancedSearch(true)}
-                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95"
                 title="Advanced Search (Ctrl/Cmd + K)"
               >
                 <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
@@ -1186,7 +1209,7 @@ const ChatArea = ({ setActiveView }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(!showExportMenu)}
-                  className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95"
                   title="Export chat history"
                 >
                   <Download size={20} className="text-indigo-600 dark:text-indigo-400" />
@@ -1855,7 +1878,7 @@ const ChatArea = ({ setActiveView }) => {
 
           {/* Message Input */}
           <div 
-            className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 px-3 md:px-6 py-3 md:py-4 relative z-10"
             style={{
               paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
               paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
@@ -1964,7 +1987,7 @@ const ChatArea = ({ setActiveView }) => {
                     }
                   }}
                   placeholder={aiHelpMode ? "Type your message... (AI Help enabled)" : "Type your message... (Use @ to mention)"}
-                  className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                  className="w-full px-4 md:px-5 py-3 text-sm md:text-base border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all duration-300"
                   disabled={sending || waitingForAI}
                 />
                 {/* Mention Autocomplete */}
@@ -2086,7 +2109,7 @@ const ChatArea = ({ setActiveView }) => {
                 <button
                   type="submit"
                   disabled={sending || waitingForAI || (!newMessage.trim() && !attachedFile)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-1 md:gap-2"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 md:px-6 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 font-medium"
                 >
                   {waitingForAI ? (
                     <>

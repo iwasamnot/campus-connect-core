@@ -142,21 +142,39 @@ const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catc
   return { default: () => null };
 }));
 
-// Loading component for lazy-loaded routes
+// Loading component - Minimal Fluid Design
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center h-screen h-[100dvh] bg-gray-50 dark:bg-gray-900 animate-fade-in">
-    <div className="text-center">
-      <img 
-        src="/logo.png" 
-        alt="CampusConnect Logo" 
-        className="w-24 h-24 mx-auto mb-4 animate-pulse-slow object-contain"
-        onError={(e) => {
-          e.target.style.display = 'none';
-        }}
-      />
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
-      <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
+  <div className="flex items-center justify-center h-screen h-[100dvh] bg-white dark:bg-gray-900 relative overflow-hidden">
+    {/* Fluid Background */}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {Array.from({ length: 6 }, (_, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-gradient-to-br from-indigo-200/20 via-purple-200/15 to-pink-200/20 dark:from-indigo-900/15 dark:via-purple-900/10 dark:to-pink-900/15 blur-3xl"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            width: `${80 + Math.random() * 120}px`,
+            height: `${80 + Math.random() * 120}px`,
+            animation: `float-particles ${12 + Math.random() * 8}s ease-in-out infinite`,
+            animationDelay: `${Math.random() * 5}s`,
+          }}
+        />
+      ))}
     </div>
+    <div className="text-center relative z-10">
+      <div className="w-16 h-16 mx-auto mb-6 relative">
+        <div className="absolute inset-0 rounded-full border-4 border-indigo-200/30 dark:border-indigo-800/30"></div>
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-600 dark:border-t-indigo-400 animate-spin"></div>
+      </div>
+      <p className="text-sm text-gray-500 dark:text-gray-400 font-light">Loading...</p>
+    </div>
+    <style>{`
+      @keyframes float-particles {
+        0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+        50% { transform: translate(20px, -20px) scale(1.1); opacity: 0.6; }
+      }
+    `}</style>
   </div>
 );
 
@@ -245,14 +263,7 @@ function App() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!user || !userRole) {

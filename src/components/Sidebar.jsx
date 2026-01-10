@@ -47,24 +47,24 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay - Minimal */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden animate-fade-in"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
           onClick={onClose}
         />
       )}
       
-      {/* Sidebar */}
+      {/* Sidebar - Minimal Fluid Design */}
       <div 
         className={`
           fixed md:static
           top-0 left-0
-          w-full md:w-64 bg-gray-900 dark:bg-gray-900 text-white 
-          flex flex-col h-screen h-[100dvh] border-r border-gray-800
+          w-full md:w-64 bg-gray-900/95 dark:bg-gray-900/95 backdrop-blur-xl text-white 
+          flex flex-col h-screen h-[100dvh] border-r border-gray-800/50
           z-[70]
-          transform transition-transform duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
-          ${isOpen ? 'translate-x-0 animate-slide-in-left' : '-translate-x-full md:translate-x-0'}
+          transform transition-transform duration-500 ease-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -76,220 +76,220 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Mobile Header - Always visible on mobile */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0"
+        {/* Mobile Header - Minimal Design */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800/50 flex-shrink-0"
              style={{ paddingTop: `calc(1rem + env(safe-area-inset-top, 0px))` }}>
-          <Logo size="small" showText={true} />
+          <Logo size="small" showText={false} />
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95"
+            className="p-2 hover:bg-gray-800/50 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95"
             aria-label="Close menu"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
         
-        {/* Desktop Header - Always visible on desktop */}
-        <div className="hidden md:block p-6 border-b border-gray-800 flex-shrink-0"
+        {/* Desktop Header - Minimal Design */}
+        <div className="hidden md:block p-6 border-b border-gray-800/50 flex-shrink-0"
              style={{ paddingTop: `calc(1.5rem + env(safe-area-inset-top, 0px))` }}>
-          <Logo size="small" showText={true} className="mb-2" />
-          <p className="text-sm text-gray-300 dark:text-gray-300 mt-1 text-center">
-            {isAdminRole(userRole) ? 'Admin Panel' : 'Student Portal'}
+          <Logo size="small" showText={false} className="mb-3" />
+          <p className="text-xs text-gray-400 dark:text-gray-400 mt-2 text-center font-light uppercase tracking-wider">
+            {isAdminRole(userRole) ? 'Admin' : 'Student'}
           </p>
         </div>
 
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch animate-fade-in">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto overscroll-contain touch-pan-y -webkit-overflow-scrolling-touch">
         {!isAdminRole(userRole) ? (
           <>
             <button
               onClick={() => handleNavClick('chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1) transform hover:scale-105 active:scale-95 stagger-item ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-spring'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md hover:animate-glow'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <MessageSquare size={20} className="transition-transform duration-300 hover:rotate-12" />
-              <span>Campus Chat</span>
+              <MessageSquare size={18} className="transition-transform duration-300" />
+              <span className="text-sm">Campus Chat</span>
             </button>
             <button
               onClick={() => handleNavClick('ai-help')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'ai-help'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Bot size={20} />
-              <span>AI Help</span>
+              <Bot size={18} />
+              <span className="text-sm">AI Help</span>
             </button>
             <button
               onClick={() => handleNavClick('groups')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'groups' || activeView === 'group-chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <UserCircle size={20} />
-              <span>Groups</span>
+              <UserCircle size={18} />
+              <span className="text-sm">Groups</span>
             </button>
             <button
               onClick={() => handleNavClick('private-chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'private-chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <MessageCircle size={20} />
-              <span>Private Chat</span>
+              <MessageCircle size={18} />
+              <span className="text-sm">Private Chat</span>
             </button>
             <button
               onClick={() => handleNavClick('activity')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'activity'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Activity size={20} />
-              <span>Activity</span>
+              <Activity size={18} />
+              <span className="text-sm">Activity</span>
             </button>
             <button
               onClick={() => handleNavClick('scheduler')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'scheduler'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Calendar size={20} />
-              <span>Scheduler</span>
+              <Calendar size={18} />
+              <span className="text-sm">Scheduler</span>
             </button>
             <button
               onClick={() => handleNavClick('saved')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'saved'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Bookmark size={20} />
-              <span>Saved</span>
+              <Bookmark size={18} />
+              <span className="text-sm">Saved</span>
             </button>
             <button
               onClick={() => handleNavClick('gallery')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'gallery'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <ImageIcon size={20} />
-              <span>Gallery</span>
+              <ImageIcon size={18} />
+              <span className="text-sm">Gallery</span>
             </button>
             <button
               onClick={() => handleNavClick('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'settings'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Settings size={20} />
-              <span>Settings</span>
+              <Settings size={18} />
+              <span className="text-sm">Settings</span>
             </button>
           </>
         ) : (
           <>
             <button
               onClick={() => handleNavClick('chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <MessageSquare size={20} />
-              <span>Campus Chat</span>
+              <MessageSquare size={18} />
+              <span className="text-sm">Campus Chat</span>
             </button>
             <button
               onClick={() => handleNavClick('audit')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'audit'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <FileText size={20} />
-              <span>Audit Logs</span>
+              <FileText size={18} />
+              <span className="text-sm">Audit Logs</span>
             </button>
             <button
               onClick={() => handleNavClick('analytics')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'analytics'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <BarChart3 size={20} />
-              <span>Analytics</span>
+              <BarChart3 size={18} />
+              <span className="text-sm">Analytics</span>
             </button>
             <button
               onClick={() => handleNavClick('users')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'users'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Users size={20} />
-              <span>Users Management</span>
+              <Users size={18} />
+              <span className="text-sm">Users</span>
             </button>
             <button
               onClick={() => handleNavClick('create-user')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'create-user'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <UserPlus size={20} />
-              <span>Create User</span>
+              <UserPlus size={18} />
+              <span className="text-sm">Create User</span>
             </button>
             <button
               onClick={() => handleNavClick('private-chat')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'private-chat'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <MessageCircle size={20} />
-              <span>Private Chat</span>
+              <MessageCircle size={18} />
+              <span className="text-sm">Private Chat</span>
             </button>
             <button
               onClick={() => handleNavClick('contact-messages')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'contact-messages'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Mail size={20} />
-              <span>Contact Messages</span>
+              <Mail size={18} />
+              <span className="text-sm">Messages</span>
             </button>
             <button
               onClick={() => handleNavClick('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 activeView === 'settings'
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105 font-semibold animate-scale-in'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Settings size={20} />
-              <span>Settings</span>
+              <Settings size={18} />
+              <span className="text-sm">Settings</span>
             </button>
           </>
         )}
