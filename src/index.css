@@ -195,6 +195,133 @@ motion.article {
   box-shadow: var(--fluid-shadow) !important;
 }
 
+/* Fun Theme Styles - Colorful & Playful */
+.theme-fun {
+  --fun-radius: 1rem; /* Playful rounded corners */
+  --fun-border: 2px solid rgba(99, 102, 241, 0.3); /* Vibrant borders */
+  --fun-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(139, 92, 246, 0.2);
+  --fun-glass-bg: rgba(255, 255, 255, 0.1);
+  --fun-blur: blur(10px);
+  --fun-accent: #6366f1; /* Indigo */
+  --fun-accent-hover: #4f46e5; /* Darker indigo */
+  --fun-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --fun-gradient-hover: linear-gradient(135deg, #764ba2 0%, #f093fb 100%);
+}
+
+.dark.theme-fun {
+  --fun-border: 2px solid rgba(139, 92, 246, 0.4);
+  --fun-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4), 0 4px 6px -2px rgba(236, 72, 153, 0.3);
+  --fun-glass-bg: rgba(30, 30, 30, 0.5);
+  --fun-blur: blur(15px);
+  --fun-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --fun-gradient-hover: linear-gradient(135deg, #f093fb 0%, #4facfe 100%);
+}
+
+/* Fun theme - Playful rounded corners */
+.theme-fun .rounded-lg {
+  border-radius: 1rem !important;
+}
+
+.theme-fun .rounded-xl {
+  border-radius: 1.25rem !important;
+}
+
+.theme-fun .rounded-2xl,
+.theme-fun .rounded-\[2rem\] {
+  border-radius: 1.5rem !important;
+}
+
+/* Fun theme - Vibrant glassmorphism effects */
+.theme-fun .glass-panel {
+  background: var(--fun-glass-bg) !important;
+  backdrop-filter: var(--fun-blur) !important;
+  -webkit-backdrop-filter: var(--fun-blur) !important;
+  border: var(--fun-border) !important;
+  box-shadow: var(--fun-shadow) !important;
+}
+
+/* Fun theme - Enhanced shadows with color */
+.theme-fun .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(139, 92, 246, 0.2) !important;
+}
+
+.theme-fun .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.3), 0 10px 10px -5px rgba(139, 92, 246, 0.2) !important;
+}
+
+.theme-fun .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.4), 0 15px 20px -5px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Fun theme - Colorful gradients on buttons and interactive elements */
+.theme-fun .bg-indigo-600,
+.theme-fun .bg-indigo-700,
+.theme-fun .bg-gradient-to-r {
+  background: var(--fun-gradient) !important;
+}
+
+.theme-fun .from-indigo-600.to-purple-600,
+.theme-fun .from-indigo-600,
+.theme-fun .from-indigo-700.to-purple-700,
+.theme-fun .from-indigo-700 {
+  background-image: var(--fun-gradient) !important;
+}
+
+.theme-fun button:hover,
+.theme-fun .hover\:bg-indigo-700:hover,
+.theme-fun .hover\:from-indigo-700:hover {
+  background: var(--fun-gradient-hover) !important;
+  background-image: var(--fun-gradient-hover) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Fun theme - Playful animations */
+.theme-fun * {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; /* Bouncy ease-out-back */
+}
+
+.theme-fun button,
+.theme-fun .hover\:scale-110:hover,
+.theme-fun .hover\:scale-105:hover,
+.theme-fun .hover\:scale-\[1\.02\]:hover {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.theme-fun button:active {
+  transform: scale(0.95) !important;
+  transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Fun theme - Colorful borders */
+.theme-fun .border-indigo-500,
+.theme-fun .border-indigo-600 {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  border-width: 2px !important;
+}
+
+.dark.theme-fun .border-indigo-400,
+.dark.theme-fun .border-indigo-500 {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Fun theme - Vibrant text colors */
+.theme-fun .text-indigo-600,
+.theme-fun .text-indigo-500 {
+  color: #818cf8 !important; /* Lighter indigo for fun theme */
+}
+
+.dark.theme-fun .text-indigo-300,
+.dark.theme-fun .text-indigo-400 {
+  color: #a78bfa !important; /* Brighter purple for dark fun theme */
+}
+
+/* Fun theme - Playful card hover effects */
+.theme-fun .card-hover:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: var(--fun-shadow) !important;
+}
+
 /* Minimal Theme Styles - Ultra Modern & Clean */
 .theme-minimal {
   --minimal-radius: 0px; /* Sharp corners - completely flat */
@@ -785,6 +912,34 @@ motion.article {
   background: #050505;
   overflow: hidden;
   pointer-events: none;
+}
+
+/* Aurora background only visible for Fluid theme */
+.theme-fun .aurora-background,
+.theme-minimal .aurora-background {
+  display: none !important;
+}
+
+/* Fun theme - Colorful gradient background */
+html.theme-fun,
+html.theme-fun body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #fce7f3 100%) !important;
+}
+
+.dark.theme-fun,
+.dark.theme-fun body {
+  background: linear-gradient(135deg, #1e1b4b 0%, #3b1f54 50%, #4c1d4f 100%) !important;
+}
+
+/* Minimal theme - Clean flat background */
+html.theme-minimal,
+html.theme-minimal body {
+  background: #ffffff !important;
+}
+
+.dark.theme-minimal,
+.dark.theme-minimal body {
+  background: #0f172a !important;
 }
 
 .aurora-blob {
