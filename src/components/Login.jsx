@@ -201,9 +201,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
   );
 
   return (
-    // Use a dedicated scroll container for Login/Register on mobile/PWA.
-    // This prevents the viewport from getting "stuck" in standalone mode when the keyboard opens.
-    <div className="h-screen h-[100dvh] overflow-y-auto bg-transparent relative">
+    <div className="h-screen h-[100dvh] overflow-y-auto overscroll-contain touch-pan-y bg-transparent relative">
       {/* Aurora Background - Fluid.so aesthetic */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="aurora-background">
@@ -215,147 +213,93 @@ const Login = ({ onBack, initialMode = 'login' }) => {
         </div>
       </div>
 
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 relative z-10 safe-area-inset" style={{
-        paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 1rem)`,
-        paddingBottom: `max(1rem, env(safe-area-inset-bottom, 0px) + 1rem)`,
-        paddingLeft: `max(1rem, env(safe-area-inset-left, 0px) + 1rem)`,
-        paddingRight: `max(1rem, env(safe-area-inset-right, 0px) + 1rem)`
-      }}>
-        {/* Animated Navigation Bar */}
-        <FadeIn delay={0.1} duration={0.5}>
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="absolute top-0 left-0 right-0 z-50 glass-panel border-b border-white/10 backdrop-blur-xl"
-          >
-            <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+      {/* Navigation Bar - Clean & Minimal */}
+      <FadeIn delay={0.1}>
+        <motion.div
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/10 backdrop-blur-xl rounded-b-2xl"
+        >
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+            <motion.button
+              onClick={onBack || (() => window.history.length > 1 ? window.history.back() : window.location.href = '/')}
+              whileHover={{ scale: 1.05, x: -2 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2.5 glass-panel border border-white/10 text-white/70 hover:text-white font-medium rounded-xl transition-all"
+              type="button"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm">Back</span>
+            </motion.button>
+            <div className="flex items-center gap-3">
+              <Logo size="small" showText={false} />
               <motion.button
-                onClick={onBack || (() => {
-                  if (window.history.length > 1) {
-                    window.history.back();
-                  } else {
-                    // Fallback: use the showLogin state change
-                    if (typeof onBack === 'function') {
-                      onBack();
-                    } else {
-                      // Force navigation to landing page
-                      window.location.href = '/';
-                    }
-                  }
-                })}
-                whileHover={{ scale: 1.05, x: -2 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-white/70 hover:text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-                type="button"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-                <span className="text-sm">Back</span>
-              </motion.button>
-              <div className="flex items-center gap-2">
-                <Logo size="small" showText={false} />
-              </div>
-              <motion.button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleDarkMode();
-                }}
+                onClick={() => toggleDarkMode()}
                 whileHover={{ scale: 1.1, rotate: 15 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white transition-all"
                 aria-label="Toggle dark mode"
                 type="button"
               >
-                {darkMode ? (
-                  <Sun className="w-5 h-5 text-yellow-400" size={20} />
-                ) : (
-                  <Moon className="w-5 h-5 text-indigo-300" size={20} />
-                )}
+                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-indigo-300" />}
               </motion.button>
             </div>
-          </motion.div>
-        </FadeIn>
+          </div>
+        </motion.div>
+      </FadeIn>
 
-        {/* Animated Form Container */}
-        <ScaleIn delay={0.3} duration={0.6}>
+      {/* Main Content - Centered & Spacious */}
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 pt-24 relative z-10" style={{
+        paddingTop: `max(6rem, calc(env(safe-area-inset-top, 0px) + 5rem))`,
+        paddingBottom: `max(2rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))`,
+        paddingLeft: `max(1rem, calc(env(safe-area-inset-left, 0px) + 1rem))`,
+        paddingRight: `max(1rem, calc(env(safe-area-inset-right, 0px) + 1rem))`
+      }}>
+        <ScaleIn delay={0.2} duration={0.5}>
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-6 md:p-8 w-full max-w-3xl mx-auto"
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-8 md:p-10 w-full max-w-md mx-auto backdrop-blur-xl"
           >
-            <StaggerContainer staggerDelay={0.1} initialDelay={0.4}>
+            <StaggerContainer staggerDelay={0.08} initialDelay={0.3}>
               <StaggerItem>
-                {/* Back Button Inside Form - Always Visible */}
-                <div className="mb-4 flex justify-start">
-                  <button
-                    onClick={onBack || (() => {
-                      if (window.history.length > 1) {
-                        window.history.back();
-                      } else {
-                        window.location.href = '/';
-                      }
-                    })}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:text-white font-medium transition-colors rounded-xl hover:bg-white/10 border border-white/20 bg-white/5 backdrop-blur-sm"
-                    type="button"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M19 12H5M12 19l-7-7 7-7" />
-                    </svg>
-                    <span>Back to Home</span>
-                  </button>
-                </div>
-                
-                <div className="text-center mb-6">
+                {/* Logo & Header */}
+                <div className="text-center mb-8">
                   <motion.div
-                    className="mb-4 flex justify-center"
-                    animate={{
-                      y: [0, -10, 0],
-                    }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
+                    className="mb-6 flex justify-center"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   >
                     <Logo size="large" showText={false} />
                   </motion.div>
-                  <h1 className="text-2xl md:text-3xl font-semibold text-white mb-1.5 text-glow">
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 text-glow">
                     {mode === 'register' ? 'Create Account' : mode === 'reset' ? 'Reset Password' : 'Welcome Back'}
                   </h1>
-                  <p className="text-sm text-white/60">
+                  <p className="text-base text-white/60 font-light">
                     {mode === 'register' ? 'Join your campus community' : mode === 'reset' ? 'Recover your account' : 'Sign in to continue'}
                   </p>
                 </div>
               </StaggerItem>
 
               <StaggerItem>
-                {/* Animated Toggle between Login and Register */}
+                {/* Mode Toggle - Beautiful Pill Design */}
                 <motion.div
                   layout
-                  className="flex mb-8 bg-white/10 backdrop-blur-sm rounded-full p-1 gap-1 border border-white/20"
+                  className="relative flex mb-8 bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 gap-1.5 border border-white/10"
                 >
+                  <motion.div
+                    layoutId="activeMode"
+                    className="absolute inset-y-1.5 rounded-xl bg-indigo-600/80 backdrop-blur-sm border border-indigo-500/50 shadow-lg"
+                    style={{
+                      left: mode === 'login' ? '0.375rem' : '50%',
+                      right: mode === 'login' ? '50%' : '0.375rem',
+                      width: 'calc(50% - 0.375rem)',
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
                   <motion.button
                     onClick={() => {
                       setMode('login');
@@ -364,14 +308,15 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                       setConfirmPassword('');
                       setEmailVerificationSent(false);
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex-1 py-2.5 px-4 rounded-full font-medium text-sm transition-colors ${
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`relative flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-colors z-10 ${
                       mode === 'login'
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-transparent text-white/70 hover:text-white'
+                        ? 'text-white'
+                        : 'text-white/60 hover:text-white/80'
                     }`}
                   >
+                    <LogIn size={16} className="inline mr-2" />
                     Login
                   </motion.button>
                   <motion.button
@@ -382,209 +327,266 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                       setConfirmPassword('');
                       setEmailVerificationSent(false);
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex-1 py-2.5 px-4 rounded-full font-medium text-sm transition-colors ${
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`relative flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-colors z-10 ${
                       mode === 'register'
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-transparent text-white/70 hover:text-white'
+                        ? 'text-white'
+                        : 'text-white/60 hover:text-white/80'
                     }`}
                   >
+                    <UserPlus size={16} className="inline mr-2" />
                     Register
                   </motion.button>
                 </motion.div>
               </StaggerItem>
 
-              <StaggerItem>
+              <AnimatePresence mode="wait">
                 {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 p-4 bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-red-200 rounded-xl text-sm flex items-start gap-2"
-                  >
-                    <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-red-300" />
-                    <div className="flex-1 font-light">{error}</div>
-                  </motion.div>
+                  <StaggerItem key="error">
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      className="mb-6 p-4 glass-panel bg-red-500/10 border border-red-500/30 text-red-200 rounded-xl text-sm flex items-start gap-3"
+                    >
+                      <AlertCircle size={18} className="mt-0.5 flex-shrink-0 text-red-400" />
+                      <div className="flex-1 font-medium leading-relaxed">{error}</div>
+                    </motion.div>
+                  </StaggerItem>
                 )}
-              </StaggerItem>
 
-              <StaggerItem>
                 {emailVerificationSent && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 p-4 bg-green-500/20 backdrop-blur-sm border border-green-500/30 text-green-200 rounded-xl text-sm"
-                  >
-                    <div className="flex items-start gap-2 mb-2">
-                      <CheckCircle size={16} className="mt-0.5 flex-shrink-0 text-green-300" />
-                      <div className="flex-1">
-                        <p className="font-medium text-xs text-green-100">Verification Email Sent!</p>
-                        <p className="mt-1 text-xs font-light text-white/80">Check your inbox to activate your account.</p>
+                  <StaggerItem key="verification">
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      className="mb-6 p-4 glass-panel bg-green-500/10 border border-green-500/30 text-green-200 rounded-xl text-sm"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <CheckCircle size={18} className="mt-0.5 flex-shrink-0 text-green-400" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm text-green-100 mb-1">Verification Email Sent!</p>
+                          <p className="text-xs font-light text-white/80 leading-relaxed">Check your inbox to activate your account.</p>
+                        </div>
                       </div>
-                    </div>
-                    {mode === 'login' && (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setResendingVerification(true);
-                          try {
-                            await resendVerificationEmail();
-                            success('Verification email resent! Please check your inbox.');
-                          } catch (err) {
-                            showError('Failed to resend verification email. Please try again.');
-                          } finally {
-                            setResendingVerification(false);
-                          }
-                        }}
-                        disabled={resendingVerification}
-                        className="mt-2 text-xs text-indigo-300 hover:text-indigo-200 hover:underline font-light disabled:opacity-50 transition-colors"
-                      >
-                        {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
-                      </button>
-                    )}
-                  </motion.div>
+                      {mode === 'login' && (
+                        <motion.button
+                          type="button"
+                          onClick={async () => {
+                            setResendingVerification(true);
+                            try {
+                              await resendVerificationEmail();
+                              success('Verification email resent! Please check your inbox.');
+                            } catch (err) {
+                              showError('Failed to resend verification email. Please try again.');
+                            } finally {
+                              setResendingVerification(false);
+                            }
+                          }}
+                          disabled={resendingVerification}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="mt-2 text-xs text-indigo-300 hover:text-indigo-200 hover:underline font-medium disabled:opacity-50 transition-colors"
+                        >
+                          {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                        </motion.button>
+                      )}
+                    </motion.div>
+                  </StaggerItem>
                 )}
-              </StaggerItem>
+              </AnimatePresence>
 
               <StaggerItem>
-                <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
-            {mode === 'register' && (
-              <div>
-                <label htmlFor="register-name" className="block text-xs font-medium text-white/90 mb-2">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
-                  <input
-                    type="text"
-                    id="register-name"
-                    name="name"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                    required
-                    className="w-full pl-11 pr-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            )}
-            <div>
-              <label htmlFor="login-email" className="block text-xs font-medium text-white/90 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
-                <input
-                  type="email"
-                  id="login-email"
-                  name="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  className="w-full pl-11 pr-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            {mode === 'register' && (
-              <div>
-                <label htmlFor="register-confirm-email" className="block text-xs font-medium text-white/90 mb-2">
-                  Confirm Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
-                  <input
-                    type="email"
-                    id="register-confirm-email"
-                    name="confirmEmail"
-                    autoComplete="email"
-                    value={confirmEmail}
-                    onChange={(e) => setConfirmEmail(e.target.value)}
-                    placeholder="Confirm your email"
-                    required
-                    className={`w-full pl-11 pr-4 py-2.5 border rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-all duration-300 ${
-                      confirmEmail && email !== confirmEmail
-                        ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50'
-                        : 'border-white/10 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10'
-                    }`}
-                    disabled={loading}
-                  />
-                </div>
-                {confirmEmail && email !== confirmEmail && (
-                  <p className="text-xs text-red-300 mt-1 ml-4">
-                    Emails do not match
-                  </p>
-                )}
-              </div>
-            )}
+                <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-5">
+                  {/* Full Name (Register only) */}
+                  <AnimatePresence>
+                    {mode === 'register' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <label htmlFor="register-name" className="block text-sm font-semibold text-white/90 mb-2.5">
+                          Full Name
+                        </label>
+                        <div className="relative group">
+                          <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                          <input
+                            type="text"
+                            id="register-name"
+                            name="name"
+                            autoComplete="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="John Doe"
+                            required
+                            className="w-full pl-12 pr-4 py-3.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20"
+                            disabled={loading}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-            {mode !== 'reset' && (
-              <div>
-                <label htmlFor="login-password" className="block text-xs font-medium text-white/90 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
-                  <input
-                    type="password"
-                    id="login-password"
-                    name="password"
-                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
-                    required
-                    minLength={mode === 'register' ? 6 : undefined}
-                    className="w-full pl-11 pr-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            )}
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="login-email" className="block text-sm font-semibold text-white/90 mb-2.5">
+                      Email Address
+                    </label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                      <input
+                        type="email"
+                        id="login-email"
+                        name="email"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="s20230091@sistc.app"
+                        required
+                        className="w-full pl-12 pr-4 py-3.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20"
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
 
-            {mode === 'register' && (
-              <div>
-                <label htmlFor="register-confirm-password" className="block text-xs font-medium text-white/90 mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
-                  <input
-                    type="password"
-                    id="register-confirm-password"
-                    name="confirmPassword"
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
-                    required
-                    minLength={6}
-                    className={`w-full pl-11 pr-4 py-2.5 border rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-all duration-300 ${
-                      confirmPassword && password !== confirmPassword
-                        ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50'
-                        : 'border-white/10 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10'
-                    }`}
-                    disabled={loading}
-                  />
-                </div>
-                {confirmPassword && password !== confirmPassword && (
-                  <p className="text-xs text-red-300 mt-1 ml-4">
-                    Passwords do not match
-                  </p>
-                )}
-              </div>
-            )}
+                  {/* Confirm Email (Register only) */}
+                  <AnimatePresence>
+                    {mode === 'register' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <label htmlFor="register-confirm-email" className="block text-sm font-semibold text-white/90 mb-2.5">
+                          Confirm Email
+                        </label>
+                        <div className="relative group">
+                          <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                          <input
+                            type="email"
+                            id="register-confirm-email"
+                            name="confirmEmail"
+                            autoComplete="email"
+                            value={confirmEmail}
+                            onChange={(e) => setConfirmEmail(e.target.value)}
+                            placeholder="Confirm your email"
+                            required
+                            className={`w-full pl-12 pr-4 py-3.5 border rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 transition-all duration-300 hover:border-white/20 ${
+                              confirmEmail && email !== confirmEmail
+                                ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50'
+                                : 'border-white/10 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10'
+                            }`}
+                            disabled={loading}
+                          />
+                        </div>
+                        {confirmEmail && email !== confirmEmail && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs text-red-400 mt-2 ml-4 font-medium flex items-center gap-1"
+                          >
+                            <AlertCircle size={12} />
+                            Emails do not match
+                          </motion.p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <AnimatedButton
-                  type="submit"
-                  disabled={loading}
-                  variant="default"
-                  className="send-button-shimmer w-full flex items-center justify-center gap-2 text-white font-semibold py-3 px-6 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 disabled:transform-none"
-                >
+                  {/* Password (Login & Register) */}
+                  <AnimatePresence>
+                    {mode !== 'reset' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <label htmlFor="login-password" className="block text-sm font-semibold text-white/90 mb-2.5">
+                          Password
+                        </label>
+                        <div className="relative group">
+                          <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                          <input
+                            type="password"
+                            id="login-password"
+                            name="password"
+                            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
+                            required
+                            minLength={mode === 'register' ? 6 : undefined}
+                            className="w-full pl-12 pr-4 py-3.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20"
+                            disabled={loading}
+                          />
+                        </div>
+                        {mode === 'register' && (
+                          <p className="text-xs text-white/50 mt-2 ml-4 font-light">Minimum 6 characters</p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Confirm Password (Register only) */}
+                  <AnimatePresence>
+                    {mode === 'register' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <label htmlFor="register-confirm-password" className="block text-sm font-semibold text-white/90 mb-2.5">
+                          Confirm Password
+                        </label>
+                        <div className="relative group">
+                          <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                          <input
+                            type="password"
+                            id="register-confirm-password"
+                            name="confirmPassword"
+                            autoComplete="new-password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm your password"
+                            required
+                            minLength={6}
+                            className={`w-full pl-12 pr-4 py-3.5 border rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 transition-all duration-300 hover:border-white/20 ${
+                              confirmPassword && password !== confirmPassword
+                                ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50'
+                                : 'border-white/10 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10'
+                            }`}
+                            disabled={loading}
+                          />
+                        </div>
+                        {confirmPassword && password !== confirmPassword && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs text-red-400 mt-2 ml-4 font-medium flex items-center gap-1"
+                          >
+                            <AlertCircle size={12} />
+                            Passwords do not match
+                          </motion.p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Submit Button - Beautiful & Prominent */}
+                  <motion.button
+                    type="submit"
+                    disabled={loading}
+                    whileHover={!loading ? { scale: 1.02, y: -2 } : {}}
+                    whileTap={!loading ? { scale: 0.98 } : {}}
+                    className="send-button-shimmer w-full flex items-center justify-center gap-3 text-white font-semibold py-4 px-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 disabled:transform-none shadow-lg hover:shadow-xl mt-6"
+                  >
                     {loading ? (
                       <>
                         <motion.div
@@ -610,94 +612,68 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                         <span>Sign In</span>
                       </>
                     )}
-                  </AnimatedButton>
+                  </motion.button>
                 </form>
               </StaggerItem>
+
+              {/* Footer Actions */}
+              <StaggerItem>
+                <div className="mt-8 space-y-4">
+                  {/* Forgot Password (Login only) */}
+                  {mode !== 'reset' && (
+                    <motion.button
+                      onClick={() => {
+                        setMode('reset');
+                        setError(null);
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-sm text-white/60 hover:text-indigo-300 transition-colors font-medium"
+                      type="button"
+                    >
+                      Forgot password?
+                    </motion.button>
+                  )}
+
+                  {/* Switch Mode Text */}
+                  <p className="text-center text-sm text-white/60 font-light">
+                    {mode === 'register' 
+                      ? 'Already have an account?'
+                      : mode === 'reset'
+                      ? 'Remember your password?'
+                      : "Don't have an account?"}
+                    {' '}
+                    <motion.button
+                      onClick={() => {
+                        setMode(mode === 'register' ? 'login' : mode === 'reset' ? 'login' : 'register');
+                        setError(null);
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="text-indigo-300 hover:text-indigo-200 hover:underline font-semibold"
+                    >
+                      {mode === 'register' ? 'Login' : mode === 'reset' ? 'Login' : 'Register'}
+                    </motion.button>
+                  </p>
+
+                  {/* Contact Admin */}
+                  <div className="pt-6 border-t border-white/10">
+                    <motion.button
+                      onClick={() => setShowContactForm(true)}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-white/70 hover:text-white rounded-xl transition-all duration-300 hover:bg-white/10 font-medium border border-white/10 bg-white/5 backdrop-blur-sm"
+                    >
+                      <MessageSquare size={16} />
+                      <span>Contact Admin</span>
+                    </motion.button>
+                  </div>
+                </div>
+              </StaggerItem>
             </StaggerContainer>
-
-            {/* Back to Landing Page Button - Fluid.so aesthetic */}
-            <motion.button
-              onClick={onBack || (() => {
-                if (window.history.length > 1) {
-                  window.history.back();
-                } else {
-                  window.location.href = '/';
-                }
-              })}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full mt-4 mb-2 flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white font-medium border border-white/20 rounded-xl hover:bg-white/10 transition-all bg-white/5 backdrop-blur-sm"
-              type="button"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              <span>Back to Home</span>
-            </motion.button>
-
-            {mode !== 'reset' && (
-              <motion.button
-                onClick={() => {
-                  setMode('reset');
-                  setError(null);
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full mt-2 text-sm text-white/60 hover:text-indigo-300 transition-colors"
-                type="button"
-              >
-                Forgot password?
-              </motion.button>
-            )}
-
-            <p className="text-center text-xs text-white/60 mt-8 font-light">
-              {mode === 'register' 
-                ? 'Already have an account?'
-                : mode === 'reset'
-                ? 'Remember your password?'
-                : "Don't have an account?"}
-              {' '}
-              <motion.button
-                onClick={() => {
-                  setMode(mode === 'register' ? 'login' : mode === 'reset' ? 'login' : 'register');
-                  setError(null);
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="text-indigo-300 hover:text-indigo-200 hover:underline font-medium"
-              >
-                {mode === 'register' ? 'Login' : mode === 'reset' ? 'Login' : 'Register'}
-              </motion.button>
-            </p>
-
-            {/* Contact Admin - Fluid.so aesthetic */}
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <motion.button
-                onClick={() => setShowContactForm(true)}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:text-white rounded-full transition-all duration-300 hover:bg-white/10 font-light border border-white/10 bg-white/5 backdrop-blur-sm"
-              >
-                <MessageSquare size={16} />
-                <span>Contact Admin</span>
-              </motion.button>
-            </div>
           </motion.div>
         </ScaleIn>
-
-      {/* Contact Form Modal */}
-      {showContactForm && (
-        <ContactForm onClose={() => setShowContactForm(false)} />
-      )}
+      </div>
 
       {/* Custom Fluid Animations */}
       <style>{`
@@ -729,7 +705,13 @@ const Login = ({ onBack, initialMode = 'login' }) => {
           animation: float-slow 5s ease-in-out infinite;
         }
       `}</style>
-      </div>
+
+      {/* Contact Form Modal */}
+      <AnimatePresence>
+        {showContactForm && (
+          <ContactForm onClose={() => setShowContactForm(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
