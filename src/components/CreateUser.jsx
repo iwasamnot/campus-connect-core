@@ -10,7 +10,7 @@ const auth = typeof window !== 'undefined' && window.__firebaseAuth
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { UserPlus, Mail, Lock, User, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Shield, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { FadeIn, ScaleIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
 
 const CreateUser = () => {
@@ -147,6 +147,30 @@ const CreateUser = () => {
           <div className="aurora-blob aurora-blob-5" />
         </div>
       </div>
+
+      {/* Floating Back Arrow - Fluid.so aesthetic */}
+      <FadeIn delay={0.1}>
+        <motion.button
+          onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/'}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.1, x: -4 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed top-6 left-4 md:left-6 z-50 glass-panel border border-white/10 rounded-2xl p-3 md:p-3.5 text-white/70 hover:text-white hover:border-indigo-500/50 hover:bg-indigo-600/20 transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-xl group"
+          style={{
+            top: `max(1.5rem, calc(env(safe-area-inset-top, 0px) + 1.5rem))`,
+            left: `max(1rem, calc(env(safe-area-inset-left, 0px) + 1rem))`
+          }}
+          type="button"
+          aria-label="Go back"
+        >
+          <ArrowLeft 
+            size={22} 
+            className="md:w-6 md:h-6 transition-transform duration-300 group-hover:-translate-x-1" 
+            strokeWidth={2.5}
+          />
+        </motion.button>
+      </FadeIn>
 
       {/* Main Content */}
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 relative z-10" style={{

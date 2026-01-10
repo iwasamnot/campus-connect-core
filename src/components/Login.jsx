@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react';
+import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle, MessageSquare, ArrowLeft } from 'lucide-react';
 // Import Logo directly - it's in main bundle so no code-splitting issues
 import Logo from '../components/Logo.jsx';
 import ContactForm from '../components/ContactForm';
@@ -213,39 +213,49 @@ const Login = ({ onBack, initialMode = 'login' }) => {
         </div>
       </div>
 
-      {/* Navigation Bar - Clean & Minimal */}
+      {/* Floating Back Arrow - Fluid.so aesthetic */}
       <FadeIn delay={0.1}>
+        <motion.button
+          onClick={onBack || (() => window.history.length > 1 ? window.history.back() : window.location.href = '/')}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.1, x: -4 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed top-6 left-4 md:left-6 z-50 glass-panel border border-white/10 rounded-2xl p-3 md:p-3.5 text-white/70 hover:text-white hover:border-indigo-500/50 hover:bg-indigo-600/20 transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-xl group"
+          style={{
+            top: `max(1.5rem, calc(env(safe-area-inset-top, 0px) + 1.5rem))`,
+            left: `max(1rem, calc(env(safe-area-inset-left, 0px) + 1rem))`
+          }}
+          type="button"
+          aria-label="Go back"
+        >
+          <ArrowLeft 
+            size={22} 
+            className="md:w-6 md:h-6 transition-transform duration-300 group-hover:-translate-x-1" 
+            strokeWidth={2.5}
+          />
+        </motion.button>
+      </FadeIn>
+
+      {/* Navigation Bar - Clean & Minimal */}
+      <FadeIn delay={0.15}>
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/10 backdrop-blur-xl rounded-b-2xl"
+          className="fixed top-0 right-0 z-40 glass-panel border-l border-b border-white/10 backdrop-blur-xl rounded-bl-2xl rounded-tr-2xl"
         >
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+          <div className="px-4 md:px-6 py-4 flex items-center gap-3">
+            <Logo size="small" showText={false} />
             <motion.button
-              onClick={onBack || (() => window.history.length > 1 ? window.history.back() : window.location.href = '/')}
-              whileHover={{ scale: 1.05, x: -2 }}
+              onClick={() => toggleDarkMode()}
+              whileHover={{ scale: 1.1, rotate: 15 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2.5 glass-panel border border-white/10 text-white/70 hover:text-white font-medium rounded-xl transition-all"
+              className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white transition-all"
+              aria-label="Toggle dark mode"
               type="button"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              <span className="text-sm">Back</span>
+              {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-indigo-300" />}
             </motion.button>
-            <div className="flex items-center gap-3">
-              <Logo size="small" showText={false} />
-              <motion.button
-                onClick={() => toggleDarkMode()}
-                whileHover={{ scale: 1.1, rotate: 15 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white transition-all"
-                aria-label="Toggle dark mode"
-                type="button"
-              >
-                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-indigo-300" />}
-              </motion.button>
-            </div>
           </div>
         </motion.div>
       </FadeIn>
