@@ -62,6 +62,11 @@ export const AnimatedPage = ({ children, variant = 'fade', className = '' }) => 
       style={{
         transform: 'translateZ(0)',
         willChange: 'transform, opacity',
+        height: '100%',
+        minHeight: 0,
+        maxHeight: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}
       className={`${className} theme-${themeStyle} ${darkMode ? 'dark' : ''}`}
     >

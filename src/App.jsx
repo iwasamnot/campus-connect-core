@@ -315,6 +315,7 @@ function App() {
       <motion.div 
         id="main-content" 
         className="flex-1 overflow-hidden relative w-full glass-panel rounded-[2rem] flex flex-col"
+        style={{ minHeight: 0, maxHeight: '100%', height: '100%' }}
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
@@ -341,7 +342,7 @@ function App() {
             {isAdminRole(userRole) ? (
               <>
                 {activeView === 'chat' && (
-                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <ChatArea setActiveView={setActiveView} />
@@ -427,7 +428,7 @@ function App() {
             ) : (
               <>
                 {activeView === 'chat' && (
-                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <ChatArea setActiveView={setActiveView} />

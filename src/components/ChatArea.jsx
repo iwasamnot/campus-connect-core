@@ -1103,7 +1103,7 @@ const ChatArea = ({ setActiveView }) => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full relative bg-transparent" style={{ minHeight: 0, maxHeight: '100%' }}>
+    <div className="flex flex-col h-full w-full relative bg-transparent" style={{ height: '100%', minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}>
       {/* Chat Header - Fluid.so aesthetic */}
       <div 
         className="glass-panel border-b border-white/10 px-4 md:px-6 py-3 md:py-4 relative z-10 rounded-t-[2rem] flex-shrink-0"
@@ -1112,6 +1112,7 @@ const ChatArea = ({ setActiveView }) => {
           paddingBottom: `0.75rem`,
           paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
           paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
+          flexShrink: 0
         }}
       >
         <div className="flex items-center justify-between">
@@ -1325,10 +1326,13 @@ const ChatArea = ({ setActiveView }) => {
             className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent" 
             style={{ 
               minHeight: 0,
-              height: '100%',
-              maxHeight: '100%',
+              flex: '1 1 auto',
+              overflowY: 'auto',
+              overflowX: 'hidden',
               WebkitOverflowScrolling: 'touch',
-              scrollBehavior: 'smooth'
+              scrollBehavior: 'smooth',
+              position: 'relative',
+              zIndex: 1
             }}
           >
             {filteredMessages.length === 0 ? (
@@ -2011,7 +2015,8 @@ const ChatArea = ({ setActiveView }) => {
             style={{
               paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
               paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
-              paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
+              paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`,
+              flexShrink: 0
             }}
           >
             {/* Reply Preview - Fluid.so aesthetic */}
