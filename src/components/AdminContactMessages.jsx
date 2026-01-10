@@ -425,22 +425,24 @@ const AdminContactMessages = () => {
         {/* Mobile Message Detail Modal */}
         {selectedMessage && (
           <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-black dark:text-white">Message Details</h2>
-                <button
+            <div className="glass-panel border border-white/10 rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto backdrop-blur-xl">
+              <div className="sticky top-0 glass-panel border-b border-white/10 backdrop-blur-xl px-6 py-4 flex items-center justify-between rounded-t-[2rem]">
+                <h2 className="text-xl font-bold text-white text-glow">Message Details</h2>
+                <motion.button
                   onClick={() => setSelectedMessage(null)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.05, rotate: 90 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 text-white/70 hover:text-white transition-all"
                 >
-                  <XCircle size={24} className="text-gray-600 dark:text-gray-400" />
-                </button>
+                  <XCircle size={24} />
+                </motion.button>
               </div>
               <div className="p-6">
                 <div className="mb-6 pb-6 border-b border-white/10">
-                  <h2 className="text-2xl font-bold text-black dark:text-white mb-2">
+                  <h2 className="text-2xl font-bold text-white mb-2 text-glow">
                     {selectedMessage.subject || 'No Subject'}
                   </h2>
-                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <div className="flex items-center gap-4 text-sm text-white/60 mb-2">
                     <div className="flex items-center gap-2">
                       <User size={16} />
                       <span>{selectedMessage.name || 'Anonymous'}</span>
@@ -449,7 +451,7 @@ const AdminContactMessages = () => {
                       <Mail size={16} />
                       <a 
                         href={`mailto:${selectedMessage.email}`}
-                        className="hover:text-indigo-600 dark:hover:text-indigo-400"
+                        className="hover:text-indigo-400 transition-colors"
                       >
                         {selectedMessage.email}
                       </a>
@@ -458,14 +460,14 @@ const AdminContactMessages = () => {
                   <span className={`inline-block px-3 py-1 rounded-lg text-sm font-medium ${getStatusBadge(selectedMessage.status)}`}>
                     {selectedMessage.status}
                   </span>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  <p className="text-sm text-white/60 mt-2">
                     Received: {formatTimestamp(selectedMessage.timestamp)}
                   </p>
                 </div>
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Message</h3>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                  <h3 className="text-lg font-semibold text-white mb-3 text-glow">Message</h3>
+                  <div className="glass-panel bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
+                    <p className="text-white/90 whitespace-pre-wrap leading-relaxed">
                       {selectedMessage.message}
                     </p>
                   </div>
