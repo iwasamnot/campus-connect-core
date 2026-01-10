@@ -8,9 +8,14 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
+      'react/jsx-runtime',
       // Force Logo to be pre-bundled and always available
       './src/components/Logo.jsx'
-    ]
+    ],
+    // Ensure React is always available synchronously
+    esbuildOptions: {
+      jsx: 'automatic',
+    }
   },
   plugins: [
     react(),
@@ -210,19 +215,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // SIMPLEST APPROACH: Put ALL source files in main bundle
-          // Only split vendor code for better caching
-          // This prevents ALL export errors by ensuring everything is available synchronously
+          // CRITICAL: Keep React and React-DOM in main bundle to prevent "createContext" errors
+          // React must be available synchronously when contexts are created
           
           // If it's a source file, put it in main bundle (no code-splitting)
           if (!id.includes('node_modules') && id.includes('src/')) {
             return undefined; // Main bundle - no splitting
           }
           
-          // Only split vendor chunks for better caching
+          // Keep React and React-DOM in main bundle (CRITICAL for contexts)
           if (id.includes('node_modules')) {
+            // DO NOT split React/React-DOM - they must be in main bundle
             if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
+              return undefined; // Main bundle - React must be available immediately
             }
             if (id.includes('firebase')) {
               return 'firebase-vendor';
@@ -235,6 +240,9 @@ export default defineConfig({
             }
             if (id.includes('@google/generative-ai')) {
               return 'gemini-vendor';
+            }
+            if (id.includes('framer-motion') || id.includes('@react-spring') || id.includes('gsap')) {
+              return 'animation-vendor';
             }
             // Other node_modules
             return 'vendor';

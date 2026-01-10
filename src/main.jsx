@@ -1,5 +1,12 @@
+// CRITICAL: Import React first and ensure it's available globally
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+
+// Ensure React is available globally before importing contexts
+if (typeof window !== 'undefined') {
+  window.React = React;
+}
+
 import App from './App.jsx'
 import './index.css'
 // CRITICAL: Import ALL context providers in main.jsx to ensure they're in main bundle

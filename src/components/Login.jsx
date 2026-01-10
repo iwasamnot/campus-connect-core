@@ -231,67 +231,76 @@ const Login = ({ onBack, initialMode = 'login' }) => {
             transition={{ duration: 0.5 }}
             className="absolute top-0 left-0 right-0 z-50 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50"
           >
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+              <motion.button
+                onClick={onBack || (() => window.history.back())}
+                whileHover={{ scale: 1.05, x: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors rounded-lg hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                type="button"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span>Back</span>
+              </motion.button>
+              <div className="flex items-center gap-2">
                 <Logo size="small" showText={false} />
               </div>
-              <div className="flex items-center gap-4">
-                <motion.button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleDarkMode();
-                  }}
-                  whileHover={{ scale: 1.1, rotate: 15 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors"
-                  aria-label="Toggle dark mode"
-                  type="button"
-                >
-                  {darkMode ? (
-                    <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
-                  ) : (
-                    <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
-                  )}
-                </motion.button>
-                {onBack && (
-                  <motion.button
-                    onClick={onBack}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
-                  >
-                    Back
-                  </motion.button>
+              <motion.button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleDarkMode();
+                }}
+                whileHover={{ scale: 1.1, rotate: 15 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors"
+                aria-label="Toggle dark mode"
+                type="button"
+              >
+                {darkMode ? (
+                  <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
+                ) : (
+                  <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" size={20} />
                 )}
-              </div>
+              </motion.button>
             </div>
           </motion.div>
         </FadeIn>
 
         {/* Animated Form Container */}
         <ScaleIn delay={0.3} duration={0.6}>
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-700/50 rounded-3xl p-8 w-full max-w-md pt-24 pb-8">
+          <div className="bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 rounded-2xl p-6 md:p-8 w-full max-w-md mx-auto">
             <StaggerContainer staggerDelay={0.1} initialDelay={0.4}>
               <StaggerItem>
-                <div className="text-center mb-8">
+                <div className="text-center mb-6">
                   <motion.div
-                    className="mb-6"
+                    className="mb-4 flex justify-center"
                     animate={{
-                      y: [0, -15, 0],
+                      y: [0, -10, 0],
                     }}
                     transition={{
-                      duration: 5,
+                      duration: 4,
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
                   >
                     <Logo size="large" showText={false} />
                   </motion.div>
-                  <h1 className="text-3xl font-light text-black dark:text-white mb-2">
+                  <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white mb-1.5">
                     {mode === 'register' ? 'Create Account' : mode === 'reset' ? 'Reset Password' : 'Welcome Back'}
                   </h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-light">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {mode === 'register' ? 'Join your campus community' : mode === 'reset' ? 'Recover your account' : 'Sign in to continue'}
                   </p>
                 </div>
@@ -389,7 +398,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                 <form onSubmit={mode === 'reset' ? handlePasswordReset : handleEmailAuth} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label htmlFor="register-name" className="block text-xs font-light text-gray-600 dark:text-gray-400 mb-2">
+                <label htmlFor="register-name" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Full Name
                 </label>
                 <div className="relative">
@@ -403,14 +412,14 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
                     required
-                    className="w-full pl-11 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50/50 dark:bg-gray-800/50 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all duration-300"
+                    className="w-full pl-11 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                     disabled={loading}
                   />
                 </div>
               </div>
             )}
             <div>
-              <label htmlFor="login-email" className="block text-xs font-light text-gray-600 dark:text-gray-400 mb-2">
+              <label htmlFor="login-email" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <div className="relative">
@@ -424,14 +433,14 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50/50 dark:bg-gray-800/50 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all duration-300"
+                  className="w-full pl-11 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                   disabled={loading}
                 />
               </div>
             </div>
             {mode === 'register' && (
               <div>
-                <label htmlFor="register-confirm-email" className="block text-xs font-light text-gray-600 dark:text-gray-400 mb-2">
+                <label htmlFor="register-confirm-email" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirm Email
                 </label>
                 <div className="relative">
@@ -445,16 +454,16 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                     onChange={(e) => setConfirmEmail(e.target.value)}
                     placeholder="Confirm your email"
                     required
-                    className={`w-full pl-11 pr-4 py-3 border rounded-full bg-gray-50/50 dark:bg-gray-800/50 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-300 ${
+                    className={`w-full pl-11 pr-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-200 ${
                       confirmEmail && email !== confirmEmail
                         ? 'border-red-400 dark:border-red-600 focus:ring-red-400 focus:border-red-400'
-                        : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500'
                     }`}
                     disabled={loading}
                   />
                 </div>
                 {confirmEmail && email !== confirmEmail && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1 ml-4 font-light">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1 ml-4">
                     Emails do not match
                   </p>
                 )}
@@ -463,7 +472,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
 
             {mode !== 'reset' && (
               <div>
-                <label htmlFor="login-password" className="block text-xs font-light text-gray-600 dark:text-gray-400 mb-2">
+                <label htmlFor="login-password" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -478,7 +487,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                     placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                     required
                     minLength={mode === 'register' ? 6 : undefined}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50/50 dark:bg-gray-800/50 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all duration-300"
+                    className="w-full pl-11 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                     disabled={loading}
                   />
                 </div>
@@ -487,7 +496,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
 
             {mode === 'register' && (
               <div>
-                <label htmlFor="register-confirm-password" className="block text-xs font-light text-gray-600 dark:text-gray-400 mb-2">
+                <label htmlFor="register-confirm-password" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -502,28 +511,28 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                     placeholder="Confirm your password"
                     required
                     minLength={6}
-                    className={`w-full pl-11 pr-4 py-3 border rounded-full bg-gray-50/50 dark:bg-gray-800/50 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-300 ${
+                    className={`w-full pl-11 pr-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-200 ${
                       confirmPassword && password !== confirmPassword
                         ? 'border-red-400 dark:border-red-600 focus:ring-red-400 focus:border-red-400'
-                        : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500'
                     }`}
                     disabled={loading}
                   />
                 </div>
                 {confirmPassword && password !== confirmPassword && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1 ml-4 font-light">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1 ml-4">
                     Passwords do not match
                   </p>
                 )}
               </div>
             )}
 
-                  <AnimatedButton
-                    type="submit"
-                    disabled={loading}
-                    variant="default"
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                <AnimatedButton
+                  type="submit"
+                  disabled={loading}
+                  variant="default"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-2.5 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
+                >
                     {loading ? (
                       <>
                         <motion.div
