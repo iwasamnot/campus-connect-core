@@ -1090,7 +1090,7 @@ const ChatArea = ({ setActiveView }) => {
             <Logo size="small" showText={false} />
             <div className="min-w-0 flex-1">
               <h2 className="text-base sm:text-lg md:text-2xl font-semibold text-white truncate text-glow">Campus Chat</h2>
-              <p className="text-xs md:text-sm text-gray-400 hidden sm:block font-medium">Connect with your campus community</p>
+              <p className="text-xs md:text-sm text-white/60 hidden sm:block font-medium">Connect with your campus community</p>
             </div>
           </div>
             <div className="flex items-center gap-2">
@@ -1303,9 +1303,9 @@ const ChatArea = ({ setActiveView }) => {
                 e.target.style.display = 'none';
               }}
             />
-            <p className="text-gray-400 dark:text-gray-500 text-center">
-              {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
-            </p>
+                              <p className="text-white/60 text-center">
+                    {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
+                  </p>
           </div>
         ) : (
           <>
@@ -1377,11 +1377,11 @@ const ChatArea = ({ setActiveView }) => {
                 )}
 
                 <motion.div
-                    className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative ${
-                    isAuthor
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-800 dark:text-white border border-gray-200/50 dark:border-gray-700/50'
-                  }`}
+                        className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative ${
+                            isAuthor
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
+                          }`}
                   style={{ position: 'relative' }}
                   whileHover={{ y: -2 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
@@ -1434,7 +1434,7 @@ const ChatArea = ({ setActiveView }) => {
                         name={`edit-message-${message.id}`}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        className="flex-1 px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                        className="flex-1 px-2 py-1 rounded bg-white/10 backdrop-blur-sm text-white border border-white/10 text-sm"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -1483,7 +1483,7 @@ const ChatArea = ({ setActiveView }) => {
                               <span>Seen by {readInfo.count}</span>
                               <div className="relative group/read">
                                 <span className="cursor-help">👁️</span>
-                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block bg-gray-800 dark:bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg z-10 min-w-[150px]">
+                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block glass-panel border border-white/10 text-white text-xs rounded-xl p-2 shadow-xl z-10 min-w-[150px]">
                                   <div className="font-semibold mb-1">Seen by:</div>
                                   {readInfo.users.map((readUser, idx) => (
                                     <div key={readUser.uid} className="py-1">
@@ -1528,14 +1528,14 @@ const ChatArea = ({ setActiveView }) => {
 
                   {/* Reply Preview in Message */}
                   {message.replyTo && (
-                    <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 border-l-2 border-indigo-500 rounded text-xs">
+                    <div className="mb-2 p-3 bg-indigo-600/20 backdrop-blur-sm border-l-2 border-indigo-500 rounded-xl text-xs">
                       <div className="flex items-center gap-1 mb-1">
-                        <Reply size={12} className="text-indigo-600 dark:text-indigo-400" />
-                        <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                        <Reply size={12} className="text-indigo-300" />
+                        <span className="font-medium text-indigo-200">
                           {message.replyToUserName || 'User'}
                         </span>
                       </div>
-                      <p className="text-gray-600 dark:text-gray-400 truncate">
+                      <p className="text-white/70 truncate">
                         {message.replyToText || 'Message'}
                       </p>
                     </div>
@@ -1555,7 +1555,7 @@ const ChatArea = ({ setActiveView }) => {
                         <button
                           type="button"
                           onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
-                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 active:opacity-75 transition-opacity cursor-pointer touch-action-manipulation w-full text-left p-0"
+                          className="block rounded-xl overflow-hidden border border-white/20 hover:opacity-90 active:opacity-75 transition-opacity cursor-pointer touch-action-manipulation w-full text-left p-0"
                           aria-label="View image"
                         >
                           <img
@@ -1566,7 +1566,7 @@ const ChatArea = ({ setActiveView }) => {
                           />
                         </button>
                       ) : message.attachment.type?.startsWith('audio/') ? (
-                        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                        <div className="p-3 bg-indigo-600/20 backdrop-blur-sm rounded-xl border border-indigo-500/30">
                           <audio controls className="w-full">
                             <source src={message.attachment.url} type={message.attachment.type} />
                             Your browser does not support the audio element.
@@ -1577,11 +1577,11 @@ const ChatArea = ({ setActiveView }) => {
                           href={message.attachment.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          <File size={20} className="text-indigo-600 dark:text-indigo-400" />
-                          <span className="text-sm font-medium">{message.attachment.name}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          className="inline-flex items-center gap-2 p-2 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-colors border border-white/10"
+                          >
+                            <File size={20} className="text-white/70" />
+                            <span className="text-sm font-medium text-white">{message.attachment.name}</span>
+                            <span className="text-xs text-white/60">
                             ({(message.attachment.size / 1024).toFixed(1)} KB)
                           </span>
                         </a>
@@ -1602,8 +1602,8 @@ const ChatArea = ({ setActiveView }) => {
                                 : message.displayText.replace(/\n/g, '<br />')
                             }}
                           />
-                          <div className="mt-2 pt-2 border-t border-gray-300 dark:border-gray-600">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Translated:</p>
+                          <div className="mt-2 pt-2 border-t border-white/20">
+                            <p className="text-xs text-white/60 mb-1">Translated:</p>
                             <p className="text-sm whitespace-pre-wrap break-words italic">
                               {translations[message.id]}
                             </p>
@@ -1630,40 +1630,47 @@ const ChatArea = ({ setActiveView }) => {
                     }}
                     className="absolute -top-1 right-0 opacity-0 group-hover/message:opacity-100 invisible group-hover/message:visible transition-all duration-200 z-30"
                   >
-                    <button
+                    <motion.button
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenMenuId(openMenuId === message.id ? null : message.id);
                       }}
-                      className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors touch-action-manipulation"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="p-1.5 hover:bg-white/10 rounded-full transition-colors touch-action-manipulation"
                       title="More options"
                       aria-label="More options"
                     >
-                      <MoreVertical size={16} className="text-gray-600 dark:text-gray-400" />
-                    </button>
+                      <MoreVertical size={16} className="text-white/70 hover:text-white" />
+                    </motion.button>
                     
-                    {/* Dropdown menu */}
+                    {/* Dropdown menu - Fluid.so aesthetic */}
                     {openMenuId === message.id && (
-                      <div 
-                        className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 min-w-[180px] z-40"
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl py-1 min-w-[180px] z-40 overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {/* Menu items */}
                         {!isAuthor && (
-                          <button
+                          <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReplyingTo(message);
                               setOpenMenuId(null);
                             }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                            whileHover={{ x: 4 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
                           >
                             <Reply size={16} />
                             Reply
-                          </button>
+                          </motion.button>
                         )}
                         
-                        <button
+                        <motion.button
                           onClick={async (e) => {
                             e.stopPropagation();
                             try {
@@ -1678,52 +1685,64 @@ const ChatArea = ({ setActiveView }) => {
                               }
                             }
                           }}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
                         >
                           <Bookmark size={16} />
                           Save
-                        </button>
+                        </motion.button>
                         
                         {preferences.allowMessageForwarding && (
-                          <button
+                          <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleForwardMessage(message.id);
                               setOpenMenuId(null);
                             }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                            whileHover={{ x: 4 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
                           >
                             <Forward size={16} />
                             Forward
-                          </button>
+                          </motion.button>
                         )}
                         
-                        <button
+                        <motion.button
                           onClick={async (e) => {
                             e.stopPropagation();
                             const messageText = message.displayText || message.text || '';
                             await shareMessage(messageText, message.id);
                             setOpenMenuId(null);
                           }}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
                         >
                           <Share2 size={16} />
                           Share
-                        </button>
+                        </motion.button>
                         
                         {!message.isVoice && (
-                          <button
+                          <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleTranslateMessage(message.id, message.displayText || message.text || '');
                               setOpenMenuId(null);
                             }}
                             disabled={translating.has(message.id)}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={!translating.has(message.id) ? { x: 4 } : {}}
+                            whileTap={!translating.has(message.id) ? { scale: 0.98 } : {}}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-t border-white/10"
                           >
                             {translating.has(message.id) ? (
                               <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-gray-400"></div>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                  className="rounded-full h-4 w-4 border-b-2 border-white/70"
+                                />
                                 Translating...
                               </>
                             ) : (
@@ -1732,11 +1751,11 @@ const ChatArea = ({ setActiveView }) => {
                                 Translate
                               </>
                             )}
-                          </button>
+                          </motion.button>
                         )}
                         
                         {isAdminRole(userRole) && (
-                          <button
+                          <motion.button
                             onClick={async (e) => {
                               e.stopPropagation();
                               try {
@@ -1761,45 +1780,51 @@ const ChatArea = ({ setActiveView }) => {
                                 showError('Failed to pin message');
                               }
                             }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                            whileHover={{ x: 4 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
                           >
                             <Pin size={16} />
                             {pinnedMessages.includes(message.id) ? 'Unpin' : 'Pin'}
-                          </button>
+                          </motion.button>
                         )}
                         
                         {canEdit && (
-                          <button
+                          <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditing(message.id);
                               setEditText(message.text);
                               setOpenMenuId(null);
                             }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                            whileHover={{ x: 4 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
                           >
                             <Edit2 size={16} />
                             Edit
-                          </button>
+                          </motion.button>
                         )}
                         
                         {canDelete && (
-                          <button
+                          <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteMessage(message.id, message.userId, isAIMessage);
                               setOpenMenuId(null);
                             }}
                             disabled={deleting === message.id}
-                            className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={deleting !== message.id ? { x: 4 } : {}}
+                            whileTap={deleting !== message.id ? { scale: 0.98 } : {}}
+                            className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/20 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-t border-white/10"
                           >
                             <Trash2 size={16} />
                             {isAIMessage ? "Delete (Admin)" : "Delete"}
-                          </button>
+                          </motion.button>
                         )}
                         
                         {!isAuthor && (
-                          <button
+                          <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReporting(reporting === message.id ? null : message.id);
@@ -1807,49 +1832,60 @@ const ChatArea = ({ setActiveView }) => {
                                 setOpenMenuId(null);
                               }
                             }}
-                            className="w-full px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                            whileHover={{ x: 4 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-orange-400 hover:text-orange-300 hover:bg-orange-500/20 flex items-center gap-2 transition-colors border-t border-white/10"
                           >
                             <Flag size={16} />
                             {reporting === message.id ? 'Cancel Report' : 'Report'}
-                          </button>
+                          </motion.button>
                         )}
-                      </div>
+                      </motion.div>
                     )}
                   </div>
                   
-                  {/* Report form - shown separately if reporting */}
-                  {reporting === message.id && (
-                    <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 z-40 min-w-[250px]">
-                      <textarea
-                        value={reportReason}
-                        onChange={(e) => setReportReason(e.target.value)}
-                        placeholder="Reason for reporting..."
-                        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
-                        rows={3}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            handleReportMessage(message.id);
-                            setOpenMenuId(null);
-                          }}
-                          className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs rounded transition-colors touch-action-manipulation"
-                        >
-                          Report
-                        </button>
-                        <button
-                          onClick={() => {
-                            setReporting(null);
-                            setReportReason('');
-                            setOpenMenuId(null);
-                          }}
-                          className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white text-xs rounded transition-colors touch-action-manipulation"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                        {/* Report form - Fluid.so aesthetic */}
+                        {reporting === message.id && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl p-4 z-40 min-w-[250px]"
+                          >
+                            <textarea
+                              value={reportReason}
+                              onChange={(e) => setReportReason(e.target.value)}
+                              placeholder="Reason for reporting..."
+                              className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 mb-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-white/10 transition-all duration-300"
+                              rows={3}
+                            />
+                            <div className="flex gap-2">
+                              <motion.button
+                                onClick={() => {
+                                  handleReportMessage(message.id);
+                                  setOpenMenuId(null);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium"
+                              >
+                                Report
+                              </motion.button>
+                              <motion.button
+                                onClick={() => {
+                                  setReporting(null);
+                                  setReportReason('');
+                                  setOpenMenuId(null);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-sm rounded-xl transition-colors touch-action-manipulation font-medium border border-white/10"
+                              >
+                                Cancel
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        )}
 
                   {/* Reaction picker - always visible on touch, hover on desktop */}
                   {!isAuthor && (

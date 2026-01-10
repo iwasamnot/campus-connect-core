@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 // Use window globals to avoid import/export issues in production builds
@@ -11,10 +11,10 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
   ? window.__firebaseDb 
   : null;
 import { UserPlus, Mail, Lock, User, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { FadeIn } from './AnimatedComponents';
 
 const CreateUser = () => {
   const { user: currentUser } = useAuth();
-  const { darkMode } = useTheme();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -136,158 +136,184 @@ const CreateUser = () => {
   };
 
   return (
-    <div className={`flex flex-col h-screen p-6 ${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      {/* Header */}
-      <div className={`border-b ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} px-6 py-4 -mx-6 -mt-6 mb-6`}>
-        <h2 className="text-2xl font-bold">Create New User</h2>
-        <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-sm`}>
-          Add new student or admin accounts to the platform
-        </p>
-      </div>
-
-      {/* Form */}
-      <div className={`max-w-2xl mx-auto w-full ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'} p-8 rounded-lg shadow-md`}>
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm flex items-center gap-2">
-            <AlertCircle size={18} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-4 p-3 bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm flex items-center gap-2">
-            <CheckCircle size={18} />
-            <span>User created successfully! You will be redirected to login page...</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="email"
-                id="email"
-                name="email"
-                autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter Your Email"
-                required
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${
-                  darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-100 border-gray-300 text-gray-900'
-                }`}
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="password"
-                id="password"
-                name="password"
-                autoComplete="new-password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="At least 6 characters"
-                required
-                minLength={6}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent ${
-                  darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-100 border-gray-300 text-gray-900'
-                }`}
-                disabled={loading}
-              />
-            </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Password must be at least 6 characters long
+    <div className="flex flex-col h-screen h-[100dvh] p-4 md:p-6 bg-transparent relative">
+      {/* Form - Fluid.so aesthetic */}
+      <FadeIn delay={0.1}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="max-w-2xl mx-auto w-full glass-panel p-6 md:p-8 rounded-[2rem] shadow-xl"
+        >
+          {/* Header */}
+          <div className="mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Create New User</h2>
+            <p className="text-sm text-white/60">
+              Add new student or admin accounts to the platform
             </p>
           </div>
 
-          {/* Role Selection */}
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              User Role
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, role: 'student' }))}
-                className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-colors ${
-                  formData.role === 'student'
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-indigo-400`
-                }`}
-                disabled={loading}
-              >
-                <User size={18} />
-                <span>Student</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, role: 'admin' }))}
-                className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-colors ${
-                  formData.role === 'admin'
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                    : `${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-300 bg-white text-gray-700'} hover:border-indigo-400`
-                }`}
-                disabled={loading}
-              >
-                <Shield size={18} />
-                <span>Admin</span>
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Selected: <span className="font-semibold">{formData.role}</span>
-            </p>
-          </div>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-4 bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-red-200 rounded-xl text-sm flex items-center gap-2"
+            >
+              <AlertCircle size={18} className="text-red-400" />
+              <span>{error}</span>
+            </motion.div>
+          )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-4 bg-green-500/20 backdrop-blur-sm border border-green-500/30 text-green-200 rounded-xl text-sm flex items-center gap-2"
+            >
+              <CheckCircle size={18} className="text-green-400" />
+              <span>User created successfully! You will be redirected to login page...</span>
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={20} />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  autoComplete="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter Your Email"
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={20} />
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  autoComplete="new-password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="At least 6 characters"
+                  required
+                  minLength={6}
+                  className="w-full pl-10 pr-4 py-3 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+                  disabled={loading}
+                />
+              </div>
+              <p className="mt-2 text-xs text-white/60">
+                Password must be at least 6 characters long
+              </p>
+            </div>
+
+            {/* Role Selection */}
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-white/90 mb-2">
+                User Role
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <motion.button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'student' }))}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-xl transition-all duration-300 ${
+                    formData.role === 'student'
+                      ? 'border-indigo-500 bg-indigo-600/30 text-white shadow-lg'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
+                  }`}
+                  disabled={loading}
+                >
+                  <User size={18} />
+                  <span>Student</span>
+                </motion.button>
+                <motion.button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'admin' }))}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-xl transition-all duration-300 ${
+                    formData.role === 'admin'
+                      ? 'border-indigo-500 bg-indigo-600/30 text-white shadow-lg'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
+                  }`}
+                  disabled={loading}
+                >
+                  <Shield size={18} />
+                  <span>Admin</span>
+                </motion.button>
+              </div>
+              <p className="mt-2 text-xs text-white/60">
+                Selected: <span className="font-semibold text-white">{formData.role}</span>
+              </p>
+            </div>
+
+            {/* Submit Button - Fluid.so shimmer effect */}
+            <motion.button
+              type="submit"
+              disabled={loading}
+              whileHover={!loading ? { scale: 1.02 } : {}}
+              whileTap={!loading ? { scale: 0.98 } : {}}
+              className="send-button-shimmer w-full flex items-center justify-center gap-2 text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {loading ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="rounded-full h-5 w-5 border-b-2 border-white"
+                  />
+                  <span>Creating User...</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus size={20} />
+                  <span>Create User</span>
+                </>
+              )}
+            </motion.button>
+          </form>
+
+          {/* Info Box - Fluid.so aesthetic */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-6 p-4 bg-indigo-600/20 backdrop-blur-sm border border-indigo-500/30 rounded-xl"
           >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>Creating User...</span>
-              </>
-            ) : (
-              <>
-                <UserPlus size={20} />
-                <span>Create User</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Info Box */}
-        <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-indigo-900/20 border border-indigo-700' : 'bg-indigo-50 border border-indigo-200'}`}>
-          <div className="flex items-start gap-2">
-            <AlertCircle className={`${darkMode ? 'text-indigo-400' : 'text-indigo-600'} mt-0.5`} size={18} />
-            <div className="text-sm">
-              <p className={`font-medium ${darkMode ? 'text-indigo-300' : 'text-indigo-800'}`}>
-                Important Note
-              </p>
-              <p className={`mt-1 ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>
-                After creating a user, you will be signed out and redirected to the login page. 
-                This is because the system needs to create the user account. Please sign back in to continue.
-              </p>
+            <div className="flex items-start gap-2">
+              <AlertCircle className="text-indigo-300 mt-0.5 flex-shrink-0" size={18} />
+              <div className="text-sm">
+                <p className="font-medium text-indigo-200">
+                  Important Note
+                </p>
+                <p className="mt-1 text-white/70">
+                  After creating a user, you will be signed out and redirected to the login page. 
+                  This is because the system needs to create the user account. Please sign back in to continue.
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </FadeIn>
     </div>
   );
 };
