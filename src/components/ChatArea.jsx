@@ -283,25 +283,30 @@ const ChatArea = ({ setActiveView }) => {
   // OPTIMIZED: Added ref to prevent multiple simultaneous fetches
   const fetchingUsersRef = useRef(false);
   
+  // Load users list on mount (optimized: only once, with interval refresh)
   useEffect(() => {
-    // Prevent multiple simultaneous fetches (fixes triple loading issue)
-    if (fetchingUsersRef.current) {
-      console.log('ChatArea - User fetch already in progress, skipping...');
+    // Prevent multiple simultaneous fetches (fixes duplicate loading issue)
+    if (fetchingUsersRef.current || !mountedRef.current) {
       return;
     }
     
-    let mounted = true;
     fetchingUsersRef.current = true;
     
     const fetchUsers = async () => {
       try {
+        if (!db) {
+          console.warn('ChatArea: Firestore db not available');
+          fetchingUsersRef.current = false;
+          return;
+        }
+        
         const q = query(
           collection(db, 'users'),
           limit(50) // Further reduced to 50 users to save reads
         );
         
         const snapshot = await getDocs(q);
-        if (!mounted) {
+        if (!mountedRef.current) {
           fetchingUsersRef.current = false;
           return;
         }
@@ -345,11 +350,14 @@ const ChatArea = ({ setActiveView }) => {
         setUserNames(names);
         setUserProfiles(profiles);
         
-        console.log('ChatArea - Loaded users:', { 
-          count: snapshot.docs.length, 
-          names: names,
-          userIds: Object.keys(names)
-        });
+        // Only log in development to improve performance
+        if (import.meta.env.DEV) {
+          console.log('ChatArea - Loaded users:', { 
+            count: snapshot.docs.length, 
+            names: names,
+            userIds: Object.keys(names)
+          });
+        }
         
         fetchingUsersRef.current = false;
       } catch (error) {
@@ -362,13 +370,12 @@ const ChatArea = ({ setActiveView }) => {
     
     // Refresh users every 5 minutes instead of real-time
     const intervalId = setInterval(() => {
-      if (!fetchingUsersRef.current) {
+      if (!fetchingUsersRef.current && mountedRef.current) {
         fetchUsers();
       }
     }, 5 * 60 * 1000);
     
     return () => {
-      mounted = false;
       fetchingUsersRef.current = false;
       clearInterval(intervalId);
     };
