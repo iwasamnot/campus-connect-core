@@ -301,7 +301,13 @@ function App() {
         <div className="aurora-blob aurora-blob-5" />
       </div>
       
-      <div className="flex h-screen h-[100dvh] overflow-hidden w-full relative z-10 md:flex-row p-4 gap-4">
+      <div className="flex h-screen h-[100dvh] h-[100svh] w-full relative z-10 md:flex-row p-4 gap-4" style={{
+        height: '100dvh',
+        minHeight: '-webkit-fill-available',
+        maxHeight: '100dvh',
+        overflow: 'hidden',
+        WebkitOverflowScrolling: 'touch'
+      }}>
       {/* Skip to main content link for accessibility */}
       <a href="#main-content" className="skip-to-main">
         Skip to main content
@@ -314,8 +320,16 @@ function App() {
       />
       <motion.div 
         id="main-content" 
-        className="flex-1 overflow-hidden relative w-full glass-panel rounded-[2rem] flex flex-col"
-        style={{ minHeight: 0, maxHeight: '100%', height: '100%' }}
+        className="flex-1 relative w-full glass-panel rounded-[2rem] flex flex-col"
+        style={{ 
+          minHeight: 0, 
+          maxHeight: '100%', 
+          height: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}

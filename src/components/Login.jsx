@@ -201,7 +201,12 @@ const Login = ({ onBack, initialMode = 'login' }) => {
   );
 
   return (
-    <div className="h-screen h-[100dvh] overflow-y-auto overscroll-contain touch-pan-y bg-transparent relative">
+    <div className="h-screen h-[100dvh] h-[100svh] overflow-y-auto overscroll-contain touch-pan-y bg-transparent relative" style={{
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain',
+      height: '100dvh',
+      minHeight: '-webkit-fill-available'
+    }}>
       {/* Aurora Background - Fluid.so aesthetic */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="aurora-background">
@@ -452,7 +457,10 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                         type="email"
                         id="login-email"
                         name="email"
-                        autoComplete="email"
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="s20230091@sistc.app"
@@ -481,7 +489,10 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                             type="email"
                             id="register-confirm-email"
                             name="confirmEmail"
-                            autoComplete="email"
+                            autoComplete="off"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck="false"
                             value={confirmEmail}
                             onChange={(e) => setConfirmEmail(e.target.value)}
                             placeholder="Confirm your email"
