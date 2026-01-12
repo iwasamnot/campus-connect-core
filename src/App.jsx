@@ -142,7 +142,6 @@ const MessageScheduler = createLazyComponent(() => import('./components/MessageS
 const SavedMessages = createLazyComponent(() => import('./components/SavedMessages'), 'Saved Messages');
 const ImageGallery = createLazyComponent(() => import('./components/ImageGallery'), 'Image Gallery');
 const NearbyChat = createLazyComponent(() => import('./components/NearbyChat'), 'Nearby Chat');
-const AdminContactMessages = createLazyComponent(() => import('./components/AdminContactMessages'), 'Admin Contact Messages');
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
   return { default: () => null };
 }));
@@ -556,7 +555,7 @@ function App() {
             )}
           </AnimatePresence>
         </Suspense>
-      </div>
+      </motion.div>
     </div>
     </>
   );
