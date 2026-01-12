@@ -142,6 +142,7 @@ const MessageScheduler = createLazyComponent(() => import('./components/MessageS
 const SavedMessages = createLazyComponent(() => import('./components/SavedMessages'), 'Saved Messages');
 const ImageGallery = createLazyComponent(() => import('./components/ImageGallery'), 'Image Gallery');
 const NearbyChat = createLazyComponent(() => import('./components/NearbyChat'), 'Nearby Chat');
+const AdminContactMessages = createLazyComponent(() => import('./components/AdminContactMessages'), 'Admin Contact Messages');
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
   return { default: () => null };
 }));
@@ -351,73 +352,20 @@ function App() {
           />
         )}
         <Suspense fallback={<LoadingSpinner />}>
-<<<<<<< HEAD
-          {isAdminRole(userRole) ? (
-            <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
-              {activeView === 'audit' && <ErrorBoundary><div className="page-transition"><AdminDashboard /></div></ErrorBoundary>}
-              {activeView === 'analytics' && <ErrorBoundary><div className="page-transition"><AdminAnalytics /></div></ErrorBoundary>}
-              {activeView === 'users' && <ErrorBoundary><div className="page-transition"><UsersManagement /></div></ErrorBoundary>}
-              {activeView === 'create-user' && <ErrorBoundary><div className="page-transition"><CreateUser /></div></ErrorBoundary>}
-              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
-              <KeyboardShortcuts />
-              <PWAInstallPrompt />
-            </>
-          ) : (
-            <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
-              {activeView === 'ai-help' && <ErrorBoundary><div className="page-transition"><AIHelp /></div></ErrorBoundary>}
-              {activeView === 'profile' && <ErrorBoundary><div className="page-transition"><StudentProfile /></div></ErrorBoundary>}
-              {activeView === 'groups' && (
-                <ErrorBoundary>
-                  <div className="page-transition">
-                    <Groups 
-                      setActiveView={handleSetActiveView} 
-                      setSelectedGroup={handleSetSelectedGroup}
-                    />
-                  </div>
-                </ErrorBoundary>
-              )}
-              {activeView === 'group-chat' && (
-                <ErrorBoundary>
-                  <div className="page-transition">
-                    <GroupChat 
-                      group={selectedGroup}
-                      setActiveView={handleSetActiveView}
-                      onBack={() => {
-                        handleSetActiveView('groups');
-                        handleSetSelectedGroup(null);
-                      }}
-                    />
-                  </div>
-                </ErrorBoundary>
-              )}
-              {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
-              {activeView === 'activity' && <ErrorBoundary><div className="page-transition"><ActivityDashboard /></div></ErrorBoundary>}
-              {activeView === 'scheduler' && <ErrorBoundary><div className="page-transition"><MessageScheduler /></div></ErrorBoundary>}
-              {activeView === 'saved' && <ErrorBoundary><div className="page-transition"><SavedMessages /></div></ErrorBoundary>}
-              {activeView === 'gallery' && <ErrorBoundary><div className="page-transition"><ImageGallery /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
-              <KeyboardShortcuts />
-              <PWAInstallPrompt />
-            </>
-          )}
-=======
           <AnimatePresence mode="wait" initial={false}>
             {isAdminRole(userRole) ? (
               <>
                 {activeView === 'chat' && (
-                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
-                        <ChatArea setActiveView={setActiveView} />
+                        <ChatArea setActiveView={handleSetActiveView} />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
                 )}
                 {activeView === 'audit' && (
-                  <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideUp">
                         <AdminDashboard />
@@ -426,7 +374,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'analytics' && (
-                  <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideLeft">
                         <AdminAnalytics />
@@ -435,7 +383,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'users' && (
-                  <motion.div key="users" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="users" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideDown">
                         <UsersManagement />
@@ -444,7 +392,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'create-user' && (
-                  <motion.div key="create-user" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="create-user" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="scale">
                         <CreateUser />
@@ -453,7 +401,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'contact-messages' && (
-                  <motion.div key="contact-messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="contact-messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideUp">
                         <AdminContactMessages />
@@ -462,7 +410,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'private-chat' && (
-                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <PrivateChat />
@@ -471,19 +419,19 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'nearby' && (
-                  <motion.div key="nearby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="nearby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
-                        <NearbyChat onClose={() => setActiveView('chat')} />
+                        <NearbyChat onClose={() => handleSetActiveView('chat')} />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
                 )}
                 {activeView === 'settings' && (
-                  <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="scale">
-                        <Settings setActiveView={setActiveView} />
+                        <Settings setActiveView={handleSetActiveView} />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
@@ -494,16 +442,16 @@ function App() {
             ) : (
               <>
                 {activeView === 'chat' && (
-                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                  <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
-                        <ChatArea setActiveView={setActiveView} />
+                        <ChatArea setActiveView={handleSetActiveView} />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
                 )}
                 {activeView === 'ai-help' && (
-                  <motion.div key="ai-help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="ai-help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideLeft">
                         <AIHelp />
@@ -512,7 +460,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'profile' && (
-                  <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="scale">
                         <StudentProfile />
@@ -521,27 +469,27 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'groups' && (
-                  <motion.div key="groups" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="groups" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideUp">
                         <Groups 
-                          setActiveView={setActiveView} 
-                          setSelectedGroup={setSelectedGroup}
+                          setActiveView={handleSetActiveView} 
+                          setSelectedGroup={handleSetSelectedGroup}
                         />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
                 )}
                 {activeView === 'group-chat' && (
-                  <motion.div key="group-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="group-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <GroupChat 
                           group={selectedGroup}
-                          setActiveView={setActiveView}
+                          setActiveView={handleSetActiveView}
                           onBack={() => {
-                            setActiveView('groups');
-                            setSelectedGroup(null);
+                            handleSetActiveView('groups');
+                            handleSetSelectedGroup(null);
                           }}
                         />
                       </AnimatedPage>
@@ -549,7 +497,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'private-chat' && (
-                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <PrivateChat />
@@ -558,7 +506,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'activity' && (
-                  <motion.div key="activity" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="activity" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideDown">
                         <ActivityDashboard />
@@ -567,7 +515,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'scheduler' && (
-                  <motion.div key="scheduler" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="scheduler" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideLeft">
                         <MessageScheduler />
@@ -576,7 +524,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'saved' && (
-                  <motion.div key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideUp">
                         <SavedMessages />
@@ -585,7 +533,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'gallery' && (
-                  <motion.div key="gallery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="gallery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="scale">
                         <ImageGallery />
@@ -594,10 +542,10 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'settings' && (
-                  <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                  <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="scale">
-                        <Settings setActiveView={setActiveView} />
+                        <Settings setActiveView={handleSetActiveView} />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
@@ -607,9 +555,8 @@ function App() {
               </>
             )}
           </AnimatePresence>
->>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
         </Suspense>
-      </motion.div>
+      </div>
     </div>
     </>
   );
