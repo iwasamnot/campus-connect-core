@@ -1771,11 +1771,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .message-enter {
-<<<<<<< HEAD
-  animation: messageSlideIn 0.1s ease-out;
-=======
-  animation: messageSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
->>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
+  animation: messageSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Message group animation */
