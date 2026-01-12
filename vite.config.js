@@ -316,17 +316,7 @@ export default defineConfig({
             }
           }
         ],
-        navigationPreload: false, // Disabled to prevent preloadResponse cancellation errors
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [
-          /^\/api/,
-          /^\/_/,
-          /^\/admin/,
-          /\.js$/,
-          /\.mjs$/,
-          /\.css$/,
-          /\/assets\//
-        ]
+        navigationPreload: false // Disabled to prevent preloadResponse cancellation errors
       },
       devOptions: {
         enabled: true,

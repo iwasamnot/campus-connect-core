@@ -148,7 +148,7 @@ const ChatArea = ({ setActiveView }) => {
         e.preventDefault();
         // Use startTransition for non-urgent UI updates
         startTransition(() => {
-          setShowAdvancedSearch(true);
+        setShowAdvancedSearch(true);
         });
       }
       // Ctrl/Cmd + Enter to send
@@ -162,15 +162,15 @@ const ChatArea = ({ setActiveView }) => {
       if (e.key === 'ArrowUp' && !newMessage.trim() && messageInputRef.current === document.activeElement) {
         // Use startTransition to prevent blocking
         startTransition(() => {
-          const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
-          if (userMessages.length > 0) {
-            const lastMessage = userMessages[userMessages.length - 1];
-            if (!lastMessage.edited) {
-              e.preventDefault();
-              setEditing(lastMessage.id);
-              setEditText(lastMessage.text);
-            }
+        const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
+        if (userMessages.length > 0) {
+          const lastMessage = userMessages[userMessages.length - 1];
+          if (!lastMessage.edited) {
+            e.preventDefault();
+            setEditing(lastMessage.id);
+            setEditText(lastMessage.text);
           }
+        }
         });
       }
     };
@@ -358,11 +358,11 @@ const ChatArea = ({ setActiveView }) => {
         
         // Only log in development to improve performance
         if (import.meta.env.DEV) {
-          console.log('ChatArea - Loaded users:', { 
-            count: snapshot.docs.length, 
-            names: names,
-            userIds: Object.keys(names)
-          });
+        console.log('ChatArea - Loaded users:', { 
+          count: snapshot.docs.length, 
+          names: names,
+          userIds: Object.keys(names)
+        });
         }
         
         fetchingUsersRef.current = false;
@@ -424,37 +424,12 @@ const ChatArea = ({ setActiveView }) => {
     }
   }, []);
 
-<<<<<<< HEAD
-  // Scroll to bottom when new messages arrive (optimized with requestIdleCallback)
-  const scrollToBottom = useCallback(() => {
-    if (messagesEndRef.current) {
-      // Use requestIdleCallback to avoid blocking main thread
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, { timeout: 100 });
-      } else {
-        // Fallback for browsers without requestIdleCallback
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 0);
-      }
-    }
-  }, []);
-  
   useEffect(() => {
     // Use startTransition for non-urgent scroll updates
     startTransition(() => {
       scrollToBottom();
     });
   }, [messages.length, scrollToBottom]); // Only depend on length, not full array
-=======
-  // Scroll to bottom when new messages arrive (debounced)
-  useEffect(() => {
-    const timeoutId = setTimeout(scrollToBottom, 50);
-    return () => clearTimeout(timeoutId);
-  }, [messages.length, scrollToBottom]);
->>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
   // Optimized: Memoize query to prevent recreation
@@ -476,32 +451,32 @@ const ChatArea = ({ setActiveView }) => {
         
         // Use startTransition to prevent blocking main thread
         startTransition(() => {
-          try {
-            const messagesData = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-            
-            // Deduplicate messages by ID to prevent duplicates (use Map for O(1) lookup)
-            const messageMap = new Map();
-            messagesData.forEach(message => {
-              if (!messageMap.has(message.id)) {
-                messageMap.set(message.id, message);
-              }
-            });
-            
-            // Convert to array and sort by timestamp
-            const uniqueMessages = Array.from(messageMap.values()).sort((a, b) => {
-              const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
-              const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
-              return aTime - bTime;
-            });
-            
-            setMessages(uniqueMessages);
-          } catch (error) {
-            console.error('Error processing messages:', error);
-            showError('Error loading messages. Please refresh the page.');
-          }
+        try {
+          const messagesData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          // Deduplicate messages by ID to prevent duplicates (use Map for O(1) lookup)
+          const messageMap = new Map();
+          messagesData.forEach(message => {
+            if (!messageMap.has(message.id)) {
+              messageMap.set(message.id, message);
+            }
+          });
+          
+          // Convert to array and sort by timestamp
+          const uniqueMessages = Array.from(messageMap.values()).sort((a, b) => {
+            const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
+            const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
+            return aTime - bTime;
+          });
+          
+          setMessages(uniqueMessages);
+        } catch (error) {
+          console.error('Error processing messages:', error);
+          showError('Error loading messages. Please refresh the page.');
+        }
         });
       },
       (error) => {
@@ -1158,7 +1133,6 @@ const ChatArea = ({ setActiveView }) => {
 
   // Memoize filtered messages to prevent unnecessary re-renders
   const filteredMessages = useMemo(() => {
-<<<<<<< HEAD
     if (!searchQuery.trim()) return messages;
     const queryLower = searchQuery.toLowerCase();
     return messages.filter(msg => {
@@ -1167,10 +1141,6 @@ const ChatArea = ({ setActiveView }) => {
       return text.includes(queryLower) || userName.includes(queryLower);
     });
   }, [messages, searchQuery]);
-=======
-    return messages;
-  }, [messages]);
->>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 
   // Memoize expensive formatting functions
   const formatTimestamp = useCallback((timestamp) => {
@@ -1237,7 +1207,7 @@ const ChatArea = ({ setActiveView }) => {
               <p className="text-xs md:text-sm text-white/60 hidden sm:block font-medium">Connect with your campus community</p>
             </div>
           </div>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             {/* AI Help Mode Toggle with Model Selector - Fluid.so aesthetic */}
             <div className="relative">
               <button
@@ -1442,21 +1412,21 @@ const ChatArea = ({ setActiveView }) => {
               willChange: 'scroll-position'
             }}
           >
-            {filteredMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full animate-fade-in">
-                <img 
-                  src="/logo.png" 
-                  alt="CampusConnect Logo" 
-                  className="w-24 h-24 mb-4 opacity-50 object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
+        {filteredMessages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+            <img 
+              src="/logo.png" 
+              alt="CampusConnect Logo" 
+              className="w-24 h-24 mb-4 opacity-50 object-contain"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
                 <p className="text-white/60 text-center">
-                  {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
-                </p>
-              </div>
-            ) : (
+              {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
+            </p>
+          </div>
+        ) : (
               <>
                 {/* Display Polls */}
                 {polls.length > 0 && polls.slice(0, 5).map((poll) => (
@@ -1467,27 +1437,27 @@ const ChatArea = ({ setActiveView }) => {
                 
                 {/* Display Messages */}
                 {filteredMessages.map((message) => {
-                  const isAuthor = message.userId === user?.uid;
-                  const isAdmin = isAdminRole(userRole);
-                  const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
-                  const canEdit = isAuthor && !message.edited;
-                  // Allow admins to delete AI messages, or users to delete their own messages
-                  const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
-                  const userReaction = message.reactions?.[user.uid];
-                  const reactionCounts = message.reactions ? Object.values(message.reactions).reduce((acc, emoji) => {
-                    acc[emoji] = (acc[emoji] || 0) + 1;
-                    return acc;
-                  }, {}) : {};
-                  const userProfile = userProfiles[message.userId] || {};
-                  const profilePicture = userProfile.profilePicture;
+            const isAuthor = message.userId === user?.uid;
+            const isAdmin = isAdminRole(userRole);
+            const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
+            const canEdit = isAuthor && !message.edited;
+            // Allow admins to delete AI messages, or users to delete their own messages
+            const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
+            const userReaction = message.reactions?.[user.uid];
+            const reactionCounts = message.reactions ? Object.values(message.reactions).reduce((acc, emoji) => {
+              acc[emoji] = (acc[emoji] || 0) + 1;
+              return acc;
+            }, {}) : {};
+            const userProfile = userProfiles[message.userId] || {};
+            const profilePicture = userProfile.profilePicture;
 
-                  return (
-                    <div
-                      id={`message-${message.id}`}
-                      key={message.id}
+            return (
+              <div
+                id={`message-${message.id}`}
+                key={message.id}
                       className={`flex items-start gap-2 group/message relative gpu-accelerated ${
-                        isAuthor ? 'justify-end' : 'justify-start'
-                      }`}
+                  isAuthor ? 'justify-end' : 'justify-start'
+                }`}
                       style={{ 
                         contain: 'layout style paint',
                         isolation: 'isolate'
@@ -1510,7 +1480,7 @@ const ChatArea = ({ setActiveView }) => {
                           }
                         }
                       }}
-                    >
+              >
                 {/* Profile Picture - Only show for other users */}
                 {!isAuthor && (
                   <button
@@ -1540,8 +1510,8 @@ const ChatArea = ({ setActiveView }) => {
                 <div className="relative">
                 <div
                         className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer gpu-accelerated transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] ${
-                            isAuthor
-                              ? 'bg-indigo-600 text-white'
+                    isAuthor
+                      ? 'bg-indigo-600 text-white'
                               : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
                           }`}
                   style={{ 
@@ -1774,15 +1744,15 @@ const ChatArea = ({ setActiveView }) => {
                           </div>
                         </div>
                       ) : (
-                        <p 
-                          className="text-sm whitespace-pre-wrap break-words"
-                          dangerouslySetInnerHTML={{
-                            __html: hasMarkdown(message.displayText) 
-                              ? parseMarkdown(message.displayText)
-                              : message.displayText.replace(/\n/g, '<br />')
-                          }}
-                        />
-                      )}
+                    <p 
+                      className="text-sm whitespace-pre-wrap break-words"
+                      dangerouslySetInnerHTML={{
+                        __html: hasMarkdown(message.displayText) 
+                          ? parseMarkdown(message.displayText)
+                          : message.displayText.replace(/\n/g, '<br />')
+                      }}
+                    />
+                  )}
                     </div>
                   )}
                 </div>
@@ -1840,7 +1810,7 @@ const ChatArea = ({ setActiveView }) => {
                       >
                         {/* Menu items */}
                         {!isAuthor && (
-                          <button
+                    <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReplyingTo(message);
@@ -1857,27 +1827,27 @@ const ChatArea = ({ setActiveView }) => {
                         <button
                           onClick={async (e) => {
                             e.stopPropagation();
-                            try {
-                              await saveMessage(user.uid, { ...message, chatType: 'global' });
-                              success('Message saved!');
+                        try {
+                          await saveMessage(user.uid, { ...message, chatType: 'global' });
+                          success('Message saved!');
                               setOpenMenuId(null);
-                            } catch (error) {
-                              if (error.message === 'Message already saved') {
-                                showError('Message already saved');
-                              } else {
-                                showError('Failed to save message');
-                              }
-                            }
-                          }}
+                        } catch (error) {
+                          if (error.message === 'Message already saved') {
+                            showError('Message already saved');
+                          } else {
+                            showError('Failed to save message');
+                          }
+                        }
+                      }}
                           className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
                           style={{ transform: 'translateZ(0)' }}
-                        >
+                    >
                           <Bookmark size={16} />
                           Save
-                        </button>
+                    </button>
                         
-                        {preferences.allowMessageForwarding && (
-                          <button
+                    {preferences.allowMessageForwarding && (
+                      <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleForwardMessage(message.id);
@@ -1888,10 +1858,10 @@ const ChatArea = ({ setActiveView }) => {
                           >
                             <Forward size={16} />
                             Forward
-                          </button>
-                        )}
+                      </button>
+                    )}
                         
-                        <button
+                      <button
                           onClick={async (e) => {
                             e.stopPropagation();
                             const messageText = message.displayText || message.text || '';
@@ -1903,7 +1873,7 @@ const ChatArea = ({ setActiveView }) => {
                         >
                           <Share2 size={16} />
                           Share
-                        </button>
+                      </button>
                         
                         {!message.isVoice && (
                           <button
@@ -1934,74 +1904,74 @@ const ChatArea = ({ setActiveView }) => {
                           </button>
                         )}
                         
-                        {isAdminRole(userRole) && (
-                          <button
+                    {isAdminRole(userRole) && (
+                      <button
                             onClick={async (e) => {
                               e.stopPropagation();
-                              try {
-                                const isPinned = pinnedMessages.includes(message.id);
-                                if (isPinned) {
-                                  await updateDoc(doc(db, 'messages', message.id), {
-                                    pinned: false
-                                  });
-                                  setPinnedMessages(prev => prev.filter(id => id !== message.id));
-                                  success('Message unpinned');
-                                } else {
-                                  await updateDoc(doc(db, 'messages', message.id), {
-                                    pinned: true,
-                                    pinnedAt: serverTimestamp()
-                                  });
-                                  setPinnedMessages(prev => [...prev, message.id]);
-                                  success('Message pinned');
-                                }
+                          try {
+                            const isPinned = pinnedMessages.includes(message.id);
+                            if (isPinned) {
+                              await updateDoc(doc(db, 'messages', message.id), {
+                                pinned: false
+                              });
+                              setPinnedMessages(prev => prev.filter(id => id !== message.id));
+                              success('Message unpinned');
+                            } else {
+                              await updateDoc(doc(db, 'messages', message.id), {
+                                pinned: true,
+                                pinnedAt: serverTimestamp()
+                              });
+                              setPinnedMessages(prev => [...prev, message.id]);
+                              success('Message pinned');
+                            }
                                 setOpenMenuId(null);
-                              } catch (error) {
-                                console.error('Error pinning message:', error);
-                                showError('Failed to pin message');
-                              }
-                            }}
+                          } catch (error) {
+                            console.error('Error pinning message:', error);
+                            showError('Failed to pin message');
+                          }
+                        }}
                             className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
                             style={{ transform: 'translateZ(0)' }}
                           >
                             <Pin size={16} />
                             {pinnedMessages.includes(message.id) ? 'Unpin' : 'Pin'}
-                          </button>
-                        )}
+                      </button>
+                    )}
                         
-                        {canEdit && (
-                          <button
+                    {canEdit && (
+                      <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditing(message.id);
-                              setEditText(message.text);
+                          setEditing(message.id);
+                          setEditText(message.text);
                               setOpenMenuId(null);
-                            }}
+                        }}
                             className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
                             style={{ transform: 'translateZ(0)' }}
-                          >
+                      >
                             <Edit2 size={16} />
                             Edit
-                          </button>
-                        )}
+                      </button>
+                    )}
                         
-                        {canDelete && (
-                          <button
+                    {canDelete && (
+                      <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteMessage(message.id, message.userId, isAIMessage);
                               setOpenMenuId(null);
                             }}
-                            disabled={deleting === message.id}
+                        disabled={deleting === message.id}
                             className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:bg-transparent border-t border-white/10 gpu-accelerated"
                             style={{ transform: 'translateZ(0)' }}
-                          >
+                      >
                             <Trash2 size={16} />
                             {isAIMessage ? "Delete (Admin)" : "Delete"}
-                          </button>
-                        )}
+                      </button>
+                    )}
                         
-                        {!isAuthor && (
-                          <button
+                    {!isAuthor && (
+                        <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReporting(reporting === message.id ? null : message.id);
@@ -2014,55 +1984,55 @@ const ChatArea = ({ setActiveView }) => {
                           >
                             <Flag size={16} />
                             {reporting === message.id ? 'Cancel Report' : 'Report'}
-                          </button>
+                        </button>
                         )}
                       </motion.div>
                     )}
                     
                     {/* Report form - Fluid.so aesthetic */}
-                    {reporting === message.id && (
+                        {reporting === message.id && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl p-4 z-40 min-w-[250px]"
                       >
-                        <textarea
-                          value={reportReason}
-                          onChange={(e) => setReportReason(e.target.value)}
-                          placeholder="Reason for reporting..."
+                            <textarea
+                              value={reportReason}
+                              onChange={(e) => setReportReason(e.target.value)}
+                              placeholder="Reason for reporting..."
                           className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 mb-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-white/10 transition-all duration-300"
-                          rows={3}
-                        />
-                        <div className="flex gap-2">
-                          <button
+                              rows={3}
+                            />
+                            <div className="flex gap-2">
+                              <button
                             onClick={() => {
                               handleReportMessage(message.id);
                               setOpenMenuId(null);
                             }}
                             className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-600 hover:scale-[1.02] active:scale-[0.98] text-white text-sm rounded-xl transition-all duration-200 touch-action-manipulation font-medium gpu-accelerated"
                             style={{ transform: 'translateZ(0)' }}
-                          >
-                            Report
-                          </button>
-                          <button
-                            onClick={() => {
-                              setReporting(null);
-                              setReportReason('');
+                              >
+                                Report
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setReporting(null);
+                                  setReportReason('');
                               setOpenMenuId(null);
-                            }}
+                                }}
                             className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 hover:scale-[1.02] active:scale-[0.98] text-white/70 hover:text-white text-sm rounded-xl transition-all duration-200 touch-action-manipulation font-medium border border-white/10 gpu-accelerated"
                             style={{ transform: 'translateZ(0)' }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                              >
+                                Cancel
+                              </button>
+                            </div>
                       </motion.div>
                     )}
                   </div>
 
-                    {/* Reaction picker - always visible on touch, hover on desktop */}
-                    {!isAuthor && (
+                  {/* Reaction picker - always visible on touch, hover on desktop */}
+                  {!isAuthor && (
                     <div className="mt-2 opacity-100 md:opacity-0 md:group-hover/message:opacity-100 transition-opacity">
                       <div className="flex gap-1 touch-action-none">
                         {EMOJI_REACTIONS.map((emoji) => {
@@ -2090,12 +2060,12 @@ const ChatArea = ({ setActiveView }) => {
                   )}
                 </div>
               </div>
-                  );
+            );
                 })}
               </>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
           {/* Typing Indicator */}
           {Object.keys(typingUsers).length > 0 && (

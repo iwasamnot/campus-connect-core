@@ -1526,14 +1526,9 @@ html {
   overscroll-behavior: contain;
 }
 
-<<<<<<< HEAD
 /* Global smooth transitions - optimized for performance */
 button, a, input, textarea, select {
   transition: all 0.1s ease-in-out;
-=======
-/* Global smooth transitions with fun spring effect */
-button, a, input, textarea, select {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Enhanced button hover with glow */
