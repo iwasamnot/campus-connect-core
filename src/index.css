@@ -377,19 +377,19 @@ html {
   overscroll-behavior: contain;
 }
 
-/* Global smooth transitions */
+/* Global smooth transitions - optimized for performance */
 button, a, input, textarea, select {
-  transition: all 0.2s ease-in-out;
+  transition: all 0.1s ease-in-out;
 }
 
-/* Smooth page transitions */
+/* Smooth page transitions - faster */
 .page-transition {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.15s ease-in-out;
 }
 
-/* Smooth card hover effects */
+/* Smooth card hover effects - faster */
 .card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {
@@ -402,10 +402,10 @@ button, a, input, textarea, select {
   transition: background-color 0.05s ease !important;
 }
 
-/* Smooth button press effect */
+/* Smooth button press effect - faster */
 button:active {
   transform: scale(0.98);
-  transition: transform 0.1s ease-in-out;
+  transition: transform 0.05s ease-in-out;
 }
 
 /* Minimal theme - instant button press */
@@ -413,9 +413,9 @@ button:active {
   transition: transform 0.05s ease-in-out !important;
 }
 
-/* Smooth input focus */
+/* Smooth input focus - faster */
 input:focus, textarea:focus, select:focus {
-  transition: all 0.2s ease-in-out;
+  transition: all 0.1s ease-in-out;
 }
 
 /* Smooth modal animations */
@@ -431,7 +431,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .modal-enter {
-  animation: modalFadeIn 0.3s ease-out;
+  animation: modalFadeIn 0.15s ease-out;
 }
 
 /* Smooth toast animations */
@@ -447,7 +447,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .toast-enter {
-  animation: toastSlideIn 0.3s ease-out;
+  animation: toastSlideIn 0.15s ease-out;
 }
 
 /* Smooth message animations */
@@ -463,7 +463,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .message-enter {
-  animation: messageSlideIn 0.3s ease-out;
+  animation: messageSlideIn 0.1s ease-out;
 }
 
 /* Smooth loading spinner */

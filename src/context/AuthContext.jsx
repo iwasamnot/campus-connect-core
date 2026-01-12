@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   signInAnonymously, 
   signOut as firebaseSignOut,
@@ -300,18 +300,26 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
+  const loginAsStudentMemo = useCallback(loginAsStudent, []);
+  const loginAsAdminMemo = useCallback(loginAsAdmin, []);
+  const registerMemo = useCallback(register, []);
+  const loginMemo = useCallback(login, []);
+  const signOutMemo = useCallback(signOut, []);
+  const resetPasswordMemo = useCallback(resetPassword, []);
+  const resendVerificationEmailMemo = useCallback(resendVerificationEmail, [user]);
+
+  const value = useMemo(() => ({
     user,
     userRole,
-    loginAsStudent,
-    loginAsAdmin,
-    register,
-    login,
-    signOut,
-    resetPassword,
-    resendVerificationEmail,
+    loginAsStudent: loginAsStudentMemo,
+    loginAsAdmin: loginAsAdminMemo,
+    register: registerMemo,
+    login: loginMemo,
+    signOut: signOutMemo,
+    resetPassword: resetPasswordMemo,
+    resendVerificationEmail: resendVerificationEmailMemo,
     loading
-  };
+  }), [user, userRole, loading, loginAsStudentMemo, loginAsAdminMemo, registerMemo, loginMemo, signOutMemo, resetPasswordMemo, resendVerificationEmailMemo]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 const PreferencesContext = createContext();
 
@@ -112,14 +112,14 @@ const PreferencesProvider = ({ children }) => {
     });
   }, [preferences]);
 
-  const updatePreference = (key, value) => {
+  const updatePreference = useCallback((key, value) => {
     setPreferences(prev => ({
       ...prev,
       [key]: value
     }));
-  };
+  }, []);
 
-  const resetPreferences = () => {
+  const resetPreferences = useCallback(() => {
     const defaultPrefs = {
       accentColor: 'indigo',
       fontSize: 'medium',
@@ -136,13 +136,13 @@ const PreferencesProvider = ({ children }) => {
     };
     setPreferences(defaultPrefs);
     localStorage.setItem('userPreferences', JSON.stringify(defaultPrefs));
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     preferences,
     updatePreference,
     resetPreferences
-  };
+  }), [preferences, updatePreference, resetPreferences]);
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 };

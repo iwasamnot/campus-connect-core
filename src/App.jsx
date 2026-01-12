@@ -3,9 +3,10 @@ import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
+import { debounce } from './utils/debounce';
 // CRITICAL: Import firebaseConfig in main App to ensure it's in main bundle
 // Lazy components import auth, db, etc. from firebaseConfig
 import { auth, db } from './firebaseConfig';
@@ -165,18 +166,34 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hasSetDefaultView, setHasSetDefaultView] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleSetActiveView = useCallback((view) => {
+    setActiveView(view);
+  }, []);
+  
+  const handleSetSelectedGroup = useCallback((group) => {
+    setSelectedGroup(group);
+  }, []);
+  
+  const handleSetSidebarOpen = useCallback((open) => {
+    setSidebarOpen(open);
+  }, []);
 
-  // Track window size for mobile detection
+  // Track window size for mobile detection (debounced for performance)
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = debounce(() => {
       setIsMobile(window.innerWidth < 768);
       // Close sidebar when switching from mobile to desktop
       if (window.innerWidth >= 768) {
         setSidebarOpen(false);
       }
-    };
+    }, 150); // Debounce resize events for better performance
+    
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Set default view based on user role (only on initial load)
@@ -213,9 +230,9 @@ function App() {
       </a>
       <Sidebar 
         activeView={activeView} 
-        setActiveView={setActiveView}
+        setActiveView={handleSetActiveView}
         isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        onClose={() => handleSetSidebarOpen(false)}
       />
       <div 
         id="main-content" 
@@ -223,7 +240,7 @@ function App() {
         onTouchStart={(e) => {
           // Swipe from left edge to open menu (only on mobile, when sidebar is closed)
           if (isMobile && !sidebarOpen && e.touches[0].clientX < 30) {
-            setSidebarOpen(true);
+            handleSetSidebarOpen(true);
           }
         }}
       >
@@ -241,27 +258,27 @@ function App() {
         <Suspense fallback={<LoadingSpinner />}>
           {isAdminRole(userRole) ? (
             <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
               {activeView === 'audit' && <ErrorBoundary><div className="page-transition"><AdminDashboard /></div></ErrorBoundary>}
               {activeView === 'analytics' && <ErrorBoundary><div className="page-transition"><AdminAnalytics /></div></ErrorBoundary>}
               {activeView === 'users' && <ErrorBoundary><div className="page-transition"><UsersManagement /></div></ErrorBoundary>}
               {activeView === 'create-user' && <ErrorBoundary><div className="page-transition"><CreateUser /></div></ErrorBoundary>}
               {activeView === 'private-chat' && <ErrorBoundary><div className="page-transition"><PrivateChat /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />
               <PWAInstallPrompt />
             </>
           ) : (
             <>
-              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'chat' && <ErrorBoundary><div className="page-transition"><ChatArea setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
               {activeView === 'ai-help' && <ErrorBoundary><div className="page-transition"><AIHelp /></div></ErrorBoundary>}
               {activeView === 'profile' && <ErrorBoundary><div className="page-transition"><StudentProfile /></div></ErrorBoundary>}
               {activeView === 'groups' && (
                 <ErrorBoundary>
                   <div className="page-transition">
                     <Groups 
-                      setActiveView={setActiveView} 
-                      setSelectedGroup={setSelectedGroup}
+                      setActiveView={handleSetActiveView} 
+                      setSelectedGroup={handleSetSelectedGroup}
                     />
                   </div>
                 </ErrorBoundary>
@@ -271,10 +288,10 @@ function App() {
                   <div className="page-transition">
                     <GroupChat 
                       group={selectedGroup}
-                      setActiveView={setActiveView}
+                      setActiveView={handleSetActiveView}
                       onBack={() => {
-                        setActiveView('groups');
-                        setSelectedGroup(null);
+                        handleSetActiveView('groups');
+                        handleSetSelectedGroup(null);
                       }}
                     />
                   </div>
@@ -285,7 +302,7 @@ function App() {
               {activeView === 'scheduler' && <ErrorBoundary><div className="page-transition"><MessageScheduler /></div></ErrorBoundary>}
               {activeView === 'saved' && <ErrorBoundary><div className="page-transition"><SavedMessages /></div></ErrorBoundary>}
               {activeView === 'gallery' && <ErrorBoundary><div className="page-transition"><ImageGallery /></div></ErrorBoundary>}
-              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={setActiveView} /></div></ErrorBoundary>}
+              {activeView === 'settings' && <ErrorBoundary><div className="page-transition"><Settings setActiveView={handleSetActiveView} /></div></ErrorBoundary>}
               <KeyboardShortcuts />
               <PWAInstallPrompt />
             </>

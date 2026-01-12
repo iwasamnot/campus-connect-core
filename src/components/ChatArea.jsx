@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 // Use window globals to avoid import/export issues in production builds
@@ -314,10 +314,18 @@ const ChatArea = ({ setActiveView }) => {
     };
   }, []);
 
-  // Scroll to bottom when new messages arrive
+  // Scroll to bottom when new messages arrive (throttled for performance)
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+  
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Throttle scroll to prevent excessive scrolling
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages.length, scrollToBottom]); // Only depend on length, not full array
 
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
   // Optimized: Memoize query to prevent recreation
@@ -840,9 +848,19 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
-  const filteredMessages = messages; // Advanced search handles filtering
+  // Memoize filtered messages to prevent unnecessary re-renders
+  const filteredMessages = useMemo(() => {
+    if (!searchQuery.trim()) return messages;
+    const queryLower = searchQuery.toLowerCase();
+    return messages.filter(msg => {
+      const text = (msg.text || msg.displayText || '').toLowerCase();
+      const userName = (msg.userName || '').toLowerCase();
+      return text.includes(queryLower) || userName.includes(queryLower);
+    });
+  }, [messages, searchQuery]);
 
-  const formatTimestamp = (timestamp) => {
+  // Memoize expensive formatting functions
+  const formatTimestamp = useCallback((timestamp) => {
     if (!timestamp) return '';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const now = new Date();
@@ -853,9 +871,9 @@ const ChatArea = ({ setActiveView }) => {
     if (minutes < 60) return `${minutes}m ago`;
     if (minutes < 1440) return `${Math.floor(minutes / 60)}h ago`;
     return date.toLocaleDateString();
-  };
+  }, []);
 
-  const formatLastSeen = (lastSeen) => {
+  const formatLastSeen = useCallback((lastSeen) => {
     if (!lastSeen) return 'Never';
     const date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
     const now = new Date();
@@ -869,9 +887,9 @@ const ChatArea = ({ setActiveView }) => {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
-  };
+  }, []);
 
-  const getReadReceiptInfo = (message) => {
+  const getReadReceiptInfo = useCallback((message) => {
     if (!message.readBy) return { count: 0, users: [] };
     const readBy = message.readBy;
     const readUserIds = Object.keys(readBy).filter(uid => uid !== message.userId); // Exclude sender
@@ -883,7 +901,7 @@ const ChatArea = ({ setActiveView }) => {
         timestamp: readBy[uid]
       }))
     };
-  };
+  }, [userNames, userProfiles]);
 
   return (
     <div className="flex flex-col h-screen h-[100dvh] w-full bg-gray-50 dark:bg-gray-900">
