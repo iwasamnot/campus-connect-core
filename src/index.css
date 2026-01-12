@@ -1619,6 +1619,13 @@ button:active {
 }
 
 /* Card hover translate effect - WORKING on desktop */
+.card-hover {
+  /* Reserve space to prevent layout shift */
+  min-height: fit-content;
+  will-change: transform;
+  contain: layout style paint;
+}
+
 .card-hover:hover {
   transform: translateY(-5px) scale(1.02) !important;
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 10px 20px -5px rgba(99, 102, 241, 0.1);

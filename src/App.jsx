@@ -4,15 +4,12 @@ import LandingPage from './components/LandingPage';
 import Sidebar from './components/Sidebar';
 import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
-import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
-<<<<<<< HEAD
 import { debounce } from './utils/debounce';
-=======
 import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedPage } from './components/AnimatedComponents';
->>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 // CRITICAL: Import firebaseConfig in main App to ensure it's in main bundle
 // Lazy components import auth, db, etc. from firebaseConfig
 import { auth, db } from './firebaseConfig';

@@ -84,10 +84,11 @@ export const observePerformance = () => {
   if (typeof window === 'undefined' || !window.PerformanceObserver) return;
   
   try {
-    // Observe long tasks (blocking the main thread)
+    // Observe long tasks (blocking the main thread) - only log in development
     const longTaskObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (entry.duration > 50) { // Tasks longer than 50ms
+        // Only warn for tasks longer than 100ms (more significant)
+        if (entry.duration > 100 && import.meta.env.DEV) {
           console.warn('[Performance] Long task detected:', {
             duration: entry.duration.toFixed(2) + 'ms',
             startTime: entry.startTime.toFixed(2) + 'ms'
@@ -96,12 +97,17 @@ export const observePerformance = () => {
       }
     });
     
-    longTaskObserver.observe({ entryTypes: ['longtask'] });
+    try {
+      longTaskObserver.observe({ entryTypes: ['longtask'] });
+    } catch (e) {
+      // Long task API might not be supported
+    }
     
-    // Observe layout shifts
+    // Observe layout shifts - only log significant shifts in development
     const layoutShiftObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) {
+        // Only warn for significant layout shifts (>0.01) and in development
+        if (!entry.hadRecentInput && entry.value > 0.01 && import.meta.env.DEV) {
           console.warn('[Performance] Unexpected layout shift:', {
             value: entry.value,
             sources: entry.sources?.map(s => ({
@@ -114,7 +120,11 @@ export const observePerformance = () => {
       }
     });
     
-    layoutShiftObserver.observe({ entryTypes: ['layout-shift'] });
+    try {
+      layoutShiftObserver.observe({ entryTypes: ['layout-shift'] });
+    } catch (e) {
+      // Layout shift API might not be supported
+    }
   } catch (error) {
     console.warn('Performance observation failed:', error);
   }

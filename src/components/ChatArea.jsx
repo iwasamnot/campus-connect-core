@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, memo, startTransition } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 // Use window globals to avoid import/export issues in production builds
@@ -140,13 +140,16 @@ const ChatArea = ({ setActiveView }) => {
     return () => clearTimeout(timeoutId);
   }, [newMessage]);
   
-  // Keyboard shortcuts
+  // Keyboard shortcuts - optimized with startTransition for better INP
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ctrl/Cmd + K for advanced search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setShowAdvancedSearch(true);
+        // Use startTransition for non-urgent UI updates
+        startTransition(() => {
+          setShowAdvancedSearch(true);
+        });
       }
       // Ctrl/Cmd + Enter to send
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !sending) {
@@ -155,21 +158,24 @@ const ChatArea = ({ setActiveView }) => {
           sendMessage(e);
         }
       }
-      // Up arrow to edit last message
+      // Up arrow to edit last message - optimize with memoized filter
       if (e.key === 'ArrowUp' && !newMessage.trim() && messageInputRef.current === document.activeElement) {
-        const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
-        if (userMessages.length > 0) {
-          const lastMessage = userMessages[userMessages.length - 1];
-          if (!lastMessage.edited) {
-            e.preventDefault();
-            setEditing(lastMessage.id);
-            setEditText(lastMessage.text);
+        // Use startTransition to prevent blocking
+        startTransition(() => {
+          const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
+          if (userMessages.length > 0) {
+            const lastMessage = userMessages[userMessages.length - 1];
+            if (!lastMessage.edited) {
+              e.preventDefault();
+              setEditing(lastMessage.id);
+              setEditText(lastMessage.text);
+            }
           }
-        }
+        });
       }
     };
     
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { passive: true });
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [newMessage, sending, messages, user]);
   
@@ -419,17 +425,28 @@ const ChatArea = ({ setActiveView }) => {
   }, []);
 
 <<<<<<< HEAD
-  // Scroll to bottom when new messages arrive (throttled for performance)
+  // Scroll to bottom when new messages arrive (optimized with requestIdleCallback)
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Use requestIdleCallback to avoid blocking main thread
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, { timeout: 100 });
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 0);
+      }
     }
   }, []);
   
   useEffect(() => {
-    // Throttle scroll to prevent excessive scrolling
-    const timeoutId = setTimeout(scrollToBottom, 100);
-    return () => clearTimeout(timeoutId);
+    // Use startTransition for non-urgent scroll updates
+    startTransition(() => {
+      scrollToBottom();
+    });
   }, [messages.length, scrollToBottom]); // Only depend on length, not full array
 =======
   // Scroll to bottom when new messages arrive (debounced)
@@ -457,32 +474,35 @@ const ChatArea = ({ setActiveView }) => {
       (snapshot) => {
         if (!mountedRef.current) return;
         
-        try {
-          const messagesData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          
-          // Deduplicate messages by ID to prevent duplicates (use Map for O(1) lookup)
-          const messageMap = new Map();
-          messagesData.forEach(message => {
-            if (!messageMap.has(message.id)) {
-              messageMap.set(message.id, message);
-            }
-          });
-          
-          // Convert to array and sort by timestamp
-          const uniqueMessages = Array.from(messageMap.values()).sort((a, b) => {
-            const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
-            const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
-            return aTime - bTime;
-          });
-          
-          setMessages(uniqueMessages);
-        } catch (error) {
-          console.error('Error processing messages:', error);
-          showError('Error loading messages. Please refresh the page.');
-        }
+        // Use startTransition to prevent blocking main thread
+        startTransition(() => {
+          try {
+            const messagesData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+            
+            // Deduplicate messages by ID to prevent duplicates (use Map for O(1) lookup)
+            const messageMap = new Map();
+            messagesData.forEach(message => {
+              if (!messageMap.has(message.id)) {
+                messageMap.set(message.id, message);
+              }
+            });
+            
+            // Convert to array and sort by timestamp
+            const uniqueMessages = Array.from(messageMap.values()).sort((a, b) => {
+              const aTime = a.timestamp?.toDate?.() || a.timestamp || 0;
+              const bTime = b.timestamp?.toDate?.() || b.timestamp || 0;
+              return aTime - bTime;
+            });
+            
+            setMessages(uniqueMessages);
+          } catch (error) {
+            console.error('Error processing messages:', error);
+            showError('Error loading messages. Please refresh the page.');
+          }
+        });
       },
       (error) => {
         if (!mountedRef.current) return;
