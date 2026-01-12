@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Filter, Calendar, User, MessageSquare, FileText } from 'lucide-react';
+import { FadeIn } from './AnimatedComponents';
 // Use window globals to avoid import/export issues
 const debounce = typeof window !== 'undefined' && window.__debounce 
   ? window.__debounce 
@@ -34,13 +36,26 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
   const filteredResults = useMemo(() => {
     let results = messages;
 
-    // Text search
+    // Text search - Only search displayText (respects AI moderation)
+    // Filter out toxic messages that are hidden by AI (they should not appear in search)
     if (query.trim()) {
       const searchLower = query.toLowerCase();
       results = results.filter(msg => {
-        const text = (msg.text || msg.displayText || '').toLowerCase();
+        // Skip toxic messages that are hidden - they should not appear in search
+        if (msg.toxic && msg.displayText === '[REDACTED BY AI]') {
+          return false; // Don't show hidden toxic messages in search
+        }
+        
+        // Only search displayText (the redacted version if toxic, or original if safe)
+        const text = (msg.displayText || msg.text || '').toLowerCase();
         const userName = (msg.userName || '').toLowerCase();
         return text.includes(searchLower) || userName.includes(searchLower);
+      });
+    } else {
+      // Even without search query, filter out hidden toxic messages
+      results = results.filter(msg => {
+        // Don't show toxic messages that are hidden by AI
+        return !(msg.toxic && msg.displayText === '[REDACTED BY AI]');
       });
     }
 
@@ -109,232 +124,293 @@ const AdvancedSearch = ({ messages = [], users = [], onSelectMessage, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-70 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <Search className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Advanced Search
-            </h2>
-            {filteredResults.length > 0 && (
-              <span className="px-2 py-1 text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">
-                {filteredResults.length} result{filteredResults.length !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-lg transition-colors ${
-                showFilters
-                  ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
-                  : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400'
-              }`}
-              title="Toggle filters"
-            >
-              <Filter className="w-5 h-5" />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            </button>
-          </div>
-        </div>
-
-        {/* Search Input */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <label htmlFor="advanced-search-query" className="sr-only">Search messages, users, or content</label>
-            <input
-              type="text"
-              id="advanced-search-query"
-              name="search-query"
-              value={query}
-              onChange={(e) => handleQueryChange(e.target.value)}
-              placeholder="Search messages, users, or content..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              autoFocus
-            />
-            {query && (
-              <button
-                onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Filters */}
-        {showFilters && (
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* User Filter */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <FadeIn delay={0.1}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] max-w-4xl w-full max-h-[90vh] flex flex-col backdrop-blur-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header - Fluid.so aesthetic */}
+          <div className="flex items-center justify-between p-6 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 glass-panel border border-white/10 rounded-xl">
+                <Search className="w-6 h-6 text-indigo-400" />
+              </div>
               <div>
-                <label htmlFor="search-filter-user" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  <User className="w-4 h-4 inline mr-1" />
-                  User
-                </label>
-                <select
-                  id="search-filter-user"
-                  name="filter-user"
-                  value={filters.user}
-                  onChange={(e) => setFilters({ ...filters, user: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                <h2 className="text-xl font-bold text-white text-glow">
+                  Advanced Search
+                </h2>
+                <p className="text-sm text-white/60 mt-0.5">
+                  Search messages, users, and content
+                </p>
+              </div>
+              {filteredResults.length > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="px-3 py-1 text-sm glass-panel bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 rounded-full font-medium"
                 >
-                  <option value="">All Users</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.name || user.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Date From */}
-              <div>
-                <label htmlFor="search-filter-date-from" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  From Date
-                </label>
-                <input
-                  type="date"
-                  id="search-filter-date-from"
-                  name="filter-date-from"
-                  value={filters.dateFrom}
-                  onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
-
-              {/* Date To */}
-              <div>
-                <label htmlFor="search-filter-date-to" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  To Date
-                </label>
-                <input
-                  type="date"
-                  id="search-filter-date-to"
-                  name="filter-date-to"
-                  value={filters.dateTo}
-                  onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
-              </div>
-
-              {/* Checkboxes */}
-              <div className="space-y-2">
-                <label htmlFor="search-filter-has-files" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    id="search-filter-has-files"
-                    name="filter-has-files"
-                    checked={filters.hasFiles}
-                    onChange={(e) => setFilters({ ...filters, hasFiles: e.target.checked })}
-                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <FileText className="w-4 h-4" />
-                  Has Files
-                </label>
-                <label htmlFor="search-filter-has-reactions" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    id="search-filter-has-reactions"
-                    name="filter-has-reactions"
-                    checked={filters.hasReactions}
-                    onChange={(e) => setFilters({ ...filters, hasReactions: e.target.checked })}
-                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <MessageSquare className="w-4 h-4" />
-                  Has Reactions
-                </label>
-                <label htmlFor="search-filter-is-pinned" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    id="search-filter-is-pinned"
-                    name="filter-is-pinned"
-                    checked={filters.isPinned}
-                    onChange={(e) => setFilters({ ...filters, isPinned: e.target.checked })}
-                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  Pinned Only
-                </label>
-              </div>
+                  {filteredResults.length} result{filteredResults.length !== 1 ? 's' : ''}
+                </motion.span>
+              )}
             </div>
-            {(filters.user || filters.dateFrom || filters.dateTo || filters.hasFiles || filters.hasReactions || filters.isPinned) && (
-              <button
-                onClick={clearFilters}
-                className="mt-4 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+            <div className="flex items-center gap-2">
+              <motion.button
+                onClick={() => setShowFilters(!showFilters)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`p-2.5 rounded-xl transition-all ${
+                  showFilters
+                    ? 'glass-panel bg-indigo-600/20 border border-indigo-500/50 text-indigo-300'
+                    : 'glass-panel border border-white/10 text-white/70 hover:text-white hover:border-white/20'
+                }`}
+                title="Toggle filters"
               >
-                Clear Filters
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Results */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {filteredResults.length === 0 ? (
-            <div className="text-center py-12">
-              <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">
-                {query || Object.values(filters).some(v => v) 
-                  ? 'No messages found matching your search criteria.'
-                  : 'Start typing to search messages...'}
-              </p>
+                <Filter className="w-5 h-5" />
+              </motion.button>
+              <motion.button
+                onClick={onClose}
+                whileHover={{ scale: 1.05, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </motion.button>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredResults.map((message) => (
-                <div
-                  key={message.id}
-                  onClick={() => {
-                    if (onSelectMessage) onSelectMessage(message);
-                    onClose();
-                  }}
-                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+          </div>
+
+          {/* Search Input - Fluid.so aesthetic */}
+          <div className="p-6 border-b border-white/10">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40 group-focus-within:text-indigo-400 transition-colors" />
+              <label htmlFor="advanced-search-query" className="sr-only">Search messages, users, or content</label>
+              <input
+                type="text"
+                id="advanced-search-query"
+                name="search-query"
+                value={query}
+                onChange={(e) => handleQueryChange(e.target.value)}
+                placeholder="Search messages, users, or content..."
+                className="w-full pl-12 pr-10 py-3 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20"
+                autoFocus
+              />
+              {query && (
+                <motion.button
+                  onClick={() => setQuery('')}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {message.userName || 'Unknown User'}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatDate(message.timestamp)}
-                      </span>
+                  <X className="w-4 h-4" />
+                </motion.button>
+              )}
+            </div>
+          </div>
+
+          {/* Filters - Fluid.so aesthetic */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden border-b border-white/10 bg-white/5 backdrop-blur-sm"
+              >
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* User Filter */}
+                  <div>
+                    <label htmlFor="search-filter-user" className="block text-sm font-semibold text-white/90 mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4 text-indigo-400" />
+                      User
+                    </label>
+                    <select
+                      id="search-filter-user"
+                      name="filter-user"
+                      value={filters.user}
+                      onChange={(e) => setFilters({ ...filters, user: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20"
+                    >
+                      <option value="" className="bg-[#1a1a1a] text-white">All Users</option>
+                      {users.map(user => (
+                        <option key={user.id} value={user.id} className="bg-[#1a1a1a] text-white">
+                          {user.name || user.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date From */}
+                  <div>
+                    <label htmlFor="search-filter-date-from" className="block text-sm font-semibold text-white/90 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-indigo-400" />
+                      From Date
+                    </label>
+                    <input
+                      type="date"
+                      id="search-filter-date-from"
+                      name="filter-date-from"
+                      value={filters.dateFrom}
+                      onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
+                    />
+                  </div>
+
+                  {/* Date To */}
+                  <div>
+                    <label htmlFor="search-filter-date-to" className="block text-sm font-semibold text-white/90 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-indigo-400" />
+                      To Date
+                    </label>
+                    <input
+                      type="date"
+                      id="search-filter-date-to"
+                      name="filter-date-to"
+                      value={filters.dateTo}
+                      onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
+                    />
+                  </div>
+
+                  {/* Checkboxes */}
+                  <div className="space-y-3 md:col-span-2 lg:col-span-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <label htmlFor="search-filter-has-files" className="flex items-center gap-3 p-3 glass-panel border border-white/10 rounded-xl cursor-pointer hover:border-white/20 transition-all group">
+                        <input
+                          type="checkbox"
+                          id="search-filter-has-files"
+                          name="filter-has-files"
+                          checked={filters.hasFiles}
+                          onChange={(e) => setFilters({ ...filters, hasFiles: e.target.checked })}
+                          className="rounded border-white/20 bg-white/5 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                        />
+                        <FileText className="w-4 h-4 text-white/60 group-hover:text-indigo-400 transition-colors" />
+                        <span className="text-sm text-white/80 font-medium">Has Files</span>
+                      </label>
+                      <label htmlFor="search-filter-has-reactions" className="flex items-center gap-3 p-3 glass-panel border border-white/10 rounded-xl cursor-pointer hover:border-white/20 transition-all group">
+                        <input
+                          type="checkbox"
+                          id="search-filter-has-reactions"
+                          name="filter-has-reactions"
+                          checked={filters.hasReactions}
+                          onChange={(e) => setFilters({ ...filters, hasReactions: e.target.checked })}
+                          className="rounded border-white/20 bg-white/5 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                        />
+                        <MessageSquare className="w-4 h-4 text-white/60 group-hover:text-indigo-400 transition-colors" />
+                        <span className="text-sm text-white/80 font-medium">Has Reactions</span>
+                      </label>
+                      <label htmlFor="search-filter-is-pinned" className="flex items-center gap-3 p-3 glass-panel border border-white/10 rounded-xl cursor-pointer hover:border-white/20 transition-all group">
+                        <input
+                          type="checkbox"
+                          id="search-filter-is-pinned"
+                          name="filter-is-pinned"
+                          checked={filters.isPinned}
+                          onChange={(e) => setFilters({ ...filters, isPinned: e.target.checked })}
+                          className="rounded border-white/20 bg-white/5 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                        />
+                        <span className="text-sm text-white/80 font-medium">Pinned Only</span>
+                      </label>
                     </div>
-                    {message.pinned && (
-                      <span className="px-2 py-1 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded">
-                        Pinned
-                      </span>
+                    {(filters.user || filters.dateFrom || filters.dateTo || filters.hasFiles || filters.hasReactions || filters.isPinned) && (
+                      <motion.button
+                        onClick={clearFilters}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="px-4 py-2 text-sm text-indigo-300 hover:text-indigo-200 glass-panel border border-indigo-500/30 rounded-xl transition-all font-medium"
+                      >
+                        Clear All Filters
+                      </motion.button>
                     )}
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300 line-clamp-2">
-                    {message.text || message.displayText || ''}
-                  </p>
-                  {message.fileName && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400">
-                      <FileText className="w-4 h-4" />
-                      {message.fileName}
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Results - Fluid.so aesthetic */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {filteredResults.length === 0 ? (
+              <div className="text-center py-12">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="inline-block p-4 glass-panel border border-white/10 rounded-2xl mb-4"
+                >
+                  <Search className="w-12 h-12 text-white/40 mx-auto" />
+                </motion.div>
+                <p className="text-white/60 font-medium">
+                  {query || Object.values(filters).some(v => v) 
+                    ? 'No messages found matching your search criteria.'
+                    : 'Start typing to search messages...'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredResults.map((message, index) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.02 }}
+                    whileHover={{ y: -2, scale: 1.01 }}
+                    onClick={() => {
+                      if (onSelectMessage) onSelectMessage(message);
+                      onClose();
+                    }}
+                    className="p-4 glass-panel border border-white/10 rounded-xl hover:border-white/20 cursor-pointer transition-all group"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white group-hover:text-indigo-300 transition-colors">
+                          {message.userName || 'Unknown User'}
+                        </span>
+                        <span className="text-xs text-white/50">
+                          {formatDate(message.timestamp)}
+                        </span>
+                      </div>
+                      {message.pinned && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="px-2 py-1 text-xs glass-panel bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 rounded-lg font-medium"
+                        >
+                          Pinned
+                        </motion.span>
+                      )}
+                    </div>
+                    <p className="text-white/70 line-clamp-2 group-hover:text-white/90 transition-colors">
+                      {/* Always show displayText (respects AI moderation - shows [REDACTED BY AI] if toxic) */}
+                      {message.displayText || message.text || ''}
+                    </p>
+                    {message.toxic && message.displayText === '[REDACTED BY AI]' && (
+                      <div className="mt-1 text-xs text-yellow-400/70 italic">
+                        ⚠️ Flagged by AI Moderation
+                      </div>
+                    )}
+                    {message.fileName && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-indigo-400">
+                        <FileText className="w-4 h-4" />
+                        <span className="font-medium">{message.fileName}</span>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </FadeIn>
     </div>
   );
 };
 
 export default AdvancedSearch;
-

@@ -2,6 +2,310 @@
 @tailwind components;
 @tailwind utilities;
 
+/* PWA and Mobile Optimizations */
+/* Safe Area Insets for Notched Devices (iOS, Android) */
+@supports (padding: max(0px)) {
+  :root {
+    --safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --safe-area-inset-right: env(safe-area-inset-right, 0px);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  }
+}
+
+/* Prevent text size adjustment on iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Support for safe area insets */
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  /* Fix for iPhone 16 and newer devices */
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
+/* Fix body height for iPhone 16 and all mobile devices */
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  height: 100%;
+  overflow-x: hidden;
+  /* Prevent iOS bounce effect */
+  position: fixed;
+  width: 100%;
+  overscroll-behavior-y: contain;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Optimize touch targets - minimum 44x44px for iOS */
+  button, a, input, select, textarea, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation; /* Remove 300ms tap delay */
+  }
+  
+  /* Prevent zoom on input focus (iOS Safari) - iPhone 16 and all iOS devices */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents zoom on focus */
+  }
+  
+  /* Optimize scroll performance on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
+    -webkit-touch-callout: none; /* Disable callout on long press */
+  }
+  
+  /* Better scrolling on iOS - iPhone 16 specific */
+  body, html {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    position: relative;
+  }
+  
+  /* Fix for iPhone 16 Pro Max and all iPhone models */
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: 100svh;
+    min-height: -webkit-fill-available;
+    height: 100%;
+    height: 100dvh;
+    height: 100svh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    position: relative;
+  }
+}
+
+/* Prevent pull-to-refresh on mobile (maintains scroll position) */
+body {
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+/* Optimize for landscape orientation */
+@media (orientation: landscape) {
+  /* Adjust layout for landscape if needed */
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* GPU Acceleration Optimizations - Uncapped FPS Support */
+.gpu-accelerated,
+[class*="gpu-"],
+[data-gpu="true"] {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  isolation: isolate;
+  contain: layout style paint;
+  /* Force GPU layer creation */
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+}
+
+/* Optimize all animated elements for GPU - Performance Critical */
+[class*="animate-"],
+[class*="motion-"],
+motion.div,
+motion.button,
+motion.section,
+motion.article {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  /* Only use will-change when actively animating */
+}
+
+/* Optimize Framer Motion components for performance */
+[data-framer-component] {
+  contain: layout style paint;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+/* Performance: Remove will-change after animation completes */
+@supports (animation: fade-in 0.3s) {
+  *:not(:hover):not(:active):not(:focus) {
+    will-change: auto;
+  }
+}
+
+/* Performance: Optimize message items for better rendering */
+.message-item {
+  contain: layout style paint;
+  isolation: isolate;
+  transform: translateZ(0);
+  /* Only use will-change on hover */
+  will-change: auto;
+}
+
+.message-item:hover {
+  will-change: transform;
+}
+
+/* Optimize scroll performance with passive listeners */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: auto; /* Use auto for better performance */
+}
+
+/* Optimize Framer Motion buttons - reduce animations */
+motion.button {
+  /* Only animate on interaction, not always */
+  will-change: auto;
+}
+
+motion.button:hover {
+  will-change: transform;
+}
+
+motion.button:active {
+  will-change: transform;
+}
+
+/* PWA and Mobile Optimizations - Safe Area Insets */
+@supports (padding: max(0px)) {
+  :root {
+    --safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --safe-area-inset-right: env(safe-area-inset-right, 0px);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  }
+}
+
+/* Prevent text size adjustment on iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Optimize touch targets - minimum 44x44px for iOS */
+  button, a, input, select, textarea, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation; /* Remove 300ms tap delay */
+  }
+  
+  /* Prevent zoom on input focus (iOS Safari) */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents zoom on focus */
+  }
+  
+  /* Optimize scroll performance on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
+    -webkit-touch-callout: none; /* Disable callout on long press */
+  }
+  
+  /* Better scrolling on iOS */
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Prevent pull-to-refresh on mobile (maintains scroll position) */
+body {
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+/* Optimize for landscape orientation */
+@media (orientation: landscape) {
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Remove FPS caps - use native refresh rate */
+* {
+  /* Optimize for high refresh rate displays */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Performance optimizations for animations */
+@supports (will-change: transform) {
+  .motion-safe\:gpu-accelerated {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+}
+
+/* High refresh rate optimizations */
+@media (min-resolution: 120dpi) {
+  * {
+    /* Optimize rendering for high DPI/high refresh displays */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Force GPU acceleration for transform operations */
+.transform,
+[style*="transform"] {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Optimize transitions for uncapped FPS */
+.transition-all,
+.transition-transform,
+.transition-opacity {
+  /* Use compositor-friendly properties */
+  will-change: transform, opacity;
+}
+
+/* Remove transition caps on high refresh displays */
+@media (prefers-reduced-motion: no-preference) {
+  @media (min-resolution: 120dpi) {
+    .transition-all,
+    .transition-transform,
+    .transition-opacity {
+      /* Let browser optimize for display refresh rate */
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+}
+
 /* Screen reader only class for accessibility */
 .sr-only {
   position: absolute;
@@ -59,6 +363,316 @@
   --accent-color: #6366f1;
   --accent-color-dark: #818cf8;
   --base-font-size: 1rem;
+}
+
+/* Font Loading Optimization - Prevent Layout Shifts */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/plusjakartasans/v8/LDIbaomQNQcsA88c7O9yZ4KMCoOg4IA6-91aHEjcWuA_qU79TR_I.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Prevent Layout Shifts */
+* {
+  /* Prevent layout shifts from missing dimensions */
+  box-sizing: border-box;
+}
+
+img, video, iframe {
+  /* Prevent layout shifts from images loading */
+  height: auto;
+  max-width: 100%;
+  /* Use aspect-ratio for modern browsers */
+  aspect-ratio: attr(width) / attr(height);
+}
+
+/* Optimize rendering with content-visibility */
+@media (prefers-reduced-motion: no-preference) {
+  .lazy-render {
+    content-visibility: auto;
+    contain-intrinsic-size: 200px;
+  }
+}
+
+/* Fluid Theme Styles - Glassmorphism & Aurora (Default/Fluid.so aesthetic) */
+.theme-fluid {
+  --fluid-radius: 2rem; /* Very rounded corners - Fluid.so aesthetic */
+  --fluid-border: 1px solid rgba(255, 255, 255, 0.08);
+  --fluid-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --fluid-glass-bg: rgba(20, 20, 20, 0.4);
+  --fluid-blur: blur(20px);
+  --fluid-accent: #4f46e5; /* Indigo */
+  --fluid-accent-secondary: #7c3aed; /* Purple */
+  --fluid-accent-tertiary: #0ea5e9; /* Sky Blue */
+}
+
+.dark.theme-fluid {
+  --fluid-border: 1px solid rgba(255, 255, 255, 0.08);
+  --fluid-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --fluid-glass-bg: rgba(20, 20, 20, 0.4);
+  --fluid-blur: blur(20px);
+}
+
+/* Fluid theme - Enhanced rounded corners (default behavior, already in use) */
+.theme-fluid .rounded-lg {
+  border-radius: 1rem !important;
+}
+
+.theme-fluid .rounded-xl {
+  border-radius: 1.5rem !important;
+}
+
+.theme-fluid .rounded-\[2rem\] {
+  border-radius: 2rem !important;
+}
+
+.theme-fluid .rounded-2xl {
+  border-radius: 2rem !important;
+}
+
+/* Fluid theme - Glassmorphism effects (default behavior, already in use) */
+/* Note: The .glass-panel class is already defined and works with Fluid theme */
+.theme-fluid .glass-panel {
+  background: var(--fluid-glass-bg) !important;
+  backdrop-filter: var(--fluid-blur) !important;
+  -webkit-backdrop-filter: var(--fluid-blur) !important;
+  border: var(--fluid-border) !important;
+  box-shadow: var(--fluid-shadow) !important;
+}
+
+/* Fluid theme - Override indigo colors to use theme accent */
+.theme-fluid .text-indigo-300,
+.theme-fluid .text-indigo-400,
+.theme-fluid .text-indigo-500 {
+  color: var(--fluid-accent-secondary, #818cf8) !important;
+}
+
+.theme-fluid .border-indigo-400,
+.theme-fluid .border-indigo-500,
+.theme-fluid .border-indigo-500\/50,
+.theme-fluid .border-indigo-400\/50 {
+  border-color: rgba(124, 58, 237, 0.5) !important;
+}
+
+.theme-fluid .bg-indigo-600\/20,
+.theme-fluid .bg-indigo-600\/30,
+.theme-fluid .bg-indigo-600\/80 {
+  background-color: rgba(79, 70, 229, 0.2) !important;
+}
+
+.theme-fluid .bg-indigo-600\/80 {
+  background-color: rgba(79, 70, 229, 0.8) !important;
+}
+
+.theme-fluid .hover\:text-indigo-300:hover,
+.theme-fluid .hover\:text-indigo-400:hover,
+.theme-fluid .hover\:text-indigo-200:hover {
+  color: var(--fluid-accent-tertiary, #a78bfa) !important;
+}
+
+.theme-fluid .hover\:border-indigo-500:hover,
+.theme-fluid .hover\:border-indigo-400:hover,
+.theme-fluid .hover\:border-indigo-500\/50:hover {
+  border-color: rgba(124, 58, 237, 0.7) !important;
+}
+
+.theme-fluid .focus\:ring-indigo-500:focus,
+.theme-fluid .focus\:ring-indigo-500\/50:focus,
+.theme-fluid .focus\:border-indigo-500:focus,
+.theme-fluid .focus\:border-indigo-500\/50:focus {
+  --tw-ring-color: rgba(124, 58, 237, 0.5) !important;
+  border-color: rgba(124, 58, 237, 0.5) !important;
+}
+
+/* Fluid theme - Enhanced shadows and depth */
+.theme-fluid .shadow-xl,
+.theme-fluid .shadow-2xl {
+  box-shadow: var(--fluid-shadow) !important;
+}
+
+/* Fun Theme Styles - Colorful & Playful */
+.theme-fun {
+  --fun-radius: 1rem; /* Playful rounded corners */
+  --fun-border: 2px solid rgba(99, 102, 241, 0.3); /* Vibrant borders */
+  --fun-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(139, 92, 246, 0.2);
+  --fun-glass-bg: rgba(255, 255, 255, 0.1);
+  --fun-blur: blur(10px);
+  --fun-accent: #6366f1; /* Indigo */
+  --fun-accent-hover: #4f46e5; /* Darker indigo */
+  --fun-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --fun-gradient-hover: linear-gradient(135deg, #764ba2 0%, #f093fb 100%);
+}
+
+.dark.theme-fun {
+  --fun-border: 2px solid rgba(139, 92, 246, 0.4);
+  --fun-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4), 0 4px 6px -2px rgba(236, 72, 153, 0.3);
+  --fun-glass-bg: rgba(30, 30, 30, 0.5);
+  --fun-blur: blur(15px);
+  --fun-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --fun-gradient-hover: linear-gradient(135deg, #f093fb 0%, #4facfe 100%);
+}
+
+/* Fun theme - Playful rounded corners */
+.theme-fun .rounded-lg {
+  border-radius: 1rem !important;
+}
+
+.theme-fun .rounded-xl {
+  border-radius: 1.25rem !important;
+}
+
+.theme-fun .rounded-2xl,
+.theme-fun .rounded-\[2rem\] {
+  border-radius: 1.5rem !important;
+}
+
+/* Fun theme - Vibrant glassmorphism effects */
+.theme-fun .glass-panel {
+  background: var(--fun-glass-bg) !important;
+  backdrop-filter: var(--fun-blur) !important;
+  -webkit-backdrop-filter: var(--fun-blur) !important;
+  border: var(--fun-border) !important;
+  box-shadow: var(--fun-shadow) !important;
+}
+
+/* Fun theme - Enhanced shadows with color */
+.theme-fun .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(139, 92, 246, 0.2) !important;
+}
+
+.theme-fun .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.3), 0 10px 10px -5px rgba(139, 92, 246, 0.2) !important;
+}
+
+.theme-fun .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.4), 0 15px 20px -5px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Fun theme - Colorful gradients on buttons and interactive elements */
+.theme-fun .bg-indigo-600,
+.theme-fun .bg-indigo-700,
+.theme-fun .bg-indigo-500,
+.theme-fun .bg-gradient-to-r {
+  background: var(--fun-gradient) !important;
+}
+
+.theme-fun .from-indigo-600.to-purple-600,
+.theme-fun .from-indigo-600,
+.theme-fun .from-indigo-700.to-purple-700,
+.theme-fun .from-indigo-700,
+.theme-fun .from-indigo-500,
+.theme-fun .from-indigo-500.to-purple-500 {
+  background-image: var(--fun-gradient) !important;
+}
+
+/* Fun theme - Override all indigo text colors */
+.theme-fun .text-indigo-300,
+.theme-fun .text-indigo-400,
+.theme-fun .text-indigo-500,
+.theme-fun .text-indigo-600 {
+  color: #a78bfa !important; /* Purple for fun theme */
+}
+
+/* Fun theme - Override all indigo border colors */
+.theme-fun .border-indigo-400,
+.theme-fun .border-indigo-500,
+.theme-fun .border-indigo-600 {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+.dark.theme-fun .border-indigo-400,
+.dark.theme-fun .border-indigo-500 {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Fun theme - Override hover colors */
+.theme-fun .hover\:text-indigo-300:hover,
+.theme-fun .hover\:text-indigo-400:hover,
+.theme-fun .hover\:text-indigo-200:hover {
+  color: #c4b5fd !important;
+}
+
+.theme-fun .hover\:border-indigo-500:hover,
+.theme-fun .hover\:border-indigo-400:hover {
+  border-color: rgba(139, 92, 246, 0.7) !important;
+}
+
+.theme-fun .hover\:bg-indigo-600:hover,
+.theme-fun .hover\:bg-indigo-600\/20:hover {
+  background: var(--fun-gradient-hover) !important;
+}
+
+/* Fun theme - Focus ring colors */
+.theme-fun .focus\:ring-indigo-500:focus,
+.theme-fun .focus\:ring-indigo-500\/50:focus {
+  --tw-ring-color: rgba(139, 92, 246, 0.5) !important;
+}
+
+.theme-fun button:hover,
+.theme-fun .hover\:bg-indigo-700:hover,
+.theme-fun .hover\:from-indigo-700:hover {
+  background: var(--fun-gradient-hover) !important;
+  background-image: var(--fun-gradient-hover) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Fun theme - Playful animations */
+.theme-fun * {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; /* Bouncy ease-out-back */
+}
+
+.theme-fun button,
+.theme-fun .hover\:scale-110:hover,
+.theme-fun .hover\:scale-105:hover,
+.theme-fun .hover\:scale-\[1\.02\]:hover {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.theme-fun button:active {
+  transform: scale(0.95) !important;
+  transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Fun theme - Colorful borders */
+.theme-fun .border-indigo-500,
+.theme-fun .border-indigo-600 {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  border-width: 2px !important;
+}
+
+.dark.theme-fun .border-indigo-400,
+.dark.theme-fun .border-indigo-500 {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Fun theme - Vibrant text colors */
+.theme-fun .text-indigo-600,
+.theme-fun .text-indigo-500 {
+  color: #818cf8 !important; /* Lighter indigo for fun theme */
+}
+
+.dark.theme-fun .text-indigo-300,
+.dark.theme-fun .text-indigo-400 {
+  color: #a78bfa !important; /* Brighter purple for dark fun theme */
+}
+
+/* Fun theme - Playful card hover effects */
+.theme-fun .card-hover:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: var(--fun-shadow) !important;
 }
 
 /* Minimal Theme Styles - Ultra Modern & Clean */
@@ -129,15 +743,31 @@
   box-shadow: none !important;
 }
 
+/* Minimal theme - Glass panel */
+.theme-minimal .glass-panel {
+  background: var(--minimal-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: var(--minimal-border) !important;
+  box-shadow: none !important;
+}
+
+.dark.theme-minimal .glass-panel {
+  background: var(--minimal-bg) !important;
+  border: var(--minimal-border-dark) !important;
+}
+
 /* Minimal theme - flat backgrounds, more contrast */
 /* Keep ALL action button colors - don't override to grey */
 .theme-minimal .bg-indigo-600,
-.theme-minimal .bg-indigo-700 {
+.theme-minimal .bg-indigo-700,
+.theme-minimal .bg-indigo-500 {
   background-color: #6366f1 !important; /* Keep original indigo */
 }
 
 .dark.theme-minimal .bg-indigo-600,
-.dark.theme-minimal .bg-indigo-700 {
+.dark.theme-minimal .bg-indigo-700,
+.dark.theme-minimal .bg-indigo-500 {
   background-color: #6366f1 !important; /* Keep original indigo in dark mode too */
 }
 
@@ -348,16 +978,535 @@
   color: var(--minimal-text-secondary) !important;
 }
 
-/* Responsive improvements */
+/* Responsive Design Optimizations for All Screen Sizes */
+
+/* Mobile-first responsive breakpoints */
+/* Extra small devices (phones, 320px and up) */
+@media (min-width: 320px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Small devices (phones, 480px and up) */
+@media (min-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+/* Medium devices (tablets, 640px and up) */
+@media (min-width: 640px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Large devices (desktops, 1024px and up) */
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Extra large devices (large desktops, 1280px and up) */
+@media (min-width: 1280px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+/* Ultra wide screens (1920px and up) */
+@media (min-width: 1920px) {
+  html {
+    font-size: 20px;
+  }
+}
+
+/* Mobile-specific optimizations */
 @media (max-width: 640px) {
   .mobile-hidden {
-    display: none;
+    display: none !important;
+  }
+  
+  /* Touch-friendly tap targets */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Optimize text sizes for mobile */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Prevent text selection on buttons (better UX) */
+  button {
+    -webkit-tap-highlight-color: rgba(79, 70, 229, 0.1);
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1023px) {
+  /* Tablet-specific styles */
+  .tablet-hidden {
+    display: none !important;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* PWA Safe Area Insets (iOS notch support) */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .safe-area-inset {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Landscape orientation optimizations */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Optimize for landscape mobile */
+  .landscape-compact {
+    padding: 0.5rem;
+  }
+  
+  header, footer {
+    min-height: 48px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Optimize for retina displays */
+  img, svg {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch-friendly interactive elements */
+  button, a, input, select, textarea {
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+  
+  /* Remove hover states on touch devices */
+  button:hover, a:hover {
+    transform: none;
+  }
+  
+  /* Better tap feedback */
+  button:active, a:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+/* Dark mode media query */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Modern CSS Features - Container Queries (when supported) */
+@supports (container-type: inline-size) {
+  .container-query {
+    container-type: inline-size;
+  }
+  
+  @container (min-width: 768px) {
+    .container-md\:grid {
+      display: grid;
+    }
+  }
+}
+
+/* Modern CSS :has() selector support */
+@supports selector(:has(*)) {
+  /* Card with button hover effect */
+  .card:has(button:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Form field with error */
+  .form-group:has(input:invalid) {
+    border-color: #ef4444;
+  }
+  
+  /* Navigation item with active child */
+  nav:has(.active) {
+    /* Styles for active navigation */
+  }
+}
+
+/* CSS Nesting (when supported) */
+@supports (selector(&)) {
+  .modern-button {
+    & :hover {
+      transform: scale(1.05);
+    }
+    
+    & :active {
+      transform: scale(0.95);
+    }
+    
+    & :disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* Color-scheme support for better dark mode */
+@supports (color-scheme: dark light) {
+  :root {
+    color-scheme: light;
+  }
+  
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+/* Scroll-driven animations (experimental but modern) */
+@supports (animation-timeline: scroll()) {
+  .scroll-animate {
+    animation: fadeIn linear;
+    animation-timeline: scroll();
+    animation-range: 0% 50%;
+  }
+}
+
+/* View transitions API support (Chrome 111+) */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.3s;
+  }
+}
+
+/* Aurora Background - Fluid.so aesthetic */
+@keyframes aurora-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.4;
+  }
+  33% {
+    transform: translate(30%, -30%) scale(1.1);
+    opacity: 0.6;
+  }
+  66% {
+    transform: translate(-20%, 20%) scale(0.9);
+    opacity: 0.5;
+  }
+}
+
+@keyframes aurora-float-slow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(25%, -25%) scale(1.15);
+    opacity: 0.5;
+  }
+}
+
+@keyframes aurora-float-fast {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.35;
+  }
+  25% {
+    transform: translate(-25%, 25%) scale(1.05);
+    opacity: 0.55;
+  }
+  75% {
+    transform: translate(25%, -15%) scale(0.95);
+    opacity: 0.45;
+  }
+}
+
+.aurora-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: #050505;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Aurora background only visible for Fluid theme */
+.theme-fun .aurora-background,
+.theme-minimal .aurora-background {
+  display: none !important;
+}
+
+/* Fun theme - Colorful gradient background */
+html.theme-fun,
+html.theme-fun body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #fce7f3 100%) !important;
+}
+
+.dark.theme-fun,
+.dark.theme-fun body {
+  background: linear-gradient(135deg, #1e1b4b 0%, #3b1f54 50%, #4c1d4f 100%) !important;
+}
+
+/* Minimal theme - Clean flat background */
+html.theme-minimal,
+html.theme-minimal body {
+  background: #ffffff !important;
+}
+
+.dark.theme-minimal,
+.dark.theme-minimal body {
+  background: #0f172a !important;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.aurora-blob-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #4f46e5 0%, transparent 70%);
+  top: -200px;
+  left: -200px;
+  animation: aurora-float 20s ease-in-out infinite;
+}
+
+.aurora-blob-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  animation: aurora-float-slow 25s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.aurora-blob-3 {
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: aurora-float-fast 18s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+.aurora-blob-4 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.6) 0%, transparent 70%);
+  top: 20%;
+  right: 10%;
+  animation: aurora-float 22s ease-in-out infinite;
+  animation-delay: -7s;
+}
+
+.aurora-blob-5 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.5) 0%, transparent 70%);
+  bottom: 30%;
+  left: 15%;
+  animation: aurora-float-slow 24s ease-in-out infinite;
+  animation-delay: -12s;
+}
+
+/* Glassmorphism 2.0 - Fluid.so aesthetic */
+@supports (backdrop-filter: blur(20px)) {
+  .glass-panel {
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(20px) saturate(180%);
+    background-color: rgba(20, 20, 20, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  
+  .dark .glass-effect {
+    background-color: rgba(20, 20, 20, 0.4);
+  }
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(20px)) {
+  .glass-panel {
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Modern focus-visible support for better keyboard navigation */
+@supports selector(:focus-visible) {
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+  
+  *:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* Fix for message action buttons hover issue */
+.message-actions.show-actions,
+.message-actions:has(button:hover) {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Keep action buttons visible on touch devices */
+@media (hover: none) {
+  .message-actions {
+    opacity: 0.7 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  
+  .message-actions:active {
+    opacity: 1 !important;
   }
 }
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* Fluid Animation Utilities - Global */
+@keyframes float-particles {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.4;
+  }
+  33% {
+    transform: translate(20px, -20px) scale(1.05);
+    opacity: 0.6;
+  }
+  66% {
+    transform: translate(-15px, 15px) scale(0.95);
+    opacity: 0.5;
+  }
+}
+
+@keyframes float-subtle {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(15px, -15px) scale(1.05);
+    opacity: 0.5;
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-float-particles {
+  animation: float-particles 15s ease-in-out infinite;
+}
+
+.animate-float-subtle {
+  animation: float-subtle 12s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+/* Minimal Modern Button Styles */
+.btn-minimal {
+  @apply rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95;
+}
+
+.btn-gradient {
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium;
+}
+
+.btn-ghost {
+  @apply bg-transparent border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300;
+}
+
+/* Minimal Input Styles */
+.input-minimal {
+  @apply rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all duration-300;
+}
+
+/* Glassmorphism Utility */
+.glass {
+  @apply backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50;
 }
 
 /* Swipe gesture indicator animation */
@@ -377,24 +1526,125 @@ html {
   overscroll-behavior: contain;
 }
 
+<<<<<<< HEAD
 /* Global smooth transitions - optimized for performance */
 button, a, input, textarea, select {
   transition: all 0.1s ease-in-out;
+=======
+/* Global smooth transitions with fun spring effect */
+button, a, input, textarea, select {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Enhanced button hover with glow */
+button:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+button:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Fun button press animation */
+@keyframes buttonPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.button-press {
+  animation: buttonPress 0.2s ease-in-out;
+>>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 }
 
 /* Smooth page transitions - faster */
 .page-transition {
+<<<<<<< HEAD
   animation: fadeIn 0.15s ease-in-out;
 }
 
 /* Smooth card hover effects - faster */
 .card-hover {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+=======
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced page transitions with spring effect */
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page-transition-enhanced {
+  animation: pageEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Stagger animation for lists */
+.stagger-item {
+  opacity: 0;
+  animation: staggerFade 0.6s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+.stagger-item:nth-child(6) { animation-delay: 0.3s; }
+.stagger-item:nth-child(7) { animation-delay: 0.35s; }
+.stagger-item:nth-child(8) { animation-delay: 0.4s; }
+.stagger-item:nth-child(9) { animation-delay: 0.45s; }
+.stagger-item:nth-child(10) { animation-delay: 0.5s; }
+
+/* Enhanced card hover effects with spring animation */
+.card-hover {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.card-hover:hover::before {
+  left: 100%;
+>>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 10px 20px -5px rgba(99, 102, 241, 0.1);
+}
+
+/* Card entrance animation */
+.card-enter {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  animation: cardEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cardEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Minimal theme - faster card transitions */
@@ -418,58 +1668,132 @@ input:focus, textarea:focus, select:focus {
   transition: all 0.1s ease-in-out;
 }
 
-/* Smooth modal animations */
+/* Enhanced modal animations with spring effect */
 @keyframes modalFadeIn {
-  from {
+  0% {
     opacity: 0;
-    transform: scale(0.95) translateY(-10px);
+    transform: scale(0.8) translateY(-20px) rotateX(10deg);
   }
-  to {
+  50% {
+    transform: scale(1.05) translateY(5px);
+  }
+  100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(1) translateY(0) rotateX(0deg);
   }
 }
 
 .modal-enter {
+<<<<<<< HEAD
   animation: modalFadeIn 0.15s ease-out;
+=======
+  animation: modalFadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+>>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 }
 
-/* Smooth toast animations */
-@keyframes toastSlideIn {
+/* Modal backdrop animation */
+.modal-backdrop {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes modalBackdropFade {
   from {
-    transform: translateX(100%);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Enhanced toast animations with bounce */
+@keyframes toastSlideIn {
+  0% {
+    transform: translateX(120%) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-5%) scale(1.02);
+  }
+  100% {
+    transform: translateX(0) scale(1);
     opacity: 1;
   }
 }
 
 .toast-enter {
+<<<<<<< HEAD
   animation: toastSlideIn 0.15s ease-out;
+=======
+  animation: toastSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+>>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 }
 
-/* Smooth message animations */
-@keyframes messageSlideIn {
+@keyframes toastSlideOut {
   from {
-    opacity: 0;
-    transform: translateY(10px);
+    transform: translateX(0) scale(1);
+    opacity: 1;
   }
   to {
+    transform: translateX(120%) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.toast-exit {
+  animation: toastSlideOut 0.3s ease-in forwards;
+}
+
+/* Enhanced message animations with spring */
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(15px) scale(0.95);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.01);
+  }
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .message-enter {
+<<<<<<< HEAD
   animation: messageSlideIn 0.1s ease-out;
+=======
+  animation: messageSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+>>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 }
 
-/* Smooth loading spinner */
+/* Message group animation */
+.message-group {
+  animation: messageSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.message-group:nth-child(odd) {
+  animation-delay: 0.05s;
+}
+
+.message-group:nth-child(even) {
+  animation-delay: 0.1s;
+}
+
+/* Enhanced loading spinner with pulse */
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes spinPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
   }
 }
 
@@ -477,13 +1801,143 @@ input:focus, textarea:focus, select:focus {
   animation: spin 1s linear infinite;
 }
 
-/* Smooth skeleton loading */
+.spinner-pulse {
+  animation: spin 1s linear infinite, spinPulse 2s ease-in-out infinite;
+}
+
+/* Modern loading dots */
+@keyframes loadingDots {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.loading-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: loadingDots 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Enhanced skeleton loading with pulse */
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
   }
   100% {
     background-position: 1000px 0;
+  }
+}
+
+@keyframes shimmer-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.6), 0 0 60px rgba(124, 58, 237, 0.4);
+  }
+}
+
+/* Typography & Glow Effects - Fluid.so aesthetic */
+.text-glow {
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
+
+.text-glow-strong {
+  text-shadow: 0 0 30px rgba(99, 102, 241, 0.8), 0 0 50px rgba(124, 58, 237, 0.6);
+}
+
+.text-glow-subtle {
+  text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+/* Message hover lift effect - Handled by Framer Motion */
+.message-item {
+  /* Framer Motion handles the hover transform, so we only add a subtle scale effect */
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0); /* Force GPU acceleration */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure group hover works properly - use escaped selector for Tailwind group */
+.group\/message:hover .message-menu-button {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Keep menu visible when menu is open */
+.message-menu-button.opacity-100 {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Message container hover */
+.group\/message {
+  position: relative;
+}
+
+/* Ensure scrollable areas work properly */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent scroll blocking on mobile */
+@media (hover: none) and (pointer: coarse) {
+  .message-menu-button {
+    opacity: 0.6 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+}
+
+/* Send button shimmer effect */
+.send-button-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #6366f1 0%, #7c3aed 100%);
+  background-size: 200% 100%;
+  transition: all 0.3s ease;
+}
+
+.send-button-shimmer:hover {
+  animation: shimmer 2s linear infinite, shimmer-glow 2s ease-in-out infinite;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+}
+
+.send-button-shimmer:active {
+  transform: translateY(0) scale(0.98);
+}
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }
 
@@ -495,7 +1949,8 @@ input:focus, textarea:focus, select:focus {
     #f0f0f0 75%
   );
   background-size: 1000px 100%;
-  animation: shimmer 2s infinite;
+  animation: shimmer 2s infinite, skeletonPulse 2s ease-in-out infinite;
+  border-radius: 4px;
 }
 
 .dark .skeleton {
@@ -506,6 +1961,11 @@ input:focus, textarea:focus, select:focus {
     #374151 75%
   );
   background-size: 1000px 100%;
+}
+
+/* Skeleton fade in */
+.skeleton-enter {
+  animation: fadeIn 0.3s ease-out, shimmer 2s infinite, skeletonPulse 2s ease-in-out infinite;
 }
 
 /* Custom scrollbar */
@@ -565,12 +2025,12 @@ html {
   height: -webkit-fill-available; /* iOS Safari fix */
   width: 100%;
   overscroll-behavior: none;
-  background-color: #ffffff;
+  background-color: #050505; /* Deep black for aurora background */
   transition: background-color 0.1s ease;
 }
 
 .dark html {
-  background-color: #111827;
+  background-color: #050505; /* Keep deep black for aurora in dark mode */
 }
 
 .theme-minimal html {
@@ -583,7 +2043,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -594,13 +2054,13 @@ body {
   width: 100%;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  background-color: #ffffff;
+  background-color: #050505; /* Deep black for aurora background */
   margin: 0;
   padding: 0;
 }
 
 .dark body {
-  background-color: #111827;
+  background-color: #050505; /* Keep deep black for aurora in dark mode */
 }
 
 .theme-minimal body {
@@ -622,20 +2082,30 @@ input, textarea, [contenteditable] {
 
 #root {
   width: 100%;
-  /* Don't hard-lock the app to the viewport.
-     Allow pages (login/admin/etc) to scroll naturally when content exceeds the viewport. */
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available; /* iOS Safari fix */
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* Keep a single scroll container (views handle their own scrolling).
+     This prevents "stuck" scroll / weird viewport jumps in mobile PWA. */
+  height: 100vh;
+  height: 100dvh;
+  height: 100svh; /* Support for iPhone 16 and newer */
+  height: -webkit-fill-available; /* iOS Safari fix */
+  overflow: hidden;
   position: relative;
-  background-color: #ffffff;
+  background-color: #050505; /* Deep black for aurora background */
   transition: background-color 0.1s ease;
 }
 
+/* iPhone 16 and mobile devices - allow scrolling */
+@media (max-width: 768px) {
+  #root {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}
+
 .dark #root {
-  background-color: #111827;
+  background-color: #050505; /* Keep deep black for aurora in dark mode */
 }
 
 .theme-minimal #root {
@@ -870,15 +2340,18 @@ input, textarea, [contenteditable] {
     html, body {
       height: 100%;
       height: 100dvh;
+      height: 100svh; /* iPhone 16 support */
       overflow: hidden;
     }
     
     #root {
       height: 100%;
       height: 100dvh;
-      /* Keep body locked (prevents bounce) but allow the app to scroll */
+      height: 100svh; /* iPhone 16 support */
+      overflow-y: auto; /* Allow scrolling on mobile PWA */
       overflow-x: hidden;
-      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
     
     /* Ensure headers are visible in PWA */

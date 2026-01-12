@@ -29,10 +29,15 @@ const ThemeProvider = ({ children }) => {
 
   const [themeStyle, setThemeStyle] = useState(() => {
     // Check localStorage for theme style preference
-    if (typeof window === 'undefined') return 'fun';
+    if (typeof window === 'undefined') return 'fluid';
     
     const saved = localStorage.getItem('themeStyle');
-    return saved || 'fun';
+    // Migrate old 'lucid' to 'fluid' if exists
+    if (saved === 'lucid') {
+      localStorage.setItem('themeStyle', 'fluid');
+      return 'fluid';
+    }
+    return saved || 'fluid';
   });
 
   useEffect(() => {
@@ -49,9 +54,9 @@ const ThemeProvider = ({ children }) => {
     }
     
     // Apply theme style class
-    root.classList.remove('theme-fun', 'theme-minimal');
+    root.classList.remove('theme-fun', 'theme-minimal', 'theme-fluid');
     root.classList.add(`theme-${themeStyle}`);
-    body.classList.remove('theme-fun', 'theme-minimal');
+    body.classList.remove('theme-fun', 'theme-minimal', 'theme-fluid');
     body.classList.add(`theme-${themeStyle}`);
     
     // Save to localStorage

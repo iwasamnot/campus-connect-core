@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, Image, File, Loader } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 // Use window.__firebaseStorage to avoid import/export issues in production builds
@@ -115,42 +116,65 @@ const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['
         className="hidden"
         disabled={uploading}
       />
-      <label
+      <motion.label
         htmlFor="file-upload"
-        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
+        whileHover={!uploading ? { scale: 1.05, y: -2 } : {}}
+        whileTap={!uploading ? { scale: 0.95 } : {}}
+        className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all duration-300 border border-white/10 ${
           uploading
-            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-white/10 text-white/40 cursor-not-allowed border-white/5'
+            : 'glass-panel text-white/90 hover:text-white hover:bg-white/10'
         }`}
       >
         {uploading ? (
-          <Loader className="animate-spin" size={18} />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader size={18} />
+          </motion.div>
         ) : (
           <Upload size={18} />
         )}
         <span className="text-sm font-medium">
           {uploading ? 'Uploading...' : 'Upload File'}
         </span>
-      </label>
+      </motion.label>
       
-      {preview && (
-        <div className="absolute bottom-full left-0 mb-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-          <img src={preview} alt="Preview" className="max-w-xs max-h-48 rounded" />
-          <button
-            onClick={() => setPreview(null)}
-            aria-label="Remove preview"
-            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+      <AnimatePresence>
+        {preview && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="absolute bottom-full left-0 mb-2 p-2 glass-panel border border-white/10 rounded-xl shadow-xl overflow-hidden"
           >
-            <X size={14} />
-          </button>
-        </div>
-      )}
+            <img src={preview} alt="Preview" className="max-w-xs max-h-48 rounded-lg" />
+            <motion.button
+              onClick={() => setPreview(null)}
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              aria-label="Remove preview"
+              className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-full transition-colors shadow-lg"
+            >
+              <X size={14} />
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {error && (
-        <div className="absolute top-full left-0 mt-1 text-xs text-red-600 dark:text-red-400">
-          {error}
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="absolute top-full left-0 mt-1 text-xs text-red-400 bg-red-500/20 border border-red-500/50 rounded-lg px-2 py-1 backdrop-blur-sm"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

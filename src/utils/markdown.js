@@ -10,9 +10,9 @@ export const parseMarkdown = (text) => {
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/_(.+?)_/g, '<em>$1</em>')
     // Code `code`
-    .replace(/`(.+?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono">$1</code>')
+    .replace(/`(.+?)`/g, '<code class="glass-panel bg-white/10 border border-white/10 px-1 py-0.5 rounded text-sm font-mono text-white/90 backdrop-blur-sm">$1</code>')
     // Links [text](url)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-indigo-400 hover:underline">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline hover:text-indigo-300 transition-colors">$1</a>')
     // Line breaks
     .replace(/\n/g, '<br />');
 

@@ -1,5 +1,20 @@
+// CRITICAL: Import React first and ensure it's available globally
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+
+// Ensure React is available globally BEFORE importing contexts
+// This prevents "Cannot read properties of undefined (reading 'createContext')" errors
+if (typeof window !== 'undefined') {
+  window.React = React;
+  // Also ensure createContext is available
+  window.ReactCreateContext = React.createContext;
+}
+
+// CRITICAL: Verify React is available before importing contexts
+if (!React || !React.createContext) {
+  throw new Error('React is not available. This should never happen.');
+}
+
 import App from './App.jsx'
 import './index.css'
 // CRITICAL: Import ALL context providers in main.jsx to ensure they're in main bundle
@@ -10,6 +25,7 @@ import { ToastProvider, useToast } from './context/ToastContext.jsx'
 import { PresenceProvider } from './context/PresenceContext.jsx'
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext.jsx'
 import { CallProvider, useCall } from './context/CallContext.jsx'
+import ThemeWrapper from './components/ThemeWrapper.jsx'
 
 // Keep references to prevent tree-shaking (contexts are used by lazy components)
 // Note: We can't expose hooks via window (they're React hooks), but importing them here
@@ -43,6 +59,8 @@ import { checkToxicity } from './utils/toxicityChecker.js'
 import { debounce } from './utils/debounce.js'
 import { keyboard } from './utils/accessibility.js'
 import { calculateVisibleRange, getVisibleItems, calculateTotalHeight, calculateOffset } from './utils/virtualScroll.js'
+import { measureWebVitals, observePerformance } from './utils/webVitals.js'
+import { getCurrentLanguage, setLanguage } from './utils/i18n.js'
 
 // Register Logo in the registry so lazy-loaded components can access it
 // Note: Logo is also registered in App.jsx, but we register it here too for safety
@@ -108,12 +126,51 @@ if (false) {
   console.log(_logoRef, _logoNamedRef);
 }
 
+// Initialize internationalization
+if (typeof window !== 'undefined') {
+  const currentLang = getCurrentLanguage();
+  setLanguage(currentLang);
+  
+  // Listen for language changes
+  window.addEventListener('languagechange', () => {
+    // Re-initialize on language change
+    const newLang = getCurrentLanguage();
+    setLanguage(newLang);
+  });
+}
+
+// Measure Core Web Vitals for performance monitoring
+if (typeof window !== 'undefined') {
+  // Measure Web Vitals after page load
+  window.addEventListener('load', () => {
+    measureWebVitals();
+    observePerformance();
+  });
+}
+
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // VitePWA plugin will auto-register, but we can add custom handling here
-    navigator.serviceWorker.ready.then(() => {
+    navigator.serviceWorker.ready.then((registration) => {
       console.log('Service Worker ready');
+      
+      // Register background sync for offline actions
+      try {
+        if (registration && 'sync' in registration) {
+          // Background sync is available
+          console.log('Background Sync API available');
+        }
+        
+        // Register periodic background sync for cache updates
+        if (registration && 'periodicSync' in registration) {
+          // Periodic sync is available
+          console.log('Periodic Background Sync API available');
+        }
+      } catch (error) {
+        // Background sync APIs might not be supported
+        console.log('Background Sync APIs not available:', error.message);
+      }
     }).catch(err => {
       console.error('Service Worker registration failed:', err);
     });
@@ -147,21 +204,40 @@ window.addEventListener('unhandledrejection', function(e) {
   }
 });
 
+// CRITICAL: Ensure React is fully loaded before rendering
+// This prevents "Cannot read properties of undefined (reading 'createContext')" errors
+if (!React || !React.createContext || !ReactDOM || !ReactDOM.createRoot) {
+  console.error('React is not fully loaded. Waiting for React to be available...');
+  // Wait a bit and retry
+  setTimeout(() => {
+    if (!React || !React.createContext || !ReactDOM || !ReactDOM.createRoot) {
+      throw new Error('React failed to load. Please refresh the page.');
+    }
+  }, 100);
+}
+
 try {
+  // Double-check React is available
+  if (!React || !React.createContext) {
+    throw new Error('React.createContext is not available. React may not be fully loaded.');
+  }
+  
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <ThemeProvider>
         <ErrorBoundary>
           <PreferencesProvider>
-            <AuthProvider>
-              <PresenceProvider>
-                <ToastProvider>
-                  <CallProvider>
-                    <App />
-                  </CallProvider>
-                </ToastProvider>
-              </PresenceProvider>
-            </AuthProvider>
+            <ThemeWrapper>
+              <AuthProvider>
+                <PresenceProvider>
+                  <ToastProvider>
+                    <CallProvider>
+                      <App />
+                    </CallProvider>
+                  </ToastProvider>
+                </PresenceProvider>
+              </AuthProvider>
+            </ThemeWrapper>
           </PreferencesProvider>
         </ErrorBoundary>
       </ThemeProvider>

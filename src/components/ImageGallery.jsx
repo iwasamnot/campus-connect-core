@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, memo } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 // Use window.__firebaseDb to avoid import/export issues in production builds
@@ -158,29 +159,37 @@ const ImageGallery = memo(() => {
         }}
       >
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-glow flex items-center gap-2">
+            <div className="p-2 glass-panel border border-white/10 rounded-xl">
+              <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+            </div>
             <span>Image Gallery</span>
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-xs sm:text-sm text-white/60 mt-1">
             Browse all shared images
           </p>
         </div>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          className="px-4 py-2 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
         >
-          <option value="all">All Images</option>
-          <option value="my">My Images</option>
-          <option value="recent">Recent</option>
+          <option value="all" className="bg-[#1a1a1a] text-white">All Images</option>
+          <option value="my" className="bg-[#1a1a1a] text-white">My Images</option>
+          <option value="recent" className="bg-[#1a1a1a] text-white">Recent</option>
         </select>
       </div>
 
       {filteredImages.length === 0 ? (
         <div className="text-center py-12">
-          <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="inline-block p-4 glass-panel border border-white/10 rounded-2xl mb-4"
+          >
+            <ImageIcon className="w-16 h-16 text-white/40 mx-auto" />
+          </motion.div>
+          <p className="text-white/60 font-medium">
             No images found
           </p>
         </div>
@@ -195,9 +204,12 @@ const ImageGallery = memo(() => {
             }
 
             return (
-              <div
+              <motion.div
                 key={img.id}
-                className="relative group cursor-pointer bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden aspect-square"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05, y: -4 }}
+                className="relative group cursor-pointer glass-panel border border-white/10 rounded-xl overflow-hidden aspect-square"
                 onClick={() => setSelectedImage(img)}
               >
                 <img
@@ -215,7 +227,7 @@ const ImageGallery = memo(() => {
                   <p className="text-white text-xs truncate">{img.userName || 'Unknown'}</p>
                   <p className="text-white text-xs">{formatDate(img.timestamp)}</p>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

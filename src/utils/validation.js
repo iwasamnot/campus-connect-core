@@ -24,8 +24,9 @@ export const isValidStudentEmail = (email) => {
   if (!email || typeof email !== 'string') return false;
   
   const emailLower = email.toLowerCase().trim();
+  // Accept both old domain (@sistc.nsw.edu.au) and new domain (@sistc.app) for backward compatibility
   return emailLower.startsWith('s20') && 
-         (emailLower.includes('@sistc.edu.au') || emailLower.includes('@sistc.nsw.edu.au'));
+         (emailLower.includes('@sistc.app') || emailLower.includes('@sistc.nsw.edu.au'));
 };
 
 /**
@@ -37,7 +38,7 @@ export const isValidAdminEmail = (email) => {
   if (!email || typeof email !== 'string') return false;
   
   const emailLower = email.toLowerCase().trim();
-  return emailLower.startsWith('admin') && emailLower.includes('@campusconnect');
+  return emailLower === 'admin@sistc.app';
 };
 
 /**

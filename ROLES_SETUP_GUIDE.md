@@ -95,10 +95,10 @@ Your application has two user roles:
 ### Student Role
 
 - **Default role** for all registered users
-- **Email format**: Must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
+- **Email format**: Must start with "s20" and contain "@sistc.app"
 - **Examples**: 
-  - `s2012345@sistc.edu.au`
-  - `s20230091@sistc.nsw.edu.au`
+  - `s2012345@sistc.app`
+  - `s20230091@sistc.app`
 - **Permissions**:
   - Can send messages
   - Can create groups
@@ -110,10 +110,9 @@ Your application has two user roles:
 ### Admin Role
 
 - **Special role** for administrators
-- **Email format**: Must start with "admin" and contain "@campusconnect"
+- **Email format**: Must start with "admin" and contain "@sistc.app"
 - **Examples**: 
-  - `admin1@campusconnect.com`
-  - `admin2@campusconnect.com`
+  - `admin@sistc.app`
 - **Permissions**:
   - All student permissions PLUS:
   - Access to Admin Dashboard
@@ -131,7 +130,7 @@ See `ADMIN_ACCOUNT_SETUP.md` for detailed instructions. Quick steps:
 
 1. Go to [Firebase Console](https://console.firebase.google.com/project/campus-connect-sistc/authentication/users)
 2. Click **Add user**
-3. Enter email (must start with "admin" and contain "@campusconnect")
+3. Enter email (must start with "admin" and contain "@sistc.app", e.g., admin@sistc.app)
 4. Set a password
 5. After creation, go to Firestore Database
 6. Navigate to `users` collection
@@ -176,7 +175,7 @@ See `ADMIN_ACCOUNT_SETUP.md` for detailed instructions. Quick steps:
 ### Issue: User Can't Access Admin Features
 
 **Solution**:
-1. Verify the user's email format (must start with "admin" and contain "@campusconnect")
+1. Verify the user's email format (must start with "admin" and contain "@sistc.app")
 2. Check Firestore `users` collection - ensure `role: "admin"`
 3. User may need to log out and log back in
 4. Clear browser cache
@@ -184,7 +183,7 @@ See `ADMIN_ACCOUNT_SETUP.md` for detailed instructions. Quick steps:
 ### Issue: Student Can't Verify Email
 
 **Solution**:
-1. Check email format (must be @sistc.edu.au or @sistc.nsw.edu.au)
+1. Check email format (must be @sistc.app)
 2. Check spam folder
 3. Admin can manually verify in Users Management
 4. Or set `emailVerified: true` in Firestore

@@ -85,7 +85,7 @@ const MentionAutocomplete = ({ text, cursorPosition, users, onSelect }) => {
     <>
       <div
         ref={listRef}
-        className="absolute bottom-full left-0 mb-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50 animate-scale-in"
+        className="absolute bottom-full left-0 mb-2 w-64 glass-panel border border-white/10 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 backdrop-blur-xl animate-scale-in"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
@@ -93,10 +93,10 @@ const MentionAutocomplete = ({ text, cursorPosition, users, onSelect }) => {
           <button
             key={user.id}
             onClick={() => handleSelect(user)}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-all duration-300 ${
               index === selectedIndex
-                ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-100'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
+                ? 'bg-indigo-600/30 border-l-2 border-indigo-400 text-white'
+                : 'hover:bg-white/10 text-white/80 hover:text-white'
             }`}
           >
             {user.profilePicture ? (
@@ -112,7 +112,7 @@ const MentionAutocomplete = ({ text, cursorPosition, users, onSelect }) => {
             )}
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{user.name || 'Unknown User'}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <p className="text-xs text-white/50 truncate">
                 {user.email || user.studentEmail || ''}
               </p>
             </div>

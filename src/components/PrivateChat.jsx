@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useCall } from '../context/CallContext';
@@ -9,6 +10,7 @@ const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole
 const isUserOnline = typeof window !== 'undefined' && window.__isUserOnline 
   ? window.__isUserOnline 
   : (userData) => userData?.isOnline === true;
+import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
 import { 
   collection, 
   addDoc, 
@@ -941,128 +943,148 @@ const PrivateChat = () => {
     return name.includes(query) || email.includes(query);
   });
 
-  // If no chat selected, show list of available users
+  // If no chat selected, show list of available users - Fluid.so aesthetic
   if (!selectedChatId) {
     return (
-      <div className="h-screen h-[100dvh] flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div 
-          className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-4 md:py-6"
-          style={{
-            paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
-            paddingBottom: `1rem`,
-            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
-            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
-            marginTop: '0',
-            position: 'relative',
-            zIndex: 10
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Direct Messages
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Start a private conversation with any user
-              </p>
-            </div>
-            <button
-              onClick={() => setShowAddUser(!showAddUser)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95"
-            >
-              <Plus size={18} />
-              <span className="hidden sm:inline">Add by Email</span>
-            </button>
-          </div>
-
-          {/* Add User by Email Form */}
-          {showAddUser && (
-            <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-              <div className="flex items-center gap-2 mb-2">
-                <Mail size={18} className="text-indigo-600 dark:text-indigo-400" />
-                <label htmlFor="private-chat-email-search" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Search user by email
-                </label>
+      <div className="h-screen h-[100dvh] flex flex-col bg-transparent relative overflow-hidden">
+        <FadeIn delay={0.1}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-panel border-b border-white/10 px-4 md:px-6 py-4 md:py-6 relative z-10 rounded-t-[2rem] flex-shrink-0"
+            style={{
+              paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
+              paddingBottom: `1rem`,
+              paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+              paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-glow">
+                  Direct Messages
+                </h1>
+                <p className="text-xs sm:text-sm text-white/60 mt-1">
+                  Start a private conversation with any user
+                </p>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  id="private-chat-email-search"
-                  name="email-search"
-                  autoComplete="email"
-                  value={emailToAdd}
-                  onChange={(e) => setEmailToAdd(e.target.value)}
-                  placeholder="Enter email address..."
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      searchUserByEmail(emailToAdd);
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => searchUserByEmail(emailToAdd)}
-                  disabled={searchingUser || !emailToAdd.trim()}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {searchingUser ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Search size={18} />
-                  )}
-                  <span className="hidden sm:inline">Search</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddUser(false);
-                    setEmailToAdd('');
-                  }}
-                  className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+              <motion.button
+                onClick={() => setShowAddUser(!showAddUser)}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="send-button-shimmer flex items-center gap-2 px-4 py-2 text-white rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">Add by Email</span>
+              </motion.button>
             </div>
-          )}
 
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <label htmlFor="private-chat-user-search" className="sr-only">Search users by name or email</label>
-            <input
-              type="text"
-              id="private-chat-user-search"
-              name="user-search"
-              autoComplete="off"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search users by name or email..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-        </div>
+            {/* Add User by Email Form - Fluid.so aesthetic */}
+            <AnimatePresence>
+              {showAddUser && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail size={18} className="text-indigo-300" />
+                    <label htmlFor="private-chat-email-search" className="text-sm font-medium text-white/90">
+                      Search user by email
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      id="private-chat-email-search"
+                      name="email-search"
+                      autoComplete="email"
+                      value={emailToAdd}
+                      onChange={(e) => setEmailToAdd(e.target.value)}
+                      placeholder="Enter email address..."
+                      className="flex-1 px-3 py-2 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          searchUserByEmail(emailToAdd);
+                        }
+                      }}
+                    />
+                    <motion.button
+                      onClick={() => searchUserByEmail(emailToAdd)}
+                      disabled={searchingUser || !emailToAdd.trim()}
+                      whileHover={!searchingUser && emailToAdd.trim() ? { scale: 1.05, y: -2 } : {}}
+                      whileTap={!searchingUser && emailToAdd.trim() ? { scale: 0.95 } : {}}
+                      className="send-button-shimmer px-4 py-2 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium disabled:transform-none shadow-lg"
+                    >
+                      {searchingUser ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="rounded-full h-4 w-4 border-b-2 border-white"
+                        />
+                      ) : (
+                        <Search size={18} />
+                      )}
+                      <span className="hidden sm:inline">Search</span>
+                    </motion.button>
+                    <motion.button
+                      onClick={() => {
+                        setShowAddUser(false);
+                        setEmailToAdd('');
+                      }}
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors border border-white/10"
+                    >
+                      <X size={18} />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6">
+            {/* Search Bar - Fluid.so aesthetic */}
+            <div className="relative mt-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={18} />
+              <label htmlFor="private-chat-user-search" className="sr-only">Search users by name or email</label>
+              <input
+                type="text"
+                id="private-chat-user-search"
+                name="user-search"
+                autoComplete="off"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search users by name or email..."
+                className="w-full pl-10 pr-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+              />
+            </div>
+          </motion.div>
+        </FadeIn>
+
+        <StaggerContainer className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6" staggerDelay={0.05} initialDelay={0.2}>
           {filteredUsers.length === 0 ? (
             <div className="text-center py-12">
-              <MessageCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
+              <MessageCircle className="mx-auto h-12 w-12 text-white/40 mb-4" />
+              <p className="text-white/60">
                 {searchQuery.trim() 
                   ? 'No users found matching your search'
                   : 'No users available'}
               </p>
               {!searchQuery.trim() && (
-                <button
+                <motion.button
                   onClick={() => setShowAddUser(true)}
-                  className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="mt-4 px-4 py-2 send-button-shimmer text-white rounded-xl transition-all font-medium shadow-lg hover:shadow-xl"
                 >
                   Add User by Email
-                </button>
+                </motion.button>
               )}
             </div>
           ) : (
-            <div className="space-y-2">
-              {filteredUsers.map((otherUser) => {
+            <div className="space-y-2" style={{ minHeight: filteredUsers.length === 0 ? '200px' : '300px' }}>
+              {filteredUsers.map((otherUser, index) => {
                 const userProfile = userProfiles[otherUser.id] || otherUser;
                 const profilePicture = userProfile.profilePicture || otherUser.profilePicture;
                 const displayName = userNames[otherUser.id] || 
@@ -1077,359 +1099,395 @@ const PrivateChat = () => {
                                    `User ${otherUser.id.substring(0, 8)}`;
                 
                 return (
-                  <div
-                    key={otherUser.id}
-                    className="w-full flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedUserId(otherUser.id);
-                      }}
-                      className="relative flex-shrink-0"
+                  <StaggerItem key={otherUser.id}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      whileHover={{ y: -2, scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      className="w-full flex items-center gap-4 p-4 glass-panel rounded-xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
+                      onClick={() => selectChat(otherUser)}
                     >
-                      {profilePicture ? (
-                        <img
-                          src={profilePicture}
-                          alt={displayName}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div 
-                        className={`w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedUserId(otherUser.id);
+                        }}
+                        className="relative flex-shrink-0"
                       >
-                        {displayName[0].toUpperCase()}
-                      </div>
-                      {isUserOnline(onlineUsers[otherUser.id]) && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => selectChat(otherUser)}
-                      className="flex-1 min-w-0 text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                          {displayName}
-                        </h3>
-                        {isAdminRole(otherUser.role) && (
-                          <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded">
-                            Admin
-                          </span>
+                        {profilePicture ? (
+                          <img
+                            src={profilePicture}
+                            alt={displayName}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-indigo-500/50"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div 
+                          className={`w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold border-2 border-indigo-500/50 ${profilePicture ? 'hidden' : ''}`}
+                        >
+                          {displayName[0].toUpperCase()}
+                        </div>
+                        {isUserOnline(onlineUsers[otherUser.id]) && (
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
                         )}
-                      </div>
-                      {chatSummaries[otherUser.id]?.lastMessage ? (
-                        <>
-                          <p className="text-sm text-gray-900 dark:text-white truncate font-medium">
-                            {chatSummaries[otherUser.id].lastMessage}
-                          </p>
-                          {chatSummaries[otherUser.id].lastMessageTime && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                              {(() => {
-                                const time = chatSummaries[otherUser.id].lastMessageTime;
-                                const date = time.toDate ? time.toDate() : new Date(time);
-                                const now = new Date();
-                                const diff = now - date;
-                                const minutes = Math.floor(diff / 60000);
-                                const hours = Math.floor(diff / 3600000);
-                                const days = Math.floor(diff / 86400000);
-                                
-                                if (minutes < 1) return 'Just now';
-                                if (minutes < 60) return `${minutes}m ago`;
-                                if (hours < 24) return `${hours}h ago`;
-                                if (days < 7) return `${days}d ago`;
-                                return date.toLocaleDateString();
-                              })()}
-                            </p>
+                      </button>
+                      <button
+                        onClick={() => selectChat(otherUser)}
+                        className="flex-1 min-w-0 text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-white truncate">
+                            {displayName}
+                          </h3>
+                          {isAdminRole(otherUser.role) && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-indigo-600/30 border border-indigo-500/50 text-indigo-200 rounded-lg">
+                              Admin
+                            </span>
                           )}
-                        </>
-                      ) : (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                          {otherUser.email || otherUser.studentEmail || 'No email'}
-                        </p>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => selectChat(otherUser)}
-                      className="flex-shrink-0"
-                    >
-                      <User
-                        size={20}
-                        className="text-gray-400"
-                      />
-                    </button>
-                  </div>
+                        </div>
+                        {chatSummaries[otherUser.id]?.lastMessage ? (
+                          <>
+                            <p className="text-sm text-white/90 truncate font-medium">
+                              {chatSummaries[otherUser.id].lastMessage}
+                            </p>
+                            {chatSummaries[otherUser.id].lastMessageTime && (
+                              <p className="text-xs text-white/50 mt-0.5">
+                                {(() => {
+                                  const time = chatSummaries[otherUser.id].lastMessageTime;
+                                  const date = time.toDate ? time.toDate() : new Date(time);
+                                  const now = new Date();
+                                  const diff = now - date;
+                                  const minutes = Math.floor(diff / 60000);
+                                  const hours = Math.floor(diff / 3600000);
+                                  const days = Math.floor(diff / 86400000);
+                                  
+                                  if (minutes < 1) return 'Just now';
+                                  if (minutes < 60) return `${minutes}m ago`;
+                                  if (hours < 24) return `${hours}h ago`;
+                                  if (days < 7) return `${days}d ago`;
+                                  return date.toLocaleDateString();
+                                })()}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-sm text-white/60 truncate">
+                            {otherUser.email || otherUser.studentEmail || 'No email'}
+                          </p>
+                        )}
+                      </button>
+                      <motion.button
+                        onClick={() => selectChat(otherUser)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="flex-shrink-0 text-white/70 hover:text-white transition-colors"
+                      >
+                        <User size={20} />
+                      </motion.button>
+                    </motion.div>
+                  </StaggerItem>
                 );
               })}
             </div>
           )}
-        </div>
+        </StaggerContainer>
       </div>
     );
   }
 
-  // Show chat interface
+  // Show chat interface - Fluid.so aesthetic
   return (
-    <div className="h-screen h-[100dvh] flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
-        style={{
-          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
-          paddingBottom: `0.75rem`,
-          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
-          marginTop: '0',
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        <div className="flex items-center gap-2 md:gap-4">
-          <button
-            onClick={() => {
-              setSelectedChatId(null);
-              setSelectedUser(null);
-              setMessages([]);
-            }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
-            aria-label="Back"
-          >
-            <ArrowLeft size={18} className="md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-          <button
-            onClick={() => setSelectedUserId(selectedUser.id)}
-            className="relative flex-shrink-0"
-          >
-            {(() => {
-              const userProfile = userProfiles[selectedUser.id] || selectedUser;
-              const profilePicture = userProfile.profilePicture || selectedUser.profilePicture;
-              const displayName = userNames[selectedUser.id] || 
-                                 userProfile.name || 
-                                 selectedUser.name || 
-                                 userProfile.studentEmail?.split('@')[0] || 
-                                 selectedUser.studentEmail?.split('@')[0] || 
-                                 userProfile.email?.split('@')[0] || 
-                                 selectedUser.email?.split('@')[0] || 
-                                 userProfile.personalEmail?.split('@')[0] ||
-                                 selectedUser.personalEmail?.split('@')[0] ||
-                                 `User ${selectedUser.id.substring(0, 8)}`;
-              
-              return (
-                <>
-                  {profilePicture ? (
-                    <img
-                      src={profilePicture}
-                      alt={displayName}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm md:text-base font-semibold border-2 border-indigo-200 dark:border-indigo-700 ${profilePicture ? 'hidden' : ''}`}
-                  >
-                    {displayName[0].toUpperCase()}
-                  </div>
-                  {isUserOnline(onlineUsers[selectedUser.id]) && (
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-                  )}
-                </>
-              );
-            })()}
-          </button>
-          <div className="flex-1 min-w-0">
-            <button
+    <div className="h-full min-h-0 flex flex-col bg-transparent relative overflow-hidden">
+      {/* Header - Fluid.so aesthetic */}
+      <FadeIn delay={0.1}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel border-b border-white/10 px-4 md:px-6 py-3 md:py-4 relative z-10 rounded-t-[2rem] flex-shrink-0"
+          style={{
+            paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.75rem)`,
+            paddingBottom: `0.75rem`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          }}
+        >
+          <div className="flex items-center gap-2 md:gap-4">
+            <motion.button
+              onClick={() => {
+                setSelectedChatId(null);
+                setSelectedUser(null);
+                setMessages([]);
+              }}
+              whileHover={{ scale: 1.1, x: -2 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 hover:bg-white/10 rounded-xl transition-colors flex-shrink-0"
+              aria-label="Back"
+            >
+              <ArrowLeft size={18} className="md:w-5 md:h-5 text-white/70 hover:text-white" />
+            </motion.button>
+            <motion.button
               onClick={() => setSelectedUserId(selectedUser.id)}
-              className="text-left w-full"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative flex-shrink-0"
             >
-              <h2 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white truncate">
-                {(() => {
-                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
-                  return userNames[selectedUser.id] || 
-                         userProfile.name || 
-                         selectedUser.name || 
-                         userProfile.studentEmail?.split('@')[0] || 
-                         selectedUser.studentEmail?.split('@')[0] || 
-                         userProfile.email?.split('@')[0] || 
-                         selectedUser.email?.split('@')[0] || 
-                         userProfile.personalEmail?.split('@')[0] ||
-                         selectedUser.personalEmail?.split('@')[0] ||
-                         `User ${selectedUser.id.substring(0, 8)}`;
-                })()}
-              </h2>
-              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
-                {isUserOnline(onlineUsers[selectedUser.id]) ? 'Online' : 
-                 onlineUsers[selectedUser.id]?.lastSeen ? 
-                 `Last seen ${formatTime(onlineUsers[selectedUser.id].lastSeen)}` : 
-                 'Offline'}
-              </p>
-            </button>
-          </div>
-          {/* Call Buttons */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => {
-                if (!isCallingAvailable) {
-                  showError('Calling is temporarily unavailable. Please try again later.');
-                  return;
-                }
+              {(() => {
                 const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                const profilePicture = userProfile.profilePicture || selectedUser.profilePicture;
                 const displayName = userNames[selectedUser.id] || 
-                                 selectedUser.name || 
-                                 userProfile.studentEmail?.split('@')[0] || 
-                                 selectedUser.email?.split('@')[0] ||
-                                 `User ${selectedUser.id.substring(0, 8)}`;
-                startCall({ 
-                  id: selectedUser.id, 
-                  name: displayName, 
-                  email: selectedUser.email || selectedUser.studentEmail 
-                }, 'voice');
-              }}
-              className={`p-2 rounded-lg transition-colors ${
-                isCallingAvailable 
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700' 
-                  : 'opacity-50 cursor-not-allowed'
-              }`}
-              title={isCallingAvailable ? "Voice call" : "Calling unavailable"}
-              aria-label={isCallingAvailable ? "Voice call" : "Calling unavailable"}
-              disabled={!isCallingAvailable}
-            >
-              <Phone size={18} className={`${isCallingAvailable ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`} />
-            </button>
-            <button
-              onClick={() => {
-                if (!isCallingAvailable) {
-                  showError('Calling is temporarily unavailable. Please try again later.');
-                  return;
-                }
-                const userProfile = userProfiles[selectedUser.id] || selectedUser;
-                const displayName = userNames[selectedUser.id] || 
-                                 selectedUser.name || 
-                                 userProfile.studentEmail?.split('@')[0] || 
-                                 selectedUser.email?.split('@')[0] ||
-                                 `User ${selectedUser.id.substring(0, 8)}`;
-                startCall({ 
-                  id: selectedUser.id, 
-                  name: displayName, 
-                  email: selectedUser.email || selectedUser.studentEmail 
-                }, 'video');
-              }}
-              className={`p-2 rounded-lg transition-colors ${
-                isCallingAvailable 
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700' 
-                  : 'opacity-50 cursor-not-allowed'
-              }`}
-              title={isCallingAvailable ? "Video call" : "Calling unavailable - Check configuration"}
-              aria-label={isCallingAvailable ? "Video call" : "Calling unavailable"}
-              disabled={!isCallingAvailable}
-            >
-              <Video size={18} className={`${isCallingAvailable ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`} />
-            </button>
-          </div>
-          {/* Disappearing Messages Settings Button */}
-          <div className="relative disappearing-settings-container flex-shrink-0">
-            <button
-              onClick={() => setShowDisappearingSettings(!showDisappearingSettings)}
-              className={`p-2 rounded-lg transition-colors ${
-                disappearingMessagesEnabled 
-                  ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400' 
-                  : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-              }`}
-              title="Disappearing Messages Settings"
-              aria-label="Disappearing Messages Settings"
-            >
-              <Clock size={18} className="md:w-5 md:h-5" />
-            </button>
-            
-            {/* Disappearing Messages Settings Dropdown */}
-            {showDisappearingSettings && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4 transform transition-all duration-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Disappearing Messages</h3>
-                  <button
-                    onClick={() => setShowDisappearingSettings(false)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
+                                   userProfile.name || 
+                                   selectedUser.name || 
+                                   userProfile.studentEmail?.split('@')[0] || 
+                                   selectedUser.studentEmail?.split('@')[0] || 
+                                   userProfile.email?.split('@')[0] || 
+                                   selectedUser.email?.split('@')[0] || 
+                                   userProfile.personalEmail?.split('@')[0] ||
+                                   selectedUser.personalEmail?.split('@')[0] ||
+                                   `User ${selectedUser.id.substring(0, 8)}`;
                 
-                <div className="space-y-3">
-                  <label htmlFor="disappearing-messages-enabled" className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      id="disappearing-messages-enabled"
-                      name="disappearing-messages-enabled"
-                      checked={disappearingMessagesEnabled}
-                      onChange={(e) => setDisappearingMessagesEnabled(e.target.checked)}
-                      className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Enable disappearing messages</span>
-                  </label>
-                  
-                  {disappearingMessagesEnabled && (
-                    <div className="space-y-2">
-                      <label htmlFor="disappearing-messages-duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
-                      <select
-                        id="disappearing-messages-duration"
-                        name="disappearing-messages-duration"
-                        value={disappearingMessagesDuration}
-                        onChange={(e) => setDisappearingMessagesDuration(Number(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value={24}>24 hours</option>
-                        <option value={168}>7 days</option>
-                      </select>
+                return (
+                  <>
+                    {profilePicture ? (
+                      <img
+                        src={profilePicture}
+                        alt={displayName}
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-indigo-500/50"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm md:text-base font-semibold border-2 border-indigo-500/50 ${profilePicture ? 'hidden' : ''}`}
+                    >
+                      {displayName[0].toUpperCase()}
                     </div>
-                  )}
-                  
-                  <button
-                    onClick={updateDisappearingSettings}
-                    className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                    {isUserOnline(onlineUsers[selectedUser.id]) && (
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
+                    )}
+                  </>
+                );
+              })()}
+            </motion.button>
+            <div className="flex-1 min-w-0">
+              <motion.button
+                onClick={() => setSelectedUserId(selectedUser.id)}
+                whileHover={{ x: 2 }}
+                className="text-left w-full"
+              >
+                <h2 className="text-sm md:text-base font-semibold text-white truncate text-glow">
+                  {(() => {
+                    const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                    return userNames[selectedUser.id] || 
+                           userProfile.name || 
+                           selectedUser.name || 
+                           userProfile.studentEmail?.split('@')[0] || 
+                           selectedUser.studentEmail?.split('@')[0] || 
+                           userProfile.email?.split('@')[0] || 
+                           selectedUser.email?.split('@')[0] || 
+                           userProfile.personalEmail?.split('@')[0] ||
+                           selectedUser.personalEmail?.split('@')[0] ||
+                           `User ${selectedUser.id.substring(0, 8)}`;
+                  })()}
+                </h2>
+                <p className="text-xs md:text-sm text-white/60 truncate">
+                  {isUserOnline(onlineUsers[selectedUser.id]) ? 'Online' : 
+                   onlineUsers[selectedUser.id]?.lastSeen ? 
+                   `Last seen ${formatTime(onlineUsers[selectedUser.id].lastSeen)}` : 
+                   'Offline'}
+                </p>
+              </motion.button>
+            </div>
+            {/* Call Buttons - Fluid.so aesthetic */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <motion.button
+                onClick={() => {
+                  if (!isCallingAvailable) {
+                    showError('Calling is temporarily unavailable. Please try again later.');
+                    return;
+                  }
+                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                  const displayName = userNames[selectedUser.id] || 
+                                   selectedUser.name || 
+                                   userProfile.studentEmail?.split('@')[0] || 
+                                   selectedUser.email?.split('@')[0] ||
+                                   `User ${selectedUser.id.substring(0, 8)}`;
+                  startCall({ 
+                    id: selectedUser.id, 
+                    name: displayName, 
+                    email: selectedUser.email || selectedUser.studentEmail 
+                  }, 'voice');
+                }}
+                whileHover={isCallingAvailable ? { scale: 1.1, y: -2 } : {}}
+                whileTap={isCallingAvailable ? { scale: 0.9 } : {}}
+                className={`p-2 rounded-xl transition-all border border-white/10 ${
+                  isCallingAvailable 
+                    ? 'hover:bg-white/10 text-indigo-300' 
+                    : 'opacity-50 cursor-not-allowed text-white/40'
+                }`}
+                title={isCallingAvailable ? "Voice call" : "Calling unavailable"}
+                aria-label={isCallingAvailable ? "Voice call" : "Calling unavailable"}
+                disabled={!isCallingAvailable}
+              >
+                <Phone size={18} />
+              </motion.button>
+              <motion.button
+                onClick={() => {
+                  if (!isCallingAvailable) {
+                    showError('Calling is temporarily unavailable. Please try again later.');
+                    return;
+                  }
+                  const userProfile = userProfiles[selectedUser.id] || selectedUser;
+                  const displayName = userNames[selectedUser.id] || 
+                                   selectedUser.name || 
+                                   userProfile.studentEmail?.split('@')[0] || 
+                                   selectedUser.email?.split('@')[0] ||
+                                   `User ${selectedUser.id.substring(0, 8)}`;
+                  startCall({ 
+                    id: selectedUser.id, 
+                    name: displayName, 
+                    email: selectedUser.email || selectedUser.studentEmail 
+                  }, 'video');
+                }}
+                whileHover={isCallingAvailable ? { scale: 1.1, y: -2 } : {}}
+                whileTap={isCallingAvailable ? { scale: 0.9 } : {}}
+                className={`p-2 rounded-xl transition-all border border-white/10 ${
+                  isCallingAvailable 
+                    ? 'hover:bg-white/10 text-indigo-300' 
+                    : 'opacity-50 cursor-not-allowed text-white/40'
+                }`}
+                title={isCallingAvailable ? "Video call" : "Calling unavailable - Check configuration"}
+                aria-label={isCallingAvailable ? "Video call" : "Calling unavailable"}
+                disabled={!isCallingAvailable}
+              >
+                <Video size={18} />
+              </motion.button>
+            </div>
+            {/* Disappearing Messages Settings Button - Fluid.so aesthetic */}
+            <div className="relative disappearing-settings-container flex-shrink-0">
+              <motion.button
+                onClick={() => setShowDisappearingSettings(!showDisappearingSettings)}
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.9 }}
+                className={`p-2 rounded-xl transition-all border border-white/10 ${
+                  disappearingMessagesEnabled 
+                    ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50' 
+                    : 'hover:bg-white/10 text-white/70 hover:text-white'
+                }`}
+                title="Disappearing Messages Settings"
+                aria-label="Disappearing Messages Settings"
+              >
+                <Clock size={18} className="md:w-5 md:h-5" />
+              </motion.button>
+              
+              {/* Disappearing Messages Settings Dropdown - Fluid.so aesthetic */}
+              <AnimatePresence>
+                {showDisappearingSettings && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-64 glass-panel border border-white/10 rounded-xl shadow-xl z-50 p-4"
                   >
-                    Save Settings
-                  </button>
-                </div>
-              </div>
-            )}
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-white">Disappearing Messages</h3>
+                      <motion.button
+                        onClick={() => setShowDisappearingSettings(false)}
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="text-white/70 hover:text-white transition-colors"
+                      >
+                        <X size={18} />
+                      </motion.button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label htmlFor="disappearing-messages-enabled" className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          id="disappearing-messages-enabled"
+                          name="disappearing-messages-enabled"
+                          checked={disappearingMessagesEnabled}
+                          onChange={(e) => setDisappearingMessagesEnabled(e.target.checked)}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 bg-white/10 border-white/20"
+                        />
+                        <span className="text-sm text-white/90">Enable disappearing messages</span>
+                      </label>
+                      
+                      {disappearingMessagesEnabled && (
+                        <div className="space-y-2">
+                          <label htmlFor="disappearing-messages-duration" className="text-sm font-medium text-white/90">Duration:</label>
+                          <select
+                            id="disappearing-messages-duration"
+                            name="disappearing-messages-duration"
+                            value={disappearingMessagesDuration}
+                            onChange={(e) => setDisappearingMessagesDuration(Number(e.target.value))}
+                            className="w-full px-3 py-2 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+                          >
+                            <option value={24} className="bg-gray-900 text-white">24 hours</option>
+                            <option value={168} className="bg-gray-900 text-white">7 days</option>
+                          </select>
+                        </div>
+                      )}
+                      
+                      <motion.button
+                        onClick={updateDisappearingSettings}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full px-4 py-2 send-button-shimmer text-white rounded-xl transition-all text-sm font-medium shadow-lg hover:shadow-xl"
+                      >
+                        Save Settings
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </FadeIn>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-        {messages.length === 0 ? (
-          <div className="text-center py-12 animate-fade-in">
-            <img 
-              src="/logo.png" 
-              alt="CampusConnect Logo" 
-              className="w-24 h-24 mx-auto mb-4 opacity-50 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                const fallback = e.target.nextElementSibling;
-                if (fallback) fallback.style.display = 'block';
-              }}
-            />
-            <MessageCircle className="mx-auto h-12 w-12 text-gray-400 mb-4 hidden" />
-            <p className="text-gray-600 dark:text-gray-400">No messages yet. Start the conversation!</p>
-          </div>
+      {/* Messages - Fluid.so aesthetic */}
+        <StaggerContainer className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6 space-y-4" staggerDelay={0.03} initialDelay={0.2}>
+          {messages.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-12"
+            >
+              <img 
+                src="/logo.png" 
+                alt="CampusConnect Logo" 
+                className="w-24 h-24 mx-auto mb-4 opacity-30 object-contain"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const fallback = e.target.nextElementSibling;
+                  if (fallback) fallback.style.display = 'block';
+                }}
+              />
+              <MessageCircle className="mx-auto h-12 w-12 text-white/30 mb-4 hidden" />
+              <p className="text-white/60">No messages yet. Start the conversation!</p>
+            </motion.div>
         ) : (
-          messages.map((message) => {
+          messages.map((message, index) => {
             const isOwn = message.userId === user.uid;
             const messageUser = userProfiles[message.userId] || {};
             const messageUserName = userNames[message.userId] || message.userEmail?.split('@')[0] || 'Unknown';
 
             return (
-              <div
-                key={message.id}
-                className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-              >
+              <StaggerItem key={message.id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                >
                 <div className={`flex gap-2 max-w-[80%] md:max-w-[70%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
                   {!isOwn && (
                     <button
@@ -1451,15 +1509,18 @@ const PrivateChat = () => {
                   )}
                   <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                     {!isOwn && (
-                      <span className="text-xs text-gray-600 dark:text-gray-400 mb-1 px-2">
+                      <span className="text-xs text-white/60 mb-1 px-2">
                         {messageUserName}
                       </span>
                     )}
-                    <div
-                      className={`rounded-lg px-4 py-2 ${
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      whileHover={{ y: -2, scale: 1.02 }}
+                      className={`rounded-xl px-4 py-2 ${
                         isOwn
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                          ? 'bg-indigo-600 text-white shadow-lg'
+                          : 'glass-panel text-white border border-white/10'
                       }`}
                     >
                       {editing === message.id ? (
@@ -1477,25 +1538,29 @@ const PrivateChat = () => {
                             name={`private-edit-message-${message.id}`}
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            className="flex-1 bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
+                            className="flex-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300"
                             autoFocus
                           />
-                          <button
+                          <motion.button
                             type="submit"
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 hover:bg-white/20 rounded-lg text-white transition-colors"
                           >
                             <Check size={16} />
-                          </button>
-                          <button
+                          </motion.button>
+                          <motion.button
                             type="button"
                             onClick={() => {
                               setEditing(null);
                               setEditText('');
                             }}
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                            whileHover={{ scale: 1.1, rotate: 90 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 hover:bg-white/20 rounded-lg text-white transition-colors"
                           >
                             <X size={16} />
-                          </button>
+                          </motion.button>
                         </form>
                       ) : (
                         <>
@@ -1503,29 +1568,32 @@ const PrivateChat = () => {
                           {message.attachment && (
                             <div className="mb-2">
                               {message.attachment.type?.startsWith('image/') ? (
-                                <div
+                                <motion.div
                                   onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
-                                  className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className="block rounded-xl overflow-hidden border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-lg"
                                 >
                                   <img
                                     src={message.attachment.url}
                                     alt={message.attachment.name}
                                     className="max-w-full max-h-64 object-contain"
                                   />
-                                </div>
+                                </motion.div>
                               ) : (
-                                <a
+                                <motion.a
                                   href={message.attachment.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                  whileHover={{ scale: 1.02, y: -2 }}
+                                  className="inline-flex items-center gap-2 p-3 glass-panel border border-white/10 rounded-xl hover:bg-white/10 transition-all"
                                 >
-                                  <File size={20} className="text-indigo-600 dark:text-indigo-400" />
-                                  <span className="text-sm font-medium">{message.attachment.name}</span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  <File size={20} className="text-indigo-300" />
+                                  <span className="text-sm font-medium text-white/90">{message.attachment.name}</span>
+                                  <span className="text-xs text-white/60">
                                     ({(message.attachment.size / 1024).toFixed(1)} KB)
                                   </span>
-                                </a>
+                                </motion.a>
                               )}
                             </div>
                           )}
@@ -1547,159 +1615,205 @@ const PrivateChat = () => {
                             </span>
                             {isOwn && (
                               <>
-                                <button
+                                <motion.button
                                   onClick={() => {
                                     setEditing(message.id);
                                     setEditText(message.text);
                                   }}
-                                  className="opacity-70 hover:opacity-100"
+                                  whileHover={{ scale: 1.2 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  className="opacity-70 hover:opacity-100 text-white/70 hover:text-white transition-colors"
                                   title="Edit message"
                                 >
                                   <Edit2 size={12} />
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                   onClick={() => handleDeleteMessage(message.id)}
                                   disabled={deleting === message.id}
-                                  className="opacity-70 hover:opacity-100 disabled:opacity-50"
+                                  whileHover={deleting !== message.id ? { scale: 1.2 } : {}}
+                                  whileTap={deleting !== message.id ? { scale: 0.9 } : {}}
+                                  className="opacity-70 hover:opacity-100 disabled:opacity-50 text-white/70 hover:text-red-300 transition-colors"
                                   title="Delete message"
                                 >
                                   {deleting === message.id ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                                    <motion.div
+                                      animate={{ rotate: 360 }}
+                                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                      className="rounded-full h-3 w-3 border-b-2 border-current"
+                                    />
                                   ) : (
                                     <Trash2 size={12} />
                                   )}
-                                </button>
+                                </motion.button>
                               </>
                             )}
                           </div>
                         </>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
+              </StaggerItem>
             );
           })
         )}
         <div ref={messagesEndRef} />
-      </div>
+      </StaggerContainer>
 
-      {/* Message Input */}
-      <div 
-        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 md:p-6"
-        style={{
-          paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
-          paddingTop: `1rem`,
-          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
-        }}
-      >
-        {/* File Preview */}
-        {attachedFile && (
-          <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {attachedFile.type?.startsWith('image/') ? (
-                <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
-              ) : (
-                <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {attachedFile.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {(attachedFile.size / 1024).toFixed(1)} KB
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setAttachedFile(null)}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
-            >
-              <X size={16} className="text-gray-600 dark:text-gray-400" />
-            </button>
-          </div>
-        )}
-
-        <form 
-          onSubmit={sendMessage} 
-          className="flex gap-2 relative"
+      {/* Message Input - Fluid.so aesthetic */}
+      <FadeIn delay={0.3}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel border-t border-white/10 p-4 md:p-6 rounded-b-[2rem] flex-shrink-0"
+          style={{
+            paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
+            paddingTop: `1rem`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          }}
         >
-          <div className="flex-1 relative">
-            <label htmlFor="private-chat-message-input" className="sr-only">Type a message</label>
-            <input
-              type="text"
-              id="private-chat-message-input"
-              name="message"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              disabled={sending}
-            />
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1">
-            {/* File Upload */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowFileUpload(!showFileUpload)}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title="Upload file"
-              >
-                <Paperclip size={20} />
-              </button>
-              {showFileUpload && (
-                <div className="absolute bottom-full right-0 mb-2 z-50">
-                  <FileUpload
-                    onFileUpload={(file) => {
-                      setAttachedFile(file);
-                      setShowFileUpload(false);
-                    }}
-                  />
-                </div>
+            {/* File Preview - Fluid.so aesthetic */}
+            <AnimatePresence>
+              {attachedFile && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -10, height: 0 }}
+                  className="mb-2 p-3 glass-panel border border-white/10 rounded-xl flex items-center justify-between overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {attachedFile.type?.startsWith('image/') ? (
+                      <ImageIcon size={20} className="text-indigo-300 flex-shrink-0" />
+                    ) : (
+                      <File size={20} className="text-indigo-300 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {attachedFile.name}
+                      </p>
+                      <p className="text-xs text-white/60">
+                        {(attachedFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <motion.button
+                    onClick={() => setAttachedFile(null)}
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-1.5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 text-white/70 hover:text-white"
+                  >
+                    <X size={16} />
+                  </motion.button>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
 
-            {/* Emoji Picker */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title="Add emoji"
-              >
-                <Smile size={20} />
-              </button>
-              {showEmojiPicker && (
-                <div className="absolute bottom-full right-0 mb-2 z-50">
-                  <EmojiPicker
-                    onEmojiSelect={(emoji) => {
-                      setNewMessage(prev => prev + emoji);
-                      setShowEmojiPicker(false);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={(!newMessage.trim() && !attachedFile) || sending}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            <form 
+              onSubmit={sendMessage} 
+              className="flex gap-2 relative"
             >
-              {sending ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Send size={20} />
-              )}
-              <span className="hidden md:inline">Send</span>
-            </button>
-          </div>
-        </form>
-      </div>
+              <div className="flex-1 relative">
+                <label htmlFor="private-chat-message-input" className="sr-only">Type a message</label>
+                <input
+                  type="text"
+                  id="private-chat-message-input"
+                  name="message"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="w-full px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+                  disabled={sending}
+                />
+              </div>
+              
+              {/* Action Buttons - Fluid.so aesthetic */}
+              <div className="flex items-center gap-2">
+                {/* File Upload */}
+                <div className="relative">
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowFileUpload(!showFileUpload)}
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/10"
+                    title="Upload file"
+                  >
+                    <Paperclip size={20} />
+                  </motion.button>
+                  <AnimatePresence>
+                    {showFileUpload && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute bottom-full right-0 mb-2 z-50"
+                      >
+                        <FileUpload
+                          onFileUpload={(file) => {
+                            setAttachedFile(file);
+                            setShowFileUpload(false);
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Emoji Picker */}
+                <div className="relative">
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all border border-white/10"
+                    title="Add emoji"
+                  >
+                    <Smile size={20} />
+                  </motion.button>
+                  <AnimatePresence>
+                    {showEmojiPicker && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute bottom-full right-0 mb-2 z-50"
+                      >
+                        <EmojiPicker
+                          onEmojiSelect={(emoji) => {
+                            setNewMessage(prev => prev + emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <motion.button
+                  type="submit"
+                  disabled={(!newMessage.trim() && !attachedFile) || sending}
+                  whileHover={(!newMessage.trim() && !attachedFile) || sending ? {} : { scale: 1.05, y: -2 }}
+                  whileTap={(!newMessage.trim() && !attachedFile) || sending ? {} : { scale: 0.95 }}
+                  className="send-button-shimmer px-6 py-2.5 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium shadow-lg hover:shadow-xl disabled:transform-none"
+                >
+                  {sending ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="rounded-full h-4 w-4 border-b-2 border-white"
+                    />
+                  ) : (
+                    <Send size={20} />
+                  )}
+                  <span className="hidden md:inline">Send</span>
+                </motion.button>
+              </div>
+          </form>
+        </motion.div>
+      </FadeIn>
 
       {/* User Profile Popup */}
       {selectedUserId && (

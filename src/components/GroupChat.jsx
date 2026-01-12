@@ -29,7 +29,8 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader, Mail, Paperclip, Smile, File, Image as ImageIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Trash2, Edit2, X, Check, ArrowLeft, Users, UserMinus, LogOut, Loader, Mail, Paperclip, Smile, File, Image as ImageIcon, UserPlus } from 'lucide-react';
 import UserProfilePopup from './UserProfilePopup';
 import FileUpload from './FileUpload';
 import EmojiPicker from './EmojiPicker';
@@ -705,17 +706,17 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
   if (!group) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
-        <p className="text-gray-500 dark:text-gray-400">No group selected</p>
+      <div className="flex items-center justify-center h-full min-h-[400px] bg-transparent">
+        <p className="text-white/60 font-medium">No group selected</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full min-h-0 bg-transparent relative overflow-hidden">
       {/* Chat Header */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        className="glass-panel border-b border-white/10 backdrop-blur-xl px-4 md:px-6 py-3 md:py-4"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
@@ -729,17 +730,17 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+              className="p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 text-white/70 hover:text-white transition-all"
               title="Back to groups"
             >
-              <ArrowLeft size={20} className="text-indigo-600 dark:text-indigo-400" />
+              <ArrowLeft size={20} className="text-indigo-400" />
             </button>
             <div>
-              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">{group.name}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-white text-glow truncate">{group.name}</h2>
+              <p className="text-sm text-white/60">
                 {group.members?.length || 0} member(s)
                 {group.admins?.includes(user?.uid) && (
-                  <span className="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium">
+                  <span className="ml-2 px-2 py-0.5 glass-panel bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium">
                     Admin
                   </span>
                 )}
@@ -750,10 +751,10 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
             {group.admins?.includes(user?.uid) && joinRequests.length > 0 && (
               <button
                 onClick={() => setShowRequestsModal(true)}
-                className="relative p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                className="relative p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 text-white/70 hover:text-white transition-all"
                 title="View join requests"
               >
-                <UserPlus size={20} className="text-indigo-600 dark:text-indigo-400" />
+                <UserPlus size={20} className="text-indigo-400" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {joinRequests.length}
                 </span>
@@ -761,40 +762,40 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
             )}
             <button
               onClick={() => setShowMembersModal(true)}
-              className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+              className="p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 text-white/70 hover:text-white transition-all"
               title="View members"
             >
-              <Users size={20} className="text-indigo-600 dark:text-indigo-400" />
+              <Users size={20} className="text-indigo-400" />
             </button>
             {group.admins?.includes(user?.uid) && (
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="p-2 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors"
+                className="p-2 glass-panel border border-white/10 rounded-xl hover:border-green-500/50 text-green-400 hover:text-green-300 transition-all"
                 title="Invite by email"
               >
-                <Mail size={20} className="text-green-600 dark:text-green-400" />
+                <Mail size={20} className="text-green-400" />
               </button>
             )}
             {!group.admins?.includes(user?.uid) && (
               <button
                 onClick={handleLeaveGroup}
-                className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg transition-colors"
+                className="p-2 glass-panel border border-white/10 rounded-xl hover:border-red-500/50 text-red-400 hover:text-red-300 transition-all"
                 title="Leave group"
               >
-                <LogOut size={20} className="text-red-600 dark:text-red-400" />
+                <LogOut size={20} className="text-red-400" />
               </button>
             )}
           </div>
         </div>
         {group.description && (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{group.description}</p>
+          <p className="mt-2 text-sm text-white/60 font-medium">{group.description}</p>
         )}
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4 min-h-0" style={{ minHeight: '400px' }}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+          <div className="flex flex-col items-center justify-center min-h-[400px] animate-fade-in">
             <img 
               src="/logo.png" 
               alt="CampusConnect Logo" 
@@ -803,7 +804,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                 e.target.style.display = 'none';
               }}
             />
-            <p className="text-gray-400 dark:text-gray-500 text-center">
+            <p className="text-white/50 text-center font-medium">
               No messages yet. Start the conversation!
             </p>
           </div>
@@ -833,7 +834,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                       <img 
                         src={profilePicture} 
                         alt={userNames[message.userId] || 'User'} 
-                        className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                        className="w-10 h-10 rounded-full object-cover border-2 border-indigo-400/50 cursor-pointer hover:border-indigo-500 transition-colors"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextSibling.style.display = 'flex';
@@ -841,9 +842,9 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                       />
                     ) : null}
                     <div 
-                      className={`w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors ${profilePicture ? 'hidden' : ''}`}
+                      className={`w-10 h-10 rounded-full bg-indigo-600/20 flex items-center justify-center border-2 border-indigo-400/50 cursor-pointer hover:border-indigo-500 transition-colors ${profilePicture ? 'hidden' : ''}`}
                     >
-                      <Users size={20} className="text-indigo-600 dark:text-indigo-400" />
+                      <Users size={20} className="text-indigo-400" />
                     </div>
                   </button>
                 )}
@@ -852,7 +853,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                   className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg relative group ${
                     isAuthor
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
+                      : 'glass-panel bg-white/5 text-white border border-white/10'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -891,7 +892,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                         name={`group-edit-message-${message.id}`}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        className="flex-1 px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                        className="flex-1 px-2 py-1 rounded-xl glass-panel bg-white/5 border border-white/10 text-white text-sm"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -926,7 +927,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                           {message.attachment.type?.startsWith('image/') ? (
                             <div
                               onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
-                              className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 transition-opacity cursor-pointer"
+                              className="block rounded-xl overflow-hidden border border-white/10 hover:opacity-90 hover:border-white/20 transition-all cursor-pointer"
                             >
                               <img
                                 src={message.attachment.url}
@@ -939,11 +940,11 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                               href={message.attachment.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                              className="inline-flex items-center gap-2 p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 transition-all"
                             >
-                              <File size={20} className="text-indigo-600 dark:text-indigo-400" />
-                              <span className="text-sm font-medium">{message.attachment.name}</span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                              <File size={20} className="text-indigo-400" />
+                              <span className="text-sm font-medium text-white">{message.attachment.name}</span>
+                              <span className="text-xs text-white/60">
                                 ({(message.attachment.size / 1024).toFixed(1)} KB)
                               </span>
                             </a>
@@ -973,7 +974,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                               <span>Seen by {readInfo.count}</span>
                               <div className="relative group/read">
                                 <span className="cursor-help">👁️</span>
-                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block bg-gray-800 dark:bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg z-10 min-w-[150px]">
+                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block glass-panel border border-white/10 text-white text-xs rounded-xl p-2 shadow-xl backdrop-blur-xl z-10 min-w-[150px]">
                                   <div className="font-semibold mb-1">Seen by:</div>
                                   {readInfo.users.map((readUser, idx) => (
                                     <div key={readUser.uid} className="py-1">
@@ -1025,7 +1026,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
       {/* Message Input */}
       <div 
-        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+        className="glass-panel border-t border-white/10 backdrop-blur-xl px-3 md:px-6 py-3 md:py-4"
         style={{
           paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
           paddingTop: `0.75rem`,
@@ -1035,27 +1036,27 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
       >
         {/* File Preview */}
         {attachedFile && (
-          <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+          <div className="mb-2 p-2 glass-panel border border-white/10 rounded-xl flex items-center justify-between animate-slide-in-down backdrop-blur-sm">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {attachedFile.type?.startsWith('image/') ? (
-                <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                <ImageIcon size={20} className="text-indigo-400 flex-shrink-0" />
               ) : (
-                <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                <File size={20} className="text-indigo-400 flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-white truncate">
                   {attachedFile.name}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-white/60">
                   {(attachedFile.size / 1024).toFixed(1)} KB
                 </p>
               </div>
             </div>
             <button
               onClick={() => setAttachedFile(null)}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+              className="p-1 glass-panel border border-white/10 rounded-lg hover:border-white/20 text-white/70 hover:text-white transition-all flex-shrink-0"
             >
-              <X size={16} className="text-gray-600 dark:text-gray-400" />
+              <X size={16} />
             </button>
           </div>
         )}
@@ -1070,7 +1071,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type your message..."
-              className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+              className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
               disabled={sending}
             />
           </div>
@@ -1082,7 +1083,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
               <button
                 type="button"
                 onClick={() => setShowFileUpload(!showFileUpload)}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
                 title="Upload file"
               >
                 <Paperclip size={20} />
@@ -1104,7 +1105,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
                 title="Add emoji"
               >
                 <Smile size={20} />
@@ -1161,21 +1162,30 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
 
       {/* Members Modal */}
       {showMembersModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowMembersModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Group Members</h3>
-              <button
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[90] p-4" onClick={() => setShowMembersModal(false)} style={{ zIndex: 9990 }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            className="glass-panel border border-white/10 rounded-[2rem] shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col backdrop-blur-xl" onClick={(e) => e.stopPropagation()}
+            style={{ zIndex: 9991 }}
+          >
+            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white text-glow">Group Members</h3>
+              <motion.button
                 onClick={() => setShowMembersModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                whileHover={{ scale: 1.05, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
               >
                 <X size={24} />
-              </button>
+              </motion.button>
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-6 py-4">
               {group.members && group.members.length > 0 ? (
                 <div className="space-y-2">
-                  {group.members.map((memberId) => {
+                  {group.members.map((memberId, index) => {
                     const isAdmin = group.admins?.includes(memberId);
                     const isCurrentUser = memberId === user?.uid;
                     const isCurrentUserAdmin = group.admins?.includes(user?.uid);
@@ -1185,52 +1195,58 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                     const memberOnline = isUserOnline(onlineUsers[memberId]) || false;
 
                     return (
-                      <div
+                      <motion.div
                         key={memberId}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ x: 4, scale: 1.01 }}
+                        className="flex items-center justify-between p-3 glass-panel border border-white/10 rounded-xl hover:border-white/20 transition-all"
                       >
                         <div className="flex items-center gap-3 flex-1">
                           {memberProfile.profilePicture ? (
                             <img
                               src={memberProfile.profilePicture}
                               alt={memberName}
-                              className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
+                              className="w-10 h-10 rounded-full object-cover border-2 border-indigo-400/50"
                               onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.nextSibling.style.display = 'flex';
                               }}
                             />
                           ) : null}
-                          <div className={`w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-2 border-indigo-200 dark:border-indigo-700 ${memberProfile.profilePicture ? 'hidden' : ''}`}>
-                            <Users size={20} className="text-indigo-600 dark:text-indigo-400" />
+                          <div className={`w-10 h-10 rounded-full bg-indigo-600/20 flex items-center justify-center border-2 border-indigo-400/50 ${memberProfile.profilePicture ? 'hidden' : ''}`}>
+                            <Users size={20} className="text-indigo-400" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="font-medium text-gray-800 dark:text-white truncate">
+                              <p className="font-medium text-white truncate">
                                 {memberName}
                                 {isCurrentUser && ' (You)'}
                               </p>
                               {isAdmin && (
-                                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium flex-shrink-0">
+                                <span className="px-2 py-0.5 glass-panel bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium flex-shrink-0">
                                   Admin
                                 </span>
                               )}
                               {memberOnline && (
-                                <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" title="Online" />
+                                <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0 shadow-lg shadow-green-400/50" title="Online" />
                               )}
                             </div>
                             {memberProfile.email && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                              <p className="text-xs text-white/60 truncate">
                                 {memberProfile.email}
                               </p>
                             )}
                           </div>
                         </div>
                         {canRemove && (
-                          <button
+                          <motion.button
                             onClick={() => handleRemoveMember(memberId)}
                             disabled={removingMember === memberId}
-                            className="ml-2 p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="ml-2 p-2 text-red-400 hover:text-red-300 glass-panel border border-red-500/30 hover:border-red-500/50 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Remove member"
                           >
                             {removingMember === memberId ? (
@@ -1238,18 +1254,27 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                             ) : (
                               <UserMinus size={18} />
                             )}
-                          </button>
+                          </motion.button>
                         )}
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-8">No members found</p>
+                <div className="text-center py-12">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="inline-block p-4 glass-panel border border-white/10 rounded-2xl mb-4"
+                  >
+                    <Users className="w-16 h-16 text-white/40 mx-auto" />
+                  </motion.div>
+                  <p className="text-white/60 font-medium">No members found</p>
+                </div>
               )}
             </div>
             {!group.admins?.includes(user?.uid) && (
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="px-6 py-4 border-t border-white/10">
                 <button
                   onClick={() => {
                     setShowMembersModal(false);
@@ -1262,7 +1287,7 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                 </button>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

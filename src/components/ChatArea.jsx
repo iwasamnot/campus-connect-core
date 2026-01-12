@@ -25,11 +25,14 @@ import {
   getDocs,
   getDoc
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 // Use window.__firebaseDb to avoid import/export issues in production builds
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
 // Use window.__LogoComponent directly to avoid import/export issues
 // This is set in main.jsx and App.jsx before any lazy components load
@@ -42,6 +45,13 @@ import EmojiPicker from './EmojiPicker';
 import FileUpload from './FileUpload';
 import MentionAutocomplete from './MentionAutocomplete';
 import AdvancedSearch from './AdvancedSearch';
+import PollCreator from './PollCreator';
+import PollDisplay from './PollDisplay';
+import VoiceRecorder from './VoiceRecorder';
+import VoiceMessage from './VoiceMessage';
+import QuickReplies from './QuickReplies';
+import { translateText } from '../utils/aiTranslation';
+import { summarizeConversation } from '../utils/aiSummarization';
 // Use window globals to avoid import/export issues
 const saveDraft = typeof window !== 'undefined' && window.__saveDraft ? window.__saveDraft : () => {};
 const getDraft = typeof window !== 'undefined' && window.__getDraft ? window.__getDraft : () => null;
@@ -83,7 +93,7 @@ const ChatArea = ({ setActiveView }) => {
   const [reacting, setReacting] = useState(new Set()); // Track reactions in progress to prevent duplicates
   const [aiHelpMode, setAiHelpMode] = useState(false); // Toggle for AI Help mode
   const [waitingForAI, setWaitingForAI] = useState(false); // Track if waiting for AI response
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-pro'); // Default model
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-2.5-flash'); // Default model (latest 2026 version)
   const [showModelSelector, setShowModelSelector] = useState(false); // Show model selector dropdown
   const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Show emoji picker
   const [showFileUpload, setShowFileUpload] = useState(false); // Show file upload
@@ -95,9 +105,19 @@ const ChatArea = ({ setActiveView }) => {
   const [forwardingMessage, setForwardingMessage] = useState(null); // Message to forward
   const [showForwardModal, setShowForwardModal] = useState(false); // Show forward modal
   const [previewImage, setPreviewImage] = useState(null); // Image preview state { url, name }
+  const [showPollCreator, setShowPollCreator] = useState(false); // Show poll creator
+  const [polls, setPolls] = useState([]); // List of polls in chat
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false); // Show voice recorder
+  const [showQuickReplies, setShowQuickReplies] = useState(false); // Show quick replies
+  const [translating, setTranslating] = useState(new Set()); // Messages being translated
+  const [translations, setTranslations] = useState({}); // Translated messages cache
+  const [showSummarization, setShowSummarization] = useState(false); // Show summarization
+  const [conversationSummary, setConversationSummary] = useState(null); // Conversation summary
+  const [openMenuId, setOpenMenuId] = useState(null); // Track which message's menu is open
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
+  const menuRefs = useRef({}); // Refs for each menu
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
   const CHAT_ID = 'global'; // For drafts
   
@@ -132,7 +152,7 @@ const ChatArea = ({ setActiveView }) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !sending) {
         e.preventDefault();
         if (newMessage.trim()) {
-          handleSendMessage(e);
+          sendMessage(e);
         }
       }
       // Up arrow to edit last message
@@ -195,10 +215,11 @@ const ChatArea = ({ setActiveView }) => {
 
   // Available Gemini models
   const geminiModels = [
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Latest 2026 Model - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient', free: true },
     { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
     { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
-    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Paid - Standard Model', free: false },
+    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 2.5 Flash instead', free: false },
   ];
 
   // Initialize Gemini AI with selected model
@@ -210,8 +231,10 @@ const ChatArea = ({ setActiveView }) => {
     
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
+      // Use the selected model, fallback to gemini-2.5-flash if model not found
+      const modelToUse = modelName || 'gemini-2.5-flash';
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-2.5-flash',
+        model: modelToUse,
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -234,25 +257,59 @@ const ChatArea = ({ setActiveView }) => {
       });
       return model;
     } catch (error) {
-      console.error('Error initializing Gemini:', error);
+      console.error('Error initializing Gemini model:', error);
+      // Fallback to gemini-2.5-flash, then gemini-1.5-flash if the selected model fails
+      if (modelName !== 'gemini-2.5-flash') {
+        try {
+          const genAI = new GoogleGenerativeAI(apiKey);
+          return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        } catch (fallbackError) {
+          console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', fallbackError);
+          try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          } catch (secondFallbackError) {
+            console.error('Fallback models also failed:', secondFallbackError);
+            return null;
+          }
+        }
+      }
       return null;
     }
   };
 
   // Fetch all users to get names and profile data (limited to prevent quota exhaustion)
   // Using one-time read instead of real-time listener to reduce reads
+  // OPTIMIZED: Added ref to prevent multiple simultaneous fetches
+  const fetchingUsersRef = useRef(false);
+  
+  // Load users list on mount (optimized: only once, with interval refresh)
   useEffect(() => {
-    let mounted = true;
+    // Prevent multiple simultaneous fetches (fixes duplicate loading issue)
+    if (fetchingUsersRef.current || !mountedRef.current) {
+      return;
+    }
+    
+    fetchingUsersRef.current = true;
     
     const fetchUsers = async () => {
       try {
+        if (!db) {
+          console.warn('ChatArea: Firestore db not available');
+          fetchingUsersRef.current = false;
+          return;
+        }
+        
         const q = query(
           collection(db, 'users'),
           limit(50) // Further reduced to 50 users to save reads
         );
         
         const snapshot = await getDocs(q);
-        if (!mounted) return;
+        if (!mountedRef.current) {
+          fetchingUsersRef.current = false;
+          return;
+        }
         
         const users = {};
         const names = {};
@@ -293,27 +350,75 @@ const ChatArea = ({ setActiveView }) => {
         setUserNames(names);
         setUserProfiles(profiles);
         
-        console.log('ChatArea - Loaded users:', { 
-          count: snapshot.docs.length, 
-          names: names,
-          userIds: Object.keys(names)
-        });
+        // Only log in development to improve performance
+        if (import.meta.env.DEV) {
+          console.log('ChatArea - Loaded users:', { 
+            count: snapshot.docs.length, 
+            names: names,
+            userIds: Object.keys(names)
+          });
+        }
+        
+        fetchingUsersRef.current = false;
       } catch (error) {
         console.error('ChatArea - Error fetching users:', error);
+        fetchingUsersRef.current = false;
       }
     };
     
     fetchUsers();
     
     // Refresh users every 5 minutes instead of real-time
-    const intervalId = setInterval(fetchUsers, 5 * 60 * 1000);
+    const intervalId = setInterval(() => {
+      if (!fetchingUsersRef.current && mountedRef.current) {
+        fetchUsers();
+      }
+    }, 5 * 60 * 1000);
     
     return () => {
-      mounted = false;
+      fetchingUsersRef.current = false;
       clearInterval(intervalId);
     };
+  }, []); // Empty deps - only run once on mount
+
+  // Optimized scroll to bottom - use requestAnimationFrame for smooth performance
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      requestAnimationFrame(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'end' });
+          // Smooth scroll with RAF for better performance
+          const target = messagesEndRef.current;
+          const start = target.parentElement?.scrollTop || 0;
+          const end = target.parentElement?.scrollHeight || 0;
+          const distance = end - start;
+          const duration = Math.min(300, Math.abs(distance) * 0.5);
+          let startTime = null;
+          
+          const animateScroll = (currentTime) => {
+            if (startTime === null) startTime = currentTime;
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = progress * (2 - progress); // ease-out
+            
+            if (target.parentElement) {
+              target.parentElement.scrollTop = start + (distance * ease);
+            }
+            
+            if (progress < 1) {
+              requestAnimationFrame(animateScroll);
+            }
+          };
+          
+          if (distance > 50) { // Only animate if significant scroll needed
+            requestAnimationFrame(animateScroll);
+          }
+        }
+      });
+    }
   }, []);
 
+<<<<<<< HEAD
   // Scroll to bottom when new messages arrive (throttled for performance)
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -326,6 +431,13 @@ const ChatArea = ({ setActiveView }) => {
     const timeoutId = setTimeout(scrollToBottom, 100);
     return () => clearTimeout(timeoutId);
   }, [messages.length, scrollToBottom]); // Only depend on length, not full array
+=======
+  // Scroll to bottom when new messages arrive (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(scrollToBottom, 50);
+    return () => clearTimeout(timeoutId);
+  }, [messages.length, scrollToBottom]);
+>>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
   // Optimized: Memoize query to prevent recreation
@@ -823,6 +935,182 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
+  // Handle poll creation
+  const handleCreatePoll = async (pollData) => {
+    if (!user?.uid || !db) return;
+    
+    try {
+      await addDoc(collection(db, 'polls'), {
+        ...pollData,
+        userId: user.uid,
+        userName: userNames[user.uid] || user.email?.split('@')[0] || 'User',
+        chatType: 'campus',
+        chatId: 'global',
+        createdAt: serverTimestamp(),
+        expiresAt: pollData.expiresAt || serverTimestamp()
+      });
+      success('Poll created successfully!');
+      setShowPollCreator(false);
+    } catch (error) {
+      console.error('Error creating poll:', error);
+      showError('Failed to create poll. Please try again.');
+    }
+  };
+
+  // Handle voice message sending
+  const handleSendVoiceMessage = async (audioBlob, duration) => {
+    if (!user?.uid || !db) return;
+    
+    const storage = typeof window !== 'undefined' && window.__firebaseStorage 
+      ? window.__firebaseStorage 
+      : null;
+    
+    if (!storage) {
+      showError('Storage not available');
+      return;
+    }
+    
+    try {
+      setSending(true);
+      
+      // Upload audio to Firebase Storage
+      const timestamp = Date.now();
+      const fileName = `voice_${timestamp}.webm`;
+      const storageRef = ref(storage, `voice-messages/${fileName}`);
+      await uploadBytes(storageRef, audioBlob);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Get user name
+      let userName = userNames[user.uid] || user.email?.split('@')[0] || 'User';
+      
+      // Save voice message to Firestore
+      await addDoc(collection(db, 'messages'), {
+        text: 'Voice message',
+        displayText: '🎤 Voice message',
+        isVoice: true,
+        voiceUrl: downloadURL,
+        voiceDuration: duration,
+        attachment: {
+          url: downloadURL,
+          name: fileName,
+          type: 'audio/webm',
+          size: audioBlob.size
+        },
+        toxic: false,
+        isAI: false,
+        userId: user.uid,
+        userName: userName,
+        userEmail: user.email || null,
+        timestamp: serverTimestamp(),
+        reactions: {},
+        edited: false,
+        readBy: {
+          [user.uid]: serverTimestamp()
+        }
+      });
+      
+      success('Voice message sent!');
+      setLastMessageTime(Date.now());
+    } catch (error) {
+      console.error('Error sending voice message:', error);
+      showError('Failed to send voice message. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Handle quick reply selection
+  const handleQuickReplySelect = (templateText) => {
+    setNewMessage(templateText);
+    setShowQuickReplies(false);
+    if (messageInputRef.current) {
+      messageInputRef.current.focus();
+    }
+  };
+
+  // Handle message translation
+  const handleTranslateMessage = async (messageId, messageText, targetLang = 'en') => {
+    if (translating.has(messageId)) return;
+    
+    setTranslating(prev => new Set(prev).add(messageId));
+    
+    try {
+      const translatedText = await translateText(messageText, targetLang);
+      setTranslations(prev => ({
+        ...prev,
+        [messageId]: translatedText
+      }));
+      success('Message translated!');
+    } catch (error) {
+      console.error('Error translating message:', error);
+      showError('Failed to translate message. Please try again.');
+    } finally {
+      setTranslating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(messageId);
+        return newSet;
+      });
+    }
+  };
+
+  // Handle conversation summarization
+  const handleSummarizeConversation = async () => {
+    if (messages.length === 0) {
+      showError('No messages to summarize.');
+      return;
+    }
+    
+    try {
+      setShowSummarization(true);
+      setConversationSummary(null); // Reset previous summary
+      const summary = await summarizeConversation(messages, 150);
+      
+      // If we get here, summary was successful
+      if (summary && summary.trim() !== '') {
+        setConversationSummary(summary);
+        success('Conversation summarized successfully!');
+      } else {
+        throw new Error('Empty summary received');
+      }
+    } catch (error) {
+      console.error('Error summarizing conversation:', error);
+      showError(error.message || 'Failed to summarize conversation. Please ensure the Gemini API key is configured and try again.');
+      setShowSummarization(false);
+      setConversationSummary(null);
+    }
+  };
+
+  // Fetch polls for campus chat
+  useEffect(() => {
+    if (!db) return;
+    
+    const q = query(
+      collection(db, 'polls'),
+      where('chatType', '==', 'campus'),
+      where('chatId', '==', 'global'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+    
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const pollsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPolls(pollsData);
+      },
+      (error) => {
+        if (error.code !== 'failed-precondition') {
+          console.error('Error fetching polls:', error);
+        }
+      }
+    );
+    
+    return () => unsubscribe();
+  }, []);
+
   const handleReportMessage = async (messageId) => {
     if (!reportReason.trim()) {
       showError('Please provide a reason for reporting this message.');
@@ -850,6 +1138,7 @@ const ChatArea = ({ setActiveView }) => {
 
   // Memoize filtered messages to prevent unnecessary re-renders
   const filteredMessages = useMemo(() => {
+<<<<<<< HEAD
     if (!searchQuery.trim()) return messages;
     const queryLower = searchQuery.toLowerCase();
     return messages.filter(msg => {
@@ -858,6 +1147,10 @@ const ChatArea = ({ setActiveView }) => {
       return text.includes(queryLower) || userName.includes(queryLower);
     });
   }, [messages, searchQuery]);
+=======
+    return messages;
+  }, [messages]);
+>>>>>>> 229e82f4068baf21b576f812509a307b39102a9a
 
   // Memoize expensive formatting functions
   const formatTimestamp = useCallback((timestamp) => {
@@ -904,39 +1197,38 @@ const ChatArea = ({ setActiveView }) => {
   }, [userNames, userProfiles]);
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-full bg-gray-50 dark:bg-gray-900">
-      {/* Chat Header */}
+    <div className="flex flex-col h-full w-full relative bg-transparent" style={{ height: '100%', minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}>
+      {/* Chat Header - Fluid.so aesthetic */}
       <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
+        className="glass-panel border-b border-white/10 px-4 md:px-6 py-3 md:py-4 relative z-10 rounded-t-[2rem] flex-shrink-0"
         style={{
           paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           paddingBottom: `0.75rem`,
           paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
           paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
-          marginTop: '0',
-          position: 'relative',
-          zIndex: 10
+          flexShrink: 0
         }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             <Logo size="small" showText={false} />
             <div className="min-w-0 flex-1">
-              <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white truncate">Campus Chat</h2>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Connect with your campus community</p>
+              <h2 className="text-base sm:text-lg md:text-2xl font-semibold text-white truncate text-glow">Campus Chat</h2>
+              <p className="text-xs md:text-sm text-white/60 hidden sm:block font-medium">Connect with your campus community</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* AI Help Mode Toggle with Model Selector */}
+            <div className="flex items-center gap-2">
+            {/* AI Help Mode Toggle with Model Selector - Fluid.so aesthetic */}
             <div className="relative">
               <button
                 onClick={() => setAiHelpMode(!aiHelpMode)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 gpu-accelerated ${
                   aiHelpMode
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-indigo-100 dark:hover:bg-indigo-700 text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white shadow-lg'
+                    : 'hover:bg-white/10 text-white/70 hover:text-white'
                 }`}
                 title={aiHelpMode ? 'AI Help Mode: ON - Virtual Senior will respond' : 'AI Help Mode: OFF - Click to enable'}
+                style={{ transform: 'translateZ(0)' }}
               >
                 <Bot size={20} />
               </button>
@@ -946,15 +1238,20 @@ const ChatArea = ({ setActiveView }) => {
                     e.stopPropagation();
                     setShowModelSelector(!showModelSelector);
                   }}
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-400 rounded-full border-2 border-white dark:border-gray-800 hover:bg-indigo-500 transition-colors"
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-white/80 rounded-full border-2 border-white/90 hover:bg-white hover:scale-125 active:scale-100 transition-all shadow-lg gpu-accelerated"
                   title="Select Gemini Model"
+                  style={{ transform: 'translateZ(0)' }}
                 />
               )}
-              {/* Model Selector Dropdown */}
+              {/* Model Selector Dropdown - Fluid.so aesthetic */}
               {aiHelpMode && showModelSelector && (
-                <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[250px]">
-                  <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Select Gemini Model</p>
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute top-full right-0 mt-2 glass-panel border border-white/10 rounded-xl shadow-xl z-50 min-w-[250px] overflow-hidden"
+                >
+                  <div className="p-3 border-b border-white/10">
+                    <p className="text-xs font-semibold text-white">Select Gemini Model</p>
                   </div>
                   <div className="p-2 max-h-64 overflow-y-auto">
                     {geminiModels.map((model) => (
@@ -964,64 +1261,83 @@ const ChatArea = ({ setActiveView }) => {
                           setSelectedGeminiModel(model.value);
                           setShowModelSelector(false);
                         }}
-                        className={`w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors ${
+                        className={`w-full text-left px-3 py-2 rounded-lg mb-1 hover:translate-x-1 active:scale-[0.98] transition-all duration-200 gpu-accelerated ${
                           selectedGeminiModel === model.value
-                            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            ? 'bg-white/20 text-white font-semibold'
+                            : 'hover:bg-white/10 text-white/70 hover:text-white'
                         }`}
+                        style={{ transform: 'translateZ(0)' }}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">{model.label}</span>
+                              <span className="font-medium text-sm text-white">{model.label}</span>
                               {model.free && (
-                                <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded">
+                                <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">
                                   FREE
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{model.description}</p>
+                            <p className="text-xs text-white/60 mt-0.5">{model.description}</p>
                           </div>
                           {selectedGeminiModel === model.value && (
-                            <div className="w-2 h-2 bg-indigo-600 dark:bg-indigo-400 rounded-full"></div>
+                            <div className="w-2 h-2 bg-white/80 rounded-full"></div>
                           )}
                         </div>
                       </button>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
             {aiHelpMode && (
-              <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hidden sm:inline">
+              <span className="text-xs text-white/70 font-medium hidden sm:inline text-glow-subtle">
                 AI Help ON
               </span>
             )}
             <div className="relative flex items-center gap-2">
               <button
                 onClick={() => setShowAdvancedSearch(true)}
-                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                 title="Advanced Search (Ctrl/Cmd + K)"
+                style={{ transform: 'translateZ(0)' }}
               >
-                <Search size={20} className="text-indigo-600 dark:text-indigo-400" />
+                <Search size={20} className="text-white/70 hover:text-white transition-colors" />
+              </button>
+              <button
+                onClick={handleSummarizeConversation}
+                disabled={messages.length === 0 || showSummarization}
+                className="p-2 hover:bg-white/10 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-transparent rounded-xl transition-all duration-200 gpu-accelerated"
+                title="Summarize conversation"
+                aria-label="Summarize conversation"
+                style={{ transform: 'translateZ(0)' }}
+              >
+                <FileText size={20} className="text-white/70 hover:text-white transition-colors" />
               </button>
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(!showExportMenu)}
-                  className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-700 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                   title="Export chat history"
+                  style={{ transform: 'translateZ(0)' }}
                 >
-                  <Download size={20} className="text-indigo-600 dark:text-indigo-400" />
+                  <Download size={20} className="text-white/70 hover:text-white transition-colors" />
                 </button>
                 {showExportMenu && (
-                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[180px]">
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 glass-panel border border-white/10 rounded-xl shadow-xl z-50 min-w-[180px] overflow-hidden"
+                  >
                     <button
                       onClick={() => {
                         exportMessagesToJSON(messages, 'campus-chat-history');
                         setShowExportMenu(false);
                         success('Chat history exported as JSON');
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] text-sm text-white/70 hover:text-white transition-all duration-200 gpu-accelerated"
+                      style={{ transform: 'translateZ(0)' }}
                     >
                       Export as JSON
                     </button>
@@ -1031,7 +1347,8 @@ const ChatArea = ({ setActiveView }) => {
                         setShowExportMenu(false);
                         success('Chat history exported as CSV');
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] text-sm text-white/70 hover:text-white transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                      style={{ transform: 'translateZ(0)' }}
                     >
                       Export as CSV
                     </button>
@@ -1041,11 +1358,12 @@ const ChatArea = ({ setActiveView }) => {
                         setShowExportMenu(false);
                         success('Chat history exported as TXT');
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] text-sm text-white/70 hover:text-white transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                      style={{ transform: 'translateZ(0)' }}
                     >
                       Export as TXT
                     </button>
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>
@@ -1054,72 +1372,125 @@ const ChatArea = ({ setActiveView }) => {
         
       </div>
 
-          {/* Pinned Messages Section */}
+          {/* Pinned Messages Section - Fluid.so aesthetic */}
           {pinnedMessages.length > 0 && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-3 md:px-6 py-2 animate-slide-in-down">
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel border-b border-yellow-500/30 bg-yellow-500/10 px-4 md:px-6 py-3 rounded-t-[2rem]"
+            >
               <div className="flex items-center gap-2 mb-2">
-                <Pin size={16} className="text-yellow-600 dark:text-yellow-400" />
-                <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Pinned Messages</h3>
+                <Pin size={16} className="text-yellow-400" />
+                <h3 className="text-sm font-semibold text-yellow-300 text-glow-subtle">Pinned Messages</h3>
               </div>
               <div className="space-y-2">
                 {messages
                   .filter(m => pinnedMessages.includes(m.id))
                   .slice(0, 3)
                   .map((message) => (
-                    <div key={message.id} className="text-xs p-2 bg-white dark:bg-gray-800 rounded border border-yellow-200 dark:border-yellow-700 card-hover">
+                    <motion.div 
+                      key={message.id} 
+                      whileHover={{ y: -2 }}
+                      className="text-xs p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-yellow-500/20 transition-all"
+                    >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{message.userName || 'User'}</span>
-                        <Pin size={12} className="text-yellow-600 dark:text-yellow-400" />
+                        <span className="font-medium text-white">{message.userName || 'User'}</span>
+                        <Pin size={12} className="text-yellow-400" />
                       </div>
-                      <p className="text-gray-600 dark:text-gray-400 truncate">
+                      <p className="text-white/70 truncate">
                         {message.displayText || message.text}
                       </p>
-                    </div>
+                    </motion.div>
                   ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
-        {filteredMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in">
-            <img 
-              src="/logo.png" 
-              alt="CampusConnect Logo" 
-              className="w-24 h-24 mb-4 opacity-50 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
-            <p className="text-gray-400 dark:text-gray-500 text-center">
-              {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
-            </p>
-          </div>
-        ) : (
-          filteredMessages.map((message) => {
-            const isAuthor = message.userId === user?.uid;
-            const isAdmin = isAdminRole(userRole);
-            const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
-            const canEdit = isAuthor && !message.edited;
-            // Allow admins to delete AI messages, or users to delete their own messages
-            const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
-            const userReaction = message.reactions?.[user.uid];
-            const reactionCounts = message.reactions ? Object.values(message.reactions).reduce((acc, emoji) => {
-              acc[emoji] = (acc[emoji] || 0) + 1;
-              return acc;
-            }, {}) : {};
-            const userProfile = userProfiles[message.userId] || {};
-            const profilePicture = userProfile.profilePicture;
+          {/* Messages Area - Fluid.so aesthetic */}
+          <div 
+            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent scroll-container" 
+            style={{ 
+              minHeight: 0,
+              flex: '1 1 auto',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'auto', // Use auto for better performance, we handle smooth scroll with RAF
+              position: 'relative',
+              zIndex: 1,
+              contain: 'layout style',
+              willChange: 'scroll-position'
+            }}
+          >
+            {filteredMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full animate-fade-in">
+                <img 
+                  src="/logo.png" 
+                  alt="CampusConnect Logo" 
+                  className="w-24 h-24 mb-4 opacity-50 object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                <p className="text-white/60 text-center">
+                  {searchQuery ? 'No messages found matching your search.' : 'No messages yet. Start the conversation!'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Display Polls */}
+                {polls.length > 0 && polls.slice(0, 5).map((poll) => (
+                  <div key={poll.id} className="mb-4 px-2">
+                    <PollDisplay poll={poll} pollId={poll.id} collectionName="polls" />
+                  </div>
+                ))}
+                
+                {/* Display Messages */}
+                {filteredMessages.map((message) => {
+                  const isAuthor = message.userId === user?.uid;
+                  const isAdmin = isAdminRole(userRole);
+                  const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
+                  const canEdit = isAuthor && !message.edited;
+                  // Allow admins to delete AI messages, or users to delete their own messages
+                  const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
+                  const userReaction = message.reactions?.[user.uid];
+                  const reactionCounts = message.reactions ? Object.values(message.reactions).reduce((acc, emoji) => {
+                    acc[emoji] = (acc[emoji] || 0) + 1;
+                    return acc;
+                  }, {}) : {};
+                  const userProfile = userProfiles[message.userId] || {};
+                  const profilePicture = userProfile.profilePicture;
 
-            return (
-              <div
-                id={`message-${message.id}`}
-                key={message.id}
-                className={`flex items-start gap-2 ${
-                  isAuthor ? 'justify-end' : 'justify-start'
-                }`}
-              >
+                  return (
+                    <div
+                      id={`message-${message.id}`}
+                      key={message.id}
+                      className={`flex items-start gap-2 group/message relative gpu-accelerated ${
+                        isAuthor ? 'justify-end' : 'justify-start'
+                      }`}
+                      style={{ 
+                        contain: 'layout style paint',
+                        isolation: 'isolate'
+                      }}
+                      onMouseEnter={(e) => {
+                        // Show menu button on hover
+                        const menuButton = e.currentTarget.querySelector('.message-menu-button');
+                        if (menuButton && openMenuId !== message.id) {
+                          menuButton.classList.remove('opacity-0', 'invisible');
+                          menuButton.classList.add('opacity-100', 'visible');
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        // Hide menu button when not hovering (unless menu is open)
+                        if (openMenuId !== message.id) {
+                          const menuButton = e.currentTarget.querySelector('.message-menu-button');
+                          if (menuButton) {
+                            menuButton.classList.remove('opacity-100', 'visible');
+                            menuButton.classList.add('opacity-0', 'invisible');
+                          }
+                        }
+                      }}
+                    >
                 {/* Profile Picture - Only show for other users */}
                 {!isAuthor && (
                   <button
@@ -1130,7 +1501,7 @@ const ChatArea = ({ setActiveView }) => {
                       <img 
                         src={profilePicture} 
                         alt={userNames[message.userId] || 'User'} 
-                        className="w-10 h-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+                        className="w-10 h-10 rounded-full object-cover border-2 border-indigo-400/50 cursor-pointer hover:border-indigo-500 transition-colors"
                         loading="lazy"
                         onError={(e) => {
                           e.target.style.display = 'none';
@@ -1139,20 +1510,25 @@ const ChatArea = ({ setActiveView }) => {
                       />
                     ) : null}
                     <div 
-                      className={`w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-2 border-indigo-200 dark:border-indigo-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors ${profilePicture ? 'hidden' : ''}`}
+                      className={`w-10 h-10 rounded-full bg-indigo-600/20 flex items-center justify-center border-2 border-indigo-400/50 cursor-pointer hover:border-indigo-500 transition-colors ${profilePicture ? 'hidden' : ''}`}
                     >
-                      <User size={20} className="text-indigo-600 dark:text-indigo-400" />
+                      <User size={20} className="text-indigo-400" />
                     </div>
                   </button>
                 )}
 
+                <div className="relative">
                 <div
-                    className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg relative group ${
-                    isAuthor
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
-                  }`}
-                  style={{ position: 'relative' }}
+                        className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer gpu-accelerated transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] ${
+                            isAuthor
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
+                          }`}
+                  style={{ 
+                    transform: 'translateZ(0)', // Force GPU acceleration
+                    backfaceVisibility: 'hidden',
+                    contain: 'layout style paint'
+                  }}
                 >
                     <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -1202,7 +1578,7 @@ const ChatArea = ({ setActiveView }) => {
                         name={`edit-message-${message.id}`}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        className="flex-1 px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                        className="flex-1 px-2 py-1 rounded bg-white/10 backdrop-blur-sm text-white border border-white/10 text-sm"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -1251,7 +1627,7 @@ const ChatArea = ({ setActiveView }) => {
                               <span>Seen by {readInfo.count}</span>
                               <div className="relative group/read">
                                 <span className="cursor-help">👁️</span>
-                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block bg-gray-800 dark:bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg z-10 min-w-[150px]">
+                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover/read:block glass-panel border border-white/10 text-white text-xs rounded-xl p-2 shadow-xl z-10 min-w-[150px]">
                                   <div className="font-semibold mb-1">Seen by:</div>
                                   {readInfo.users.map((readUser, idx) => (
                                     <div key={readUser.uid} className="py-1">
@@ -1283,8 +1659,8 @@ const ChatArea = ({ setActiveView }) => {
                               isReacting ? 'opacity-50 cursor-wait' : ''
                             } ${
                               userReaction === emoji
-                                ? 'bg-indigo-400 dark:bg-indigo-500'
-                                : 'bg-indigo-100 dark:bg-indigo-700 text-black dark:text-white border border-indigo-300 dark:border-indigo-600'
+                                ? 'bg-indigo-500'
+                                : 'bg-indigo-600/30 text-white border border-indigo-500/50'
                             }`}
                           >
                             {emoji} {count}
@@ -1296,27 +1672,34 @@ const ChatArea = ({ setActiveView }) => {
 
                   {/* Reply Preview in Message */}
                   {message.replyTo && (
-                    <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-700 border-l-2 border-indigo-500 rounded text-xs">
+                    <div className="mb-2 p-3 bg-indigo-600/20 backdrop-blur-sm border-l-2 border-indigo-500 rounded-xl text-xs">
                       <div className="flex items-center gap-1 mb-1">
-                        <Reply size={12} className="text-indigo-600 dark:text-indigo-400" />
-                        <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                        <Reply size={12} className="text-indigo-300" />
+                        <span className="font-medium text-indigo-200">
                           {message.replyToUserName || 'User'}
                         </span>
                       </div>
-                      <p className="text-gray-600 dark:text-gray-400 truncate">
+                      <p className="text-white/70 truncate">
                         {message.replyToText || 'Message'}
                       </p>
                     </div>
                   )}
 
+                  {/* Voice Message Display */}
+                  {message.isVoice && message.voiceUrl && (
+                    <div className="mb-2">
+                      <VoiceMessage message={message} isOwnMessage={isAuthor} />
+                    </div>
+                  )}
+
                   {/* Attachment Display */}
-                  {message.attachment && (
+                  {message.attachment && !message.isVoice && (
                     <div className="mb-2">
                       {message.attachment.type?.startsWith('image/') ? (
                         <button
                           type="button"
                           onClick={() => setPreviewImage({ url: message.attachment.url, name: message.attachment.name })}
-                          className="block rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:opacity-90 active:opacity-75 transition-opacity cursor-pointer touch-action-manipulation w-full text-left p-0"
+                          className="block rounded-xl overflow-hidden border border-white/20 hover:opacity-90 active:opacity-75 transition-opacity cursor-pointer touch-action-manipulation w-full text-left p-0"
                           aria-label="View image"
                         >
                           <img
@@ -1326,16 +1709,23 @@ const ChatArea = ({ setActiveView }) => {
                             loading="lazy"
                           />
                         </button>
+                      ) : message.attachment.type?.startsWith('audio/') ? (
+                        <div className="p-3 bg-indigo-600/20 backdrop-blur-sm rounded-xl border border-indigo-500/30">
+                          <audio controls className="w-full">
+                            <source src={message.attachment.url} type={message.attachment.type} />
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
                       ) : (
                         <a
                           href={message.attachment.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          <File size={20} className="text-indigo-600 dark:text-indigo-400" />
-                          <span className="text-sm font-medium">{message.attachment.name}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          className="inline-flex items-center gap-2 p-2 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-colors border border-white/10"
+                          >
+                            <File size={20} className="text-white/70" />
+                            <span className="text-sm font-medium text-white">{message.attachment.name}</span>
+                            <span className="text-xs text-white/60">
                             ({(message.attachment.size / 1024).toFixed(1)} KB)
                           </span>
                         </a>
@@ -1344,162 +1734,316 @@ const ChatArea = ({ setActiveView }) => {
                   )}
 
                   {/* Message Text with Markdown */}
-                  {message.displayText && (
-                    <p 
-                      className="text-sm whitespace-pre-wrap break-words"
-                      dangerouslySetInnerHTML={{
-                        __html: hasMarkdown(message.displayText) 
-                          ? parseMarkdown(message.displayText)
-                          : message.displayText.replace(/\n/g, '<br />')
-                      }}
-                    />
+                  {message.displayText && !message.isVoice && (
+                    <div>
+                      {translations[message.id] ? (
+                        <div>
+                          <p 
+                            className="text-sm whitespace-pre-wrap break-words mb-1"
+                            dangerouslySetInnerHTML={{
+                              __html: hasMarkdown(message.displayText) 
+                                ? parseMarkdown(message.displayText)
+                                : message.displayText.replace(/\n/g, '<br />')
+                            }}
+                          />
+                          <div className="mt-2 pt-2 border-t border-white/20">
+                            <p className="text-xs text-white/60 mb-1">Translated:</p>
+                            <p className="text-sm whitespace-pre-wrap break-words italic">
+                              {translations[message.id]}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p 
+                          className="text-sm whitespace-pre-wrap break-words"
+                          dangerouslySetInnerHTML={{
+                            __html: hasMarkdown(message.displayText) 
+                              ? parseMarkdown(message.displayText)
+                              : message.displayText.replace(/\n/g, '<br />')
+                          }}
+                        />
+                      )}
+                    </div>
                   )}
-
-                  {/* Action buttons - hidden by default, show on hover only */}
-                  <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex pointer-events-none group-hover:pointer-events-auto transition-all duration-200 flex-row gap-1 sm:gap-1.5 touch-action-none z-20 scale-90 sm:scale-100 origin-center">
-                    <button
-                      onClick={async () => {
-                        try {
-                          await saveMessage(user.uid, { ...message, chatType: 'global' });
-                          success('Message saved!');
-                        } catch (error) {
-                          if (error.message === 'Message already saved') {
-                            showError('Message already saved');
-                          } else {
-                            showError('Failed to save message');
-                          }
+                </div>
+                    {/* 3-dots menu button - appears on hover */}
+                    <div 
+                      ref={(el) => {
+                        if (el) menuRefs.current[message.id] = el;
+                      }}
+                      className={`message-menu-button absolute ${isAuthor ? 'top-1 -right-1' : 'top-1 -left-1'} opacity-0 invisible transition-all duration-200 z-30 ${
+                        openMenuId === message.id ? 'opacity-100 visible pointer-events-auto' : 'pointer-events-none'
+                      }`}
+                      style={{ 
+                        pointerEvents: openMenuId === message.id ? 'auto' : 'none',
+                        transform: 'translateZ(0)', // Force GPU acceleration
+                        willChange: 'opacity, visibility'
+                      }}
+                      onMouseEnter={(e) => {
+                        // Keep visible when hovering over button
+                        if (openMenuId !== message.id) {
+                          e.currentTarget.style.pointerEvents = 'auto';
+                          e.currentTarget.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+                          e.currentTarget.classList.add('opacity-100', 'visible');
                         }
                       }}
-                      className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
-                      title="Save message"
-                      aria-label="Save message"
+                      onMouseLeave={(e) => {
+                        // Hide when leaving button (unless menu is open)
+                        if (openMenuId !== message.id) {
+                          e.currentTarget.style.pointerEvents = 'none';
+                          e.currentTarget.classList.remove('opacity-100', 'visible');
+                          e.currentTarget.classList.add('opacity-0', 'invisible', 'pointer-events-none');
+                        }
+                      }}
                     >
-                      <Bookmark size={10} className="sm:w-3 sm:h-3" />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === message.id ? null : message.id);
+                      }}
+                      className="p-1.5 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-full transition-all duration-200 touch-action-manipulation gpu-accelerated"
+                      title="More options"
+                      aria-label="More options"
+                      style={{ transform: 'translateZ(0)' }}
+                    >
+                      <MoreVertical size={16} className="text-white/70 hover:text-white transition-colors" />
                     </button>
-                    {preferences.allowMessageForwarding && (
-                      <button
-                        onClick={() => handleForwardMessage(message.id)}
-                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
-                        title="Forward message"
-                        aria-label="Forward message"
+                    
+                    {/* Dropdown menu - Fluid.so aesthetic */}
+                    {openMenuId === message.id && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl py-1 min-w-[180px] z-40 overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <Forward size={10} className="sm:w-3 sm:h-3" />
-                      </button>
-                    )}
-                    {!isAuthor && (
-                      <button
-                        onClick={() => setReplyingTo(message)}
-                        className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
-                        title="Reply to message"
-                        aria-label="Reply to message"
-                      >
-                        <Reply size={10} className="sm:w-3 sm:h-3" />
-                      </button>
-                    )}
-                    {isAdminRole(userRole) && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const isPinned = pinnedMessages.includes(message.id);
-                            if (isPinned) {
-                              await updateDoc(doc(db, 'messages', message.id), {
-                                pinned: false
-                              });
-                              setPinnedMessages(prev => prev.filter(id => id !== message.id));
-                              success('Message unpinned');
-                            } else {
-                              await updateDoc(doc(db, 'messages', message.id), {
-                                pinned: true,
-                                pinnedAt: serverTimestamp()
-                              });
-                              setPinnedMessages(prev => [...prev, message.id]);
-                              success('Message pinned');
-                            }
-                          } catch (error) {
-                            console.error('Error pinning message:', error);
-                            showError('Failed to pin message');
-                          }
-                        }}
-                        className={`p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center ${
-                          pinnedMessages.includes(message.id)
-                            ? 'bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white'
-                            : 'bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white'
-                        }`}
-                        title={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
-                        aria-label={pinnedMessages.includes(message.id) ? 'Unpin message' : 'Pin message'}
-                      >
-                        <Pin size={10} className="sm:w-3 sm:h-3" />
-                      </button>
-                    )}
-                    {canEdit && (
-                      <button
-                        onClick={() => {
-                          setEditing(message.id);
-                          setEditText(message.text);
-                        }}
-                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
-                        title="Edit message"
-                        aria-label="Edit message"
-                      >
-                        <Edit2 size={10} className="sm:w-3 sm:h-3" />
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button
-                        onClick={() => handleDeleteMessage(message.id, message.userId, isAIMessage)}
-                        disabled={deleting === message.id}
-                        className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-1 sm:p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
-                        title={isAIMessage ? "Delete AI message (Admin only)" : "Delete message"}
-                        aria-label={isAIMessage ? "Delete AI message" : "Delete message"}
-                      >
-                        <Trash2 size={10} className="sm:w-3 sm:h-3" />
-                      </button>
-                    )}
-                    {!isAuthor && (
-                      <div className="relative">
-                        <button
-                          onClick={() => setReporting(reporting === message.id ? null : message.id)}
-                          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white p-1 sm:p-1.5 rounded-full transition-colors touch-action-manipulation shadow-lg flex items-center justify-center"
-                          title="Report message"
-                          aria-label="Report message"
-                        >
-                          <Flag size={10} className="sm:w-3 sm:h-3" />
-                        </button>
-                        {reporting === message.id && (
-                          <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10 min-w-[200px] touch-action-none">
-                            <textarea
-                              value={reportReason}
-                              onChange={(e) => setReportReason(e.target.value)}
-                              placeholder="Reason for reporting..."
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
-                              rows={3}
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleReportMessage(message.id)}
-                                className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs rounded transition-colors touch-action-manipulation"
-                              >
-                                Report
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setReporting(null);
-                                  setReportReason('');
-                                }}
-                                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs rounded transition-colors touch-action-manipulation"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
+                        {/* Menu items */}
+                        {!isAuthor && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReplyingTo(message);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            <Reply size={16} />
+                            Reply
+                          </button>
                         )}
-                      </div>
+                        
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await saveMessage(user.uid, { ...message, chatType: 'global' });
+                              success('Message saved!');
+                              setOpenMenuId(null);
+                            } catch (error) {
+                              if (error.message === 'Message already saved') {
+                                showError('Message already saved');
+                              } else {
+                                showError('Failed to save message');
+                              }
+                            }
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          style={{ transform: 'translateZ(0)' }}
+                        >
+                          <Bookmark size={16} />
+                          Save
+                        </button>
+                        
+                        {preferences.allowMessageForwarding && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleForwardMessage(message.id);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            <Forward size={16} />
+                            Forward
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const messageText = message.displayText || message.text || '';
+                            await shareMessage(messageText, message.id);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          style={{ transform: 'translateZ(0)' }}
+                        >
+                          <Share2 size={16} />
+                          Share
+                        </button>
+                        
+                        {!message.isVoice && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTranslateMessage(message.id, message.displayText || message.text || '');
+                              setOpenMenuId(null);
+                            }}
+                            disabled={translating.has(message.id)}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:bg-transparent border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            {translating.has(message.id) ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                  className="rounded-full h-4 w-4 border-b-2 border-white/70"
+                                />
+                                Translating...
+                              </>
+                            ) : (
+                              <>
+                                <Languages size={16} />
+                                Translate
+                              </>
+                            )}
+                          </button>
+                        )}
+                        
+                        {isAdminRole(userRole) && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                const isPinned = pinnedMessages.includes(message.id);
+                                if (isPinned) {
+                                  await updateDoc(doc(db, 'messages', message.id), {
+                                    pinned: false
+                                  });
+                                  setPinnedMessages(prev => prev.filter(id => id !== message.id));
+                                  success('Message unpinned');
+                                } else {
+                                  await updateDoc(doc(db, 'messages', message.id), {
+                                    pinned: true,
+                                    pinnedAt: serverTimestamp()
+                                  });
+                                  setPinnedMessages(prev => [...prev, message.id]);
+                                  success('Message pinned');
+                                }
+                                setOpenMenuId(null);
+                              } catch (error) {
+                                console.error('Error pinning message:', error);
+                                showError('Failed to pin message');
+                              }
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            <Pin size={16} />
+                            {pinnedMessages.includes(message.id) ? 'Unpin' : 'Pin'}
+                          </button>
+                        )}
+                        
+                        {canEdit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditing(message.id);
+                              setEditText(message.text);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            <Edit2 size={16} />
+                            Edit
+                          </button>
+                        )}
+                        
+                        {canDelete && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMessage(message.id, message.userId, isAIMessage);
+                              setOpenMenuId(null);
+                            }}
+                            disabled={deleting === message.id}
+                            className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:bg-transparent border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            <Trash2 size={16} />
+                            {isAIMessage ? "Delete (Admin)" : "Delete"}
+                          </button>
+                        )}
+                        
+                        {!isAuthor && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReporting(reporting === message.id ? null : message.id);
+                              if (reporting === message.id) {
+                                setOpenMenuId(null);
+                              }
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-orange-400 hover:text-orange-300 hover:bg-orange-500/20 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            <Flag size={16} />
+                            {reporting === message.id ? 'Cancel Report' : 'Report'}
+                          </button>
+                        )}
+                      </motion.div>
+                    )}
+                    
+                    {/* Report form - Fluid.so aesthetic */}
+                    {reporting === message.id && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl p-4 z-40 min-w-[250px]"
+                      >
+                        <textarea
+                          value={reportReason}
+                          onChange={(e) => setReportReason(e.target.value)}
+                          placeholder="Reason for reporting..."
+                          className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 mb-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-white/10 transition-all duration-300"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              handleReportMessage(message.id);
+                              setOpenMenuId(null);
+                            }}
+                            className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-600 hover:scale-[1.02] active:scale-[0.98] text-white text-sm rounded-xl transition-all duration-200 touch-action-manipulation font-medium gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            Report
+                          </button>
+                          <button
+                            onClick={() => {
+                              setReporting(null);
+                              setReportReason('');
+                              setOpenMenuId(null);
+                            }}
+                            className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 hover:scale-[1.02] active:scale-[0.98] text-white/70 hover:text-white text-sm rounded-xl transition-all duration-200 touch-action-manipulation font-medium border border-white/10 gpu-accelerated"
+                            style={{ transform: 'translateZ(0)' }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </motion.div>
                     )}
                   </div>
 
-                  {/* Reaction picker - always visible on touch, hover on desktop */}
-                  {!isAuthor && (
-                    <div className="mt-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    {/* Reaction picker - always visible on touch, hover on desktop */}
+                    {!isAuthor && (
+                    <div className="mt-2 opacity-100 md:opacity-0 md:group-hover/message:opacity-100 transition-opacity">
                       <div className="flex gap-1 touch-action-none">
                         {EMOJI_REACTIONS.map((emoji) => {
                           const reactionKey = `${message.id}-${emoji}`;
@@ -1510,9 +2054,9 @@ const ChatArea = ({ setActiveView }) => {
                               onClick={() => !isReacting && handleReaction(message.id, emoji)}
                               disabled={isReacting}
                               className={`p-2 rounded transition-colors touch-action-manipulation ${
-                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-200 dark:hover:bg-indigo-700 active:bg-indigo-300 dark:active:bg-indigo-600'
+                                isReacting ? 'opacity-50 cursor-wait' : 'hover:bg-indigo-600/30 active:bg-indigo-600/40'
                               } ${
-                                userReaction === emoji ? 'bg-indigo-200 dark:bg-indigo-800' : ''
+                                userReaction === emoji ? 'bg-indigo-600/30 border border-indigo-500/50' : ''
                               }`}
                               title="Add reaction"
                               aria-label={`Add ${emoji} reaction`}
@@ -1526,74 +2070,86 @@ const ChatArea = ({ setActiveView }) => {
                   )}
                 </div>
               </div>
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+                  );
+                })}
+              </>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
 
           {/* Typing Indicator */}
           {Object.keys(typingUsers).length > 0 && (
             <TypingIndicator typingUsers={typingUsers} userNames={userNames} />
           )}
 
-          {/* Message Input */}
+          {/* Message Input - Fluid.so aesthetic */}
           <div 
-            className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
+            className="glass-panel border-t border-white/10 px-3 md:px-6 py-3 md:py-4 relative z-10 rounded-b-[2rem] flex-shrink-0"
             style={{
               paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
               paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
-              paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
+              paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`,
+              flexShrink: 0
             }}
           >
-            {/* Reply Preview */}
+            {/* Reply Preview - Fluid.so aesthetic */}
             {replyingTo && (
-              <div className="mb-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between animate-slide-in-down">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-3 p-3 bg-indigo-600/20 backdrop-blur-sm border border-indigo-500/30 rounded-xl flex items-center justify-between"
+              >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Reply size={16} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                  <Reply size={16} className="text-indigo-300 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                    <p className="text-xs font-medium text-indigo-200">
                       Replying to {replyingTo.userName}
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                    <p className="text-xs text-white/60 truncate">
                       {replyingTo.text || replyingTo.displayText}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setReplyingTo(null)}
-                  className="p-1 hover:bg-indigo-100 dark:hover:bg-indigo-800 rounded transition-colors flex-shrink-0"
+                  className="p-1.5 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-lg transition-all duration-200 flex-shrink-0 gpu-accelerated"
+                  style={{ transform: 'translateZ(0)' }}
                 >
-                  <X size={16} className="text-indigo-600 dark:text-indigo-400" />
+                  <X size={16} className="text-white/70 hover:text-white transition-colors" />
                 </button>
-              </div>
+              </motion.div>
             )}
 
-            {/* File Preview */}
+            {/* File Preview - Fluid.so aesthetic */}
             {attachedFile && (
-              <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-between animate-slide-in-down">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-3 p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-between"
+              >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {attachedFile.type?.startsWith('image/') ? (
-                    <ImageIcon size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                    <ImageIcon size={20} className="text-white/70 flex-shrink-0" />
                   ) : (
-                    <File size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                    <File size={20} className="text-white/70 flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <p className="text-sm font-medium text-white truncate">
                       {attachedFile.name}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-white/60">
                       {(attachedFile.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setAttachedFile(null)}
-                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex-shrink-0"
+                  className="p-1.5 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-lg transition-all duration-200 flex-shrink-0 gpu-accelerated"
+                  style={{ transform: 'translateZ(0)' }}
                 >
-                  <X size={16} className="text-gray-600 dark:text-gray-400" />
+                  <X size={16} className="text-white/70 hover:text-white transition-colors" />
                 </button>
-              </div>
+              </motion.div>
             )}
 
             <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
@@ -1648,7 +2204,7 @@ const ChatArea = ({ setActiveView }) => {
                     }
                   }}
                   placeholder={aiHelpMode ? "Type your message... (AI Help enabled)" : "Type your message... (Use @ to mention)"}
-                  className="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                  className="w-full px-4 md:px-5 py-3 text-sm md:text-base border border-white/10 rounded-full bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
                   disabled={sending || waitingForAI}
                 />
                 {/* Mention Autocomplete */}
@@ -1671,15 +2227,17 @@ const ChatArea = ({ setActiveView }) => {
                 )}
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex items-center gap-1">
+              {/* Action Buttons - Fluid.so aesthetic */}
+              <div className="flex items-center gap-2">
                 {/* File Upload */}
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowFileUpload(!showFileUpload)}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                     title="Upload file"
+                    aria-label="Upload file or image"
+                    style={{ transform: 'translateZ(0)' }}
                   >
                     <Paperclip size={20} />
                   </button>
@@ -1695,13 +2253,53 @@ const ChatArea = ({ setActiveView }) => {
                   )}
                 </div>
 
+                {/* Poll Creator */}
+                <button
+                  type="button"
+                  onClick={() => setShowPollCreator(true)}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
+                  title="Create poll"
+                  aria-label="Create a poll"
+                  style={{ transform: 'translateZ(0)' }}
+                >
+                  <BarChart3 size={20} />
+                </button>
+
+                {/* Voice Recorder */}
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceRecorder(true)}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
+                  title="Record voice message"
+                  aria-label="Record a voice message"
+                  style={{ transform: 'translateZ(0)' }}
+                >
+                  <Mic size={20} />
+                </button>
+
+                {/* Quick Replies */}
+                <button
+                  type="button"
+                  onClick={() => setShowQuickReplies(true)}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
+                  title="Quick replies"
+                  aria-label="Open quick replies templates"
+                  style={{ transform: 'translateZ(0)' }}
+                >
+                  <MessageSquare size={20} />
+                </button>
+
                 {/* Emoji Picker */}
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
                     title="Add emoji"
+                    aria-label="Open emoji picker"
+                    aria-expanded={showEmojiPicker}
+                    aria-haspopup="listbox"
+                    style={{ transform: 'translateZ(0)' }}
                   >
                     <Smile size={20} />
                   </button>
@@ -1729,15 +2327,24 @@ const ChatArea = ({ setActiveView }) => {
                   )}
                 </div>
 
-                {/* Send Button */}
+                {/* Send Button - Fluid.so shimmer effect */}
                 <button
                   type="submit"
                   disabled={sending || waitingForAI || (!newMessage.trim() && !attachedFile)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-1 md:gap-2"
+                  className={`send-button-shimmer text-white px-5 md:px-6 py-2.5 rounded-full transition-all duration-200 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed gpu-accelerated ${
+                    !sending && !waitingForAI && (newMessage.trim() || attachedFile) 
+                      ? 'hover:scale-105 active:scale-95' 
+                      : 'opacity-50'
+                  }`}
+                  style={{ transform: 'translateZ(0)' }}
                 >
                   {waitingForAI ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="rounded-full h-4 w-4 border-b-2 border-white"
+                      />
                       <span className="hidden sm:inline">AI thinking...</span>
                     </>
                   ) : (
@@ -1750,9 +2357,13 @@ const ChatArea = ({ setActiveView }) => {
               </div>
             </form>
             {aiHelpMode && (
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 text-center">
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-white/60 mt-2 text-center font-medium"
+              >
                 💡 AI Help Mode: Virtual Senior ({geminiModels.find(m => m.value === selectedGeminiModel)?.label}) will respond to your non-toxic messages
-              </p>
+              </motion.p>
             )}
           </div>
 
@@ -1778,30 +2389,37 @@ const ChatArea = ({ setActiveView }) => {
           setShowForwardModal(false);
           setForwardingMessage(null);
         }}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Forward Message</h3>
-              <button
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="glass-panel border border-white/10 rounded-[2rem] shadow-2xl max-w-md w-full backdrop-blur-xl" onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white text-glow">Forward Message</h3>
+              <motion.button
                 onClick={() => {
                   setShowForwardModal(false);
                   setForwardingMessage(null);
                 }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                whileHover={{ scale: 1.05, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 text-white/70 hover:text-white glass-panel border border-white/10 rounded-xl transition-all"
               >
                 <X size={24} />
-              </button>
+              </motion.button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              <div className="glass-panel bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="text-sm text-white/60 mb-1 font-medium">
                   From: {forwardingMessage.userName || 'Unknown'}
                 </p>
-                <p className="text-gray-900 dark:text-white">
+                <p className="text-white font-medium">
                   {forwardingMessage.displayText || forwardingMessage.text}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-white/90 mb-2">
                   Forward to
                 </label>
                 <div className="space-y-2">
@@ -1846,7 +2464,7 @@ const ChatArea = ({ setActiveView }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -1881,6 +2499,95 @@ const ChatArea = ({ setActiveView }) => {
           imageName={previewImage.name}
           onClose={() => setPreviewImage(null)}
         />
+      )}
+
+      {/* Poll Creator Modal */}
+      {showPollCreator && (
+        <PollCreator
+          onClose={() => setShowPollCreator(false)}
+          onPollCreate={handleCreatePoll}
+          chatType="campus"
+          chatId="global"
+        />
+      )}
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          onSend={handleSendVoiceMessage}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
+
+      {/* Quick Replies Modal */}
+      {showQuickReplies && (
+        <QuickReplies
+          onSelect={handleQuickReplySelect}
+          onClose={() => setShowQuickReplies(false)}
+        />
+      )}
+
+      {/* Conversation Summarization Modal */}
+      {showSummarization && conversationSummary && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setShowSummarization(false); setConversationSummary(null); }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="glass-panel border border-white/10 rounded-[2rem] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto backdrop-blur-xl" onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-white text-glow flex items-center gap-2">
+                  <FileText size={24} />
+                  Conversation Summary
+                </h2>
+                <motion.button
+                  onClick={() => {
+                    setShowSummarization(false);
+                    setConversationSummary(null);
+                  }}
+                  whileHover={{ scale: 1.05, rotate: 90 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
+                  aria-label="Close"
+                >
+                  <X size={24} />
+                </motion.button>
+              </div>
+              <div className="prose prose-invert max-w-none">
+                <p className="text-white/80 whitespace-pre-wrap leading-relaxed">
+                  {conversationSummary}
+                </p>
+              </div>
+              <div className="mt-6 flex gap-3 justify-end">
+                <motion.button
+                  onClick={() => {
+                    navigator.clipboard.writeText(conversationSummary);
+                    success('Summary copied to clipboard!');
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
+                >
+                  <Copy size={18} />
+                  Copy Summary
+                </motion.button>
+                <motion.button
+                  onClick={() => {
+                    setShowSummarization(false);
+                    setConversationSummary(null);
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-4 py-2 glass-panel border border-white/10 text-white/80 hover:text-white hover:border-white/20 rounded-xl transition-all duration-300 font-medium"
+                >
+                  Close
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );

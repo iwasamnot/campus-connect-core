@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
 import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
@@ -313,16 +315,17 @@ const AIHelp = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-pro'); // Default model
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-2.5-flash'); // Default model (latest 2026 version)
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
   // Available Gemini models
   const geminiModels = [
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Latest 2026 Model - Fast & Efficient (Recommended)', free: true },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient', free: true },
     { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
     { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
-    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Paid - Standard Model', free: false },
+    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 2.5 Flash instead', free: false },
   ];
 
   // Initialize Gemini AI with selected model
@@ -334,8 +337,10 @@ const AIHelp = () => {
     
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
+      // Use the selected model, fallback to gemini-2.5-flash if model not found
+      const modelToUse = modelName || 'gemini-2.5-flash';
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-2.5-flash',
+        model: modelToUse,
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -381,6 +386,22 @@ const AIHelp = () => {
       return model;
     } catch (error) {
       console.error('Error initializing Gemini model:', error);
+      // Fallback to gemini-2.5-flash, then gemini-1.5-flash if the selected model fails
+      if (modelName !== 'gemini-2.5-flash') {
+        try {
+          const genAI = new GoogleGenerativeAI(apiKey);
+          return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        } catch (fallbackError) {
+          console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', fallbackError);
+          try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          } catch (secondFallbackError) {
+            console.error('Fallback models also failed:', secondFallbackError);
+            return null;
+          }
+        }
+      }
       return null;
     }
   };
@@ -593,7 +614,7 @@ ${question}
       // Bold text
       if (line.startsWith('**') && line.endsWith('**')) {
         elements.push(
-          <strong key={`bold-${key++}`} className="font-bold text-indigo-600 dark:text-indigo-400">
+          <strong key={`bold-${key++}`} className="font-bold text-indigo-300">
             {line.slice(2, -2)}
           </strong>
         );
@@ -632,164 +653,212 @@ ${question}
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div 
-        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4"
-        style={{
-          paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
-          paddingBottom: `0.75rem`,
-          paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`,
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-          <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex-shrink-0">
-              <Bot className="text-indigo-600 dark:text-indigo-400 md:w-6 md:h-6" size={20} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800 dark:text-white">AI Help Assistant</h2>
-                <Sparkles className="text-indigo-500 hidden sm:block" size={20} />
-                {import.meta.env.VITE_GEMINI_API_KEY?.trim() && (
-                  <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full">
-                    Gemini AI
-                  </span>
-                )}
+    <div className="flex flex-col h-screen bg-transparent relative overflow-hidden">
+      {/* Header - Fluid.so aesthetic */}
+      <FadeIn delay={0.1}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel border-b border-white/10 px-4 md:px-6 py-3 md:py-4 rounded-t-[2rem] flex-shrink-0 relative z-10"
+          style={{
+            paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+            paddingBottom: `0.75rem`,
+            paddingLeft: `calc(1rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(1rem + env(safe-area-inset-right, 0px))`
+          }}
+        >
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="p-2 bg-indigo-600/30 border border-indigo-500/50 rounded-xl flex-shrink-0"
+              >
+                <Bot className="text-indigo-300 md:w-6 md:h-6" size={20} />
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base sm:text-lg md:text-2xl font-bold text-white text-glow">AI Help Assistant</h2>
+                  <Sparkles className="text-indigo-400 hidden sm:block" size={20} />
+                  {import.meta.env.VITE_GEMINI_API_KEY?.trim() && (
+                    <span className="px-2 py-1 bg-indigo-600/30 border border-indigo-500/50 text-indigo-200 text-xs font-semibold rounded-full">
+                      Gemini AI
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs md:text-sm text-white/60 hidden sm:block">
+                  {import.meta.env.VITE_GEMINI_API_KEY?.trim()
+                    ? 'Intelligent AI: Powered by Google Gemini enhanced with SISTC knowledge base'
+                    : 'Intelligent answers about SISTC courses, campuses, and more'}
+                </p>
               </div>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                {import.meta.env.VITE_GEMINI_API_KEY?.trim()
-                  ? 'Intelligent AI: Powered by Google Gemini enhanced with SISTC knowledge base'
-                  : 'Intelligent answers about SISTC courses, campuses, and more'}
-              </p>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </FadeIn>
 
-      {/* Quick Questions */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-2 md:py-3">
+      {/* Quick Questions - Fluid.so aesthetic */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="glass-panel border-b border-white/10 px-4 md:px-6 py-2 md:py-3 flex-shrink-0"
+      >
         <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
           {quickQuestions.map((q, idx) => (
-            <button
+            <motion.button
               key={idx}
               onClick={() => handleQuickQuestion(q.question)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors text-sm"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600/30 border border-indigo-500/50 text-indigo-200 rounded-xl hover:bg-indigo-600/40 transition-all text-sm font-medium"
             >
               <q.icon size={16} />
               <span>{q.text}</span>
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex items-start gap-3 ${
-              message.type === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            {message.type === 'bot' && (
-              <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-full flex-shrink-0">
-                <Bot className="text-indigo-600 dark:text-indigo-400" size={20} />
-              </div>
-            )}
-            <div
-              className={`max-w-[85%] sm:max-w-2xl px-3 md:px-4 py-2 md:py-3 rounded-lg ${
-                message.type === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700'
+      {/* Messages Area - Fluid.so aesthetic */}
+      <StaggerContainer className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4" staggerDelay={0.05} initialDelay={0.2}>
+        {messages.map((message, index) => (
+          <StaggerItem key={message.id}>
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ y: -2, scale: 1.01 }}
+              className={`flex items-start gap-3 ${
+                message.type === 'user' ? 'justify-end' : 'justify-start'
               }`}
             >
-              <div className="text-sm whitespace-pre-wrap">
-                {formatMessage(message.content)}
-              </div>
-              <div className={`text-xs mt-2 ${
-                message.type === 'user' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'
-              }`}>
-                {message.timestamp.toLocaleTimeString()}
-              </div>
-            </div>
-            {message.type === 'user' && (
-              <div className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0">
-                <div className="w-5 h-5 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
-              </div>
-            )}
-          </div>
+              {message.type === 'bot' && (
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="p-2 bg-indigo-600/30 border border-indigo-500/50 rounded-full flex-shrink-0"
+                >
+                  <Bot className="text-indigo-300" size={20} />
+                </motion.div>
+              )}
+              <motion.div
+                initial={{ opacity: 0, x: message.type === 'user' ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className={`max-w-[85%] sm:max-w-2xl px-3 md:px-4 py-2 md:py-3 rounded-xl ${
+                  message.type === 'user'
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'glass-panel text-white border border-white/10'
+                }`}
+              >
+                <div className="text-sm whitespace-pre-wrap text-white/90">
+                  {formatMessage(message.content)}
+                </div>
+                <div className={`text-xs mt-2 ${
+                  message.type === 'user' ? 'text-indigo-200' : 'text-white/60'
+                }`}>
+                  {message.timestamp.toLocaleTimeString()}
+                </div>
+              </motion.div>
+              {message.type === 'user' && (
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  className="p-2 bg-white/10 border border-white/20 rounded-full flex-shrink-0"
+                >
+                  <div className="w-5 h-5 rounded-full bg-indigo-400"></div>
+                </motion.div>
+              )}
+            </motion.div>
+          </StaggerItem>
         ))}
-        {loading && (
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-full">
-              <Bot className="text-indigo-600 dark:text-indigo-400" size={20} />
-            </div>
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Loader className="animate-spin text-indigo-600 dark:text-indigo-400" size={20} />
-                <span className="text-sm text-gray-600 dark:text-gray-400">Thinking...</span>
+        <AnimatePresence>
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex items-start gap-3"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="p-2 bg-indigo-600/30 border border-indigo-500/50 rounded-full"
+              >
+                <Bot className="text-indigo-300" size={20} />
+              </motion.div>
+              <div className="glass-panel border border-white/10 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Loader className="text-indigo-300" size={20} />
+                  </motion.div>
+                  <span className="text-sm text-white/70">Thinking...</span>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div ref={messagesEndRef} />
-      </div>
+      </StaggerContainer>
 
-      {/* Input Area */}
-      <div 
-        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 md:px-6 py-3 md:py-4"
-        style={{
-          paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
-          paddingTop: `0.75rem`,
-          paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
-          paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
-        }}
-      >
-        <form onSubmit={handleSend} className="flex gap-2 md:gap-3">
-          <label htmlFor="ai-help-input" className="sr-only">Ask about SISTC</label>
-          <input
-            type="text"
-            id="ai-help-input"
-            name="ai-help-message"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about SISTC..."
-            className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2"
-          >
-            <Send size={18} className="md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Send</span>
-          </button>
-        </form>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-          {(() => {
-            const hasGemini = !!(import.meta.env.VITE_GEMINI_API_KEY?.trim());
-            if (hasGemini) {
+      {/* Input Area - Fluid.so aesthetic */}
+      <FadeIn delay={0.25}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel border-t border-white/10 px-3 md:px-6 py-3 md:py-4 rounded-b-[2rem] flex-shrink-0"
+          style={{
+            paddingBottom: `max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.3))`,
+            paddingTop: `0.75rem`,
+            paddingLeft: `calc(0.75rem + env(safe-area-inset-left, 0px))`,
+            paddingRight: `calc(0.75rem + env(safe-area-inset-right, 0px))`
+          }}
+        >
+          <form onSubmit={handleSend} className="flex gap-2 md:gap-3">
+            <label htmlFor="ai-help-input" className="sr-only">Ask about SISTC</label>
+            <input
+              type="text"
+              id="ai-help-input"
+              name="ai-help-message"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about SISTC..."
+              className="flex-1 px-3 md:px-4 py-2.5 text-sm md:text-base border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+              disabled={loading}
+            />
+            <motion.button
+              type="submit"
+              disabled={loading || !input.trim()}
+              whileHover={(!loading && input.trim()) ? { scale: 1.05, y: -2 } : {}}
+              whileTap={(!loading && input.trim()) ? { scale: 0.95 } : {}}
+              className="send-button-shimmer text-white px-4 md:px-6 py-2.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 md:gap-2 font-medium shadow-lg hover:shadow-xl disabled:transform-none"
+            >
+              <Send size={18} className="md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Send</span>
+            </motion.button>
+          </form>
+          <p className="text-xs text-white/60 mt-2 text-center">
+            {(() => {
+              const hasGemini = !!(import.meta.env.VITE_GEMINI_API_KEY?.trim());
+              if (hasGemini) {
+                return (
+                  <>
+                    Intelligent AI: Google Gemini 2.5 Flash + SISTC Knowledge Base • 
+                    <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-300 hover:text-indigo-200 hover:underline ml-1 transition-colors">sistc.edu.au</a>
+                  </>
+                );
+              }
               return (
                 <>
-                  Intelligent AI: Google Gemini 2.5 Flash + SISTC Knowledge Base • 
-                  <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
+                  Powered by SISTC Knowledge Base • 
+                  <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-300 hover:text-indigo-200 hover:underline ml-1 transition-colors">sistc.edu.au</a>
                 </>
               );
-            }
-            return (
-              <>
-                Powered by SISTC Knowledge Base • 
-                <a href="https://sistc.edu.au/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1">sistc.edu.au</a>
-              </>
-            );
-          })()}
-        </p>
-      </div>
+            })()}
+          </p>
+        </motion.div>
+      </FadeIn>
     </div>
   );
 };

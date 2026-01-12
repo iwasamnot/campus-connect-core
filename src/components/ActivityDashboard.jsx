@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, memo } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
@@ -20,14 +21,11 @@ import {
   Users, 
   Bell, 
   TrendingUp, 
-  Clock, 
-  Bookmark,
-  Calendar,
-  Zap,
-  BarChart3,
-  Filter
+  Clock
 } from 'lucide-react';
 import { SkeletonLoader, CardSkeleton } from './SkeletonLoader';
+import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
+
 // Date formatting utility
 const formatDistanceToNow = (date) => {
   const now = new Date();
@@ -131,16 +129,13 @@ const ActivityDashboard = memo(() => {
           messagesToday = todaySnapshot.size;
         } catch (error) {
           if (error.code === 'failed-precondition' || error.code === 'resource-exhausted') {
-            // Index missing - use simple fallback query (client-side filtering)
             console.warn('Index missing for messages query. Using fallback with client-side filtering.');
             try {
-              // Simple query - just get all user messages, filter client-side
               const fallbackQuery = query(
                 collection(db, 'messages'),
                 where('userId', '==', user.uid)
               );
               const fallbackSnapshot = await getDocs(fallbackQuery);
-              // Filter client-side by timestamp
               messagesToday = fallbackSnapshot.docs.filter(doc => {
                 const msg = doc.data();
                 const msgTime = msg.timestamp?.toDate?.() || new Date(msg.timestamp || 0);
@@ -169,16 +164,13 @@ const ActivityDashboard = memo(() => {
           messagesThisWeek = weekSnapshot.size;
         } catch (error) {
           if (error.code === 'failed-precondition' || error.code === 'resource-exhausted') {
-            // Index missing - use simple fallback query (client-side filtering)
             console.warn('Index missing for messages query. Using fallback with client-side filtering.');
             try {
-              // Simple query - just get all user messages, filter client-side
               const fallbackQuery = query(
                 collection(db, 'messages'),
                 where('userId', '==', user.uid)
               );
               const fallbackSnapshot = await getDocs(fallbackQuery);
-              // Filter client-side by timestamp
               messagesThisWeek = fallbackSnapshot.docs.filter(doc => {
                 const msg = doc.data();
                 const msgTime = msg.timestamp?.toDate?.() || new Date(msg.timestamp || 0);
@@ -201,7 +193,6 @@ const ActivityDashboard = memo(() => {
           unreadNotifications: 0
         });
       } catch (error) {
-        // Only log unexpected errors, not index-related ones
         if (error.code !== 'failed-precondition' && error.code !== 'resource-exhausted') {
           console.error('Error calculating stats:', error);
         } else {
@@ -251,134 +242,187 @@ const ActivityDashboard = memo(() => {
   return (
     <div className="p-4 md:p-6 space-y-6">
       {/* Header */}
-      <div 
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4"
-        style={{
-          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
-            <span>Activity Dashboard</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Your recent activity and platform insights
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <FadeIn delay={0.1}>
+        <div 
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4"
+          style={{
+            paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+            position: 'relative',
+            zIndex: 10
+          }}
+        >
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-glow flex items-center gap-2">
+              <div className="p-2 glass-panel border border-white/10 rounded-xl">
+                <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+              </div>
+              <span>Activity Dashboard</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-white/60 mt-1">
+              Your recent activity and platform insights
+            </p>
+          </div>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
           >
-            <option value="all">All Activity</option>
-            <option value="messages">Messages</option>
-            <option value="mentions">Mentions</option>
+            <option value="all" className="bg-[#1a1a1a] text-white">All Activity</option>
+            <option value="messages" className="bg-[#1a1a1a] text-white">Messages</option>
+            <option value="mentions" className="bg-[#1a1a1a] text-white">Mentions</option>
           </select>
         </div>
-      </div>
+      </FadeIn>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Messages Today</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                {activityStats.messagesToday}
-              </p>
-            </div>
-            <MessageSquare className="w-12 h-12 text-indigo-600 dark:text-indigo-400" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">This Week</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                {activityStats.messagesThisWeek}
-              </p>
-            </div>
-            <TrendingUp className="w-12 h-12 text-green-600 dark:text-green-400" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Active Groups</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                {activityStats.activeGroups}
-              </p>
-            </div>
-            <Users className="w-12 h-12 text-purple-600 dark:text-purple-400" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Notifications</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                {activityStats.unreadNotifications}
-              </p>
-            </div>
-            <Bell className="w-12 h-12 text-yellow-600 dark:text-yellow-400" />
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          Recent Activity
-        </h2>
-        <div className="space-y-3">
-          {filteredActivity.length === 0 ? (
-            <p className="text-center py-8 text-gray-500 dark:text-gray-400">
-              No recent activity
-            </p>
-          ) : (
-            filteredActivity.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center flex-shrink-0">
-                  {item.mentions?.includes(user?.uid) ? (
-                    <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  ) : (
-                    <MessageSquare className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  )}
+      <StaggerContainer staggerDelay={0.1} initialDelay={0.2}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-white/60 font-medium">Messages Today</p>
+                  <p className="text-3xl font-bold text-white mt-2 text-glow">
+                    {activityStats.messagesToday}
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {item.userName || 'Unknown'}
-                    </span>
-                    {item.mentions?.includes(user?.uid) && (
-                      <span className="px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full">
-                        Mentioned you
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-                    {item.displayText || item.text || ''}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {formatTime(item.timestamp)}
-                  </p>
+                <div className="p-3 glass-panel bg-indigo-600/20 border border-indigo-500/30 rounded-xl">
+                  <MessageSquare className="w-8 h-8 text-indigo-400" />
                 </div>
               </div>
-            ))
-          )}
+            </motion.div>
+          </StaggerItem>
+
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-white/60 font-medium">This Week</p>
+                  <p className="text-3xl font-bold text-white mt-2 text-glow">
+                    {activityStats.messagesThisWeek}
+                  </p>
+                </div>
+                <div className="p-3 glass-panel bg-green-600/20 border border-green-500/30 rounded-xl">
+                  <TrendingUp className="w-8 h-8 text-green-400" />
+                </div>
+              </div>
+            </motion.div>
+          </StaggerItem>
+
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-white/60 font-medium">Active Groups</p>
+                  <p className="text-3xl font-bold text-white mt-2 text-glow">
+                    {activityStats.activeGroups}
+                  </p>
+                </div>
+                <div className="p-3 glass-panel bg-purple-600/20 border border-purple-500/30 rounded-xl">
+                  <Users className="w-8 h-8 text-purple-400" />
+                </div>
+              </div>
+            </motion.div>
+          </StaggerItem>
+
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-white/60 font-medium">Notifications</p>
+                  <p className="text-3xl font-bold text-white mt-2 text-glow">
+                    {activityStats.unreadNotifications}
+                  </p>
+                </div>
+                <div className="p-3 glass-panel bg-yellow-600/20 border border-yellow-500/30 rounded-xl">
+                  <Bell className="w-8 h-8 text-yellow-400" />
+                </div>
+              </div>
+            </motion.div>
+          </StaggerItem>
         </div>
-      </div>
+      </StaggerContainer>
+
+      {/* Recent Activity */}
+      <FadeIn delay={0.3}>
+        <div className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl">
+          <h2 className="text-xl font-semibold text-white text-glow mb-4 flex items-center gap-2">
+            <div className="p-1.5 glass-panel border border-white/10 rounded-lg">
+              <Clock className="w-5 h-5 text-indigo-400" />
+            </div>
+            Recent Activity
+          </h2>
+          <div className="space-y-3">
+            {filteredActivity.length === 0 ? (
+              <div className="text-center py-12">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="inline-block p-4 glass-panel border border-white/10 rounded-2xl mb-4"
+                >
+                  <Activity className="w-16 h-16 text-white/40 mx-auto" />
+                </motion.div>
+                <p className="text-white/60 font-medium">
+                  No recent activity
+                </p>
+              </div>
+            ) : (
+              filteredActivity.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ x: 4, scale: 1.01 }}
+                  className="flex items-start gap-3 p-3 glass-panel border border-white/10 rounded-xl hover:border-white/20 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-full glass-panel bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
+                    {item.mentions?.includes(user?.uid) ? (
+                      <Bell className="w-5 h-5 text-indigo-400" />
+                    ) : (
+                      <MessageSquare className="w-5 h-5 text-indigo-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-white">
+                        {item.userName || 'Unknown'}
+                      </span>
+                      {item.mentions?.includes(user?.uid) && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="px-2 py-0.5 text-xs glass-panel bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 rounded-full font-medium"
+                        >
+                          Mentioned you
+                        </motion.span>
+                      )}
+                    </div>
+                    <p className="text-sm text-white/70 line-clamp-2 leading-relaxed">
+                      {item.displayText || item.text || ''}
+                    </p>
+                    <p className="text-xs text-white/50 mt-1">
+                      {formatTime(item.timestamp)}
+                    </p>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </div>
+      </FadeIn>
     </div>
   );
 });
@@ -386,4 +430,3 @@ const ActivityDashboard = memo(() => {
 ActivityDashboard.displayName = 'ActivityDashboard';
 
 export default ActivityDashboard;
-

@@ -1,122 +1,176 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { CallContext } from '../context/CallContext';
-import { Phone, Video, Mic, MicOff, VideoOff, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { MeetingProvider } from '@videosdk.live/react-sdk';
 import MeetingView from './MeetingView';
+import { Phone, Video, X, Minimize2, Maximize2 } from 'lucide-react';
 
 const CallModal = () => {
-  // Safely get context with fallback
   const callContext = useContext(CallContext);
-  
-  // If context is not available, don't render (prevents error during HMR or initialization)
-  if (!callContext) {
+  const { user } = useAuth();
+
+  if (!callContext || !callContext.callState || !callContext.callTarget) {
     return null;
   }
 
-  const { 
-    callState, 
-    callType, 
-    callTarget, 
-    isMuted, 
-    isVideoEnabled, 
-    localVideoRef, 
-    remoteVideoRef,
-    token,
-    meetingId,
-    acceptCall,
-    endCall, 
-    toggleMute, 
-    toggleVideo
-  } = callContext;
-  const { user } = useAuth();
+  const { callState, callType, callTarget, token, meetingId, acceptCall, endCall } = callContext;
+  const [isMinimized, setIsMinimized] = useState(false);
 
-  if (!callState || !callTarget) return null;
+  // Only lock body scroll for pre-call UI, not active calls
+  useEffect(() => {
+    if (callState && callState !== 'active') {
+      // Lock body scroll only for pre-call (incoming/outgoing)
+      document.body.style.overflow = 'hidden';
+      
+      // Handle browser back button - exit call
+      const handlePopState = (e) => {
+        e.preventDefault();
+        endCall();
+        window.history.pushState(null, '', window.location.href);
+      };
 
-  // If call is active and we have token/meetingId, use VideoSDK MeetingProvider
+      window.history.pushState(null, '', window.location.href);
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        document.body.style.overflow = '';
+      };
+    } else {
+      // Allow scrolling during active calls so users can see messages
+      document.body.style.overflow = '';
+    }
+  }, [callState, endCall]);
+
+  // Active call - show VideoSDK meeting as floating overlay
   if (callState === 'active' && token && meetingId) {
     const userName = user?.email?.split('@')[0] || user?.displayName || 'User';
-    
+
     return (
-      <div className="fixed inset-0 bg-black z-50">
+      <div 
+        className={`fixed transition-all duration-300 ${
+          isMinimized 
+            ? 'bottom-4 right-4 w-80 h-60 rounded-lg overflow-hidden shadow-2xl z-[60]' 
+            : 'inset-0 bg-black z-[9999]'
+        }`}
+        style={{ 
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          touchAction: isMinimized ? 'manipulation' : 'none'
+        }}
+      >
+        {/* Minimize/Maximize button */}
+        <button
+          onClick={() => setIsMinimized(!isMinimized)}
+          className="absolute top-2 right-2 z-10 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors touch-manipulation"
+          style={{ touchAction: 'manipulation' }}
+          aria-label={isMinimized ? 'Maximize call' : 'Minimize call'}
+        >
+          {isMinimized ? (
+            <Maximize2 size={20} className="text-white" />
+          ) : (
+            <Minimize2 size={20} className="text-white" />
+          )}
+        </button>
+
         <MeetingProvider
           config={{
             meetingId: meetingId,
-            micEnabled: !isMuted,
-            webcamEnabled: callType === 'video' && isVideoEnabled,
+            micEnabled: true,
+            webcamEnabled: callType === 'video',
             name: userName
           }}
           token={token}
           joinWithoutUserInteraction={true}
         >
           <MeetingView 
-            onLeave={endCall}
+            onLeave={endCall} 
             userName={userName}
+            isMinimized={isMinimized}
           />
         </MeetingProvider>
       </div>
     );
   }
 
-  // Render pre-call UI (outgoing/incoming)
+  // Pre-call UI (outgoing/incoming)
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-90 z-[100] flex items-center justify-center touch-none"
+      style={{ 
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        touchAction: 'none'
+      }}
+      onClick={(e) => {
+        // Prevent accidental dismissals, but allow clicking buttons
+        if (e.target === e.currentTarget) {
+          // Only allow dismiss on outgoing calls by clicking outside
+          if (callState === 'outgoing') {
+            endCall();
+          }
+        }
+      }}
+    >
       <div className="relative w-full h-full flex flex-col">
-        {/* Placeholder screen */}
-        <div className="flex-1 relative bg-gray-900">
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                {callType === 'video' ? (
-                  <Video size={40} className="text-white" />
-                ) : (
-                  <Phone size={40} className="text-white" />
-                )}
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">
-                {callState === 'outgoing' ? 'Calling...' : callState === 'incoming' ? 'Incoming Call' : callTarget.name || callTarget.email}
-              </h2>
-              <p className="text-gray-400">
-                {callState === 'incoming' ? (callTarget.name || callTarget.email) : (callType === 'video' ? 'Video Call' : 'Voice Call')}
-              </p>
+        <div className="flex-1 relative bg-gray-900 flex items-center justify-center">
+          <div className="text-center px-4">
+            <div className="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              {callType === 'video' ? (
+                <Video size={40} className="text-white" />
+              ) : (
+                <Phone size={40} className="text-white" />
+              )}
             </div>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {callState === 'outgoing' ? 'Calling...' : 'Incoming Call'}
+            </h2>
+            <p className="text-gray-400">
+              {callTarget.name || callTarget.email || 'User'}
+            </p>
           </div>
         </div>
 
-        {/* Call controls */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-8">
-          <div className="flex items-center justify-center gap-4">
-            {/* Incoming call controls */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+          <div className="flex items-center justify-center gap-6">
             {callState === 'incoming' && (
               <>
                 <button
-                  onClick={endCall}
-                  className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors shadow-lg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    endCall();
+                  }}
+                  className="w-20 h-20 rounded-full bg-red-600 active:bg-red-700 flex items-center justify-center transition-colors touch-manipulation"
+                  style={{ touchAction: 'manipulation' }}
                   aria-label="Decline call"
-                  title="Decline"
                 >
-                  <X size={28} className="text-white" />
+                  <X size={32} className="text-white" />
                 </button>
                 <button
-                  onClick={acceptCall}
-                  className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors shadow-lg animate-pulse"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    acceptCall();
+                  }}
+                  className="w-20 h-20 rounded-full bg-green-600 active:bg-green-700 flex items-center justify-center transition-colors animate-pulse touch-manipulation"
+                  style={{ touchAction: 'manipulation' }}
                   aria-label="Accept call"
-                  title="Accept"
                 >
-                  <Phone size={28} className="text-white" />
+                  <Phone size={32} className="text-white" />
                 </button>
               </>
             )}
 
-            {/* Outgoing call controls */}
             {callState === 'outgoing' && (
               <button
-                onClick={endCall}
-                className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  endCall();
+                }}
+                className="w-20 h-20 rounded-full bg-red-600 active:bg-red-700 flex items-center justify-center transition-colors touch-manipulation"
+                style={{ touchAction: 'manipulation' }}
                 aria-label="Cancel call"
-                title="Cancel"
               >
-                <X size={28} className="text-white" />
+                <X size={32} className="text-white" />
               </button>
             )}
           </div>
@@ -127,3 +181,4 @@ const CallModal = () => {
 };
 
 export default CallModal;
+

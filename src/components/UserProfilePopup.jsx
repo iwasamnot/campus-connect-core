@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 // Use window.__firebaseDb to avoid import/export issues in production builds
 const db = typeof window !== 'undefined' && window.__firebaseDb 
@@ -106,35 +107,73 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
   if (!userId) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 overflow-y-auto"
+        onClick={onClose}
+        style={{ 
+          zIndex: 9999,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          minHeight: '100dvh' // Dynamic viewport height for mobile (100dvh > 100vh)
+        }}
       >
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white">User Profile</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X size={24} />
-          </button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="glass-panel border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-y-auto overscroll-contain touch-pan-y"
+          onClick={(e) => e.stopPropagation()}
+          style={{ 
+            zIndex: 10000,
+            maxHeight: 'calc(100dvh - 2rem)', // Use dynamic viewport height for mobile
+            margin: 'auto',
+            position: 'relative',
+            WebkitOverflowScrolling: 'touch',
+            scrollBehavior: 'smooth',
+            minHeight: 0 // Ensure it can shrink if needed
+          }}
+        >
+          <div className="sticky top-0 glass-panel border-b border-white/10 px-6 py-4 flex items-center justify-between backdrop-blur-xl z-10 rounded-t-2xl">
+            <h3 className="text-xl font-bold text-white text-glow">User Profile</h3>
+            <motion.button
+              onClick={onClose}
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              className="text-white/70 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg"
+            >
+              <X size={24} />
+            </motion.button>
+          </div>
 
         <div className="p-6">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="rounded-full h-8 w-8 border-b-2 border-indigo-400"
+              />
             </div>
           ) : userData ? (
             <div className="space-y-6">
-              {/* Profile Picture */}
+              {/* Profile Picture - Fluid.so aesthetic */}
               <div className="flex justify-center">
                 {userData.profilePicture ? (
                   <img 
                     src={userData.profilePicture} 
                     alt={userData.name || 'Profile'} 
-                    className="w-24 h-24 rounded-full object-cover border-4 border-indigo-200 dark:border-indigo-700"
+                    className="w-24 h-24 rounded-full object-cover border-4 border-indigo-500/50 shadow-lg"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';
@@ -142,35 +181,35 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
                   />
                 ) : null}
                 <div 
-                  className={`w-24 h-24 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center border-4 border-indigo-200 dark:border-indigo-700 ${userData.profilePicture ? 'hidden' : ''}`}
+                  className={`w-24 h-24 rounded-full bg-indigo-600/30 flex items-center justify-center border-4 border-indigo-500/50 ${userData.profilePicture ? 'hidden' : ''}`}
                 >
-                  <User size={48} className="text-indigo-600 dark:text-indigo-400" />
+                  <User size={48} className="text-indigo-300" />
                 </div>
               </div>
 
-              {/* Name */}
+              {/* Name - Fluid.so aesthetic */}
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <h4 className="text-2xl font-bold text-gray-800 dark:text-white">
+                  <h4 className="text-2xl font-bold text-white text-glow">
                     {userData.name}
                   </h4>
                   {isUserOnline(userData) ? (
-                    <div className="w-3 h-3 bg-green-500 rounded-full" title="Online" />
+                    <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg" title="Online" />
                   ) : userData.lastSeen ? (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(userData.lastSeen)}`} />
+                    <div className="w-3 h-3 bg-white/40 rounded-full" title={`Last seen: ${formatLastSeen(userData.lastSeen)}`} />
                   ) : (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full" title="Offline" />
+                    <div className="w-3 h-3 bg-white/40 rounded-full" title="Offline" />
                   )}
                 </div>
                 <span className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full ${
                   userData.role === 'admin' || userData.role === 'admin1'
-                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    ? 'bg-indigo-600/30 border border-indigo-500/50 text-indigo-200'
+                    : 'bg-white/10 border border-white/20 text-white/80'
                 }`}>
                   {userData.role || 'student'}
                 </span>
-                {/* Online Status / Last Seen */}
-                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {/* Online Status / Last Seen - Fluid.so aesthetic */}
+                <div className="mt-2 text-sm text-white/60">
                   {isUserOnline(userData) ? (
                     <span className="flex items-center justify-center gap-1">
                       <Circle size={8} className="fill-green-500 text-green-500" />
@@ -178,127 +217,130 @@ const UserProfilePopup = ({ userId, onClose, onStartPrivateChat }) => {
                     </span>
                   ) : userData.lastSeen ? (
                     <span className="flex items-center justify-center gap-1">
-                      <Circle size={8} className="fill-gray-400 text-gray-400" />
+                      <Circle size={8} className="fill-white/40 text-white/40" />
                       Last seen: {formatLastSeen(userData.lastSeen)}
                     </span>
                   ) : (
                     <span className="flex items-center justify-center gap-1">
-                      <Circle size={8} className="fill-gray-400 text-gray-400" />
+                      <Circle size={8} className="fill-white/40 text-white/40" />
                       Offline
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Start Private Chat Button */}
+              {/* Start Private Chat Button - Fluid.so aesthetic */}
               {onStartPrivateChat && user && userData && user.uid !== userId && (
-                <div className="flex justify-center pt-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                  <button
+                <div className="flex justify-center pt-4 pb-4 border-b border-white/10">
+                  <motion.button
                     onClick={() => {
                       onStartPrivateChat(userId, userData);
                       onClose();
                     }}
-                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:shadow-md font-medium"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="send-button-shimmer flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all font-medium shadow-lg hover:shadow-xl"
                   >
                     <MessageCircle size={20} />
                     <span>Start Private Chat</span>
-                  </button>
+                  </motion.button>
                 </div>
               )}
 
-              {/* Details */}
+              {/* Details - Fluid.so aesthetic */}
               <div className="space-y-4">
                 {userData.bio && userData.bio.trim() && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <FileText size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Bio</span>
+                      <FileText size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Bio</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.bio}</p>
+                    <p className="text-sm text-white/70 pl-6">{userData.bio}</p>
                   </div>
                 )}
 
                 {userData.studentEmail && userData.studentEmail.trim() && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Student Email</span>
+                      <Mail size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Student Email</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.studentEmail}</p>
+                    <p className="text-sm text-white/70 pl-6">{userData.studentEmail}</p>
                   </div>
                 )}
 
                 {userData.personalEmail && userData.personalEmail.trim() && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <Mail size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Personal Email</span>
+                      <Mail size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Personal Email</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.personalEmail}</p>
+                    <p className="text-sm text-white/70 pl-6">{userData.personalEmail}</p>
                   </div>
                 )}
 
                 {userData.phoneNumber && userData.phoneNumber.trim() && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <Phone size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone</span>
+                      <Phone size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Phone</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.phoneNumber}</p>
+                    <p className="text-sm text-white/70 pl-6">{userData.phoneNumber}</p>
                   </div>
                 )}
 
                 {userData.course && userData.course.trim() && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <GraduationCap size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Course</span>
+                      <GraduationCap size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Course</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.course}</p>
+                    <p className="text-sm text-white/70 pl-6">{userData.course}</p>
                   </div>
                 )}
 
                 {userData.yearOfStudy && userData.yearOfStudy.trim() && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <GraduationCap size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Year of Study</span>
+                      <GraduationCap size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Year of Study</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.yearOfStudy}</p>
+                    <p className="text-sm text-white/70 pl-6">{userData.yearOfStudy}</p>
                   </div>
                 )}
 
                 {userData.dateOfBirth && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <Calendar size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</span>
+                      <Calendar size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Date of Birth</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">
+                    <p className="text-sm text-white/70 pl-6">
                       {new Date(userData.dateOfBirth).toLocaleDateString()}
                     </p>
                   </div>
                 )}
 
                 {userData.address && userData.address.trim() && (
-                  <div>
+                  <div className="glass-panel border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <MapPin size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</span>
+                      <MapPin size={16} className="text-indigo-300" />
+                      <span className="text-sm font-medium text-white/90">Address</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-6">{userData.address}</p>
+                    <p className="text-sm text-white/70 pl-6">{userData.address}</p>
                   </div>
                 )}
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">User not found</p>
+              <p className="text-white/60">User not found</p>
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+    </AnimatePresence>
   );
 };
 

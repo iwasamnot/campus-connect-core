@@ -1,4 +1,5 @@
 import { useState, useMemo, memo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
@@ -8,6 +9,7 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
   : null;
 import { Calendar, Clock, Send, Trash2, X, Plus } from 'lucide-react';
 import { SkeletonLoader } from './SkeletonLoader';
+import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
 
 const MessageScheduler = memo(() => {
   const { user } = useAuth();
@@ -105,170 +107,221 @@ const MessageScheduler = memo(() => {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <div 
-        className="flex items-center justify-between mb-4"
-        style={{
-          paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
-            <span>Message Scheduler</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Schedule messages to be sent at a specific time
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+      <FadeIn delay={0.1}>
+        <div 
+          className="flex items-center justify-between mb-4"
+          style={{
+            paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
+            position: 'relative',
+            zIndex: 10
+          }}
         >
-          <Plus className="w-4 h-4" />
-          Schedule Message
-        </button>
-      </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-glow flex items-center gap-2">
+              <div className="p-2 glass-panel border border-white/10 rounded-xl">
+                <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+              </div>
+              <span>Message Scheduler</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-white/60 mt-1">
+              Schedule messages to be sent at a specific time
+            </p>
+          </div>
+          <motion.button
+            onClick={() => setShowForm(!showForm)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Schedule Message
+          </motion.button>
+        </div>
+      </FadeIn>
 
       {/* Schedule Form */}
-      {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              New Scheduled Message
-            </h2>
-            <button
-              onClick={() => setShowForm(false)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="scheduler-message-text" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Message Text
-              </label>
-              <textarea
-                id="scheduler-message-text"
-                name="text"
-                value={formData.text}
-                onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                rows={4}
-                placeholder="Enter your message..."
-                required
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="scheduler-datetime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Scheduled Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  id="scheduler-datetime"
-                  name="scheduledTime"
-                  value={formData.scheduledTime}
-                  onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="scheduler-chat-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Chat Type
-                </label>
-                <select
-                  id="scheduler-chat-type"
-                  name="chatType"
-                  value={formData.chatType}
-                  onChange={(e) => setFormData({ ...formData, chatType: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                >
-                  <option value="global">Campus Chat</option>
-                  <option value="private">Private Chat</option>
-                  <option value="group">Group Chat</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-              >
-                <Send className="w-4 h-4" />
-                Schedule Message
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData({ text: '', scheduledTime: '', chatType: 'global' });
-                }}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <StaggerContainer staggerDelay={0.05} initialDelay={0.1}>
+              <StaggerItem>
+                <div className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-white text-glow">
+                      New Scheduled Message
+                    </h2>
+                    <motion.button
+                      onClick={() => setShowForm(false)}
+                      whileHover={{ scale: 1.05, rotate: 90 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
+                    >
+                      <X className="w-5 h-5" />
+                    </motion.button>
+                  </div>
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <StaggerItem>
+                      <div>
+                        <label htmlFor="scheduler-message-text" className="block text-sm font-semibold text-white/90 mb-2.5">
+                          Message Text
+                        </label>
+                        <textarea
+                          id="scheduler-message-text"
+                          name="text"
+                          value={formData.text}
+                          onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                          className="w-full px-4 py-3 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 resize-none"
+                          rows={4}
+                          placeholder="Enter your message..."
+                          required
+                        />
+                      </div>
+                    </StaggerItem>
+                    <StaggerItem>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="scheduler-datetime" className="block text-sm font-semibold text-white/90 mb-2.5">
+                            Scheduled Date & Time
+                          </label>
+                          <input
+                            type="datetime-local"
+                            id="scheduler-datetime"
+                            name="scheduledTime"
+                            value={formData.scheduledTime}
+                            onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
+                            className="w-full px-4 py-3 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="scheduler-chat-type" className="block text-sm font-semibold text-white/90 mb-2.5">
+                            Chat Type
+                          </label>
+                          <select
+                            id="scheduler-chat-type"
+                            name="chatType"
+                            value={formData.chatType}
+                            onChange={(e) => setFormData({ ...formData, chatType: e.target.value })}
+                            className="w-full px-4 py-3 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
+                          >
+                            <option value="global" className="bg-[#1a1a1a] text-white">Campus Chat</option>
+                            <option value="private" className="bg-[#1a1a1a] text-white">Private Chat</option>
+                            <option value="group" className="bg-[#1a1a1a] text-white">Group Chat</option>
+                          </select>
+                        </div>
+                      </div>
+                    </StaggerItem>
+                    <StaggerItem>
+                      <div className="flex gap-3">
+                        <motion.button
+                          type="submit"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
+                        >
+                          <Send className="w-4 h-4" />
+                          Schedule Message
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          onClick={() => {
+                            setShowForm(false);
+                            setFormData({ text: '', scheduledTime: '', chatType: 'global' });
+                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="px-4 py-2.5 glass-panel border border-white/10 text-white/80 hover:text-white hover:border-white/20 rounded-xl transition-all duration-300 font-medium"
+                        >
+                          Cancel
+                        </motion.button>
+                      </div>
+                    </StaggerItem>
+                  </form>
+                </div>
+              </StaggerItem>
+            </StaggerContainer>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Scheduled Messages List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          Scheduled Messages ({scheduledMessages.length})
-        </h2>
-        {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <SkeletonLoader key={i} height="80px" />
-            ))}
-          </div>
-        ) : scheduledMessages.length === 0 ? (
-          <p className="text-center py-8 text-gray-500 dark:text-gray-400">
-            No scheduled messages. Schedule your first message above!
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {scheduledMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`p-4 rounded-lg border ${
-                  isUpcoming(msg.scheduledTime)
-                    ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800'
-                    : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700'
-                }`}
+      <FadeIn delay={0.2}>
+        <div className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl">
+          <h2 className="text-xl font-semibold text-white text-glow mb-4 flex items-center gap-2">
+            <div className="p-1.5 glass-panel border border-white/10 rounded-lg">
+              <Clock className="w-5 h-5 text-indigo-400" />
+            </div>
+            Scheduled Messages ({scheduledMessages.length})
+          </h2>
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonLoader key={i} height="80px" />
+              ))}
+            </div>
+          ) : scheduledMessages.length === 0 ? (
+            <div className="text-center py-12">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="inline-block p-4 glass-panel border border-white/10 rounded-2xl mb-4"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-gray-900 dark:text-white mb-2">{msg.text}</p>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {formatDateTime(msg.scheduledTime)}
-                      </span>
-                      <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">
-                        {msg.chatType}
-                      </span>
+                <Clock className="w-16 h-16 text-white/40 mx-auto" />
+              </motion.div>
+              <p className="text-white/60 font-medium">
+                No scheduled messages. Schedule your first message above!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {scheduledMessages.map((msg, index) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -2, scale: 1.01 }}
+                  className={`p-4 rounded-xl border transition-all ${
+                    isUpcoming(msg.scheduledTime)
+                      ? 'glass-panel bg-indigo-600/10 border-indigo-500/30 hover:border-indigo-500/50'
+                      : 'glass-panel border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-white mb-2 font-medium">{msg.text}</p>
+                      <div className="flex items-center gap-4 text-sm text-white/60">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 text-indigo-400" />
+                          {formatDateTime(msg.scheduledTime)}
+                        </span>
+                        <span className="px-2 py-1 glass-panel bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-white/80">
+                          {msg.chatType}
+                        </span>
+                      </div>
                     </div>
+                    <motion.button
+                      onClick={() => handleDelete(msg.id)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="p-2 text-red-400 hover:bg-red-600/20 rounded-lg transition-all ml-4"
+                      title="Delete scheduled message"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
                   </div>
-                  <button
-                    onClick={() => handleDelete(msg.id)}
-                    className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors ml-4"
-                    title="Delete scheduled message"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </FadeIn>
     </div>
   );
 });
@@ -276,4 +329,3 @@ const MessageScheduler = memo(() => {
 MessageScheduler.displayName = 'MessageScheduler';
 
 export default MessageScheduler;
-

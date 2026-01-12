@@ -8,9 +8,25 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      // Pre-bundle animation libraries to prevent circular dependency issues
+      'framer-motion',
+      '@react-spring/web',
+      'gsap',
       // Force Logo to be pre-bundled and always available
       './src/components/Logo.jsx'
-    ]
+    ],
+    // Ensure React is always available synchronously
+    esbuildOptions: {
+      jsx: 'automatic',
+      jsxFactory: 'React.createElement',
+      jsxFragment: 'React.Fragment'
+    },
+    // Force React to be pre-bundled and not split
+    force: true,
+    // Exclude React from optimization to keep it in main bundle
+    exclude: []
   },
   plugins: [
     react(),
@@ -21,16 +37,96 @@ export default defineConfig({
       manifest: {
         name: 'CampusConnect - Student Messaging Platform',
         short_name: 'CampusConnect',
-        description: 'Secure student messaging platform with AI-powered content moderation',
+        description: 'Secure student messaging platform with AI-powered content moderation, real-time chat, group messaging, and intelligent AI assistant',
         theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        background_color: '#050505', // Dark background for better splash screen
         display: 'standalone',
-        orientation: 'portrait-primary',
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
+        orientation: 'any', // Support both portrait and landscape
         scope: '/',
         start_url: '/',
         id: '/',
+        lang: 'en',
+        dir: 'ltr',
         categories: ['education', 'social', 'communication'],
+        edge_side_panel: {
+          preferred_width: 400
+        },
+        share_target: {
+          action: '/',
+          method: 'GET',
+          enctype: 'application/x-www-form-urlencoded',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url'
+          }
+        },
+        file_handlers: [
+          {
+            action: '/',
+            accept: {
+              'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+              'text/*': ['.txt', '.md'],
+              'application/pdf': ['.pdf']
+            }
+          }
+        ],
+        protocol_handlers: [
+          {
+            protocol: 'web+campusconnect',
+            url: '/?url=%s'
+          }
+        ],
         icons: [
+          {
+            src: '/logo.png',
+            sizes: '48x48',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '72x72',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '128x128',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '144x144',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '152x152',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '167x167',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
+          },
           {
             src: '/logo.png',
             sizes: '192x192',
@@ -39,9 +135,27 @@ export default defineConfig({
           },
           {
             src: '/logo.png',
+            sizes: '256x256',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
+            sizes: '384x384',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          },
+          {
+            src: '/logo.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any'
           }
         ],
         shortcuts: [
@@ -62,12 +176,50 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
-        maximumFileSizeToCacheInBytes: 5000000, // 5 MB - increased to accommodate ZEGOCLOUD SDK (2.16 MB)
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,webp}'],
+        maximumFileSizeToCacheInBytes: 10000000, // 10 MB - increased for better mobile caching
         cleanupOutdatedCaches: true,
         skipWaiting: true, // Immediately activate new service worker
         clientsClaim: true, // Take control of all clients immediately
+        // Optimize for mobile networks
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/],
+        // Better offline support for mobile
+        offlineGoogleAnalytics: false,
+        // Optimize cache for mobile devices
+        cacheId: 'campusconnect-v1',
         runtimeCaching: [
+          {
+            // CRITICAL: Handle JS module requests BEFORE navigateFallback
+            // This prevents "Expected a JavaScript module but got text/html" errors
+            // When a JS file is missing (old hash), NetworkFirst will fail and return 404 instead of HTML
+            urlPattern: /\.(?:js|mjs)$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'js-modules-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day - immutable files with hash in name
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.css$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'css-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/.*\.firebaseapp\.com\/.*/i,
             handler: 'NetworkFirst',
@@ -166,7 +318,15 @@ export default defineConfig({
         ],
         navigationPreload: false, // Disabled to prevent preloadResponse cancellation errors
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/_/, /^\/admin/]
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /^\/_/,
+          /^\/admin/,
+          /\.js$/,
+          /\.mjs$/,
+          /\.css$/,
+          /\/assets\//
+        ]
       },
       devOptions: {
         enabled: true,
@@ -182,21 +342,36 @@ export default defineConfig({
     target: 'es2015', // Better compatibility with service workers
     cssCodeSplit: true, // Split CSS for better caching
     rollupOptions: {
+      // Preserve entry signatures to ensure React is in main bundle
+      preserveEntrySignatures: 'strict',
       output: {
         manualChunks: (id) => {
-          // SIMPLEST APPROACH: Put ALL source files in main bundle
-          // Only split vendor code for better caching
-          // This prevents ALL export errors by ensuring everything is available synchronously
+          // CRITICAL: Keep React and React-DOM in main bundle to prevent "createContext" errors
+          // React must be available synchronously when contexts are created
           
           // If it's a source file, put it in main bundle (no code-splitting)
           if (!id.includes('node_modules') && id.includes('src/')) {
             return undefined; // Main bundle - no splitting
           }
           
-          // Only split vendor chunks for better caching
+          // Keep React and React-DOM in main bundle (CRITICAL for contexts)
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
+            // DO NOT split React/React-DOM - they must be in main bundle
+            // Check for exact React packages (more comprehensive check)
+            const isReact = 
+              id.includes('node_modules/react/') ||
+              id.includes('node_modules\\react\\') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules\\react-dom\\') ||
+              id.includes('react/jsx-runtime') ||
+              id.includes('react/jsx-dev-runtime') ||
+              id.includes('react/index') ||
+              id.includes('react-dom/index') ||
+              (id.includes('react') && !id.includes('react-') && id.endsWith('.js')) ||
+              (id.includes('react-dom') && !id.includes('react-dom-') && id.endsWith('.js'));
+            
+            if (isReact) {
+              return undefined; // Main bundle - React must be available immediately
             }
             if (id.includes('firebase')) {
               return 'firebase-vendor';
@@ -209,6 +384,12 @@ export default defineConfig({
             }
             if (id.includes('@google/generative-ai')) {
               return 'gemini-vendor';
+            }
+            // Keep animation libraries in main vendor chunk to avoid circular dependency issues
+            // Moving framer-motion, react-spring, and gsap to vendor instead of separate chunk
+            // This prevents "Cannot access 'yf' before initialization" errors
+            if (id.includes('framer-motion') || id.includes('@react-spring') || id.includes('gsap')) {
+              return 'vendor'; // Put in main vendor chunk instead of separate animation-vendor
             }
             // Other node_modules
             return 'vendor';

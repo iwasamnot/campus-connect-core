@@ -4,6 +4,16 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ## Features
 
+### Landing Page
+- **Fluid Minimal Design**: Redesigned with fluid animated particles and modern minimal aesthetic
+- **Advanced Animations**: Smooth floating particles with GSAP continuous motion
+- **Staggered Animations**: Hero content animates in sequence for dramatic entrance
+- **Interactive Elements**: Spring physics button interactions for natural feel
+- **Animated Gradient Text**: Smooth gradient position animations
+- **Quick Access**: Direct Register and Login buttons with gradient styling and smooth transitions
+- **Modern UI**: Centered layout with glassmorphism effects and rounded-full buttons
+- **Responsive**: Optimized for all screen sizes (320px to 4K+) with safe area insets
+
 ### Appearance & Themes
 - **Dual Theme System**: Choose between Fun (colorful & playful) or Minimal (sleek & modern) themes
 - **Dark Mode**: Full dark mode support with automatic system preference detection
@@ -12,7 +22,63 @@ A secure, student-only messaging platform for universities with AI-powered conte
 
 ### For Students
 - **Voice & Video Calling**: Make voice and video calls directly from private chats (powered by ZEGOCLOUD)
+  - High-quality voice and video calls
+  - Real-time communication
+  - Works on all devices
+- **Voice Messages**: Record and send voice messages
+  - Record voice messages up to 5 minutes
+  - MediaRecorder API integration with WebM/Opus codec
+  - Real-time recording timer
+  - Preview and playback before sending
+  - Delete and re-record functionality
+  - Microphone permission handling
+  - Audio player with play/pause controls and progress bar
+  - Duration display and download functionality
+  - Stored securely in Firebase Storage
+- **Polls & Surveys**: Create and participate in polls
+  - Create polls with 2-10 options
+  - Configurable settings (multiple votes, anonymous voting, duration)
+  - Duration options: 1 day, 3 days, 7 days, 30 days
+  - Real-time vote counting
+  - Visual progress bars for each option
+  - Winner highlighting
+  - Vote/Unvote functionality
+  - Support for multiple votes per user (configurable)
+  - Available in Campus Chat and Group Chats
+  - Expiry date tracking
+- **Quick Replies / Message Templates**: Create and use message templates
+  - Create, edit, and delete personal message templates
+  - Template name and text customization
+  - Quick access from message input
+  - Personal template library per user
+  - Real-time sync across devices
+  - Perfect for meeting reminders, common responses, and announcements
+- **AI Message Translation**: Translate messages in real-time
+  - AI-powered translation using Google Gemini 2.5 Flash
+  - Support for 14+ languages (English, Spanish, French, German, Chinese, Japanese, Arabic, Hindi, Urdu, Nepali, Bengali, Punjabi, Persian, and more)
+  - Auto-detect source language
+  - Translate individual messages or entire conversations
+  - Fallback to original text on error
+  - One-click translation from message menu
+- **AI Conversation Summarization**: Get AI-powered conversation summaries
+  - Uses Google Gemini 2.5 Flash for intelligent summarization
+  - Configurable summary length
+  - Extract key points from conversations
+  - Generate meeting notes with structured format
+  - Action items extraction
+  - Participant tracking
+  - Copy summary to clipboard
+  - Available from chat menu (Ctrl/Cmd + K)
 - **Campus Chat**: Real-time global chat with AI-powered content moderation
+  - Real-time messaging with all students
+  - AI-powered toxicity detection
+  - **Virtual Senior AI**: AI-powered responses in Campus Chat
+    - Toggle AI Help mode on/off
+    - Virtual Senior responds to non-toxic messages
+    - Multiple Gemini model support (gemini-1.5-flash, gemini-1.5-pro, etc.)
+    - Free and paid model options
+    - Context-aware intelligent responses
+    - Helps answer questions and provide guidance
 - **Activity Dashboard**: Comprehensive activity feed and insights
   - Recent messages and mentions
   - Activity statistics (messages today, this week, active groups)
@@ -34,28 +100,52 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Full-screen image viewer with download option
   - Image metadata (author, date, filename)
 - **Groups**: Create and join study groups with group chat functionality
+  - Create and manage study groups
+  - Browse and request to join groups
+  - View all groups (including joined groups)
+  - Invite users by email
+  - Admin approval system for group requests
+  - Member management (add, remove, leave)
+  - Group admin controls
+  - Group chat with all messaging features
   - File and image sharing
   - Emoji picker
   - Image preview with zoom and pan
-- **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash with local SISTC knowledge base
+  - Create polls in group chats
+  - Voice messages support
+  - Message scheduling for groups
+- **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash
+  - Multiple Gemini model support (gemini-pro, gemini-2.0-flash-exp, gemini-1.5-pro, etc.)
+  - Local SISTC knowledge base integration
+  - Context-aware responses
+  - Conversation history support (maintains context from last 10 messages)
+  - Virtual Senior AI mode in Campus Chat
+  - Toggle AI Help mode on/off
+  - Model selector for choosing the best AI model
+  - Free and paid model options
 - **My Profile**: Comprehensive profile management with:
   - Profile picture upload
   - Personal information (name, bio, course, year of study, date of birth, address)
   - Contact details (student email, personal email, phone number)
 - **User Presence**: See who's online and last seen timestamps
 - **Read Receipts**: Know when your messages are seen
-- **Message Features**:
-  - Edit your own messages
-  - React with emojis
-  - Search messages
-  - Reply to messages
-  - Forward messages to other chats
-  - Save/bookmark messages
-  - Pin messages (admin only)
-  - File and image sharing (up to 10MB per file)
-  - Markdown formatting support
-  - User @mentions with autocomplete
-  - Report inappropriate content
+- **Message Features**: Comprehensive messaging capabilities
+  - **Edit Messages**: Edit your own messages after sending
+  - **Emoji Reactions**: React with emojis (👍, ❤️, 😂, 😮, 😢, 🔥)
+  - **Message Search**: Advanced search across all messages
+  - **Reply to Messages**: Reply to specific messages with threading
+  - **Forward Messages**: Forward messages to Campus Chat, Direct Messages, or Group Chats
+  - **Save/Bookmark Messages**: Save important messages for quick access
+  - **Pin Messages**: Pin important messages (admin only)
+  - **File and Image Sharing**: Share files and images up to 10MB per file
+  - **Markdown Formatting**: Format messages with markdown syntax
+  - **User @mentions**: Mention users with autocomplete suggestions
+  - **Report Content**: Report inappropriate content for admin review
+  - **Voice Messages**: Send voice recordings (see Voice Messages section above)
+  - **Polls**: Create and vote on polls (see Polls & Surveys section above)
+  - **Quick Replies**: Use message templates for quick responses (see Quick Replies section above)
+  - **Translation**: Translate messages to different languages (see AI Message Translation section above)
+  - **Summarization**: Get AI-powered conversation summaries (see AI Conversation Summarization section above)
 
 ### For Admins
 - **Audit Dashboard**: Review all messages with advanced filtering and sorting
@@ -81,7 +171,25 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Deletion verification to ensure persistence
   - Detailed audit logging
 - **Audit Trail**: Complete log of all administrative actions
+  - All admin actions are logged automatically
+  - Detailed action descriptions
+  - Timestamp tracking
+  - User identification
+  - Searchable audit logs
+  - Filter by action type, user, date range
+  - Export audit logs
 - **Export Functionality**: Export audit logs and chat history for analysis
+  - Export audit logs in multiple formats (JSON, CSV, TXT)
+  - Export chat history (JSON, CSV, TXT)
+  - Filter exports by date range
+  - Comprehensive data export for analysis
+  - Analytics data export
+- **Contact Messages**: View and manage contact form submissions
+  - View messages from non-users
+  - Respond to inquiries
+  - Manage contact requests
+  - Contact form integration
+  - Message status tracking
 
 ### Platform Features
 - **AI-Powered Toxicity Detection**: Advanced content moderation using Google Gemini AI
@@ -93,8 +201,12 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Advanced Search**: Powerful search with multiple filters
   - Full-text search across messages
   - Filter by user, date range, file attachments, reactions, pinned status
+  - Filter by message type (text, image, file, voice, poll)
+  - Filter by chat type (Campus Chat, Private Chat, Group Chat)
   - Click to navigate to message
   - Keyboard shortcut: Ctrl/Cmd + K
+  - Real-time search results
+  - Search history
 - **Keyboard Shortcuts**: Comprehensive keyboard navigation
   - Ctrl/Cmd + K: Open advanced search
   - Ctrl/Cmd + /: Show keyboard shortcuts
@@ -103,9 +215,11 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Tab: Autocomplete mentions
   - Esc: Close modals
 - **Message Drafts**: Auto-save drafts as you type
-  - Automatically saves drafts
+  - Automatically saves drafts as you type (debounced)
   - Restores when returning to chat
   - Per-chat draft storage
+  - Works across all chat types (Campus Chat, Private Chat, Group Chat)
+  - Never lose your message while typing
 - **Export Chat History**: Export messages in multiple formats
   - JSON (full data with metadata)
   - CSV (spreadsheet-friendly)
@@ -125,25 +239,81 @@ A secure, student-only messaging platform for universities with AI-powered conte
 - **Typing Indicators**: See when others are typing in real-time
 - **Read Receipts**: Know when your messages are read
 - **Browser Notifications**: Desktop notifications for new messages and mentions
+  - Desktop push notifications
+  - Notification permissions handling
+  - Custom notification sounds
+  - Mention notifications
+  - Group chat notifications
+- **Web Share API**: Native sharing capabilities
+  - Share messages, groups, and content
+  - Automatic clipboard fallback for unsupported browsers
+  - Integrated into message actions
+  - Share to other apps and platforms
+- **Clipboard API**: Modern clipboard operations
+  - Copy to clipboard with permission handling
+  - Read from clipboard (with permissions)
+  - Image clipboard support
+  - Legacy fallback for older browsers
+  - Copy message text, links, and content
+- **File System Access API**: Native file picker
+  - Modern file selection interface
+  - Save files with native dialog
+  - Traditional input fallback
+  - File type validation and size checks
+- **Internationalization (i18n)**: Multi-language infrastructure
+  - Support for 14+ languages (English, Spanish, French, German, Chinese, Japanese, Arabic, Hindi, Urdu, Nepali, Bengali, Punjabi, Persian, and more)
+  - RTL (Right-to-Left) support for Arabic, Urdu, Persian
+  - Locale-aware formatting (dates, times, numbers)
+  - Relative time formatting ("2 hours ago")
+  - Automatic browser language detection
+  - Translation system foundation
 - **Dark Mode**: Toggle between light and dark themes
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
-  - Optimized mobile UI with safe area insets for all devices
-  - Touch-friendly interface with proper button sizes
-  - Full-screen sidebar on mobile with overlay
-  - Proper viewport handling for iOS Safari
+  - Automatic system preference detection
+  - Manual toggle option
+  - Consistent theming across all components
+- **Responsive Design**: Fully optimized for all screen sizes and devices
+  - **Fluid Minimal Design**: Modern fluid animations with floating particles throughout
+  - **Comprehensive Breakpoints**: 320px to 1920px+ (xs, sm, md, lg, xl, 2xl, 3xl)
+  - **Mobile-First**: Touch-friendly interface with 44px minimum tap targets
+  - **Safe Area Insets**: Full iOS notch and home indicator support
+  - **Landscape Support**: Optimized for both portrait and landscape orientations
+  - **High DPI Displays**: Optimized for retina and high-resolution screens
+  - **Reduced Motion**: Respects user motion preferences
+  - **Dark Mode**: Full support with automatic system detection
+  - **Glassmorphism**: Backdrop blur effects throughout for modern aesthetic
+  - **Rounded Design**: Rounded-full buttons and inputs for modern look
+  - Full-screen sidebar on mobile with fluid animations
+  - Proper viewport handling for iOS Safari and all mobile browsers
   - Pages scroll normally across views (Login/Registration/Admin), including PWA standalone mode
-- **Progressive Web App (PWA)**: Install as a native app
-  - Service worker with intelligent caching
-  - Offline support with Firebase caching strategies
-  - Install prompt for easy app installation
-  - Works on iOS, Android, and desktop
+- **Progressive Web App (PWA)**: Advanced PWA features with full optimization
+  - **Manifest Optimized**: Supports both portrait and landscape orientations
+  - **Install Prompt**: Beautiful fluid design with safe area insets and mobile-optimized layout
+  - **Service Worker**: Intelligent caching strategies with offline support
+  - **Offline Support**: Firebase caching with network-first strategies
+  - **Web Share Target API**: Share content directly to the app
+  - **File Handlers API**: Open files directly in the app
+  - **Protocol Handlers**: Custom URL schemes (web+campusconnect://)
+  - **Background Sync API**: Support for offline actions
+  - **Periodic Background Sync**: Cache updates in background
+  - **iOS Optimized**: Full iOS meta tags and safe area support
+  - **Android Optimized**: Enhanced Android PWA features
+  - Works seamlessly on iOS, Android, and desktop
 - **Code-Split Bundles**: Optimized performance with lazy-loaded components
   - Retry logic for failed component loads
   - Error boundaries with graceful recovery
   - Exponential backoff for import retries
-- **Performance Optimizations**: Enhanced application performance
-  - Debounced search inputs
+- **Performance Optimizations**: Modern performance standards
+  - **Core Web Vitals Monitoring**: CLS, LCP, FID, INP, TTFB tracking
+  - Debounced and throttled inputs with React 18.3+ patterns
   - React.memo, useMemo, useCallback optimizations
+  - **React 18.3+ Features**: useTransition, useDeferredValue, useId
+  - **Advanced Animation System**: GPU-accelerated animations with Framer Motion, React Spring, and GSAP
+    - Smooth page transitions with direction-based animations
+    - Physics-based spring animations for natural motion
+    - Staggered list animations for elegant entrances
+    - Scroll-triggered animations with Intersection Observer
+    - Timeline animations for complex sequences
+    - Optimized for 60fps performance
   - Optimized Firebase queries (60% reduction in reads)
   - Skeleton loaders for better UX
   - Virtual scrolling for long lists
@@ -151,23 +321,45 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Advanced caching strategies
   - Bundle size optimization (40% reduction)
   - Tree-shaking and minification
-- **Accessibility (a11y)**: WCAG 2.1 AA compliance
+  - Performance marks and measurements
+  - Long task monitoring (blocking main thread detection)
+  - Memory usage tracking
+- **Accessibility (a11y)**: WCAG 2.2 AA compliance (upgraded from 2.1)
   - ARIA labels on all interactive elements
-  - Full keyboard navigation support
-  - Screen reader optimizations
-  - Focus management
+  - Full keyboard navigation support (Tab, Enter, Escape, Arrow keys)
+  - Screen reader optimizations with live regions
+  - Enhanced focus management with focus trapping
   - Semantic HTML structure
-  - Color contrast improvements
-- **Security**: Latest security best practices
-  - Content Security Policy (CSP)
-  - XSS protection
-  - Secure Firebase rules
+  - Color contrast improvements (4.5:1 minimum)
+  - Icon-only buttons have accessible labels
+  - ARIA expanded, haspopup, and atomic attributes
+  - Skip to main content link
+- **Security**: Latest security best practices (OWASP Top 10 compliance)
+  - Content Security Policy (CSP) with strict headers
+  - XSS protection with input sanitization
+  - Secure Firebase rules with role-based access
   - Input validation and sanitization
   - Role-based access control (RBAC)
+  - X-Content-Type-Options: nosniff
+  - X-Frame-Options: SAMEORIGIN
+  - Referrer-Policy: strict-origin-when-cross-origin
+  - Permissions-Policy for camera/microphone/geolocation
 - **Secure**: Role-based access control with Firestore security rules
 - **Direct Messages**: Private messaging between users with chat history
+  - One-on-one private conversations
+  - Full chat history
+  - All messaging features (voice, polls, files, etc.)
+  - Read receipts and typing indicators
+  - Voice and video calling support
 - **Disappearing Messages**: Optional auto-delete messages after 24h or 7 days
+  - Configure auto-delete duration
+  - Automatic cleanup of old messages
+  - Privacy-focused messaging
 - **Comprehensive Error Handling**: Detailed error messages and graceful error recovery
+  - User-friendly error messages
+  - Automatic retry logic
+  - Graceful fallbacks
+  - Error boundaries for component isolation
 - **Group Management**: Comprehensive group system
   - Browse and request to join groups
   - View all groups (including joined groups)
@@ -175,6 +367,9 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Admin approval system
   - Member management (add, remove, leave)
   - Group admin controls
+  - Group chat with all features
+  - Polls in groups
+  - Voice messages in groups
 
 ## Tech Stack
 
@@ -183,10 +378,24 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Code splitting and tree-shaking
   - Virtual scrolling for performance
   - Optimized bundle sizes
+  - Advanced animation system with Framer Motion, React Spring, and GSAP
+- **Animations**: 
+  - **Framer Motion**: Declarative animations for React with layout animations
+  - **React Spring**: Physics-based spring animations for natural motion
+  - **GSAP**: Advanced timeline and sequence animations for complex interactions
+  - Smooth page transitions with direction-based animations
+  - Interactive hover and tap animations
+  - Staggered list animations
+  - Scroll-triggered animations with Intersection Observer
+  - GPU-accelerated performance optimizations
 - **Styling**: Tailwind CSS 3.4
-  - Responsive design system
-  - Dark mode support
-  - Custom design tokens
+  - **Fluid Minimal Design System**: Custom animations and utilities
+  - **Comprehensive Responsive Breakpoints**: xs (320px) to 3xl (1920px+)
+  - **PWA Breakpoints**: Portrait, landscape, touch, hover, motion preferences
+  - **Safe Area Utilities**: iOS notch and safe area inset support
+  - **Glassmorphism**: Backdrop blur effects throughout
+  - **Dark Mode**: Full support with automatic system detection
+  - **Custom Design Tokens**: Gradient colors, rounded-full components
 - **Backend**: Firebase 12.7
   - Firestore (Database)
   - Firebase Hosting
@@ -408,14 +617,14 @@ The platform supports email/password authentication with role-based access:
 
 1. **Student Registration & Login**
    - Students can register with email and password
-   - **Email Format**: Must start with "s20" and contain "@sistc.edu.au" or "@sistc.nsw.edu.au"
-     - Examples: `s2012345@sistc.edu.au` or `s20230091@sistc.nsw.edu.au`
+   - **Email Format**: Must start with "s20" and contain "@sistc.app"
+     - Examples: `s2012345@sistc.app` or `s20230091@sistc.app`
    - Email verification required before login
    - Role automatically set to "student" during registration
 
 2. **Admin Login**
    - Admin accounts must be created manually in Firebase Console
-   - **Email Format**: Must start with "admin" and contain "@campusconnect" (e.g., admin1@campusconnect.com)
+   - **Email Format**: Must start with "admin" and contain "@sistc.app" (e.g., admin@sistc.app)
    - Email verification bypassed for admin accounts
    - See `ADMIN_SETUP.md` for detailed admin account setup instructions
 
@@ -428,10 +637,10 @@ The platform supports email/password authentication with role-based access:
 See `ROLES_SETUP_GUIDE.md` for comprehensive role setup instructions.
 
 - **Student**: Can access Campus Chat, Groups, AI Help, and Profile management
-  - Email format: `s20xxxxx@sistc.edu.au` or `s20xxxxx@sistc.nsw.edu.au`
+  - Email format: `s20xxxxx@sistc.app` (e.g., s2012345@sistc.app)
   - Email verification required (can be verified by admin)
 - **Admin**: Can access Audit Logs, Users Management, and Create User functionality
-  - Email format: `admin*@campusconnect.com` (e.g., admin1@campusconnect.com)
+  - Email format: `admin@sistc.app`
   - Email verification bypassed (always verified)
   - Can verify/unverify student emails from Users Management
   - Must be created in Firebase Console (see `ADMIN_SETUP.md`)

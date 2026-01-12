@@ -23,6 +23,7 @@ import {
   Calendar,
   Download
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { SkeletonLoader, CardSkeleton } from './SkeletonLoader';
 
 const AdminAnalytics = () => {
@@ -257,131 +258,166 @@ const AdminAnalytics = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6 bg-transparent">
       {/* Header */}
-      <div 
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4"
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-panel border border-white/10 rounded-[2rem] p-4 md:p-6 backdrop-blur-xl mb-6"
         style={{
           paddingTop: `max(1rem, env(safe-area-inset-top, 0px) + 0.5rem)`,
           position: 'relative',
           zIndex: 10
         }}
       >
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
-            <span>Analytics Dashboard</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Comprehensive insights into platform usage and activity
-          </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white text-glow flex items-center gap-2">
+              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+              <span>Analytics Dashboard</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-white/60 mt-1">
+              Comprehensive insights into platform usage and activity
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="px-4 py-2 border border-white/10 rounded-xl glass-panel bg-white/5 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-300 hover:border-white/20 [color-scheme:dark]"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+            <motion.button
+              onClick={exportData}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </motion.button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-            <option value="all">All time</option>
-          </select>
-          <button
-            onClick={exportData}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </button>
-        </div>
-      </div>
+      </motion.div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Messages */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Messages</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm text-white/60">Total Messages</p>
+              <p className="text-3xl font-bold text-white mt-2 text-glow">
                 {stats.messages.total.toLocaleString()}
               </p>
             </div>
-            <MessageSquare className="w-12 h-12 text-indigo-600 dark:text-indigo-400" />
+            <MessageSquare className="w-12 h-12 text-indigo-400" />
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm">
-            <span className="text-gray-600 dark:text-gray-400">Toxic:</span>
-            <span className="font-semibold text-red-600 dark:text-red-400">
+            <span className="text-white/60">Toxic:</span>
+            <span className="font-semibold text-red-400">
               {stats.messages.toxic} ({stats.messages.toxicPercentage}%)
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Active Users */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Active Users</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm text-white/60">Active Users</p>
+              <p className="text-3xl font-bold text-white mt-2 text-glow">
                 {stats.users.active.toLocaleString()}
               </p>
             </div>
-            <Users className="w-12 h-12 text-green-600 dark:text-green-400" />
+            <Users className="w-12 h-12 text-green-400" />
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm">
-            <span className="text-gray-600 dark:text-gray-400">Total:</span>
-            <span className="font-semibold text-gray-900 dark:text-white">
+            <span className="text-white/60">Total:</span>
+            <span className="font-semibold text-white">
               {stats.users.total} ({stats.users.activePercentage}% active)
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Pending Reports */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Pending Reports</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm text-white/60">Pending Reports</p>
+              <p className="text-3xl font-bold text-white mt-2 text-glow">
                 {stats.activity.pending}
               </p>
             </div>
-            <AlertTriangle className="w-12 h-12 text-yellow-600 dark:text-yellow-400" />
+            <AlertTriangle className="w-12 h-12 text-yellow-400" />
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm">
-            <span className="text-gray-600 dark:text-gray-400">Resolved:</span>
-            <span className="font-semibold text-green-600 dark:text-green-400">
+            <span className="text-white/60">Resolved:</span>
+            <span className="font-semibold text-green-400">
               {stats.activity.resolved} ({stats.activity.resolutionRate}%)
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Audit Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Audit Actions</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm text-white/60">Audit Actions</p>
+              <p className="text-3xl font-bold text-white mt-2 text-glow">
                 {stats.activity.auditActions.toLocaleString()}
               </p>
             </div>
-            <Activity className="w-12 h-12 text-purple-600 dark:text-purple-400" />
+            <Activity className="w-12 h-12 text-purple-400" />
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm">
-            <span className="text-gray-600 dark:text-gray-400">Time range:</span>
-            <span className="font-semibold text-gray-900 dark:text-white">
+            <span className="text-white/60">Time range:</span>
+            <span className="font-semibold text-white">
               {timeRange === 'all' ? 'All time' : `Last ${timeRange}`}
             </span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Charts and Detailed Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Activity Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 text-glow">
+            <TrendingUp className="w-5 h-5 text-indigo-400" />
             Daily Message Activity
           </h3>
           <div className="space-y-3">
@@ -390,15 +426,17 @@ const AdminAnalytics = () => {
               const percentage = (day.count / maxCount) * 100;
               return (
                 <div key={index} className="flex items-center gap-3">
-                  <div className="w-20 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="w-20 text-sm text-white/60">
                     {day.date}
                   </div>
-                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative overflow-hidden">
-                    <div
-                      className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full transition-all duration-300"
-                      style={{ width: `${percentage}%` }}
+                  <div className="flex-1 bg-white/10 rounded-full h-6 relative overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentage}%` }}
+                      transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                      className="bg-indigo-500 h-full rounded-full transition-all duration-300"
                     />
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-900 dark:text-white">
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white">
                       {day.count}
                     </span>
                   </div>
@@ -406,69 +444,99 @@ const AdminAnalytics = () => {
               );
             })}
           </div>
-        </div>
+        </motion.div>
 
         {/* Top Active Users */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 text-glow">
+            <Users className="w-5 h-5 text-green-400" />
             Top Active Users
           </h3>
           <div className="space-y-3">
             {stats.topUsers.length > 0 ? (
               stats.topUsers.map((user, index) => (
-                <div key={user.userId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <motion.div 
+                  key={user.userId} 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 + index * 0.1 }}
+                  whileHover={{ x: 4, scale: 1.02 }}
+                  className="flex items-center justify-between p-3 glass-panel bg-white/5 border border-white/10 rounded-xl"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold">
+                    <div className="w-8 h-8 rounded-full glass-panel bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-semibold">
                       {index + 1}
                     </div>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="font-medium text-white">
                       {user.name}
                     </span>
                   </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-white/60">
                     {user.count} messages
                   </span>
-                </div>
+                </motion.div>
               ))
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              <p className="text-white/60 text-center py-4">
                 No activity data available
               </p>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Additional Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
           <div className="flex items-center gap-3 mb-2">
-            <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Messages with Files</span>
+            <FileText className="w-5 h-5 text-blue-400" />
+            <span className="text-sm font-medium text-white/60">Messages with Files</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className="text-2xl font-bold text-white text-glow">
             {stats.messages.withFiles}
           </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
           <div className="flex items-center gap-3 mb-2">
-            <MessageSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Messages with Reactions</span>
+            <MessageSquare className="w-5 h-5 text-purple-400" />
+            <span className="text-sm font-medium text-white/60">Messages with Reactions</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className="text-2xl font-bold text-white text-glow">
             {stats.messages.withReactions}
           </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
           <div className="flex items-center gap-3 mb-2">
-            <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Pinned Messages</span>
+            <Clock className="w-5 h-5 text-orange-400" />
+            <span className="text-sm font-medium text-white/60">Pinned Messages</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className="text-2xl font-bold text-white text-glow">
             {stats.messages.pinned}
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

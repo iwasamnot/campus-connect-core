@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { FadeIn } from './AnimatedComponents';
 
 const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -68,47 +70,64 @@ const PWAInstallPrompt = () => {
   if (!showPrompt || !deferredPrompt) return null;
 
   return (
-    <div 
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up"
-      style={{
-        bottom: `calc(0.25rem + env(safe-area-inset-bottom, 0px) * 0.3)`,
-        left: `calc(1rem + env(safe-area-inset-left, 0px))`,
-        right: `calc(1rem + env(safe-area-inset-right, 0px))`
-      }}
-    >
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 flex items-center gap-4">
-        <div className="flex-shrink-0">
-          <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Download className="w-6 h-6 text-white" />
-          </div>
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
-            Install CampusConnect
-          </h3>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-            Add to home screen for quick access
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleInstall}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            Install
-          </button>
-          <button
-            onClick={handleDismiss}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            aria-label="Dismiss"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-    </div>
+    <AnimatePresence>
+      {showPrompt && (
+        <motion.div
+          key="pwa-prompt"
+          initial={{ opacity: 0, y: 50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 50, scale: 0.9 }}
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50"
+          style={{
+            bottom: `max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))`,
+            left: `max(1rem, calc(env(safe-area-inset-left, 0px) + 1rem))`,
+            right: `max(1rem, calc(env(safe-area-inset-right, 0px) + 1rem))`,
+            maxWidth: 'calc(100vw - 2rem)'
+          }}
+        >
+          <div className="glass-panel backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex-shrink-0">
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg"
+                >
+                  <Download className="w-6 h-6 text-white" />
+                </motion.div>
+              </div>
+              <div className="flex-1 text-center sm:text-left min-w-0">
+                <h3 className="font-semibold text-white text-sm text-glow">
+                  Install CampusConnect
+                </h3>
+                <p className="text-xs text-white/60 mt-1 font-light">
+                  Add to home screen for quick access
+                </p>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <motion.button
+                  onClick={handleInstall}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex-1 sm:flex-none px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl min-h-[44px]"
+                >
+                  Install
+                </motion.button>
+                <motion.button
+                  onClick={handleDismiss}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-2.5 text-white/70 hover:text-white glass-panel border border-white/10 rounded-xl hover:border-white/20 transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Dismiss"
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
+              </div>
+            </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 export default PWAInstallPrompt;
-

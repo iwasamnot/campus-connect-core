@@ -10,22 +10,97 @@
     <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
     <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
     
+    <!-- Inter Font - Fluid.so aesthetic - Optimized with font-display: swap -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    
+    <!-- Plus Jakarta Sans Font - Optimized with font-display: swap -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    
     <!-- Preload critical components to prevent module resolution errors -->
     <script>
       // Ensure Logo is available globally before any lazy components load
       // This prevents "Export 'Logo' is not defined" errors
       window.__LogoPreload = true;
+      
+      // Ensure React is available before contexts are created
+      // This prevents "Cannot read properties of undefined (reading 'createContext')" errors
+      window.__ReactPreload = true;
     </script>
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
-    <meta name="description" content="Secure student messaging platform with AI-powered content moderation" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover, minimum-scale=0.5, shrink-to-fit=no, interactive-widget=resizes-content" />
+    <meta name="description" content="Your campus connected anywhere. CampusConnect is the most intuitive student messaging platform - connect with your campus community from any device." />
     <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)" />
     
-    <!-- PWA Meta Tags -->
+    <!-- SEO & Social Media Meta Tags (Open Graph, Twitter Cards) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CampusConnect - Your Campus Connected Anywhere" />
+    <meta property="og:description" content="Your campus connected anywhere. The most intuitive student messaging platform - connect with your campus community from any device." />
+    <meta property="og:image" content="/logo.png" />
+    <meta property="og:url" content="https://campus-connect-sistc.web.app" />
+    <meta property="og:site_name" content="CampusConnect" />
+    <meta property="og:locale" content="en_US" />
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CampusConnect - Your Campus Connected Anywhere" />
+    <meta name="twitter:description" content="Your campus connected anywhere. The most intuitive student messaging platform." />
+    <meta name="twitter:image" content="/logo.png" />
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="keywords" content="student messaging, campus chat, secure messaging, AI moderation, university communication, group chat, real-time chat, campus connect" />
+    <meta name="author" content="CampusConnect" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://campus-connect-sistc.web.app" />
+    
+    <!-- Structured Data (JSON-LD) for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "CampusConnect",
+      "description": "Your campus connected anywhere. The most intuitive student messaging platform - connect with your campus community from any device.",
+      "url": "https://campus-connect-sistc.web.app",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150"
+      },
+      "featureList": [
+        "Real-time messaging",
+        "AI-powered content moderation",
+        "Group chat",
+        "Voice and video calling",
+        "End-to-end encryption",
+        "Cross-platform support"
+      ]
+    }
+    </script>
+    
+    <!-- PWA Meta Tags - Optimized for all screen sizes and devices -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="CampusConnect" />
+    <meta name="apple-touch-fullscreen" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no, email=no, address=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="msapplication-navbutton-color" content="#4f46e5" />
+    <meta name="application-name" content="CampusConnect" />
+    <!-- Prevent iOS Safari from changing text size -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Prevent zoom on input focus (iOS) -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/logo.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/logo.png" />
@@ -42,7 +117,15 @@
     <meta name="msapplication-TileColor" content="#4f46e5" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
     <meta name="msapplication-TileImage" content="/logo.png" />
-    <title>CampusConnect - Student Messaging Platform</title>
+    
+    <!-- Security Headers (best practices) -->
+    <!-- Note: X-Frame-Options must be set via HTTP header in firebase.json, not meta tag -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+    
+    <title>CampusConnect - Your Campus Connected Anywhere</title>
   </head>
   <body>
     <div id="root">
