@@ -1,7 +1,7 @@
 import { useState, useCallback, memo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isAdminRole } from '../utils/helpers';
-import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail, Radio } from 'lucide-react';
+import { MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, StaggerContainer, StaggerItem } from './AnimatedComponents';
 // Use window.__LogoComponent directly to avoid import/export issues
@@ -227,7 +227,7 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
               <NavItem view="groups" activeView={activeView} onClick={handleNavClick} icon={UserCircle} label="Groups" activeViews={['groups', 'group-chat']} />
             </StaggerItem>
             <StaggerItem>
-              <NavItem view="private-chat" activeView={activeView} onClick={handleNavClick} icon={MessageCircle} label="Private Chat" />
+              <NavItem view="private-chat" activeView={activeView} onClick={handleNavClick} icon={MessageCircle} label="Live Chat" />
             </StaggerItem>
             <StaggerItem>
               <NavItem view="nearby" activeView={activeView} onClick={handleNavClick} icon={Radio} label="Nearby Chat" />
@@ -270,9 +270,6 @@ const Sidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
             </StaggerItem>
             <StaggerItem>
               <NavItem view="nearby" activeView={activeView} onClick={handleNavClick} icon={Radio} label="Nearby Chat" />
-            </StaggerItem>
-            <StaggerItem>
-              <NavItem view="contact-messages" activeView={activeView} onClick={handleNavClick} icon={Mail} label="Messages" />
             </StaggerItem>
             <StaggerItem>
               <NavItem view="settings" activeView={activeView} onClick={handleNavClick} icon={Settings} label="Settings" />

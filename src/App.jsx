@@ -4,6 +4,7 @@ import LandingPage from './components/LandingPage';
 import Sidebar from './components/Sidebar';
 import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
+import { consumeOpenSupportLiveChatAfterLogin, findSupportAdminUser, setInitialPrivateChatUser } from './utils/supportLiveChat';
 import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
 // Removed Menu import - using swipe gesture instead
 import ErrorBoundary from './components/ErrorBoundary';
@@ -124,7 +125,6 @@ const createLazyComponent = (importFn, componentName) => {
 
 const ChatArea = createLazyComponent(() => import('./components/ChatArea'), 'Chat Area');
 const AdminDashboard = createLazyComponent(() => import('./components/AdminDashboard'), 'Admin Dashboard');
-const AdminContactMessages = createLazyComponent(() => import('./components/AdminContactMessages'), 'Admin Contact Messages');
 const StudentProfile = createLazyComponent(() => import('./components/StudentProfile'), 'Student Profile');
 const UsersManagement = createLazyComponent(() => import('./components/UsersManagement'), 'Users Management');
 const CreateUser = createLazyComponent(() => import('./components/CreateUser'), 'Create User');
@@ -264,6 +264,37 @@ function App() {
     }
   }, [userRole, hasSetDefaultView]);
 
+  // If user requested "Live Chat with Admin" from the Login screen, auto-open after auth.
+  useEffect(() => {
+    if (!user?.uid || !userRole) return;
+    if (isAdminRole(userRole)) return; // admins don't need this
+
+    const shouldOpen = consumeOpenSupportLiveChatAfterLogin();
+    if (!shouldOpen) return;
+
+    const open = async () => {
+      try {
+        const runtimeDb = (typeof window !== 'undefined' && window.__firebaseDb) ? window.__firebaseDb : db;
+        const adminUser = await findSupportAdminUser(runtimeDb);
+        if (!adminUser?.id) {
+          console.warn('No admin user found for support live chat');
+          return;
+        }
+
+        setInitialPrivateChatUser(adminUser.id, adminUser);
+        startTransition(() => {
+          setActiveView('private-chat');
+        });
+      } catch (err) {
+        console.error('Failed to auto-open support live chat:', err);
+      }
+    };
+
+    open();
+    // Only run on first auth render where the flag exists.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, userRole]);
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -395,15 +426,6 @@ function App() {
                     <ErrorBoundary>
                       <AnimatedPage variant="scale">
                         <CreateUser />
-                      </AnimatedPage>
-                    </ErrorBoundary>
-                  </motion.div>
-                )}
-                {activeView === 'contact-messages' && (
-                  <motion.div key="contact-messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                    <ErrorBoundary>
-                      <AnimatedPage variant="slideUp">
-                        <AdminContactMessages />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>

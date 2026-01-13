@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle, MessageSquare, ArrowLeft } from 'lucide-react';
 // Import Logo directly - it's in main bundle so no code-splitting issues
 import Logo from '../components/Logo.jsx';
-import ContactForm from '../components/ContactForm';
+import { markOpenSupportLiveChatAfterLogin } from '../utils/supportLiveChat';
 import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
 import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
 import { handleError } from '../utils/errorHandler';
@@ -32,7 +32,6 @@ const Login = ({ onBack, initialMode = 'login' }) => {
   const [error, setError] = useState(null);
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
 
   // Memoized validation functions using imported utilities
   const validateStudentEmail = useCallback((email) => {
@@ -677,16 +676,21 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                     </motion.button>
                   </p>
 
-                  {/* Contact Admin */}
+                  {/* Live Chat */}
                   <div className="pt-6 border-t border-white/10">
                     <motion.button
-                      onClick={() => setShowContactForm(true)}
+                      onClick={() => {
+                        // We can't open PrivateChat until the user is authenticated and the main app shell renders.
+                        // So we mark a flag and the App will auto-open "Live Chat" after login/register.
+                        markOpenSupportLiveChatAfterLogin();
+                        success('Sign in (or create an account) — we’ll open Live Chat with an admin right after.');
+                      }}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-white/70 hover:text-white rounded-xl transition-all duration-300 hover:bg-white/10 font-medium border border-white/10 bg-white/5 backdrop-blur-sm"
                     >
                       <MessageSquare size={16} />
-                      <span>Contact Admin</span>
+                      <span>Live Chat with Admin</span>
                     </motion.button>
                   </div>
                 </div>
@@ -727,12 +731,6 @@ const Login = ({ onBack, initialMode = 'login' }) => {
         }
       `}</style>
 
-      {/* Contact Form Modal */}
-      <AnimatePresence>
-        {showContactForm && (
-          <ContactForm onClose={() => setShowContactForm(false)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 };
