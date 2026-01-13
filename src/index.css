@@ -2186,46 +2186,6 @@ input, textarea, [contenteditable] {
     touch-action: manipulation;
   }
   
-  /* Disable problematic hover effects on touch devices ONLY - preserve desktop hover */
-  /* Only disable transforms, scales, and opacity changes that cause "sticky" hover */
-  /* IMPORTANT: Only applies to touch devices, NOT desktop with mouse */
-  button:not(nav button):hover,
-  a:not(nav a):hover,
-  .hover\:scale-110:hover,
-  .hover\:scale-105:hover,
-  .hover\:scale-\[1\.02\]:hover {
-    transform: none !important;
-  }
-  
-  /* Disable translate on hover for touch devices only */
-  .hover\:translate-y-1:hover,
-  .hover\:translate-y-2:hover,
-  .hover\:-translate-y-1:hover,
-  .hover\:-translate-y-2:hover,
-  .hover\:-translate-y-5:hover {
-    transform: none !important;
-  }
-  
-  /* Disable opacity hover changes that cause sticky states */
-  .hover\:opacity-70:hover,
-  .hover\:opacity-100:hover,
-  .hover\:opacity-90:hover,
-  .group:hover .group-hover\:opacity-100:not(nav *) {
-    opacity: revert !important;
-  }
-  
-  /* Disable underline hover on touch */
-  .hover\:underline:hover {
-    text-decoration: revert !important;
-  }
-  
-  /* Show action buttons always on touch devices */
-  .opacity-0.group-hover\:opacity-100,
-  .md\:opacity-0.md\:group-hover\:opacity-100,
-  .group-hover\:opacity-100 {
-    opacity: 1 !important;
-  }
-  
   /* Preserve sidebar menu button backgrounds and functionality */
   nav button,
   nav a {
@@ -2420,5 +2380,43 @@ input, textarea, [contenteditable] {
     .h-screen {
       height: -webkit-fill-available;
     }
+  }
+}
+
+/* Disable "sticky hover" effects ONLY on true touch devices.
+   This avoids breaking hover interactions on hybrid/desktop environments. */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable problematic hover transforms on touch */
+  button:not(nav button):hover,
+  a:not(nav a):hover,
+  .hover\:scale-110:hover,
+  .hover\:scale-105:hover,
+  .hover\:scale-\[1\.02\]:hover,
+  .hover\:translate-y-1:hover,
+  .hover\:translate-y-2:hover,
+  .hover\:-translate-y-1:hover,
+  .hover\:-translate-y-2:hover,
+  .hover\:-translate-y-5:hover {
+    transform: none !important;
+  }
+
+  /* Disable opacity hover changes that can get "stuck" */
+  .hover\:opacity-70:hover,
+  .hover\:opacity-100:hover,
+  .hover\:opacity-90:hover,
+  .group:hover .group-hover\:opacity-100:not(nav *) {
+    opacity: revert !important;
+  }
+
+  /* Disable underline hover on touch */
+  .hover\:underline:hover {
+    text-decoration: revert !important;
+  }
+
+  /* Show action buttons always on touch devices */
+  .opacity-0.group-hover\:opacity-100,
+  .md\:opacity-0.md\:group-hover\:opacity-100,
+  .group-hover\:opacity-100 {
+    opacity: 1 !important;
   }
 }
