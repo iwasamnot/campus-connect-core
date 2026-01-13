@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, FadeIn, SlideIn, ScaleIn, StaggerContainer, StaggerItem, GSAPEntrance } from './AnimatedComponents';
 
 const Login = ({ onBack, initialMode = 'login' }) => {
-  const { register, login, resetPassword, resendVerificationEmail } = useAuth();
+  const { register, login, resetPassword, resendVerificationEmail, loginAsStudent } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const { success, error: showError } = useToast();
   const [mode, setMode] = useState(initialMode); // 'login' or 'register' or 'reset'
@@ -815,6 +815,28 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                   >
                     <span className="hidden sm:inline">Continue</span>
                     <span className="sm:hidden">Go</span>
+                  </motion.button>
+                </div>
+                <div className="mt-3">
+                  <motion.button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        setSupportLiveChatDraftMessage(supportDraft);
+                        markOpenSupportLiveChatAfterLogin();
+                        setShowSupportChat(false);
+                        await loginAsStudent(); // anonymous/guest
+                        success('Connecting you to an admin…');
+                      } catch (err) {
+                        console.error('Guest live chat sign-in failed:', err);
+                        showError('Failed to start guest chat. Please try again.');
+                      }
+                    }}
+                    whileHover={{ scale: 1.01, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full mt-2 px-4 py-2.5 glass-panel border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl transition-all duration-300 text-sm font-medium"
+                  >
+                    Start Chat as Guest (no registration)
                   </motion.button>
                 </div>
                 <p className="text-xs text-white/50 mt-3">
