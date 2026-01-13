@@ -1,6 +1,7 @@
 import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 
 const SUPPORT_CHAT_FLAG_KEY = 'openSupportLiveChatAfterLogin';
+const SUPPORT_CHAT_DRAFT_KEY = 'supportLiveChatDraftMessage';
 
 /**
  * Find any admin user document we can route support chats to.
@@ -53,5 +54,22 @@ export function consumeOpenSupportLiveChatAfterLogin() {
   const flag = sessionStorage.getItem(SUPPORT_CHAT_FLAG_KEY) === '1';
   if (flag) sessionStorage.removeItem(SUPPORT_CHAT_FLAG_KEY);
   return flag;
+}
+
+export function setSupportLiveChatDraftMessage(message) {
+  if (typeof sessionStorage === 'undefined') return;
+  const text = (message || '').toString().trim();
+  if (!text) {
+    sessionStorage.removeItem(SUPPORT_CHAT_DRAFT_KEY);
+    return;
+  }
+  sessionStorage.setItem(SUPPORT_CHAT_DRAFT_KEY, text);
+}
+
+export function consumeSupportLiveChatDraftMessage() {
+  if (typeof sessionStorage === 'undefined') return '';
+  const text = (sessionStorage.getItem(SUPPORT_CHAT_DRAFT_KEY) || '').toString();
+  sessionStorage.removeItem(SUPPORT_CHAT_DRAFT_KEY);
+  return text;
 }
 

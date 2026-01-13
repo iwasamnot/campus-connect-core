@@ -36,6 +36,7 @@ import UserProfilePopup from './UserProfilePopup';
 import FileUpload from './FileUpload';
 import EmojiPicker from './EmojiPicker';
 import ImagePreview from './ImagePreview';
+import { consumeSupportLiveChatDraftMessage } from '../utils/supportLiveChat';
 // Use window globals to avoid import/export issues
 const checkToxicity = typeof window !== 'undefined' && window.__checkToxicity 
   ? window.__checkToxicity 
@@ -632,6 +633,12 @@ const PrivateChat = () => {
         
         // Call selectChat directly
         selectChat(userToSelect);
+
+        // If we came from "Support Live Chat", prefill the first message for a chatbox-like flow.
+        const draft = consumeSupportLiveChatDraftMessage();
+        if (draft) {
+          setNewMessage(draft);
+        }
       } else if (availableUsers.length > 0) {
         // Only show error if we've loaded users but still can't find this one
         console.warn('PrivateChat: User not found in availableUsers after all attempts:', {
