@@ -2,17 +2,20 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { usePreferences } from '../context/PreferencesContext';
+import { useToast } from '../context/ToastContext';
 // Use window globals to avoid import/export issues
 const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
   ? window.__isAdminRole 
   : (role) => role === 'admin' || role === 'admin1';
-import { Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw, Sparkles, Minus, Droplet } from 'lucide-react';
+import { Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw, Sparkles, Minus, Droplet, MessageCircle } from 'lucide-react';
 import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
+import { findSupportAdminUser, setInitialPrivateChatUser } from '../utils/supportLiveChat';
 
 const Settings = ({ setActiveView }) => {
   const { userRole, signOut } = useAuth();
   const { darkMode, toggleDarkMode, themeStyle, changeThemeStyle } = useTheme();
   const { preferences, updatePreference, resetPreferences } = usePreferences();
+  const { error: showError, success } = useToast();
 
   const handleSignOut = async () => {
     try {
@@ -390,6 +393,43 @@ const Settings = ({ setActiveView }) => {
                 Help & Support
               </h2>
               <div className="space-y-3">
+                {!isAdminRole(userRole) && (
+                  <motion.button
+                    onClick={async () => {
+                      try {
+                        const runtimeDb = (typeof window !== 'undefined' && window.__firebaseDb) ? window.__firebaseDb : null;
+                        if (!runtimeDb) {
+                          showError('Database connection not available. Please refresh and try again.');
+                          return;
+                        }
+
+                        const adminUser = await findSupportAdminUser(runtimeDb);
+                        if (!adminUser?.id) {
+                          showError('No admin account is available for live chat right now.');
+                          return;
+                        }
+
+                        setInitialPrivateChatUser(adminUser.id, adminUser);
+                        success('Opening Live Chat…');
+                        setActiveView('private-chat');
+                      } catch (err) {
+                        console.error('Failed to open live chat:', err);
+                        showError('Failed to open live chat. Please try again.');
+                      }
+                    }}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 text-left"
+                  >
+                    <MessageCircle size={20} className="text-indigo-300 transition-all duration-300" />
+                    <div className="flex-1">
+                      <p className="font-medium text-white">Live Chat with Admin</p>
+                      <p className="text-sm text-white/60">
+                        Real-time support (two-way chat)
+                      </p>
+                    </div>
+                  </motion.button>
+                )}
                 <motion.button
                   onClick={() => setActiveView('ai-help')}
                   whileHover={{ scale: 1.02, y: -2 }}

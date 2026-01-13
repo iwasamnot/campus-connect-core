@@ -2,10 +2,10 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle, MessageSquare, ArrowLeft, X } from 'lucide-react';
 // Import Logo directly - it's in main bundle so no code-splitting issues
 import Logo from '../components/Logo.jsx';
-import ContactForm from '../components/ContactForm';
+import { markOpenSupportLiveChatAfterLogin, setSupportLiveChatDraftMessage } from '../utils/supportLiveChat';
 import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
 import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
 import { handleError } from '../utils/errorHandler';
@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, FadeIn, SlideIn, ScaleIn, StaggerContainer, StaggerItem, GSAPEntrance } from './AnimatedComponents';
 
 const Login = ({ onBack, initialMode = 'login' }) => {
-  const { register, login, resetPassword, resendVerificationEmail } = useAuth();
+  const { register, login, resetPassword, resendVerificationEmail, loginAsStudent } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const { success, error: showError } = useToast();
   const [mode, setMode] = useState(initialMode); // 'login' or 'register' or 'reset'
@@ -32,7 +32,8 @@ const Login = ({ onBack, initialMode = 'login' }) => {
   const [error, setError] = useState(null);
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
+  const [showSupportChat, setShowSupportChat] = useState(false);
+  const [supportDraft, setSupportDraft] = useState('');
 
   // Memoized validation functions using imported utilities
   const validateStudentEmail = useCallback((email) => {
@@ -677,16 +678,18 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                     </motion.button>
                   </p>
 
-                  {/* Contact Admin */}
+                  {/* Live Chat */}
                   <div className="pt-6 border-t border-white/10">
                     <motion.button
-                      onClick={() => setShowContactForm(true)}
+                      onClick={() => {
+                        setShowSupportChat(true);
+                      }}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-white/70 hover:text-white rounded-xl transition-all duration-300 hover:bg-white/10 font-medium border border-white/10 bg-white/5 backdrop-blur-sm"
                     >
                       <MessageSquare size={16} />
-                      <span>Contact Admin</span>
+                      <span>Live Chat with Admin</span>
                     </motion.button>
                   </div>
                 </div>
@@ -727,10 +730,121 @@ const Login = ({ onBack, initialMode = 'login' }) => {
         }
       `}</style>
 
-      {/* Contact Form Modal */}
+      {/* Support Live Chat (chatbox-style modal) */}
       <AnimatePresence>
-        {showContactForm && (
-          <ContactForm onClose={() => setShowContactForm(false)} />
+        {showSupportChat && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSupportChat(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] w-full max-w-lg overflow-hidden backdrop-blur-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="glass-panel border-b border-white/10 px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Logo size="small" showText={false} />
+                  <div>
+                    <h3 className="text-base font-semibold text-white text-glow">Support Live Chat</h3>
+                    <p className="text-xs text-white/60">Ask anything — we’ll connect you to an admin</p>
+                  </div>
+                </div>
+                <motion.button
+                  onClick={() => setShowSupportChat(false)}
+                  whileHover={{ scale: 1.05, rotate: 90 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2.5 glass-panel border border-white/10 rounded-xl text-white/70 hover:text-white hover:border-white/20 transition-all"
+                  aria-label="Close support chat"
+                  type="button"
+                >
+                  <X size={20} />
+                </motion.button>
+              </div>
+
+              <div className="p-5 space-y-3 max-h-[55vh] overflow-y-auto">
+                <div className="flex justify-start">
+                  <div className="glass-panel border border-white/10 bg-white/5 rounded-2xl px-4 py-3 max-w-[85%]">
+                    <p className="text-sm text-white/90 leading-relaxed">
+                      Hi! Describe what you need help with. When you sign in, we’ll open a real-time chat with an admin.
+                    </p>
+                    <p className="text-[11px] text-white/50 mt-2">Admin Support</p>
+                  </div>
+                </div>
+
+                {supportDraft.trim() && (
+                  <div className="flex justify-end">
+                    <div className="bg-indigo-600 text-white rounded-2xl px-4 py-3 max-w-[85%] shadow-lg">
+                      <p className="text-sm whitespace-pre-wrap break-words">{supportDraft.trim()}</p>
+                      <p className="text-[11px] text-white/70 mt-2 text-right">You</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="glass-panel border-t border-white/10 p-5">
+                <div className="flex gap-2">
+                  <label htmlFor="support-livechat-input" className="sr-only">Type your message</label>
+                  <input
+                    id="support-livechat-input"
+                    name="support-livechat-input"
+                    type="text"
+                    value={supportDraft}
+                    onChange={(e) => setSupportDraft(e.target.value)}
+                    placeholder="Type your message…"
+                    className="flex-1 px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={() => {
+                      // Store draft + flag, then user can sign in (or register). App will open the real chat after auth.
+                      setSupportLiveChatDraftMessage(supportDraft);
+                      markOpenSupportLiveChatAfterLogin();
+                      setShowSupportChat(false);
+                      success('Now sign in — we’ll open Live Chat with an admin and keep your message ready.');
+                    }}
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="send-button-shimmer px-4 py-2.5 text-white rounded-xl transition-all font-medium shadow-lg hover:shadow-xl"
+                  >
+                    <span className="hidden sm:inline">Continue</span>
+                    <span className="sm:hidden">Go</span>
+                  </motion.button>
+                </div>
+                <div className="mt-3">
+                  <motion.button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        setSupportLiveChatDraftMessage(supportDraft);
+                        markOpenSupportLiveChatAfterLogin();
+                        setShowSupportChat(false);
+                        await loginAsStudent(); // anonymous/guest
+                        success('Connecting you to an admin…');
+                      } catch (err) {
+                        console.error('Guest live chat sign-in failed:', err);
+                        showError('Failed to start guest chat. Please try again.');
+                      }
+                    }}
+                    whileHover={{ scale: 1.01, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full mt-2 px-4 py-2.5 glass-panel border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl transition-all duration-300 text-sm font-medium"
+                  >
+                    Start Chat as Guest (no registration)
+                  </motion.button>
+                </div>
+                <p className="text-xs text-white/50 mt-3">
+                  Tip: If you don’t have an account yet, tap Register — we’ll still open Live Chat after signup.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

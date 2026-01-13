@@ -47,12 +47,126 @@ const formatRelative = (value) => {
 
 const normalize = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
 
+const normalizeSql = (s) => (s || '').trim().replace(/\s+/g, ' ');
+
+const tryParseSqlValue = (raw) => {
+  const v = (raw || '').trim();
+  if (!v) return { ok: false };
+  if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith('"') && v.endsWith('"'))) {
+    return { ok: true, value: v.slice(1, -1) };
+  }
+  if (/^(true|false)$/i.test(v)) return { ok: true, value: /^true$/i.test(v) };
+  if (/^null$/i.test(v)) return { ok: true, value: null };
+  if (/^-?\d+(\.\d+)?$/.test(v)) return { ok: true, value: Number(v) };
+  // Fallback: treat as string identifier
+  return { ok: true, value: v };
+};
+
+const parseSql = (raw) => {
+  const sql = normalizeSql(raw);
+  // Minimal SQL subset:
+  // SELECT <fields|*|count(*)> FROM <collection> [WHERE a = 'b' AND c >= 2] [ORDER BY field ASC|DESC] [LIMIT n]
+  const m = sql.match(
+    /^select\s+(.+?)\s+from\s+([a-zA-Z0-9_-]+)(?:\s+where\s+(.+?))?(?:\s+order\s+by\s+([a-zA-Z0-9_.-]+)(?:\s+(asc|desc))?)?(?:\s+limit\s+(\d+))?\s*;?$/i,
+  );
+  if (!m) return null;
+
+  const selectRaw = m[1].trim();
+  const from = m[2].trim();
+  const whereRaw = (m[3] || '').trim();
+  const orderField = (m[4] || '').trim();
+  const orderDir = ((m[5] || 'asc').trim().toLowerCase() === 'desc' ? 'desc' : 'asc');
+  const limitRaw = m[6] ? Number(m[6]) : null;
+
+  const isCount =
+    /^count\(\s*\*\s*\)$/i.test(selectRaw) ||
+    /^count\(\s*1\s*\)$/i.test(selectRaw) ||
+    /^count\(\s*\w+\s*\)$/i.test(selectRaw);
+
+  const fields =
+    selectRaw === '*'
+      ? ['*']
+      : isCount
+        ? ['count']
+        : selectRaw
+            .split(',')
+            .map((f) => f.trim())
+            .filter(Boolean);
+
+  const conditions = [];
+  if (whereRaw) {
+    const parts = whereRaw.split(/\s+and\s+/i).map((p) => p.trim()).filter(Boolean);
+    for (const part of parts) {
+      // Support:
+      // field = value
+      // field != value
+      // field >= value
+      // field <= value
+      // field > value
+      // field < value
+      // field in ('a','b')
+      // field contains 'x'  -> array-contains
+      let cm = part.match(/^([a-zA-Z0-9_.-]+)\s*(=|==|!=|>=|<=|>|<)\s*(.+)$/i);
+      if (cm) {
+        const field = cm[1];
+        const op = cm[2] === '=' ? '==' : cm[2];
+        const parsed = tryParseSqlValue(cm[3]);
+        if (!parsed.ok) return null;
+        conditions.push({ field, op, value: parsed.value });
+        continue;
+      }
+
+      cm = part.match(/^([a-zA-Z0-9_.-]+)\s+contains\s+(.+)$/i);
+      if (cm) {
+        const field = cm[1];
+        const parsed = tryParseSqlValue(cm[2]);
+        if (!parsed.ok) return null;
+        conditions.push({ field, op: 'array-contains', value: parsed.value });
+        continue;
+      }
+
+      cm = part.match(/^([a-zA-Z0-9_.-]+)\s+in\s*\((.+)\)\s*$/i);
+      if (cm) {
+        const field = cm[1];
+        const listRaw = cm[2];
+        const items = listRaw
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean)
+          .map((x) => tryParseSqlValue(x))
+          .filter((x) => x.ok)
+          .map((x) => x.value);
+        if (items.length === 0) return null;
+        conditions.push({ field, op: 'in', value: items.slice(0, 10) }); // Firestore 'in' max 10
+        continue;
+      }
+
+      return null;
+    }
+  }
+
+  const safeLimit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(50, limitRaw)) : 25;
+
+  return {
+    sql,
+    from,
+    fields,
+    isCount,
+    conditions,
+    orderBy: orderField ? { field: orderField, dir: orderDir } : null,
+    limit: safeLimit,
+  };
+};
+
 const examples = [
   'Who was last online?',
   'Who sent the last message?',
   'Show the last message',
   'How many users are online?',
   'Who registered last?',
+  "SELECT count(*) FROM users WHERE isOnline = true",
+  "SELECT name, email, role FROM users ORDER BY createdAt DESC LIMIT 5",
+  "SELECT userEmail, displayText, timestamp FROM messages ORDER BY timestamp DESC LIMIT 3",
 ];
 
 const AdminQueryBox = () => {
@@ -63,7 +177,7 @@ const AdminQueryBox = () => {
 
   const hint = useMemo(
     () =>
-      'Try: "Who was last online?", "Who sent the last message?", "How many users are online?", "Who registered last?"',
+      'Try natural language (e.g. "Who was last online?") or SQL (e.g. SELECT count(*) FROM users WHERE isOnline = true)',
     [],
   );
 
@@ -81,6 +195,72 @@ const AdminQueryBox = () => {
       setResult(null);
 
       try {
+        // SQL mode (simple subset -> Firestore query)
+        const maybeSql = parseSql(rawQuestion);
+        if (maybeSql) {
+          const constraints = [];
+          for (const c of maybeSql.conditions) {
+            constraints.push(where(c.field, c.op, c.value));
+          }
+          if (maybeSql.orderBy) {
+            constraints.push(orderBy(maybeSql.orderBy.field, maybeSql.orderBy.dir));
+          }
+
+          // Count queries should not include limit/orderBy
+          if (maybeSql.isCount) {
+            const countQ = query(collection(db, maybeSql.from), ...maybeSql.conditions.map((c) => where(c.field, c.op, c.value)));
+            const countSnap = await getCountFromServer(countQ);
+            setResult({
+              title: `SQL count from ${maybeSql.from}`,
+              lines: [
+                `SQL: ${maybeSql.sql}`,
+                `Count: ${countSnap.data().count}`,
+              ],
+            });
+            return;
+          }
+
+          constraints.push(limit(maybeSql.limit));
+          const docsQ = query(collection(db, maybeSql.from), ...constraints);
+          const snap = await getDocs(docsQ);
+
+          const selectedFields = maybeSql.fields;
+          const lines = [];
+          lines.push(`SQL: ${maybeSql.sql}`);
+          lines.push(`Rows: ${snap.size} (limit ${maybeSql.limit})`);
+
+          snap.docs.forEach((d, idx) => {
+            const data = d.data();
+            if (selectedFields.length === 1 && selectedFields[0] === '*') {
+              const json = JSON.stringify({ id: d.id, ...data });
+              lines.push(`${idx + 1}. ${json.length > 400 ? `${json.slice(0, 400)}…` : json}`);
+              return;
+            }
+
+            const parts = [];
+            parts.push(`id=${d.id}`);
+            selectedFields.forEach((f) => {
+              const v = data?.[f];
+              const formatted =
+                f === 'timestamp' || f === 'lastSeen' || f === 'createdAt'
+                  ? formatDateTime(v)
+                  : typeof v === 'string'
+                    ? v
+                    : v === null || v === undefined
+                      ? 'null'
+                      : JSON.stringify(v);
+              parts.push(`${f}=${formatted}`);
+            });
+            lines.push(`${idx + 1}. ${parts.join(' | ')}`);
+          });
+
+          setResult({
+            title: `SQL results from ${maybeSql.from}`,
+            lines: lines.length ? lines : ['No rows returned.'],
+          });
+          return;
+        }
+
         // Intent detection (simple but effective for common admin queries)
         const wantsLastOnline =
           qText.includes('last online') || qText.includes('recently online') || qText.includes('most recent online');
@@ -242,7 +422,7 @@ const AdminQueryBox = () => {
           onKeyDown={(e) => {
             if (e.key === 'Enter') run(question);
           }}
-          placeholder='e.g. "Who was last online?"'
+          placeholder='e.g. "Who was last online?" or "SELECT count(*) FROM users WHERE isOnline = true"'
           className="flex-1 px-4 py-2.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20 disabled:opacity-50"
           disabled={running}
         />
