@@ -31,7 +31,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      // Auto-apply new builds so users don't get stuck on cached UI
+      registerType: 'autoUpdate',
       includeAssets: ['logo.png', 'favicon.ico'],
       injectManifest: false,
       manifest: {
@@ -187,7 +188,8 @@ export default defineConfig({
         // Better offline support for mobile
         offlineGoogleAnalytics: false,
         // Optimize cache for mobile devices
-        cacheId: 'campusconnect-v1',
+        // Bump cache id to force-refresh stale assets after updates
+        cacheId: 'campusconnect-v2',
         runtimeCaching: [
           {
             // CRITICAL: Handle JS module requests BEFORE navigateFallback
