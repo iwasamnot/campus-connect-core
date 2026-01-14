@@ -495,12 +495,22 @@ ${question}
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Initialize RAG system on mount
+  useEffect(() => {
+    const initRAG = async () => {
+      try {
+        const { initializeRAG } = await import('../utils/ragSystem');
+        await initializeRAG();
+      } catch (error) {
+        console.warn('RAG initialization error (will use fallback):', error);
+      }
+    };
+    initRAG();
+  }, []);
 
-  // Intelligent AI: Use Gemini with conversation history, fallback to local knowledge base
+
+  // Intelligent AI: Use RAG with Gemini, fallback to local knowledge base
   const getHybridAIResponse = async (question) => {
-    // Always get local knowledge base answer first for context
-    const localAnswer = ai.current.processQuestion(question);
-    
     // Build conversation history from messages (excluding the system message)
     const conversationHistory = messages
       .filter(msg => msg.id !== 1) // Exclude the initial greeting
@@ -510,17 +520,31 @@ ${question}
         content: msg.content
       }));
     
-    // Try Gemini if API key is available
+    // Try RAG-enhanced Gemini if API key is available
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     
     if (geminiApiKey && geminiApiKey !== '') {
+      try {
+        // Import RAG system dynamically
+        const { generateRAGResponse } = await import('../utils/ragSystem');
+        const ragAnswer = await generateRAGResponse(question, conversationHistory, selectedGeminiModel);
+        if (ragAnswer && ragAnswer.trim() !== '') {
+          return ragAnswer;
+        }
+      } catch (ragError) {
+        console.warn('RAG system error, falling back to standard Gemini:', ragError);
+      }
+      
+      // Fallback to standard Gemini with local knowledge base
+      const localAnswer = ai.current.processQuestion(question);
       const geminiAnswer = await callGemini(question, localAnswer, conversationHistory);
       if (geminiAnswer && geminiAnswer.trim() !== '') {
         return geminiAnswer;
       }
     }
     
-    // Fallback to local knowledge base answer
+    // Final fallback to local knowledge base answer
+    const localAnswer = ai.current.processQuestion(question);
     return localAnswer;
   };
 

@@ -67,8 +67,11 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-137dedbd'], (function (workbox) { 'use strict';
+define(['./workbox-3c4d4363'], (function (workbox) { 'use strict';
 
+  workbox.setCacheNameDetails({
+    prefix: "campusconnect-v1"
+  });
   self.skipWaiting();
   workbox.clientsClaim();
 
@@ -82,13 +85,31 @@ define(['./workbox-137dedbd'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "/index.html",
-    "revision": "0.mst0e929ofs"
+    "revision": "0.67f4teaj5ao"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/],
-    denylist: [/^\/api/, /^\/_/, /^\/admin/]
+    denylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/]
   }));
+  workbox.registerRoute(/\.(?:js|mjs)$/, new workbox.NetworkFirst({
+    "cacheName": "js-modules-cache",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 100,
+      maxAgeSeconds: 86400
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
+    })]
+  }), 'GET');
+  workbox.registerRoute(/\.css$/, new workbox.NetworkFirst({
+    "cacheName": "css-cache",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 50,
+      maxAgeSeconds: 86400
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
+    })]
+  }), 'GET');
   workbox.registerRoute(/^https:\/\/.*\.firebaseapp\.com\/.*/i, new workbox.NetworkFirst({
     "cacheName": "firebase-cache",
     plugins: [new workbox.ExpirationPlugin({

@@ -118,6 +118,7 @@ const ChatArea = ({ setActiveView }) => {
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
   const menuRefs = useRef({}); // Refs for each menu
+  const messagesContainerRef = useRef(null);
   const MESSAGE_RATE_LIMIT = 3000; // 3 seconds between messages
   const CHAT_ID = 'global'; // For drafts
   
@@ -284,6 +285,19 @@ const ChatArea = ({ setActiveView }) => {
     }
   };
 
+  // Initialize RAG system on mount
+  useEffect(() => {
+    const initRAG = async () => {
+      try {
+        const { initializeRAG } = await import('../utils/ragSystem');
+        await initializeRAG();
+      } catch (error) {
+        console.warn('RAG initialization error (will use fallback):', error);
+      }
+    };
+    initRAG();
+  }, []);
+
   // Fetch all users to get names and profile data (limited to prevent quota exhaustion)
   // Using one-time read instead of real-time listener to reduce reads
   // OPTIMIZED: Added ref to prevent multiple simultaneous fetches
@@ -431,6 +445,7 @@ const ChatArea = ({ setActiveView }) => {
     });
   }, [messages.length, scrollToBottom]); // Only depend on length, not full array
 
+
   // Fetch messages from Firestore (limited to prevent quota exhaustion)
   // Optimized: Memoize query to prevent recreation
   const messagesQuery = useMemo(() => {
@@ -569,15 +584,32 @@ const ChatArea = ({ setActiveView }) => {
 
   // Toxicity checking is now handled by the toxicityChecker utility
 
-  // Call Gemini AI with selected model
+  // Call Gemini AI with RAG enhancement
   const callGemini = async (userMessage) => {
-    const model = getGeminiModel(selectedGeminiModel);
-    if (!model) {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    if (!apiKey || apiKey === '') {
       console.warn('Gemini API key not configured');
       return null;
     }
 
     try {
+      // Try RAG-enhanced response first
+      try {
+        const { generateRAGResponse } = await import('../utils/ragSystem');
+        const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel);
+        if (ragResponse && ragResponse.trim() !== '') {
+          return ragResponse.trim();
+        }
+      } catch (ragError) {
+        console.warn('RAG system error, falling back to standard Gemini:', ragError);
+      }
+
+      // Fallback to standard Gemini
+      const model = getGeminiModel(selectedGeminiModel);
+      if (!model) {
+        return null;
+      }
+
       const result = await model.generateContent(userMessage);
       const response = await result.response;
       const text = response.text();
@@ -1398,7 +1430,8 @@ const ChatArea = ({ setActiveView }) => {
 
           {/* Messages Area - Fluid.so aesthetic */}
           <div 
-            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 md:py-6 space-y-3 md:space-y-4 bg-transparent scroll-container" 
+            ref={messagesContainerRef}
+            className={`flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 space-y-3 md:space-y-4 bg-transparent scroll-container transition-all duration-200 ${openMenuId ? 'pb-32 md:pb-40' : ''}`} 
             style={{ 
               minHeight: 0,
               flex: '1 1 auto',
@@ -1459,7 +1492,7 @@ const ChatArea = ({ setActiveView }) => {
                   isAuthor ? 'justify-end' : 'justify-start'
                 }`}
                       style={{ 
-                        contain: 'layout style paint',
+                        contain: 'layout style',
                         isolation: 'isolate'
                       }}
                       onMouseEnter={(e) => {
@@ -1507,7 +1540,7 @@ const ChatArea = ({ setActiveView }) => {
                   </button>
                 )}
 
-                <div className="relative">
+                <div className="relative" style={{ overflow: 'visible' }}>
                 <div
                         className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer gpu-accelerated transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] ${
                     isAuthor
@@ -1517,7 +1550,7 @@ const ChatArea = ({ setActiveView }) => {
                   style={{ 
                     transform: 'translateZ(0)', // Force GPU acceleration
                     backfaceVisibility: 'hidden',
-                    contain: 'layout style paint'
+                    contain: 'layout style'
                   }}
                 >
                     <div className="flex items-center justify-between mb-1">
@@ -1553,9 +1586,11 @@ const ChatArea = ({ setActiveView }) => {
                         <div className="w-2 h-2 bg-gray-400 rounded-full" title={`Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`} />
                       ) : null}
                     </div>
-                    <div className="text-xs opacity-75 ml-2">
-                      {formatTimestamp(message.timestamp)}
-                      {message.edited && <span className="ml-1 italic">(edited)</span>}
+                    <div className="flex items-center gap-1.5">
+                      <div className="text-xs opacity-75">
+                        {formatTimestamp(message.timestamp)}
+                        {message.edited && <span className="ml-1 italic">(edited)</span>}
+                      </div>
                     </div>
                   </div>
                   
@@ -1756,18 +1791,20 @@ const ChatArea = ({ setActiveView }) => {
                     </div>
                   )}
                 </div>
-                    {/* 3-dots menu button - appears on hover */}
+                
+                    {/* 3-dots menu button - appears on hover, positioned outside bubble near timestamp */}
                     <div 
                       ref={(el) => {
                         if (el) menuRefs.current[message.id] = el;
                       }}
-                      className={`message-menu-button absolute ${isAuthor ? 'top-1 -right-1' : 'top-1 -left-1'} opacity-0 invisible transition-all duration-200 z-30 ${
+                      className={`message-menu-button absolute top-0 left-full ml-1.5 opacity-0 invisible transition-all duration-200 z-30 flex items-center ${
                         openMenuId === message.id ? 'opacity-100 visible pointer-events-auto' : 'pointer-events-none'
                       }`}
                       style={{ 
                         pointerEvents: openMenuId === message.id ? 'auto' : 'none',
-                        transform: 'translateZ(0)', // Force GPU acceleration
-                        willChange: 'opacity, visibility'
+                        transform: 'translateZ(0)',
+                        willChange: 'opacity, visibility',
+                        overflow: 'visible'
                       }}
                       onMouseEnter={(e) => {
                         // Keep visible when hovering over button
@@ -1791,12 +1828,13 @@ const ChatArea = ({ setActiveView }) => {
                         e.stopPropagation();
                         setOpenMenuId(openMenuId === message.id ? null : message.id);
                       }}
-                      className="p-1.5 hover:bg-white/10 hover:scale-110 active:scale-95 rounded-full transition-all duration-200 touch-action-manipulation gpu-accelerated"
+                      className="p-1 relative active:scale-95 transition-all duration-200 touch-action-manipulation gpu-accelerated group/menubtn"
                       title="More options"
                       aria-label="More options"
                       style={{ transform: 'translateZ(0)' }}
                     >
-                      <MoreVertical size={16} className="text-white/70 hover:text-white transition-colors" />
+                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-0 h-4 bg-indigo-400 group-hover/menubtn:w-0.5 transition-all duration-200 rounded-full"></div>
+                      <MoreVertical size={14} className="text-white/50 group-hover/menubtn:text-white/70 transition-colors" />
                     </button>
                     
                     {/* Dropdown menu - Fluid.so aesthetic */}
@@ -1805,7 +1843,7 @@ const ChatArea = ({ setActiveView }) => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl py-1 min-w-[180px] z-40 overflow-hidden"
+                        className={`absolute ${isAuthor ? 'right-0' : 'left-0'} top-full mt-1 glass-panel border border-white/10 rounded-xl shadow-xl py-1 min-w-[180px] z-[100] max-h-[70vh] overflow-y-auto`}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {/* Menu items */}
@@ -1995,7 +2033,7 @@ const ChatArea = ({ setActiveView }) => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 top-8 glass-panel border border-white/10 rounded-xl shadow-xl p-4 z-40 min-w-[250px]"
+                        className={`absolute ${isAuthor ? 'right-0' : 'left-0'} top-8 glass-panel border border-white/10 rounded-xl shadow-xl p-4 z-40 min-w-[250px]`}
                       >
                             <textarea
                               value={reportReason}
