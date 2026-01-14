@@ -104,5 +104,3 @@ export const queryRAG = async (query, conversationHistory = [], useRAG = true) =
   return context || 'I apologize, but I could not retrieve relevant information for your query.';
 };
 
-// Export initialization function - call it from components
-export { initializeRAG };
