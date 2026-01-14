@@ -243,7 +243,9 @@ const CreateUser = () => {
                   Email Address
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                  <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
+                    <Mail className="text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                  </div>
                   <input
                     type="email"
                     id="email"
@@ -265,7 +267,9 @@ const CreateUser = () => {
                   Password
                 </label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                  <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
+                    <Lock className="text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                  </div>
                   <input
                     type="password"
                     id="password"
