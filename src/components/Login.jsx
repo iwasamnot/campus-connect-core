@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { Mail, Lock, UserPlus, LogIn, Moon, Sun, RotateCcw, User, CheckCircle, AlertCircle, MessageSquare, ArrowLeft } from 'lucide-react';
 // Import Logo directly - it's in main bundle so no code-splitting issues
 import Logo from '../components/Logo.jsx';
-import ContactForm from '../components/ContactForm';
+import ContactChat from '../components/ContactChat';
 import { sanitizeEmail, sanitizeText } from '../utils/sanitize';
 import { isValidStudentEmail, isValidAdminEmail, validatePassword, validateName } from '../utils/validation';
 import { handleError } from '../utils/errorHandler';
@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, FadeIn, SlideIn, ScaleIn, StaggerContainer, StaggerItem, GSAPEntrance } from './AnimatedComponents';
 
 const Login = ({ onBack, initialMode = 'login' }) => {
-  const { register, login, resetPassword, resendVerificationEmail } = useAuth();
+  const { register, login, resetPassword, resendVerificationEmail, user } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const { success, error: showError } = useToast();
   const [mode, setMode] = useState(initialMode); // 'login' or 'register' or 'reset'
@@ -277,7 +277,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
             initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-10 md:p-12 w-full min-w-[320px] max-w-[550px] md:max-w-[900px] mx-auto backdrop-blur-xl"
+            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-10 md:p-12 w-[550px] min-w-[320px] max-w-[550px] md:max-w-[900px] mx-auto backdrop-blur-xl"
           >
             <StaggerContainer staggerDelay={0.08} initialDelay={0.3}>
               <StaggerItem>
@@ -737,10 +737,14 @@ const Login = ({ onBack, initialMode = 'login' }) => {
         }
       `}</style>
 
-      {/* Contact Form Modal */}
+      {/* Contact Chat Modal */}
       <AnimatePresence>
         {showContactForm && (
-          <ContactForm onClose={() => setShowContactForm(false)} />
+          <ContactChat 
+            onClose={() => setShowContactForm(false)} 
+            userEmail={email || user?.email}
+            userName={user?.displayName || name}
+          />
         )}
       </AnimatePresence>
     </div>
