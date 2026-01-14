@@ -277,7 +277,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
             initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-8 md:p-10 w-full min-w-[320px] max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl"
+            className="glass-panel shadow-2xl border border-white/10 rounded-[2rem] p-8 md:p-10 w-full min-w-[320px] max-w-2xl md:max-w-3xl mx-auto backdrop-blur-xl"
           >
             <StaggerContainer staggerDelay={0.08} initialDelay={0.3}>
               <StaggerItem>
@@ -449,7 +449,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                   {/* Email */}
                   <div>
                     <label htmlFor="login-email" className="block text-sm font-semibold text-white/90 mb-2.5">
-                      Email Address
+                      Email
                     </label>
                     <div className="relative group">
                       <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/40 group-focus-within:text-indigo-400 transition-colors" size={20} />
@@ -463,7 +463,7 @@ const Login = ({ onBack, initialMode = 'login' }) => {
                         spellCheck="false"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="s20230091@sistc.app"
+                        placeholder="Enter your email"
                         required
                         className="w-full pl-12 pr-4 py-3.5 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 hover:border-white/20"
                         disabled={loading}
