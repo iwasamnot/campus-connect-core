@@ -139,6 +139,15 @@ const ChatArea = ({ setActiveView }) => {
   const [showCustomEmojiPicker, setShowCustomEmojiPicker] = useState(null); // Message ID for custom emoji picker
   const [showAnalytics, setShowAnalytics] = useState(false); // Show analytics dashboard
   const [voiceTranscription, setVoiceTranscription] = useState({}); // Voice message transcriptions
+  const [showSmartReplies, setShowSmartReplies] = useState(true); // AI Smart Replies (enabled by default)
+  const [showCollaborativeEditor, setShowCollaborativeEditor] = useState(false); // Collaborative Editor
+  const [showPredictiveScheduler, setShowPredictiveScheduler] = useState(false); // Predictive Scheduler
+  const [showVoiceEmotion, setShowVoiceEmotion] = useState(false); // Voice Emotion Detection
+  const [showConversationInsights, setShowConversationInsights] = useState(false); // Conversation Insights
+  const [showTaskExtractor, setShowTaskExtractor] = useState(false); // Task Extractor
+  const [showRelationshipGraph, setShowRelationshipGraph] = useState(false); // Relationship Graph
+  const [scheduledMessage, setScheduledMessage] = useState(null); // Scheduled message time
+  const [showFuturisticMenu, setShowFuturisticMenu] = useState(false); // Futuristic features menu
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
