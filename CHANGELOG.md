@@ -1,5 +1,75 @@
 # Changelog
 
+## [10.0.0] - 2025-01-18 - 🎉 MAJOR UPDATE: Fun & Modern Features
+
+### Added - Major New Features
+
+#### GIF Support with Giphy Integration 🎬
+- **Search & Send GIFs**: Search and send GIFs directly in chat
+- **Trending GIFs**: Browse trending GIFs on load
+- **Real-time Search**: Debounced search for instant results
+- **Beautiful Interface**: Modern GIF picker with smooth animations
+- **Setup Required**: Add `VITE_GIPHY_API_KEY` environment variable
+
+#### Message Effects ✨
+- **Confetti Animations**: Colorful falling confetti on message send
+- **Firework Effects**: Explosive firework animations
+- **Celebration Effects**: Mixed celebration animations
+- **Automatic Triggers**: Effects trigger based on preferences
+- **Canvas-based**: Smooth GPU-accelerated animations
+
+#### Rich Text Editor 📝
+- **Markdown Formatting**: Bold, italic, code, links, lists
+- **Formatting Toolbar**: Easy-to-use formatting buttons
+- **Live Preview**: Toggle preview mode to see formatted result
+- **Keyboard Shortcuts**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+` (code)
+- **Character Counter**: Track message length
+
+#### Custom Emoji Reactions 😊
+- **Extended Emoji Picker**: 60+ emojis organized by categories
+- **Categories**: Reactions, Faces, Gestures, Objects, Symbols
+- **Easy Access**: Click "More" button in reaction picker
+- **Smooth Animations**: Beautiful hover and click effects
+
+#### Voice Message Transcription 🎤
+- **Automatic Transcription**: Converts voice messages to text
+- **Web Speech API**: Uses browser-native speech recognition
+- **Display Transcription**: Shows transcription below voice messages
+- **Graceful Fallback**: Works even if transcription fails
+- **Browser Support**: Chrome, Edge, Safari (desktop)
+
+#### Message Analytics Dashboard 📊
+- **Personal Statistics**: Track your messaging activity
+- **Total Messages**: Count of all messages sent
+- **With Reactions**: Messages that received reactions
+- **With Files**: Messages with attachments
+- **Average Reactions**: Average reactions per message
+- **Most Active Time**: Your peak messaging hour
+- **Time Filters**: 24h, 7d, 30d, all time
+- **Keyboard Shortcut**: Ctrl/Cmd + Shift + A
+
+### Changed
+- **Message Input Toolbar**: Added GIF and Rich Text buttons
+- **Reaction Picker**: Added "More" button for extended emojis
+- **Voice Messages**: Now include transcription when available
+- **Message Send**: Triggers effects if enabled in preferences
+
+### Technical Improvements
+- Created `GifPicker.jsx` component with Giphy API integration
+- Created `MessageEffects.jsx` with canvas animations
+- Created `RichTextEditor.jsx` with markdown parser
+- Created `CustomEmojiReactions.jsx` with categorized emojis
+- Created `MessageAnalytics.jsx` with Firestore queries
+- Created `voiceTranscription.js` utility with Web Speech API
+- Integrated framer-motion for smooth animations
+- Added keyboard shortcuts for analytics
+
+### Documentation
+- Created `MAJOR_UPDATE_V10.md` with complete feature documentation
+- Updated `CHANGELOG.md` with v10.0.0 details
+
+---
+
 ## [9.0.0] - 2025-01-XX - 🚀 MAJOR UPDATE: Advanced Messaging Features
 
 ### Added - Major New Features
