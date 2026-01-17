@@ -102,8 +102,9 @@ const QuickActions = ({ onAction, isOpen, onToggle }) => {
                       transition={{ delay: index * 0.05 }}
                       whileHover={{ scale: 1.1, y: -4 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`${colorClasses[action.color]} w-16 h-16 rounded-xl flex flex-col items-center justify-center text-white shadow-lg`}
+                      className={`${colorClasses[action.color]} w-16 h-16 rounded-xl flex flex-col items-center justify-center text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-white/50 min-w-[64px] min-h-[64px]`}
                       title={action.label}
+                      aria-label={action.label}
                     >
                       <Icon size={20} />
                       <span className="text-xs mt-1 font-medium">{action.label}</span>

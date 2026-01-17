@@ -33,11 +33,13 @@ const ModernNavItem = memo(({ view, activeView, onClick, icon: Icon, label, badg
       )}
       <button
         onClick={() => onClick(view)}
-        className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+        className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px] ${
           isActive
             ? 'text-white font-semibold'
             : 'text-gray-400 hover:text-white hover:bg-white/5'
         }`}
+        aria-label={`Navigate to ${label}`}
+        aria-current={isActive ? 'page' : undefined}
       >
         <Icon size={18} className={isActive ? 'text-white' : 'text-gray-400'} />
         <span className="flex-1 text-sm font-medium text-left">{label}</span>
@@ -243,22 +245,26 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowCommandPalette(true)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Command Palette (Ctrl+K)"
+                aria-label="Open command palette"
               >
                 <Command size={18} className="text-white/60" />
               </button>
               <button
                 onClick={() => setShowNotifications(true)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors relative"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors relative focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Notifications"
+                aria-label="Open notifications"
+                aria-haspopup="true"
               >
                 <Bell size={18} className="text-white/60" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" aria-label="Unread notifications" />
               </button>
               <button
                 onClick={onClose}
-                className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+                className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Close sidebar"
               >
                 <X size={18} className="text-white/60" />
               </button>

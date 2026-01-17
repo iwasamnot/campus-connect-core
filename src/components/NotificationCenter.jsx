@@ -14,6 +14,8 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
 const NotificationCenter = ({ isOpen, onClose, userId }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!userId || !db) return;
@@ -25,14 +27,29 @@ const NotificationCenter = ({ isOpen, onClose, userId }) => {
       limit(50)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notifs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setNotifications(notifs);
-      setUnreadCount(notifs.filter(n => !n.read).length);
-    });
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        try {
+          const notifs = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setNotifications(notifs);
+          setUnreadCount(notifs.filter(n => !n.read).length);
+          setLoading(false);
+          setError(null);
+        } catch (err) {
+          console.error('Error processing notifications:', err);
+          setError('Failed to load notifications');
+          setLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Error fetching notifications:', error);
+        setError('Failed to load notifications');
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [userId]);
@@ -115,15 +132,17 @@ const NotificationCenter = ({ isOpen, onClose, userId }) => {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
                   title="Mark all as read"
+                  aria-label="Mark all notifications as read"
                 >
                   <CheckCheck size={18} className="text-white/60" />
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Close notifications"
               >
                 <X size={18} className="text-white/60" />
               </button>
@@ -132,7 +151,23 @@ const NotificationCenter = ({ isOpen, onClose, userId }) => {
 
           {/* Notifications List */}
           <div className="flex-1 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400 mx-auto mb-4" />
+                <p className="text-white/60">Loading notifications...</p>
+              </div>
+            ) : error ? (
+              <div className="p-8 text-center">
+                <AlertCircle size={48} className="mx-auto text-red-400 mb-4" />
+                <p className="text-white/60">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
                 <Bell size={48} className="mx-auto text-white/20 mb-4" />
                 <p className="text-white/60">No notifications</p>
@@ -148,12 +183,21 @@ const NotificationCenter = ({ isOpen, onClose, userId }) => {
                       key={notif.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
+                      className={`p-4 hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[60px] ${
                         !notif.read ? 'bg-indigo-600/10' : ''
                       }`}
                       onClick={() => {
                         if (!notif.read) markAsRead(notif.id);
                       }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          if (!notif.read) markAsRead(notif.id);
+                        }
+                      }}
+                      aria-label={`${notif.read ? 'Read' : 'Unread'} notification: ${notif.title}`}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`p-2 rounded-lg bg-white/5 ${iconColor}`}>

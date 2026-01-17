@@ -124,8 +124,9 @@ const CommandPalette = ({ isOpen, onClose, onNavigate, userRole }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search commands, navigate, or type a command..."
-              className="flex-1 bg-transparent text-white placeholder-white/40 focus:outline-none text-lg"
+              className="flex-1 bg-transparent text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-lg px-2 py-1 text-lg min-h-[44px]"
               autoFocus
+              aria-label="Search commands"
             />
             <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded-lg border border-white/10">
               <Command size={14} className="text-white/40" />
@@ -156,10 +157,11 @@ const CommandPalette = ({ isOpen, onClose, onNavigate, userRole }) => {
                         key={cmd.id}
                         onClick={() => handleSelect(cmd.id)}
                         onMouseEnter={() => setSelectedIndex(globalIndex)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 transition-all ${
+                        className={`w-full flex items-center gap-3 px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px] ${
                           isSelected ? 'bg-indigo-600/30' : 'hover:bg-white/5'
                         }`}
                         whileHover={{ x: 4 }}
+                        aria-label={`Select ${cmd.label}`}
                       >
                         <Icon size={18} className={isSelected ? 'text-indigo-400' : 'text-white/60'} />
                         <span className={`flex-1 text-left ${isSelected ? 'text-white font-medium' : 'text-white/80'}`}>

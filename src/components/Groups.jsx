@@ -375,7 +375,14 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
           paddingBottom: `calc(0.5rem + env(safe-area-inset-bottom, 0px) * 0.5)`
         }}
       >
-        {filteredGroups.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto mb-4" />
+              <p className="text-white/60">Loading groups...</p>
+            </div>
+          </div>
+        ) : filteredGroups.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center animate-fade-in">
               <img 
