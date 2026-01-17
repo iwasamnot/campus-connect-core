@@ -196,6 +196,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showLogin, setShowLogin] = useState(false);
   const [loginMode, setLoginMode] = useState('login'); // 'login' or 'register'
+  const [showOnboarding, setShowOnboarding] = useState(false); // Onboarding flow state
   
   // Memoize callbacks to prevent unnecessary re-renders
   const handleSetActiveView = useCallback((view) => {

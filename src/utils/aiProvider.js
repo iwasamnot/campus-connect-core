@@ -23,7 +23,7 @@ export const getAIProvider = () => {
     return {
       provider: 'groq',
       apiKey: groqApiKey,
-      model: 'llama-3.3-70b-versatile', // Updated model (llama-3.1-70b-versatile was decommissioned)
+      model: 'llama-3.1-8b-instant', // Updated: llama-3.1-70b-versatile was decommissioned
       baseUrl: 'https://api.groq.com/openai/v1',
       maxTokens: 2048,
       temperature: 0.7
