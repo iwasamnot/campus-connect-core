@@ -634,7 +634,8 @@ const ChatArea = ({ setActiveView }) => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending) return;
+    // Allow sending if there's either text or an attached file
+    if ((!newMessage.trim() && !attachedFile) || sending) return;
 
     // Rate limiting
     const now = Date.now();
@@ -1749,7 +1750,7 @@ const ChatArea = ({ setActiveView }) => {
                   )}
 
                   {/* Message Text with Markdown */}
-                  {message.displayText && !message.isVoice && (
+                  {message.displayText && message.displayText.trim() && !message.isVoice && (
                     <div>
                       {translations[message.id] ? (
                         <div>
