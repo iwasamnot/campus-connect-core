@@ -90,12 +90,19 @@ const GifPicker = ({ onSelect, onClose }) => {
   };
 
   const handleSelect = (gif) => {
+    // Estimate size from original GIF dimensions and format
+    // Giphy API doesn't always provide size, so we estimate based on dimensions
+    const estimatedSize = gif.images.original.width && gif.images.original.height
+      ? Math.round((gif.images.original.width * gif.images.original.height * 3) / 1024) // Rough estimate: width * height * 3 bytes per pixel / 1024 for KB
+      : 0;
+    
     onSelect({
       url: gif.images.original.url,
       type: 'image/gif',
       name: gif.title || 'GIF',
       preview: gif.images.preview_gif.url,
-      provider: 'giphy'
+      provider: 'giphy',
+      size: gif.images.original.size || estimatedSize * 1024 // Convert KB to bytes, or use provided size
     });
     onClose();
   };

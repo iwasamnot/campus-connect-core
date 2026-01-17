@@ -125,6 +125,12 @@ const ChatArea = ({ setActiveView }) => {
   const [openMenuId, setOpenMenuId] = useState(null); // Track which message's menu is open
   const [openThreadId, setOpenThreadId] = useState(null); // Track which message's thread is open
   const [showReminderModal, setShowReminderModal] = useState(null); // Message ID for reminder modal
+  const [showGifPicker, setShowGifPicker] = useState(false); // Show GIF picker
+  const [messageEffect, setMessageEffect] = useState(null); // Current message effect
+  const [showRichTextEditor, setShowRichTextEditor] = useState(false); // Show rich text editor
+  const [showCustomEmojiPicker, setShowCustomEmojiPicker] = useState(null); // Message ID for custom emoji picker
+  const [showAnalytics, setShowAnalytics] = useState(false); // Show analytics dashboard
+  const [voiceTranscription, setVoiceTranscription] = useState({}); // Voice message transcriptions
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
