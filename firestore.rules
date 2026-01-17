@@ -30,11 +30,14 @@ service cloud.firestore {
       // - Users can update emailVerified from false/undefined to true (when they verify email)
       // - Users CANNOT change their role after it's been set - only admins can
       // - Users CANNOT change emailVerified from true to false - only admins can
+      // - Users can update isOnline and lastSeen for presence tracking
       allow update: if isAuthenticated() && (
         // Admin updating any user (can update emailVerified and role freely)
         isAdmin() ||
         // User updating their own profile
         (request.auth.uid == userId && (
+          // Allow updating presence fields (isOnline, lastSeen)
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isOnline', 'lastSeen'])) ||
           // Allow updating fields other than role and emailVerified
           (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified', 'role'])) ||
           // Allow setting role ONLY if it doesn't exist yet (first time setup during login)
@@ -484,6 +487,48 @@ service cloud.firestore {
       
       // Only admins can delete announcements
       allow delete: if isAdmin();
+    }
+    
+    // Knowledge base collection (for RAG system)
+    match /knowledgeBase/{documentId} {
+      // Allow all authenticated users to read knowledge base documents
+      allow read: if isAuthenticated();
+      
+      // Only admins can create/update knowledge base documents
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Nearby chat presence collection (for offline proximity chat)
+    match /nearbyPresence/{userId} {
+      // Allow authenticated users to read nearby presence
+      allow read: if isAuthenticated();
+      
+      // Allow users to create/update their own presence
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow users to delete their own presence
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Collaborative documents collection
+    match /collaborativeDocuments/{documentId} {
+      // Allow authenticated users to read collaborative documents
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to create collaborative documents
+      allow create: if isAuthenticated();
+      
+      // Allow authenticated users to update collaborative documents
+      allow update: if isAuthenticated();
+      
+      // Allow document creators or admins to delete
+      allow delete: if isAuthenticated() && (
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin()
+      );
     }
   }
 }

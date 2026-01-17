@@ -66,11 +66,19 @@ export const scanNearbyDevices = async (options = {}) => {
   }
 
   try {
-    const device = await navigator.bluetooth.requestDevice({
-      filters: options.filters || [{ services: ['battery_service'] }], // Generic service
+    // Cannot use both filters and acceptAllDevices - use one or the other
+    const requestOptions = {
       optionalServices: options.optionalServices || ['battery_service'],
-      acceptAllDevices: options.acceptAllDevices || false,
-    });
+    };
+    
+    // Use acceptAllDevices if specified, otherwise use filters
+    if (options.acceptAllDevices) {
+      requestOptions.acceptAllDevices = true;
+    } else {
+      requestOptions.filters = options.filters || [{ services: ['battery_service'] }]; // Generic service
+    }
+    
+    const device = await navigator.bluetooth.requestDevice(requestOptions);
 
     return {
       id: device.id,

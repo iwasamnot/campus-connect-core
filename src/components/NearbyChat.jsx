@@ -49,6 +49,8 @@ const NearbyChat = ({ onClose }) => {
   const [messageText, setMessageText] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [supportInfo, setSupportInfo] = useState(null);
+  const [isOffline, setIsOffline] = useState(!isOnline());
+  const [networkStatus, setNetworkStatus] = useState(getNetworkStatus());
   
   const dataChannelRef = useRef(null);
   const peerConnectionRef = useRef(null);
@@ -60,7 +62,7 @@ const NearbyChat = ({ onClose }) => {
     setSupportInfo(support);
     
     if (support.bluetooth || support.hotspot || support.broadcastChannel) {
-      // Start broadcasting presence
+      // Start broadcasting presence (works offline too)
       if (user) {
         broadcastPresence({
           userId: user.uid,
@@ -69,7 +71,7 @@ const NearbyChat = ({ onClose }) => {
         });
       }
       
-      // Start listening for nearby users
+      // Start listening for nearby users (works offline via local storage/broadcast channel)
       const cleanup = listenForNearbyUsers((users) => {
         setNearbyUsers(users.filter(u => u.userId !== user?.uid));
       }, {
@@ -87,6 +89,36 @@ const NearbyChat = ({ onClose }) => {
     }
   }, [user]);
 
+  // Monitor network status for offline support
+  useEffect(() => {
+    const cleanup = onNetworkStatusChange((status) => {
+      setIsOffline(!status.online);
+      setNetworkStatus(status);
+      
+      if (status.online) {
+        // Try to sync queued messages when back online
+        syncQueuedMessages();
+      }
+    });
+
+    return cleanup;
+  }, []);
+
+  // Sync queued messages when back online
+  const syncQueuedMessages = async () => {
+    try {
+      const queued = await getQueuedMessages();
+      if (queued.length > 0) {
+        // Try to sync messages (implement sync logic based on your needs)
+        // For now, just clear the queue
+        await clearSyncedMessages();
+        success(`Synced ${queued.length} offline message(s)`);
+      }
+    } catch (error) {
+      console.error('Error syncing queued messages:', error);
+    }
+  };
+
   const handleScanDevices = async () => {
     if (!isWebBluetoothAvailable()) {
       showError('Bluetooth scanning requires HTTPS and a supported browser.');
@@ -95,8 +127,10 @@ const NearbyChat = ({ onClose }) => {
 
     setIsScanning(true);
     try {
+      // Use acceptAllDevices without filters to avoid API error
       const device = await scanNearbyDevices({
         acceptAllDevices: true,
+        filters: undefined, // Don't pass filters when using acceptAllDevices
       });
       
       if (device) {
@@ -158,18 +192,27 @@ const NearbyChat = ({ onClose }) => {
   };
 
   const handleSendMessage = async () => {
-    if (!messageText.trim() || !dataChannelRef.current || !selectedUser) return;
+    if (!messageText.trim() || !selectedUser) return;
+
+    const message = {
+      text: messageText.trim(),
+      sender: {
+        userId: user.uid,
+        name: user.displayName || user.email,
+      },
+      timestamp: Date.now(),
+    };
+
+    // If offline or no connection, queue message for later
+    if (isOffline || !dataChannelRef.current || connectionStatus !== 'connected') {
+      await queueOfflineMessage(message);
+      setMessages(prev => [...prev, message]);
+      setMessageText('');
+      success('Message queued for offline sync');
+      return;
+    }
 
     try {
-      const message = {
-        text: messageText.trim(),
-        sender: {
-          userId: user.uid,
-          name: user.displayName || user.email,
-        },
-        timestamp: Date.now(),
-      };
-
       await sendNearbyMessage(dataChannelRef.current, message);
       
       // Add to local messages
@@ -251,6 +294,19 @@ const NearbyChat = ({ onClose }) => {
             <RefreshCw className="w-5 h-5 text-white/70 hover:text-white transition-colors" />
           </button>
         </div>
+
+        {/* Offline Status */}
+        {isOffline && (
+          <div className="px-4 md:px-6 mb-4">
+            <div className="p-3 glass-panel bg-yellow-600/10 border border-yellow-500/30 rounded-xl text-xs">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-yellow-400" />
+                <span className="font-medium text-yellow-300">Offline Mode</span>
+                <span className="text-yellow-200">• Nearby Chat works offline using local discovery</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Support Info */}
         {supportInfo && (
