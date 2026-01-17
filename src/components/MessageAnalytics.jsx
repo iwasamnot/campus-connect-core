@@ -166,10 +166,19 @@ const StatCard = ({ icon, label, value, color, colSpan = 1 }) => {
     yellow: 'bg-yellow-600/20 border-yellow-500/50 text-yellow-400'
   };
 
+  // Map colSpan to Tailwind classes - ensures classes are included in build
+  const colSpanClasses = {
+    1: 'col-span-1',
+    2: 'col-span-2',
+    3: 'col-span-3',
+    4: 'col-span-4',
+  };
+  const colSpanClass = colSpanClasses[colSpan] || 'col-span-1';
+
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
-      className={`p-4 glass-panel border rounded-xl ${colorClasses[color]} col-span-${colSpan}`}
+      className={`p-4 glass-panel border rounded-xl ${colorClasses[color]} ${colSpanClass}`}
     >
       <div className="flex items-center gap-2 mb-2">
         {icon}

@@ -1,53 +1,48 @@
 /**
  * Voice Message Transcription Utility
- * Converts voice messages to text using Web Speech API
+ * Converts voice messages to text
+ * 
+ * NOTE: Web Speech API only works with live microphone input, not audio files.
+ * This function provides a placeholder that indicates transcription requires
+ * a server-side API (e.g., Google Cloud Speech-to-Text, AWS Transcribe, etc.)
  */
 
 /**
  * Transcribe audio blob to text
+ * 
+ * IMPORTANT: The Web Speech API cannot transcribe audio files/blobs directly.
+ * It only works with live microphone input via getUserMedia().
+ * 
+ * For production use, you should:
+ * 1. Send the audio blob to a server-side transcription service
+ * 2. Use APIs like Google Cloud Speech-to-Text, AWS Transcribe, or OpenAI Whisper
+ * 3. Return the transcribed text
+ * 
+ * This implementation returns a placeholder indicating transcription is not available.
  */
 export const transcribeAudio = async (audioBlob) => {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    throw new Error('Speech recognition not supported in this browser');
-  }
-
-  return new Promise((resolve, reject) => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      resolve(transcript);
-    };
-
-    recognition.onerror = (event) => {
-      reject(new Error(`Speech recognition error: ${event.error}`));
-    };
-
-    recognition.onend = () => {
-      // Recognition ended
-    };
-
-    // Convert blob to audio source
-    const audio = new Audio();
-    const url = URL.createObjectURL(audioBlob);
-    audio.src = url;
-    audio.play();
-
-    // Start recognition when audio starts playing
-    audio.onplay = () => {
-      recognition.start();
-    };
-
-    audio.onended = () => {
-      recognition.stop();
-      URL.revokeObjectURL(url);
-    };
+  // Web Speech API doesn't support audio file transcription
+  // It only works with live microphone input
+  console.warn('transcribeAudio: Web Speech API cannot transcribe audio files. Live microphone input required.');
+  
+  // Return a placeholder message indicating transcription is not available
+  // In production, replace this with a call to a server-side transcription API
+  return new Promise((resolve) => {
+    // Simulate async operation
+    setTimeout(() => {
+      resolve('[Transcription not available: Web Speech API requires live microphone input. Use a server-side transcription service for audio files.]');
+    }, 100);
   });
+  
+  // For future implementation with server-side API:
+  // const formData = new FormData();
+  // formData.append('audio', audioBlob, 'voice-message.webm');
+  // const response = await fetch('/api/transcribe', {
+  //   method: 'POST',
+  //   body: formData,
+  // });
+  // const { transcript } = await response.json();
+  // return transcript;
 };
 
 /**
