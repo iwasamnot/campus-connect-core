@@ -1,5 +1,66 @@
 # Changelog
 
+## [9.0.0] - 2025-01-XX - 🚀 MAJOR UPDATE: Advanced Messaging Features
+
+### Added - Major New Features
+
+#### Message Threading System 🧵
+- **Full Conversation Threads**: Create threaded conversations for better organization
+- **Nested Replies**: Reply to messages within threads for focused discussions
+- **Thread View**: Expandable thread view showing all replies in a conversation
+- **Thread Counter**: See number of replies in each thread
+- **Thread Navigation**: Easy open/close thread functionality
+- **Real-time Thread Updates**: Threads update in real-time as new replies are added
+
+#### Message Reminders ⏰
+- **Set Reminders**: Set reminders for important messages
+- **Date & Time Selection**: Choose specific date and time for reminders
+- **Reminder Notifications**: Get notified when reminder time arrives
+- **Reminder Indicators**: Visual indicators showing reminder status
+- **Reminder Management**: View, edit, and clear reminders
+- **Automatic Reminder Checks**: System checks for due reminders every minute
+
+#### Enhanced Message Status System 📊
+- **Delivery Status**: See when messages are delivered
+- **Read Receipts**: Enhanced read receipt system with timestamps
+- **Typing Indicators**: Real-time typing indicators for better communication
+- **Message Status Icons**: Visual indicators for message states
+
+#### Cloudinary Storage Integration ☁️
+- **Cloudinary Storage**: All photos, videos, and files now stored in Cloudinary
+- **25GB Free Storage**: Generous free tier (vs Firebase's 5GB)
+- **Automatic Image Optimization**: Images automatically optimized by Cloudinary
+- **Better Performance**: Faster uploads and downloads with CDN
+- **Seamless Migration**: Automatic fallback from Firebase Storage
+
+### Changed
+- **Storage Provider**: Migrated from Firebase Storage to Cloudinary for all file uploads
+- **File Upload Flow**: Improved file upload experience with better error handling
+- **Message Sending**: Can now send messages with only files (no text required)
+- **Build Size**: Reduced Firebase bundle size (374KB vs 386KB)
+
+### Fixed
+- **File Upload Bug**: Fixed issue where files uploaded but didn't appear in chat
+- **Voice Message Bug**: Fixed undefined fileName variable in voice messages
+- **Cloudinary Validation**: Added proper validation for Cloudinary configuration
+- **CORS Errors**: Fixed Cloudinary CORS errors in production
+- **Upload Preset**: Fixed eager parameter error for unsigned upload presets
+
+### Technical Improvements
+- **Storage Service**: New unified storage service supporting Cloudinary
+- **Error Handling**: Improved error messages for storage operations
+- **Environment Variables**: Better handling of Cloudinary credentials
+- **GitHub Actions**: Updated workflows to include Cloudinary secrets
+- **Code Quality**: Fixed critical bugs in voice messages and file uploads
+
+### Files Added
+- `src/components/MessageThread.jsx` - Message threading component
+- `src/components/MessageReminder.jsx` - Message reminder component
+- `src/utils/messageReminders.js` - Reminder utility functions
+- `MAJOR_UPDATE_V9.md` - Complete documentation of v9.0.0 update
+- `CLOUDINARY_SETUP.md` - Cloudinary setup guide
+- `GITHUB_SECRETS_CLOUDINARY.md` - GitHub Secrets setup guide
+
 ## [8.3.0] - 2025-01-XX
 
 ### Added: Nearby Chat Feature with Bluetooth and Hotspot Support
