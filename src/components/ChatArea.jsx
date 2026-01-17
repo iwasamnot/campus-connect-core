@@ -52,9 +52,15 @@ import VoiceMessage from './VoiceMessage';
 import QuickReplies from './QuickReplies';
 import MessageThread from './MessageThread';
 import MessageReminder from './MessageReminder';
+import GifPicker from './GifPicker';
+import MessageEffects from './MessageEffects';
+import RichTextEditor from './RichTextEditor';
+import CustomEmojiReactions from './CustomEmojiReactions';
+import MessageAnalytics from './MessageAnalytics';
 import { translateText } from '../utils/aiTranslation';
 import { summarizeConversation } from '../utils/aiSummarization';
 import { checkReminders, formatReminderTime } from '../utils/messageReminders';
+import { transcribeAudio, isSpeechRecognitionAvailable } from '../utils/voiceTranscription';
 // Use window globals to avoid import/export issues
 const saveDraft = typeof window !== 'undefined' && window.__saveDraft ? window.__saveDraft : () => {};
 const getDraft = typeof window !== 'undefined' && window.__getDraft ? window.__getDraft : () => null;
@@ -152,31 +158,40 @@ const ChatArea = ({ setActiveView }) => {
       // Ctrl/Cmd + K for advanced search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        // Use startTransition for non-urgent UI updates
         startTransition(() => {
-        setShowAdvancedSearch(true);
+          setShowAdvancedSearch(true);
         });
+        return;
       }
+      
+      // Ctrl/Cmd + Shift + A for analytics
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && e.shiftKey) {
+        e.preventDefault();
+        setShowAnalytics(true);
+        return;
+      }
+      
       // Ctrl/Cmd + Enter to send
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !sending) {
         e.preventDefault();
-        if (newMessage.trim()) {
+        if (newMessage.trim() || attachedFile) {
           sendMessage(e);
         }
       }
+      
       // Up arrow to edit last message - optimize with memoized filter
       if (e.key === 'ArrowUp' && !newMessage.trim() && messageInputRef.current === document.activeElement) {
         // Use startTransition to prevent blocking
         startTransition(() => {
-        const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
-        if (userMessages.length > 0) {
-          const lastMessage = userMessages[userMessages.length - 1];
-          if (!lastMessage.edited) {
-            e.preventDefault();
-            setEditing(lastMessage.id);
-            setEditText(lastMessage.text);
+          const userMessages = messages.filter(m => m.userId === user?.uid && !m.isAI);
+          if (userMessages.length > 0) {
+            const lastMessage = userMessages[userMessages.length - 1];
+            if (!lastMessage.edited) {
+              e.preventDefault();
+              setEditing(lastMessage.id);
+              setEditText(lastMessage.text);
+            }
           }
-        }
         });
       }
     };
@@ -2129,6 +2144,15 @@ const ChatArea = ({ setActiveView }) => {
                             </button>
                           );
                         })}
+                        <button
+                          onClick={() => {
+                            setShowCustomEmojiPicker(message.id);
+                          }}
+                          className="p-2 rounded transition-colors touch-action-manipulation hover:bg-indigo-600/30 active:bg-indigo-600/40"
+                          title="More reactions"
+                        >
+                          <Smile size={16} className="text-white/70" />
+                        </button>
                       </div>
                     </div>
                   )}
@@ -2293,6 +2317,30 @@ const ChatArea = ({ setActiveView }) => {
               
               {/* Action Buttons - Fluid.so aesthetic */}
               <div className="flex items-center gap-2">
+                {/* GIF Picker */}
+                <button
+                  type="button"
+                  onClick={() => setShowGifPicker(!showGifPicker)}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
+                  title="Add GIF"
+                  aria-label="Add GIF"
+                  style={{ transform: 'translateZ(0)' }}
+                >
+                  <Gif size={20} />
+                </button>
+
+                {/* Rich Text Editor Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowRichTextEditor(!showRichTextEditor)}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated"
+                  title="Rich text formatting"
+                  aria-label="Rich text formatting"
+                  style={{ transform: 'translateZ(0)' }}
+                >
+                  <FileText size={20} />
+                </button>
+
                 {/* File Upload */}
                 <div className="relative">
                   <button
@@ -2597,6 +2645,58 @@ const ChatArea = ({ setActiveView }) => {
           message={showReminderModal}
           onClose={() => setShowReminderModal(null)}
         />
+      )}
+
+      {/* GIF Picker Modal */}
+      {showGifPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowGifPicker(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <GifPicker
+              onSelect={(gif) => {
+                setAttachedFile(gif);
+                setShowGifPicker(false);
+              }}
+              onClose={() => setShowGifPicker(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Custom Emoji Reactions Modal */}
+      {showCustomEmojiPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowCustomEmojiPicker(null)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <CustomEmojiReactions
+              onSelect={(emoji) => {
+                if (showCustomEmojiPicker) {
+                  handleReaction(showCustomEmojiPicker, emoji);
+                }
+                setShowCustomEmojiPicker(null);
+              }}
+              onClose={() => setShowCustomEmojiPicker(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Message Effects */}
+      {messageEffect && (
+        <MessageEffects
+          effect={messageEffect}
+          onComplete={() => setMessageEffect(null)}
+        />
+      )}
+
+      {/* Message Analytics */}
+      {showAnalytics && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowAnalytics(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="max-w-2xl w-full">
+            <MessageAnalytics
+              userId={user?.uid}
+              onClose={() => setShowAnalytics(false)}
+            />
+          </div>
+        </div>
       )}
 
       {/* Conversation Summarization Modal */}
