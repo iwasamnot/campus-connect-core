@@ -85,6 +85,11 @@ export const uploadImage = async (file, folder = 'messages', options = {}) => {
     throw new Error('Cloudinary cloud name is empty. Please set VITE_CLOUDINARY_CLOUD_NAME environment variable.');
   }
 
+  // Validate upload preset is not empty
+  if (!CLOUDINARY_UPLOAD_PRESET || CLOUDINARY_UPLOAD_PRESET.trim() === '') {
+    throw new Error('Cloudinary upload preset is empty. Please set VITE_CLOUDINARY_UPLOAD_PRESET environment variable.');
+  }
+
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);

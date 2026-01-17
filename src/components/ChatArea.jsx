@@ -1010,7 +1010,7 @@ const ChatArea = ({ setActiveView }) => {
         voiceDuration: duration,
         attachment: {
           url: downloadURL,
-          name: fileName,
+          name: audioFile.name,
           type: 'audio/webm',
           size: audioBlob.size
         },
