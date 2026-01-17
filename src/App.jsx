@@ -3,6 +3,7 @@ import Login from './components/Login';
 import LandingPage from './components/LandingPage';
 import ModernSidebar from './components/ModernSidebar';
 import QuickActions from './components/QuickActions';
+import UIStandardizer from './components/UIStandardizer';
 import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';

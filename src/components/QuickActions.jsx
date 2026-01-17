@@ -40,11 +40,12 @@ const QuickActions = ({ onAction, isOpen, onToggle }) => {
     <>
       {/* Floating Action Button */}
       <motion.button
-              onClick={handleToggle}
+        onClick={handleToggle}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-2xl flex items-center justify-center text-white"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-2xl flex items-center justify-center text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-black"
         aria-label="Quick Actions"
+        aria-expanded={actualOpen}
       >
         <AnimatePresence mode="wait">
           {actualOpen ? (

@@ -1579,7 +1579,7 @@ const ChatArea = ({ setActiveView }) => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setSelectedUserId(message.userId)}
-                        className="text-sm font-semibold opacity-90 hover:underline cursor-pointer"
+                        className="text-sm font-semibold opacity-90 hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded"
                         title={
                           isUserOnline(onlineUsers[message.userId])
                             ? 'Online'
@@ -1587,6 +1587,13 @@ const ChatArea = ({ setActiveView }) => {
                             ? `Last seen: ${formatLastSeen(onlineUsers[message.userId].lastSeen)}`
                             : 'Offline'
                         }
+                        aria-label={`View profile of ${(() => {
+                          const cachedName = userNames[message.userId];
+                          const messageName = message.userName;
+                          const profileName = userProfiles[message.userId]?.name;
+                          const emailName = message.userEmail?.split('@')[0];
+                          return cachedName || messageName || profileName || emailName || 'Unknown';
+                        })()}`}
                       >
                         {(() => {
                           // Check if this is an AI message
@@ -1638,7 +1645,8 @@ const ChatArea = ({ setActiveView }) => {
                       />
                       <button
                         onClick={() => handleEditMessage(message.id)}
-                        className="p-1 hover:bg-indigo-600 rounded"
+                        className="p-1 hover:bg-indigo-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        aria-label="Save edit"
                       >
                         <Check size={16} />
                       </button>
@@ -1647,7 +1655,8 @@ const ChatArea = ({ setActiveView }) => {
                           setEditing(null);
                           setEditText('');
                         }}
-                        className="p-1 hover:bg-red-600 rounded"
+                        className="p-1 hover:bg-red-600 rounded focus:outline-none focus:ring-2 focus:ring-red-500/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        aria-label="Cancel edit"
                       >
                         <X size={16} />
                       </button>
@@ -1880,17 +1889,18 @@ const ChatArea = ({ setActiveView }) => {
                         {/* Menu items */}
                         {!isAuthor && (
                     <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setReplyingTo(message);
-                              setOpenMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 gpu-accelerated"
-                            style={{ transform: 'translateZ(0)' }}
-                          >
-                            <Reply size={16} />
-                            Reply
-                          </button>
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReplyingTo(message);
+                        setOpenMenuId(null);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 gpu-accelerated focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px]"
+                      style={{ transform: 'translateZ(0)' }}
+                      aria-label="Reply to message"
+                    >
+                      <Reply size={16} />
+                      Reply
+                    </button>
                         )}
                         
                         <button
@@ -1899,8 +1909,9 @@ const ChatArea = ({ setActiveView }) => {
                             setOpenThreadId(openThreadId === message.id ? null : message.id);
                             setOpenMenuId(null);
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px]"
                           style={{ transform: 'translateZ(0)' }}
+                          aria-label={openThreadId === message.id ? 'Close thread' : 'Open thread'}
                         >
                           <MessageSquare size={16} />
                           {openThreadId === message.id ? 'Close Thread' : 'Open Thread'}
@@ -1912,8 +1923,9 @@ const ChatArea = ({ setActiveView }) => {
                             setShowReminderModal(message);
                             setOpenMenuId(null);
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px]"
                           style={{ transform: 'translateZ(0)' }}
+                          aria-label="Set reminder for this message"
                         >
                           <Clock size={16} />
                           Set Reminder
@@ -1934,8 +1946,9 @@ const ChatArea = ({ setActiveView }) => {
                           }
                         }
                       }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px]"
                           style={{ transform: 'translateZ(0)' }}
+                          aria-label="Save message"
                     >
                           <Bookmark size={16} />
                           Save
@@ -1948,8 +1961,9 @@ const ChatArea = ({ setActiveView }) => {
                               handleForwardMessage(message.id);
                               setOpenMenuId(null);
                             }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px]"
                             style={{ transform: 'translateZ(0)' }}
+                            aria-label="Forward message"
                           >
                             <Forward size={16} />
                             Forward
@@ -1963,8 +1977,9 @@ const ChatArea = ({ setActiveView }) => {
                             await shareMessage(messageText, message.id);
                             setOpenMenuId(null);
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px]"
                           style={{ transform: 'translateZ(0)' }}
+                          aria-label="Share message"
                         >
                           <Share2 size={16} />
                           Share
@@ -1978,8 +1993,9 @@ const ChatArea = ({ setActiveView }) => {
                               setOpenMenuId(null);
                             }}
                             disabled={translating.has(message.id)}
-                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:bg-transparent border-t border-white/10 gpu-accelerated"
+                            className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:bg-transparent border-t border-white/10 gpu-accelerated focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[44px]"
                             style={{ transform: 'translateZ(0)' }}
+                            aria-label="Translate message"
                           >
                             {translating.has(message.id) ? (
                               <>
