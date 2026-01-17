@@ -1,7 +1,8 @@
 import { useAuth } from './context/AuthContext';
 import Login from './components/Login';
 import LandingPage from './components/LandingPage';
-import Sidebar from './components/Sidebar';
+import ModernSidebar from './components/ModernSidebar';
+import QuickActions from './components/QuickActions';
 import CallModal from './components/CallModal';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
@@ -311,11 +312,29 @@ function App() {
       <a href="#main-content" className="skip-to-main">
         Skip to main content
       </a>
-      <Sidebar 
+      <ModernSidebar 
         activeView={activeView} 
         setActiveView={handleSetActiveView}
         isOpen={sidebarOpen}
         onClose={() => handleSetSidebarOpen(false)}
+      />
+      
+      {/* Quick Actions */}
+      <QuickActions
+        isOpen={false}
+        onToggle={() => {}}
+        onAction={(action) => {
+          switch(action) {
+            case 'new-message':
+              handleSetActiveView('chat');
+              break;
+            case 'new-group':
+              handleSetActiveView('groups');
+              break;
+            default:
+              break;
+          }
+        }}
       />
       <motion.div 
         id="main-content" 
