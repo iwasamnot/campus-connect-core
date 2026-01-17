@@ -13,6 +13,13 @@ import {
   isWebBluetoothAvailable,
   isHotspotCapable,
 } from '../utils/nearbyChat';
+import { 
+  getQueuedMessages, 
+  clearSyncedMessages,
+  onNetworkStatusChange,
+  getNetworkStatus,
+  isOnline
+} from '../utils/offlineSupport';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
 import { useTheme } from '../context/ThemeContext';
@@ -49,8 +56,8 @@ const NearbyChat = ({ onClose }) => {
   const [messageText, setMessageText] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [supportInfo, setSupportInfo] = useState(null);
-  const [isOffline, setIsOffline] = useState(!isOnline());
-  const [networkStatus, setNetworkStatus] = useState(getNetworkStatus());
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [networkStatus, setNetworkStatus] = useState({ online: navigator.onLine });
   
   const dataChannelRef = useRef(null);
   const peerConnectionRef = useRef(null);
