@@ -57,6 +57,14 @@ import MessageEffects from './MessageEffects';
 import RichTextEditor from './RichTextEditor';
 import CustomEmojiReactions from './CustomEmojiReactions';
 import MessageAnalytics from './MessageAnalytics';
+import AISmartReplies from './AISmartReplies';
+import CollaborativeEditor from './CollaborativeEditor';
+import PredictiveScheduler from './PredictiveScheduler';
+import VoiceEmotionDetector from './VoiceEmotionDetector';
+import AIConversationInsights from './AIConversationInsights';
+import SmartTaskExtractor from './SmartTaskExtractor';
+import RelationshipGraph from './RelationshipGraph';
+import FuturisticFeaturesMenu from './FuturisticFeaturesMenu';
 import { translateText } from '../utils/aiTranslation';
 import { summarizeConversation } from '../utils/aiSummarization';
 import { checkReminders, formatReminderTime } from '../utils/messageReminders';
@@ -2336,6 +2344,20 @@ const ChatArea = ({ setActiveView }) => {
                   />
                 )}
               </div>
+
+              {/* AI Smart Replies */}
+              {showSmartReplies && messages.length > 0 && (
+                <AISmartReplies
+                  conversationHistory={messages.slice(-10)}
+                  onSelect={(reply) => {
+                    setNewMessage(reply);
+                    if (messageInputRef.current) {
+                      messageInputRef.current.focus();
+                    }
+                  }}
+                  userContext={user}
+                />
+              )}
               
               {/* Action Buttons - Fluid.so aesthetic */}
               <div className="flex items-center gap-2">
@@ -2783,6 +2805,113 @@ const ChatArea = ({ setActiveView }) => {
           </motion.div>
         </div>
       )}
+
+      {/* Collaborative Editor */}
+      {showCollaborativeEditor && (
+        <CollaborativeEditor
+          documentId={`chat-${selectedChatId || 'global'}`}
+          currentUserId={user.uid}
+          currentUserName={userNames[user.uid] || user.email?.split('@')[0] || 'User'}
+          onClose={() => setShowCollaborativeEditor(false)}
+        />
+      )}
+
+      {/* Predictive Scheduler */}
+      {showPredictiveScheduler && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowPredictiveScheduler(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="max-w-md w-full">
+            <PredictiveScheduler
+              recipientId={selectedChatId}
+              recipientName="Recipient"
+              messageText={newMessage}
+              onSchedule={(time) => {
+                setScheduledMessage(time);
+                setShowPredictiveScheduler(false);
+                success(`Message scheduled for ${time.toLocaleString()}`);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Voice Emotion Detector */}
+      {showVoiceEmotion && (
+        <div className="mb-4">
+          <VoiceEmotionDetector
+            onEmotionDetected={(emotionData) => {
+              console.log('Emotion detected:', emotionData);
+            }}
+            onTranscription={(text) => {
+              setNewMessage(text);
+            }}
+          />
+        </div>
+      )}
+
+      {/* Conversation Insights */}
+      {showConversationInsights && (
+        <div className="mb-4">
+          <AIConversationInsights
+            messages={messages}
+            participants={Object.values(userProfiles)}
+          />
+        </div>
+      )}
+
+      {/* Smart Task Extractor */}
+      {showTaskExtractor && (
+        <div className="mb-4">
+          <SmartTaskExtractor
+            messages={messages}
+            onTaskCreated={(task) => {
+              success(`Task created: ${task.task}`);
+            }}
+          />
+        </div>
+      )}
+
+      {/* Relationship Graph */}
+      {showRelationshipGraph && (
+        <div className="mb-4">
+          <RelationshipGraph
+            messages={messages}
+            users={Object.values(userProfiles)}
+          />
+        </div>
+      )}
+
+      {/* Futuristic Features Menu */}
+      <FuturisticFeaturesMenu
+        isOpen={showFuturisticMenu}
+        onClose={() => setShowFuturisticMenu(false)}
+        onFeatureSelect={(featureId) => {
+          switch (featureId) {
+            case 'smart-replies':
+              setShowSmartReplies(!showSmartReplies);
+              break;
+            case 'collaborative':
+              setShowCollaborativeEditor(true);
+              break;
+            case 'scheduler':
+              setShowPredictiveScheduler(true);
+              break;
+            case 'emotion':
+              setShowVoiceEmotion(!showVoiceEmotion);
+              break;
+            case 'insights':
+              setShowConversationInsights(!showConversationInsights);
+              break;
+            case 'tasks':
+              setShowTaskExtractor(!showTaskExtractor);
+              break;
+            case 'graph':
+              setShowRelationshipGraph(!showRelationshipGraph);
+              break;
+            default:
+              break;
+          }
+        }}
+      />
     </div>
   );
 };
