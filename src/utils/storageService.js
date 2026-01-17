@@ -76,37 +76,35 @@ export const uploadFile = async (file, folder = 'messages') => {
 
 /**
  * Upload image with optimization (Cloudinary only)
+ * Note: Unsigned upload presets don't allow eager transformations
+ * Transformations can be applied via URL parameters when displaying images
  */
 export const uploadImage = async (file, folder = 'messages', options = {}) => {
-  const {
-    maxWidth = 1920,
-    maxHeight = 1920,
-    quality = 'auto',
-    format = 'auto',
-  } = options;
+  // Validate cloud name is not empty
+  if (!CLOUDINARY_CLOUD_NAME || CLOUDINARY_CLOUD_NAME.trim() === '') {
+    throw new Error('Cloudinary cloud name is empty. Please set VITE_CLOUDINARY_CLOUD_NAME environment variable.');
+  }
 
-  // Cloudinary handles optimization automatically, but we can add transformations
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
   formData.append('folder', folder);
   
-  // Add optimization parameters
-  if (maxWidth || maxHeight) {
-    formData.append('eager', `c_limit,w_${maxWidth},h_${maxHeight},q_${quality},f_${format}`);
-  }
+  // Note: Unsigned upload presets don't support eager transformations
+  // We can apply transformations via URL when displaying images instead
+  // Example: https://res.cloudinary.com/cloud_name/image/upload/c_limit,w_1920,h_1920/image.jpg
   
   const timestamp = Date.now();
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
   formData.append('public_id', `${timestamp}_${sanitizedName}`);
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
+  console.log('Uploading image to Cloudinary:', uploadUrl.replace(CLOUDINARY_CLOUD_NAME, '***'));
+
+  const response = await fetch(uploadUrl, {
+    method: 'POST',
+    body: formData,
+  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
