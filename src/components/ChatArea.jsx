@@ -2363,6 +2363,41 @@ const ChatArea = ({ setActiveView }) => {
                   className="w-full px-4 md:px-5 py-3 text-sm md:text-base border border-white/10 rounded-full bg-white/5 backdrop-blur-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300"
                   disabled={sending || waitingForAI}
                 />
+                {/* AI Predictive Typing */}
+                {showPredictiveTyping && (
+                  <AIPredictiveTyping
+                    inputRef={messageInputRef}
+                    value={newMessage}
+                    onChange={(value) => {
+                      setNewMessage(value);
+                      // Trigger typing indicator
+                      if (value && value.length > 0) {
+                        try {
+                          const typingRef = doc(db, 'typing', user.uid);
+                          updateDoc(typingRef, {
+                            typing: true,
+                            timestamp: serverTimestamp()
+                          }).catch(() => {
+                            setDoc(doc(db, 'typing', user.uid), {
+                              typing: true,
+                              timestamp: serverTimestamp()
+                            }).catch(() => {});
+                          });
+                        } catch (err) {}
+                      }
+                      if (messageInputRef.current) {
+                        setCursorPosition(messageInputRef.current.selectionStart || 0);
+                      }
+                      if (value && value.includes('@')) {
+                        setShowMentions(true);
+                      } else {
+                        setShowMentions(false);
+                      }
+                    }}
+                    conversationHistory={messages.slice(-10)}
+                    disabled={sending || waitingForAI}
+                  />
+                )}
                 {/* Mention Autocomplete */}
                 {showMentions && (
                   <MentionAutocomplete
