@@ -86,6 +86,8 @@ gcloud projects add-iam-policy-binding campus-connect-sistc \
 ## GitHub Secrets Required
 
 Add these secrets in your GitHub repository:
+
+### Firebase Secrets (Required)
 - `FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC` - Service account JSON (required)
 - `VITE_FIREBASE_API_KEY` - Firebase API key (for build)
 - `VITE_FIREBASE_AUTH_DOMAIN` - Firebase auth domain (for build)
@@ -94,6 +96,13 @@ Add these secrets in your GitHub repository:
 - `VITE_FIREBASE_MESSAGING_SENDER_ID` - Firebase messaging sender ID (for build)
 - `VITE_FIREBASE_APP_ID` - Firebase app ID (for build)
 - `VITE_FIREBASE_MEASUREMENT_ID` - Firebase measurement ID (optional, for build)
+
+### Cloudinary Secrets (For Storage Fallback)
+- `VITE_CLOUDINARY_CLOUD_NAME` - Cloudinary cloud name (e.g., `dngk8azjq`)
+- `VITE_CLOUDINARY_UPLOAD_PRESET` - Cloudinary upload preset name (e.g., `CAMPUSCONNECT`)
+- `VITE_STORAGE_PROVIDER` - Storage provider preference: `auto`, `firebase`, or `cloudinary` (default: `auto`)
+
+### Other API Keys
 - `VITE_GEMINI_API_KEY` - Gemini API key (for AI features)
 - `VITE_OPENAI_API_KEY` - OpenAI API key (optional)
 - `VITE_ZEGOCLOUD_APP_ID` - ZEGOCLOUD App ID (for voice/video calling features)

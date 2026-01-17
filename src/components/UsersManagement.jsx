@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, limit } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadImage } from '../utils/storageService';
 // Use window globals to avoid import/export issues in production builds
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-const storage = typeof window !== 'undefined' && window.__firebaseStorage 
-  ? window.__firebaseStorage 
-  : null;
+// Firebase Storage removed - using Cloudinary for all file uploads
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 // Use window globals to avoid import/export issues
@@ -800,14 +798,16 @@ const UsersManagement = () => {
 
                           setUploading(editing);
                           try {
-                            const storageRef = ref(storage, `profile-pictures/${editing}/${Date.now()}_${file.name}`);
-                            await uploadBytes(storageRef, file);
-                            const downloadURL = await getDownloadURL(storageRef);
-                            setEditData(prev => ({ ...prev, profilePicture: downloadURL }));
-                            success('Image uploaded successfully!');
+                            const uploadResult = await uploadImage(file, `profile-pictures/${editing}`, {
+                              maxWidth: 800,
+                              maxHeight: 800,
+                              quality: 'auto',
+                            });
+                            setEditData(prev => ({ ...prev, profilePicture: uploadResult.url }));
+                            success('Image uploaded successfully to Cloudinary!');
                           } catch (error) {
                             console.error('Error uploading image:', error);
-                            showError('Failed to upload image. Please try again.');
+                            showError(error?.message || 'Failed to upload image. Please try again.');
                           } finally {
                             setUploading(null);
                           }

@@ -25,7 +25,7 @@ import {
   getDocs,
   getDoc
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// Firebase Storage removed - using Cloudinary for all file uploads
 // Use window.__firebaseDb to avoid import/export issues in production builds
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
@@ -988,24 +988,14 @@ const ChatArea = ({ setActiveView }) => {
   const handleSendVoiceMessage = async (audioBlob, duration) => {
     if (!user?.uid || !db) return;
     
-    const storage = typeof window !== 'undefined' && window.__firebaseStorage 
-      ? window.__firebaseStorage 
-      : null;
-    
-    if (!storage) {
-      showError('Storage not available');
-      return;
-    }
-    
     try {
       setSending(true);
       
-      // Upload audio to Firebase Storage
-      const timestamp = Date.now();
-      const fileName = `voice_${timestamp}.webm`;
-      const storageRef = ref(storage, `voice-messages/${fileName}`);
-      await uploadBytes(storageRef, audioBlob);
-      const downloadURL = await getDownloadURL(storageRef);
+      // Upload audio to Cloudinary
+      const { uploadFile } = await import('../utils/storageService');
+      const audioFile = new File([audioBlob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+      const uploadResult = await uploadFile(audioFile, 'voice-messages');
+      const downloadURL = uploadResult.url;
       
       // Get user name
       let userName = userNames[user.uid] || user.email?.split('@')[0] || 'User';

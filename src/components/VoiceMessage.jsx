@@ -2,11 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, Download, Mic } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-// Use window.__firebaseStorage to avoid import/export issues
-const storage = typeof window !== 'undefined' && window.__firebaseStorage 
-  ? window.__firebaseStorage 
-  : null;
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// VoiceMessage only displays audio - no upload functionality needed
+// All voice messages are now stored in Cloudinary
 
 /**
  * Voice Message Component
