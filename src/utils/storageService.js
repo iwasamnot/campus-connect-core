@@ -13,7 +13,15 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET?.
  */
 const uploadToCloudinary = async (file, folder = 'messages') => {
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-    throw new Error('Cloudinary configuration missing. Please set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET');
+    const missing = [];
+    if (!CLOUDINARY_CLOUD_NAME) missing.push('VITE_CLOUDINARY_CLOUD_NAME');
+    if (!CLOUDINARY_UPLOAD_PRESET) missing.push('VITE_CLOUDINARY_UPLOAD_PRESET');
+    throw new Error(`Cloudinary configuration missing: ${missing.join(', ')}. Please set these environment variables in GitHub Secrets or .env file.`);
+  }
+
+  // Validate cloud name is not empty
+  if (!CLOUDINARY_CLOUD_NAME || CLOUDINARY_CLOUD_NAME.trim() === '') {
+    throw new Error('Cloudinary cloud name is empty. Please set VITE_CLOUDINARY_CLOUD_NAME environment variable.');
   }
 
   const formData = new FormData();
@@ -26,9 +34,11 @@ const uploadToCloudinary = async (file, folder = 'messages') => {
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
   formData.append('public_id', `${timestamp}_${sanitizedName}`);
 
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
+  console.log('Uploading to Cloudinary:', uploadUrl.replace(CLOUDINARY_CLOUD_NAME, '***')); // Log without exposing cloud name
+
   try {
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`,
+    const response = await fetch(uploadUrl,
       {
         method: 'POST',
         body: formData,
