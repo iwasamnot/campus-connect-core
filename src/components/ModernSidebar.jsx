@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import CommandPalette from './CommandPalette';
 import NotificationCenter from './NotificationCenter';
+import VoiceCommands from './VoiceCommands';
 
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
   ? window.__LogoComponent 

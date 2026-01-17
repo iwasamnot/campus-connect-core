@@ -5,6 +5,9 @@ import ModernSidebar from './components/ModernSidebar';
 import QuickActions from './components/QuickActions';
 import UIStandardizer from './components/UIStandardizer';
 import CallModal from './components/CallModal';
+import Onboarding from './components/Onboarding';
+import VoiceCommands from './components/VoiceCommands';
+import Breadcrumbs from './components/Breadcrumbs';
 import { isAdminRole } from './utils/helpers';
 import { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
 // Removed Menu import - using swipe gesture instead
@@ -266,6 +269,50 @@ function App() {
     }
   }, [userRole, hasSetDefaultView]);
 
+  // Check for onboarding on login
+  useEffect(() => {
+    if (user && !loading) {
+      const hasCompletedOnboarding = localStorage.getItem('onboarding_completed');
+      if (!hasCompletedOnboarding) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [user, loading]);
+
+  // Handle voice commands
+  const handleVoiceCommand = useCallback((command) => {
+    if (command.type === 'navigate' && command.target) {
+      handleSetActiveView(command.target);
+    } else if (command.type === 'action') {
+      // Handle actions (send, delete, search, etc.)
+      console.log('Voice command action:', command);
+    }
+  }, [handleSetActiveView]);
+
+  // Breadcrumb items based on active view
+  const breadcrumbItems = useMemo(() => {
+    const viewLabels = {
+      'chat': 'Campus Chat',
+      'ai-help': 'AI Help',
+      'groups': 'Groups',
+      'private-chat': 'Private Chat',
+      'nearby': 'Nearby Chat',
+      'activity': 'Activity',
+      'scheduler': 'Scheduler',
+      'saved': 'Saved Messages',
+      'gallery': 'Gallery',
+      'settings': 'Settings',
+      'analytics': 'Analytics',
+      'users': 'Users Management',
+      'create-user': 'Create User',
+      'contact-messages': 'Contact Messages',
+      'audit': 'Audit Logs',
+    };
+    
+    if (activeView === 'chat') return [];
+    return [{ label: viewLabels[activeView] || activeView, path: `/${activeView}` }];
+  }, [activeView]);
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -291,6 +338,11 @@ function App() {
   return (
     <>
       <CallModal />
+      {/* Onboarding */}
+      <Onboarding
+        onComplete={() => setShowOnboarding(false)}
+        skipOnboarding={showOnboarding === false}
+      />
       {/* IMPORTANT: Avoid forcing 100vh on mobile/PWA (causes "locked" viewport and jumpy layouts).
           Use h-screen as fallback, but prefer 100dvh where supported. */}
       {/* Aurora Background - Fluid.so aesthetic */}

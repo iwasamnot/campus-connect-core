@@ -58,6 +58,9 @@ import RichTextEditor from './RichTextEditor';
 import CustomEmojiReactions from './CustomEmojiReactions';
 import MessageAnalytics from './MessageAnalytics';
 import AISmartReplies from './AISmartReplies';
+import AIPredictiveTyping from './AIPredictiveTyping';
+import ContextualActions from './ContextualActions';
+import SmartCategorization from './SmartCategorization';
 import CollaborativeEditor from './CollaborativeEditor';
 import PredictiveScheduler from './PredictiveScheduler';
 import VoiceEmotionDetector from './VoiceEmotionDetector';
@@ -141,6 +144,8 @@ const ChatArea = ({ setActiveView }) => {
   const [voiceTranscription, setVoiceTranscription] = useState({}); // Voice message transcriptions
   const [showSmartReplies, setShowSmartReplies] = useState(true); // AI Smart Replies (enabled by default)
   const [selectedMessageForReply, setSelectedMessageForReply] = useState(null); // Message clicked for smart replies
+  const [showPredictiveTyping, setShowPredictiveTyping] = useState(true); // AI Predictive Typing (enabled by default)
+  const [selectedMessageForActions, setSelectedMessageForActions] = useState(null); // Message for contextual actions
   const [showCollaborativeEditor, setShowCollaborativeEditor] = useState(false); // Collaborative Editor
   const [showPredictiveScheduler, setShowPredictiveScheduler] = useState(false); // Predictive Scheduler
   const [showVoiceEmotion, setShowVoiceEmotion] = useState(false); // Voice Emotion Detection
@@ -1581,14 +1586,27 @@ const ChatArea = ({ setActiveView }) => {
                 )}
 
                 <div className="relative" style={{ overflow: 'visible' }}>
+                  {/* Contextual Actions */}
+                  {selectedMessageForActions?.id === message.id && (
+                    <ContextualActions
+                      message={message}
+                      onAction={(action, msg) => {
+                        console.log('Contextual action:', action, msg);
+                        setSelectedMessageForActions(null);
+                        // Handle action based on type
+                      }}
+                      user={user}
+                    />
+                  )}
                 <div
                         onClick={(e) => {
-                          // Click on message to generate smart replies for it
+                          // Click on message to generate smart replies and contextual actions
                           // Don't trigger if clicking on buttons/links inside
                           if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('button') || e.target.closest('a')) {
                             return;
                           }
                           setSelectedMessageForReply(message);
+                          setSelectedMessageForActions(message);
                           setShowSmartReplies(true);
                         }}
                         className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer gpu-accelerated transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] ${
