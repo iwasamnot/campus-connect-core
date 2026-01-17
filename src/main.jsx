@@ -61,6 +61,7 @@ import { keyboard } from './utils/accessibility.js'
 import { calculateVisibleRange, getVisibleItems, calculateTotalHeight, calculateOffset } from './utils/virtualScroll.js'
 import { measureWebVitals, observePerformance } from './utils/webVitals.js'
 import { getCurrentLanguage, setLanguage } from './utils/i18n.js'
+import { uploadFile, uploadImage, isCloudinaryConfigured, isFirebaseStorageAvailable, getAvailableProviders } from './utils/storageService.js'
 
 // Register Logo in the registry so lazy-loaded components can access it
 // Note: Logo is also registered in App.jsx, but we register it here too for safety
@@ -111,6 +112,13 @@ if (typeof window !== 'undefined') {
   window.__getVisibleItems = getVisibleItems;
   window.__calculateTotalHeight = calculateTotalHeight;
   window.__calculateOffset = calculateOffset;
+  
+  // Storage service exports
+  window.__uploadFile = uploadFile;
+  window.__uploadImage = uploadImage;
+  window.__isCloudinaryConfigured = isCloudinaryConfigured;
+  window.__isFirebaseStorageAvailable = isFirebaseStorageAvailable;
+  window.__getAvailableProviders = getAvailableProviders;
 }
 
 // Ensure firebaseConfig is never tree-shaken

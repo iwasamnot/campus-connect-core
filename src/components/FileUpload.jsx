@@ -1,15 +1,8 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Image, File, Loader } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-// Use window.__firebaseStorage to avoid import/export issues in production builds
-const storage = typeof window !== 'undefined' && window.__firebaseStorage 
-  ? window.__firebaseStorage 
-  : null;
+import { Upload, X, Loader } from 'lucide-react';
+import { uploadFile, uploadImage } from '../utils/storageService';
 // Use window globals to avoid import/export issues
-const sanitizeFileName = typeof window !== 'undefined' && window.__sanitizeFileName 
-  ? window.__sanitizeFileName 
-  : (name) => name;
 const validateFile = typeof window !== 'undefined' && window.__validateFile 
   ? window.__validateFile 
   : () => ({ valid: true });
@@ -54,39 +47,43 @@ const FileUpload = ({ onFileUpload, maxSize = 5 * 1024 * 1024, allowedTypes = ['
 
     try {
       // Create preview for images
-      let imagePreview = null;
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          imagePreview = reader.result;
           setPreview(reader.result);
         };
         reader.readAsDataURL(file);
       }
 
-      // Upload to Firebase Storage
-      const timestamp = Date.now();
-      const sanitizedFileName = sanitizeFileName(file.name);
-      const fileName = `${timestamp}_${sanitizedFileName}`;
-      const storageRef = ref(storage, `messages/${fileName}`);
-      
-      console.log('Uploading file to:', `messages/${fileName}`);
+      // Upload using storage service (supports Firebase and Cloudinary with auto-fallback)
+      console.log('Uploading file:', file.name);
       console.log('File size:', file.size, 'bytes');
       console.log('File type:', file.type);
       
-      await uploadBytes(storageRef, file);
-      console.log('File uploaded successfully');
+      let uploadResult;
+      if (file.type.startsWith('image/')) {
+        // Use optimized image upload (Cloudinary handles optimization automatically)
+        uploadResult = await uploadImage(file, 'messages', {
+          maxWidth: 1920,
+          maxHeight: 1920,
+          quality: 'auto',
+        });
+      } else {
+        // Use regular file upload
+        uploadResult = await uploadFile(file, 'messages');
+      }
       
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log('Download URL obtained:', downloadURL);
+      console.log('File uploaded successfully via', uploadResult.provider || 'unknown provider');
+      console.log('Download URL:', uploadResult.url);
 
       // Callback with file info
       onFileUpload({
-        url: downloadURL,
+        url: uploadResult.url,
         name: file.name,
         type: file.type,
-        size: file.size,
-        preview: file.type.startsWith('image/') ? downloadURL : null
+        size: uploadResult.bytes || file.size,
+        preview: file.type.startsWith('image/') ? uploadResult.url : null,
+        provider: uploadResult.provider || 'unknown'
       });
 
       // Reset

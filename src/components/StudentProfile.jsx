@@ -2,13 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadImage } from '../utils/storageService';
 // Use window globals to avoid import/export issues in production builds
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
-  : null;
-const storage = typeof window !== 'undefined' && window.__firebaseStorage 
-  ? window.__firebaseStorage 
   : null;
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Save, Loader, Edit2, X, Image, GraduationCap, Calendar, MapPin, FileText, Upload } from 'lucide-react';
@@ -418,15 +415,19 @@ const StudentProfile = () => {
                               setUploading(true);
                               setError(null);
                               try {
-                                const storageRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}_${file.name}`);
-                                await uploadBytes(storageRef, file);
-                                const downloadURL = await getDownloadURL(storageRef);
-                                setFormData(prev => ({ ...prev, profilePicture: downloadURL }));
-                                showSuccess('Image uploaded successfully!');
+                                // Use storage service with auto-fallback (Firebase -> Cloudinary)
+                                const uploadResult = await uploadImage(file, `profile-pictures/${user.uid}`, {
+                                  maxWidth: 800,
+                                  maxHeight: 800,
+                                  quality: 'auto',
+                                });
+                                setFormData(prev => ({ ...prev, profilePicture: uploadResult.url }));
+                                showSuccess(`Image uploaded successfully via ${uploadResult.provider || 'storage'}!`);
                               } catch (error) {
                                 console.error('Error uploading image:', error);
-                                setError('Failed to upload image. Please try again.');
-                                showError('Failed to upload image. Please try again.');
+                                const errorMessage = error?.message || 'Failed to upload image. Please try again.';
+                                setError(errorMessage);
+                                showError(errorMessage);
                               } finally {
                                 setUploading(false);
                               }
