@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, X, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY?.trim() || '';
+// Giphy API Key - can be set via environment variable or use public beta key
+const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY?.trim() || 'bIPpqbrqYlsc11WrgvSUGTMDHevTr7TD';
 
 /**
  * GIF Picker Component
@@ -27,7 +28,10 @@ const GifPicker = ({ onSelect, onClose }) => {
   }, []);
 
   const loadTrending = async () => {
-    if (!GIPHY_API_KEY) return;
+    if (!GIPHY_API_KEY || GIPHY_API_KEY.trim() === '') {
+      setError('Giphy API key not configured');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -35,21 +39,29 @@ const GifPicker = ({ onSelect, onClose }) => {
       const response = await fetch(
         `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=20&rating=g`
       );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
-      if (data.data) {
+      if (data.data && Array.isArray(data.data)) {
         setTrending(data.data);
         setGifs(data.data);
+      } else {
+        throw new Error('Invalid response format from Giphy API');
       }
     } catch (err) {
       console.error('Error loading trending GIFs:', err);
-      setError('Failed to load GIFs');
+      setError(err.message || 'Failed to load GIFs. Please check your API key.');
     } finally {
       setLoading(false);
     }
   };
 
   const searchGifs = async (query) => {
-    if (!query.trim() || !GIPHY_API_KEY) {
+    if (!query.trim() || !GIPHY_API_KEY || GIPHY_API_KEY.trim() === '') {
       setGifs(trending);
       return;
     }
@@ -60,13 +72,21 @@ const GifPicker = ({ onSelect, onClose }) => {
       const response = await fetch(
         `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`
       );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
-      if (data.data) {
+      if (data.data && Array.isArray(data.data)) {
         setGifs(data.data);
+      } else {
+        throw new Error('Invalid response format from Giphy API');
       }
     } catch (err) {
       console.error('Error searching GIFs:', err);
-      setError('Failed to search GIFs');
+      setError(err.message || 'Failed to search GIFs. Please check your API key.');
     } finally {
       setLoading(false);
     }
@@ -124,7 +144,7 @@ const GifPicker = ({ onSelect, onClose }) => {
         </button>
       </div>
 
-      {!GIPHY_API_KEY && (
+      {(!GIPHY_API_KEY || GIPHY_API_KEY.trim() === '') && (
         <div className="p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg mb-4">
           <p className="text-sm text-yellow-400">
             Giphy API key not configured. Add VITE_GIPHY_API_KEY to enable GIF support.
