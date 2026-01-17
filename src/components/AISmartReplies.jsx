@@ -5,29 +5,67 @@ import { callAI } from '../utils/aiProvider';
 
 /**
  * AI Smart Replies Component
- * Generates context-aware smart replies using AI
+ * Generates context-aware smart replies using AI based on clicked message
  * 5-10 years ahead: Predictive, contextual, emotionally intelligent
  */
-const AISmartReplies = ({ conversationHistory, onSelect, userContext }) => {
+const AISmartReplies = ({ conversationHistory, selectedMessage, onSelect, userContext }) => {
   const [smartReplies, setSmartReplies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   useEffect(() => {
     generateSmartReplies();
-  }, [conversationHistory]);
+  }, [conversationHistory, selectedMessage]);
 
   const generateSmartReplies = async () => {
     if (!conversationHistory || conversationHistory.length === 0) return;
     
     setLoading(true);
     try {
-      // Analyze conversation context
-      const recentMessages = conversationHistory.slice(-5).map(msg => 
-        `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`
-      ).join('\n');
+      // If a specific message is selected, focus on that message
+      let prompt;
+      if (selectedMessage) {
+        const messageText = selectedMessage.text || selectedMessage.displayText || '';
+        const messageSender = selectedMessage.userName || 'User';
+        const messageContext = `Message from ${messageSender}: "${messageText}"`;
+        
+        // Include a bit of context around the selected message
+        const selectedIndex = conversationHistory.findIndex(m => m.id === selectedMessage.id);
+        const contextMessages = conversationHistory.slice(Math.max(0, selectedIndex - 2), selectedIndex + 3)
+          .map(msg => `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`)
+          .join('\n');
 
-      const prompt = `Analyze this conversation and generate 3-5 smart, contextually appropriate reply suggestions. 
+        prompt = `You are generating smart reply suggestions for this specific message. Generate 3-5 contextually appropriate reply suggestions that respond directly to this message.
+
+FOCUS MESSAGE (the one the user clicked on):
+${messageContext}
+
+Recent conversation context:
+${contextMessages}
+
+Consider:
+- The specific message being replied to
+- The tone and intent of the focused message
+- The topic and context
+- Natural, conversational responses
+- Appropriate tone (friendly, professional, casual, etc.)
+- Direct relevance to the focused message
+
+Generate smart replies as a JSON array of strings. Each reply should:
+- Directly respond to the focused message
+- Be natural and conversational
+- Be contextually relevant
+- Be 5-20 words maximum
+- Be varied in style (some formal, some casual)
+
+Return ONLY a JSON array, no other text. Example: ["Thanks for the update!", "That sounds great!", "I'll check it out."]`;
+      } else {
+        // Fallback to general conversation analysis
+        const recentMessages = conversationHistory.slice(-5).map(msg => 
+          `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`
+        ).join('\n');
+
+        prompt = `Analyze this conversation and generate 3-5 smart, contextually appropriate reply suggestions. 
 Consider:
 - The tone and emotion of the conversation
 - The relationship between participants
@@ -46,6 +84,7 @@ Generate smart replies as a JSON array of strings. Each reply should be:
 - Varied in style (some formal, some casual)
 
 Return ONLY a JSON array, no other text. Example: ["Thanks for the update!", "That sounds great!", "I'll check it out."]`;
+      }
 
       const text = await callAI(prompt, {
         systemPrompt: 'You are a helpful assistant that generates natural, contextually appropriate reply suggestions.',
@@ -81,8 +120,9 @@ Return ONLY a JSON array, no other text. Example: ["Thanks for the update!", "Th
   };
 
   const generateFallbackReplies = (history) => {
-    const lastMessage = history[history.length - 1];
-    const text = (lastMessage?.text || lastMessage?.displayText || '').toLowerCase();
+    // Use selected message if available, otherwise use last message
+    const messageToAnalyze = selectedMessage || history[history.length - 1];
+    const text = (messageToAnalyze?.text || messageToAnalyze?.displayText || '').toLowerCase();
     
     const replies = [];
     

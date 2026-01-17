@@ -140,6 +140,7 @@ const ChatArea = ({ setActiveView }) => {
   const [showAnalytics, setShowAnalytics] = useState(false); // Show analytics dashboard
   const [voiceTranscription, setVoiceTranscription] = useState({}); // Voice message transcriptions
   const [showSmartReplies, setShowSmartReplies] = useState(true); // AI Smart Replies (enabled by default)
+  const [selectedMessageForReply, setSelectedMessageForReply] = useState(null); // Message clicked for smart replies
   const [showCollaborativeEditor, setShowCollaborativeEditor] = useState(false); // Collaborative Editor
   const [showPredictiveScheduler, setShowPredictiveScheduler] = useState(false); // Predictive Scheduler
   const [showVoiceEmotion, setShowVoiceEmotion] = useState(false); // Voice Emotion Detection
@@ -1581,16 +1582,26 @@ const ChatArea = ({ setActiveView }) => {
 
                 <div className="relative" style={{ overflow: 'visible' }}>
                 <div
+                        onClick={(e) => {
+                          // Click on message to generate smart replies for it
+                          // Don't trigger if clicking on buttons/links inside
+                          if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('button') || e.target.closest('a')) {
+                            return;
+                          }
+                          setSelectedMessageForReply(message);
+                          setShowSmartReplies(true);
+                        }}
                         className={`message-item max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-xl relative cursor-pointer gpu-accelerated transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] ${
                     isAuthor
                       ? 'bg-indigo-600 text-white'
                               : 'bg-white/10 backdrop-blur-sm text-white border border-white/20'
-                          }`}
+                          } ${selectedMessageForReply?.id === message.id ? 'ring-2 ring-indigo-400' : ''}`}
                   style={{ 
                     transform: 'translateZ(0)', // Force GPU acceleration
                     backfaceVisibility: 'hidden',
                     contain: 'layout style'
                   }}
+                  title={selectedMessageForReply?.id === message.id ? 'Generating smart replies for this message...' : 'Click to generate smart replies'}
                 >
                     <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -2358,8 +2369,10 @@ const ChatArea = ({ setActiveView }) => {
               {showSmartReplies && messages.length > 0 && (
                 <AISmartReplies
                   conversationHistory={messages.slice(-10)}
+                  selectedMessage={selectedMessageForReply}
                   onSelect={(reply) => {
                     setNewMessage(reply);
+                    setSelectedMessageForReply(null); // Clear selection after selecting a reply
                     if (messageInputRef.current) {
                       messageInputRef.current.focus();
                     }
