@@ -406,19 +406,11 @@ const AIHelp = () => {
     }
   };
 
-  // Call Gemini AI with conversation history
-  const callGemini = async (question, localContext, conversationHistory = []) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-    if (!apiKey || apiKey === '') {
-      return null;
-    }
-
-    const model = getGeminiModel(selectedGeminiModel);
-    if (!model) {
-      return null;
-    }
-
+  // Call AI with conversation history (multi-provider support)
+  const callAIWithHistory = async (question, localContext, conversationHistory = []) => {
     try {
+      const { callAI } = await import('../utils/aiProvider');
+      
       // Build conversation history for context
       const historyContext = conversationHistory.length > 0 
         ? `\n\n**Conversation History:**\n${conversationHistory.slice(-6).map((msg, idx) => {
@@ -448,45 +440,19 @@ ${question}
 - Use markdown formatting for better readability
 - Be helpful, empathetic, and professional in your responses`;
 
-      // Build chat history for Gemini (last 6 messages for context)
-      const chatHistory = conversationHistory.slice(-6).map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }));
+      const text = await callAI(prompt, {
+        systemPrompt: 'You are a helpful assistant for SISTC students. Provide accurate, helpful information.',
+        maxTokens: 2048,
+        temperature: 0.7
+      });
 
-      // Use chat history if available, otherwise just use the prompt
-      const result = await (chatHistory.length > 0 
-        ? model.generateContent({
-            contents: [...chatHistory, { role: 'user', parts: [{ text: prompt }] }]
-          })
-        : model.generateContent(prompt)
-      );
-      
-      const response = await result.response;
-      const text = response.text();
       if (text && text.trim()) {
         return text.trim();
       } else {
         return null;
       }
     } catch (error) {
-      console.error('Error calling Gemini:', error);
-      
-      // Check if it's an API blocked error (403 with API_KEY_SERVICE_BLOCKED)
-      if (error.message && (
-        error.message.includes('403') || 
-        error.message.includes('API_KEY_SERVICE_BLOCKED') ||
-        error.message.includes('SERVICE_DISABLED') ||
-        error.message.includes('blocked')
-      )) {
-        console.warn('⚠️ Gemini API is blocked or disabled. This usually means:');
-        console.warn('   1. The API key has restrictions that block the Generative Language API');
-        console.warn('   2. The API is not enabled in the Google Cloud project');
-        console.warn('   3. The API key service is blocked for this project');
-        console.warn('💡 The AI Help feature will fall back to the local knowledge base.');
-        console.warn('   To fix: Check API key restrictions in Google Cloud Console');
-      }
-      
+      console.error('Error calling AI:', error);
       return null;
     }
   };
@@ -535,11 +501,11 @@ ${question}
         console.warn('RAG system error, falling back to standard Gemini:', ragError);
       }
       
-      // Fallback to standard Gemini with local knowledge base
+      // Fallback to AI with local knowledge base
       const localAnswer = ai.current.processQuestion(question);
-      const geminiAnswer = await callGemini(question, localAnswer, conversationHistory);
-      if (geminiAnswer && geminiAnswer.trim() !== '') {
-        return geminiAnswer;
+      const aiAnswer = await callAIWithHistory(question, localAnswer, conversationHistory);
+      if (aiAnswer && aiAnswer.trim() !== '') {
+        return aiAnswer;
       }
     }
     

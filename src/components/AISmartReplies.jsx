@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Zap, Brain, MessageSquare } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { callAI } from '../utils/aiProvider';
 
 /**
  * AI Smart Replies Component
@@ -22,17 +22,6 @@ const AISmartReplies = ({ conversationHistory, onSelect, userContext }) => {
     
     setLoading(true);
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-      if (!apiKey) {
-        // Fallback to rule-based smart replies
-        setSmartReplies(generateFallbackReplies(conversationHistory));
-        setLoading(false);
-        return;
-      }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
       // Analyze conversation context
       const recentMessages = conversationHistory.slice(-5).map(msg => 
         `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`
@@ -58,9 +47,11 @@ Generate smart replies as a JSON array of strings. Each reply should be:
 
 Return ONLY a JSON array, no other text. Example: ["Thanks for the update!", "That sounds great!", "I'll check it out."]`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
+      const text = await callAI(prompt, {
+        systemPrompt: 'You are a helpful assistant that generates natural, contextually appropriate reply suggestions.',
+        maxTokens: 200,
+        temperature: 0.8
+      });
       
       // Parse JSON response
       let replies = [];

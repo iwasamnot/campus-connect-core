@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckSquare, Plus, X, Calendar, Clock } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { callAI } from '../utils/aiProvider';
 
 /**
  * Smart Task Extractor
@@ -21,18 +21,12 @@ const SmartTaskExtractor = ({ messages, onTaskCreated }) => {
 
     setLoading(true);
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-      
-      if (apiKey) {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const conversationText = messages
+        .slice(-20) // Last 20 messages
+        .map(msg => `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`)
+        .join('\n');
 
-        const conversationText = messages
-          .slice(-20) // Last 20 messages
-          .map(msg => `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`)
-          .join('\n');
-
-        const prompt = `Extract actionable tasks and to-dos from this conversation. 
+      const prompt = `Extract actionable tasks and to-dos from this conversation. 
 Look for:
 - Action items (e.g., "I'll send you the file", "Let's schedule a meeting")
 - Deadlines and time-sensitive items
@@ -54,18 +48,17 @@ ${conversationText}
 
 Return ONLY valid JSON array, no other text.`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text().trim();
+      try {
+        const text = await callAI(prompt, {
+          systemPrompt: 'You are a helpful assistant that extracts actionable tasks from conversations.',
+          maxTokens: 400,
+          temperature: 0.7
+        });
         
-        try {
-          const jsonMatch = text.match(/\[.*\]/s);
-          const tasks = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
-          setExtractedTasks(tasks.filter(t => t.task && t.task.length > 0));
-        } catch (e) {
-          setExtractedTasks(extractFallbackTasks());
-        }
-      } else {
+        const jsonMatch = text.match(/\[.*\]/s);
+        const tasks = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
+        setExtractedTasks(tasks.filter(t => t.task && t.task.length > 0));
+      } catch (e) {
         setExtractedTasks(extractFallbackTasks());
       }
     } catch (error) {

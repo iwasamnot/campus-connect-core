@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, MessageSquare, Clock, Users, Brain, BarChart3 } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { callAI } from '../utils/aiProvider';
 
 /**
  * AI Conversation Insights Dashboard
@@ -25,18 +25,12 @@ const AIConversationInsights = ({ messages, participants }) => {
 
     setLoading(true);
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-      
-      if (apiKey) {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const conversationText = messages
+        .slice(-50) // Last 50 messages
+        .map(msg => `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`)
+        .join('\n');
 
-        const conversationText = messages
-          .slice(-50) // Last 50 messages
-          .map(msg => `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`)
-          .join('\n');
-
-        const prompt = `Analyze this conversation and provide insights in JSON format:
+      const prompt = `Analyze this conversation and provide insights in JSON format:
 {
   "topics": ["topic1", "topic2", "topic3"],
   "sentiment": "positive|neutral|negative",
@@ -50,18 +44,17 @@ ${conversationText}
 
 Return ONLY valid JSON, no other text.`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text().trim();
+      try {
+        const text = await callAI(prompt, {
+          systemPrompt: 'You are a helpful assistant that analyzes conversations and provides insights.',
+          maxTokens: 500,
+          temperature: 0.7
+        });
         
-        try {
-          const jsonMatch = text.match(/\{.*\}/s);
-          const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
-          setInsights(parsed);
-        } catch (e) {
-          setInsights(generateFallbackInsights());
-        }
-      } else {
+        const jsonMatch = text.match(/\{.*\}/s);
+        const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
+        setInsights(parsed);
+      } catch (e) {
         setInsights(generateFallbackInsights());
       }
 

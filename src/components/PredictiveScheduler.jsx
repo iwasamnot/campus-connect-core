@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, Sparkles, Check, X } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { callAI } from '../utils/aiProvider';
 
 /**
  * Predictive Message Scheduler
@@ -20,17 +20,6 @@ const PredictiveScheduler = ({ recipientId, recipientName, messageText, onSchedu
   const generateSuggestions = async () => {
     setLoading(true);
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-      if (!apiKey) {
-        // Fallback to default suggestions
-        setSuggestedTimes(generateDefaultSuggestions());
-        setLoading(false);
-        return;
-      }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
       const prompt = `Based on typical user behavior patterns, suggest 3 optimal times to send a message today.
 Consider:
 - Morning hours (8-10 AM) for important messages
@@ -44,9 +33,11 @@ Message context: "${messageText?.substring(0, 100) || 'General message'}"
 Generate 3 specific time suggestions for today in 24-hour format (HH:MM).
 Return as JSON array: ["09:30", "14:15", "18:45"]`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
+      const text = await callAI(prompt, {
+        systemPrompt: 'You are a helpful assistant that suggests optimal message send times based on user behavior patterns.',
+        maxTokens: 150,
+        temperature: 0.7
+      });
       
       let times = [];
       try {
