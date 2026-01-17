@@ -62,6 +62,7 @@ import { calculateVisibleRange, getVisibleItems, calculateTotalHeight, calculate
 import { measureWebVitals, observePerformance } from './utils/webVitals.js'
 import { getCurrentLanguage, setLanguage } from './utils/i18n.js'
 import { uploadFile, uploadImage, isCloudinaryConfigured, getAvailableProviders } from './utils/storageService.js'
+import { checkReminders, formatReminderTime } from './utils/messageReminders.js'
 
 // Register Logo in the registry so lazy-loaded components can access it
 // Note: Logo is also registered in App.jsx, but we register it here too for safety
@@ -118,6 +119,10 @@ if (typeof window !== 'undefined') {
   window.__uploadImage = uploadImage;
   window.__isCloudinaryConfigured = isCloudinaryConfigured;
   window.__getAvailableProviders = getAvailableProviders;
+  
+  // Message reminders exports
+  window.__checkReminders = checkReminders;
+  window.__formatReminderTime = formatReminderTime;
 }
 
 // Ensure firebaseConfig is never tree-shaken

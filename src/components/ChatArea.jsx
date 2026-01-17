@@ -30,7 +30,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
@@ -50,8 +50,11 @@ import PollDisplay from './PollDisplay';
 import VoiceRecorder from './VoiceRecorder';
 import VoiceMessage from './VoiceMessage';
 import QuickReplies from './QuickReplies';
+import MessageThread from './MessageThread';
+import MessageReminder from './MessageReminder';
 import { translateText } from '../utils/aiTranslation';
 import { summarizeConversation } from '../utils/aiSummarization';
+import { checkReminders, formatReminderTime } from '../utils/messageReminders';
 // Use window globals to avoid import/export issues
 const saveDraft = typeof window !== 'undefined' && window.__saveDraft ? window.__saveDraft : () => {};
 const getDraft = typeof window !== 'undefined' && window.__getDraft ? window.__getDraft : () => null;
@@ -114,6 +117,8 @@ const ChatArea = ({ setActiveView }) => {
   const [showSummarization, setShowSummarization] = useState(false); // Show summarization
   const [conversationSummary, setConversationSummary] = useState(null); // Conversation summary
   const [openMenuId, setOpenMenuId] = useState(null); // Track which message's menu is open
+  const [openThreadId, setOpenThreadId] = useState(null); // Track which message's thread is open
+  const [showReminderModal, setShowReminderModal] = useState(null); // Message ID for reminder modal
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
   const mountedRef = useRef(true);
@@ -715,11 +720,16 @@ const ChatArea = ({ setActiveView }) => {
         }
       };
 
-      // Add reply reference if replying
+      // Add reply reference if replying (for inline replies)
       if (replyingTo) {
         messageData.replyTo = replyingTo.id;
         messageData.replyToText = replyingTo.text || replyingTo.displayText;
         messageData.replyToUserName = replyingTo.userName;
+        // Check if replying to a thread parent or creating new thread
+        if (replyingTo.threadParentId) {
+          messageData.threadParentId = replyingTo.threadParentId;
+          messageData.isThreadReply = true;
+        }
       }
 
       // Add file attachment if present
@@ -1783,6 +1793,15 @@ const ChatArea = ({ setActiveView }) => {
                   )}
                 </div>
                 
+                {/* Message Thread */}
+                {openThreadId === message.id && (
+                  <MessageThread
+                    parentMessageId={message.id}
+                    onClose={() => setOpenThreadId(null)}
+                    isOpen={true}
+                  />
+                )}
+                
                     {/* 3-dots menu button - appears on hover, positioned outside bubble near timestamp */}
                     <div 
                       ref={(el) => {
@@ -1854,6 +1873,32 @@ const ChatArea = ({ setActiveView }) => {
                         )}
                         
                         <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenThreadId(openThreadId === message.id ? null : message.id);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          style={{ transform: 'translateZ(0)' }}
+                        >
+                          <MessageSquare size={16} />
+                          {openThreadId === message.id ? 'Close Thread' : 'Open Thread'}
+                        </button>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowReminderModal(message);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-white/10 hover:translate-x-1 active:scale-[0.98] flex items-center gap-2 transition-all duration-200 border-t border-white/10 gpu-accelerated"
+                          style={{ transform: 'translateZ(0)' }}
+                        >
+                          <Clock size={16} />
+                          Set Reminder
+                        </button>
+                        
+                    <button
                           onClick={async (e) => {
                             e.stopPropagation();
                         try {
@@ -2543,6 +2588,14 @@ const ChatArea = ({ setActiveView }) => {
         <QuickReplies
           onSelect={handleQuickReplySelect}
           onClose={() => setShowQuickReplies(false)}
+        />
+      )}
+
+      {/* Message Reminder Modal */}
+      {showReminderModal && (
+        <MessageReminder
+          message={showReminderModal}
+          onClose={() => setShowReminderModal(null)}
         />
       )}
 
