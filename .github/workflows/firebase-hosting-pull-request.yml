@@ -38,6 +38,7 @@ jobs:
           VITE_ZEGOCLOUD_APP_ID: ${{ secrets.VITE_ZEGOCLOUD_APP_ID }}
           VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME }}
           VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET }}
+          VITE_GIPHY_API_KEY: ${{ secrets.VITE_GIPHY_API_KEY }}
           VITE_STORAGE_PROVIDER: cloudinary
       
       - name: Deploy to Firebase Hosting Preview
