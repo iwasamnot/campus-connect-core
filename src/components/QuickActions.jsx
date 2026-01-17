@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, MessageSquare, Users, Sparkles, Calendar, Bookmark, Image as ImageIcon, Plus, X } from 'lucide-react';
 
@@ -7,6 +7,17 @@ import { Zap, MessageSquare, Users, Sparkles, Calendar, Bookmark, Image as Image
  * Floating action buttons for common tasks
  */
 const QuickActions = ({ onAction, isOpen, onToggle }) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const actualOpen = isOpen !== undefined ? isOpen : internalOpen;
+  const handleToggle = useCallback(() => {
+    if (onToggle) {
+      onToggle();
+    } else {
+      setInternalOpen(prev => !prev);
+    }
+  }, [onToggle]);
+
   const actions = [
     { id: 'new-message', label: 'New Message', icon: MessageSquare, color: 'indigo' },
     { id: 'new-group', label: 'New Group', icon: Users, color: 'purple' },
@@ -36,7 +47,7 @@ const QuickActions = ({ onAction, isOpen, onToggle }) => {
         aria-label="Quick Actions"
       >
         <AnimatePresence mode="wait">
-          {isOpen ? (
+          {actualOpen ? (
             <motion.div
               key="close"
               initial={{ rotate: -90, opacity: 0 }}

@@ -321,8 +321,6 @@ function App() {
       
       {/* Quick Actions */}
       <QuickActions
-        isOpen={false}
-        onToggle={() => {}}
         onAction={(action) => {
           switch(action) {
             case 'new-message':
