@@ -958,11 +958,6 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       }
     };
   }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes]);
-  
-  // Call renderCanvas when dependencies change
-  useEffect(() => {
-    renderCanvas();
-  }, [renderCanvas]);
 
   // Update canvas size
   useEffect(() => {

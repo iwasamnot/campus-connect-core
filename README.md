@@ -115,14 +115,24 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Voice messages support
   - Message scheduling for groups
 - **AI Help Assistant**: Intelligent AI assistant powered by Google Gemini 2.5 Flash
-  - Multiple Gemini model support (gemini-pro, gemini-2.0-flash-exp, gemini-1.5-pro, etc.)
-  - Local SISTC knowledge base integration
-  - Context-aware responses
+  - **Personalized AI Assistant**: Learns about you and remembers your preferences
+    - Automatically extracts your name, interests, course, and study goals from conversations
+    - Remembers your name and uses it in personalized greetings
+    - Customizable assistant name (rename your AI assistant)
+    - Context-aware responses based on your conversation history
+    - Smart context summarization to keep profile efficient
+  - Three specialized modes:
+    - **SISTC Info**: Answers questions about SISTC courses, campuses, and information
+    - **Study Tips**: Provides study strategies, time management, and productivity advice
+    - **Homework Help**: Tutors you through concepts and problem-solving
+  - Multiple Gemini model support (gemini-2.5-flash, gemini-1.5-pro, etc.)
+  - Local SISTC knowledge base integration with RAG (Retrieval-Augmented Generation)
   - Conversation history support (maintains context from last 10 messages)
   - Virtual Senior AI mode in Campus Chat
   - Toggle AI Help mode on/off
   - Model selector for choosing the best AI model
   - Free and paid model options
+  - Quick question buttons for common scenarios
 - **My Profile**: Comprehensive profile management with:
   - Profile picture upload
   - Personal information (name, bio, course, year of study, date of birth, address)

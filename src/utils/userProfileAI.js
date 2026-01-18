@@ -30,6 +30,7 @@ export const getUserProfile = async (userId) => {
     const defaultProfile = {
       userId,
       assistantName: 'AI Assistant',
+      userName: null,
       context: '',
       preferences: {
         communicationStyle: 'friendly',
@@ -70,6 +71,7 @@ export const updateProfileFromConversation = async (userId, conversationMessages
     // Use AI to extract user information
     const extractionPrompt = `Analyze this conversation and extract relevant information about the user. Return a JSON object with:
 {
+  "userName": "the user's name if mentioned (e.g., 'My name is John' or 'Call me Sarah'), or null if not mentioned",
   "interests": ["array of topics the user is interested in"],
   "courseInfo": "course name or null",
   "studyGoals": ["array of study goals mentioned"],
@@ -105,6 +107,26 @@ Only return valid JSON, no other text.`;
       lastUpdated: serverTimestamp()
     };
     
+    // Extract and store user name if mentioned
+    // Save to both userProfiles collection AND users collection (main profile)
+    if (extractedInfo.userName && extractedInfo.userName.trim()) {
+      const userName = extractedInfo.userName.trim();
+      updates.userName = userName;
+      
+      // Also update the user's main profile in users collection
+      try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+          name: userName,
+          updatedAt: serverTimestamp()
+        });
+        console.log('Updated user name in main profile:', userName);
+      } catch (userUpdateError) {
+        console.warn('Could not update user name in main profile (may not have permission):', userUpdateError);
+        // This is okay - Firestore rules might prevent it, but we still saved it in userProfiles
+      }
+    }
+    
     if (extractedInfo.interests && extractedInfo.interests.length > 0) {
       updates.interests = [...new Set([
         ...(currentProfile?.interests || []),
@@ -127,18 +149,72 @@ Only return valid JSON, no other text.`;
       updates['preferences.communicationStyle'] = extractedInfo.communicationStyle;
     }
     
-    // Update context notes
+    // Update context notes with smart summarization
+    const existingContext = currentProfile?.context || '';
+    
+    // Get conversation summary from AI extraction (more efficient than storing full text)
+    let conversationSummary = '';
     if (extractedInfo.contextNotes) {
-      const existingContext = currentProfile?.context || '';
-      updates.context = existingContext 
-        ? `${existingContext}\n\n${new Date().toLocaleDateString()}: ${extractedInfo.contextNotes}`
-        : extractedInfo.contextNotes;
-      
-      // Limit context to last 2000 characters
-      if (updates.context.length > 2000) {
-        updates.context = updates.context.slice(-2000);
+      conversationSummary = extractedInfo.contextNotes;
+    } else if (conversationMessages.length > 0) {
+      // If no AI summary, create a brief summary
+      const recentMessages = conversationMessages.slice(-4); // Last 4 messages
+      conversationSummary = recentMessages
+        .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content.substring(0, 100)}${msg.content.length > 100 ? '...' : ''}`)
+        .join(' | ');
+    }
+    
+    // Build new context with date separator
+    let newContext = existingContext;
+    if (conversationSummary) {
+      const datePrefix = `\n\n--- ${new Date().toLocaleDateString()} ---\n`;
+      newContext = existingContext 
+        ? `${existingContext}${datePrefix}${conversationSummary}`
+        : `${datePrefix}${conversationSummary}`;
+    }
+    
+    // Smart summarization: If context is getting long (>8000 chars), summarize it
+    if (newContext.length > 8000) {
+      try {
+        // Use AI to summarize the old context while preserving important info
+        const summarizePrompt = `Summarize this user context history into a concise format. Keep:
+- User's name and key personal details
+- Main interests and study goals
+- Course information
+- Important conversation patterns or preferences
+- Recent key topics discussed
+
+Return a brief summary (max 3000 characters) that preserves essential context:
+
+Context to summarize:
+${newContext.substring(0, 8000)}`;
+
+        const summaryResponse = await callAI(summarizePrompt, {
+          systemPrompt: 'You are an expert at condensing conversation context while preserving important information. Return only the summarized context, no extra text.',
+          maxTokens: 1000,
+          temperature: 0.3
+        });
+        
+        // If summarization worked, use it; otherwise truncate
+        if (summaryResponse && summaryResponse.trim().length > 100 && summaryResponse.trim().length < 5000) {
+          newContext = `${summaryResponse.trim()}\n\n--- ${new Date().toLocaleDateString()} ---\n${conversationSummary || 'Recent conversation'}`;
+        } else {
+          // Fallback: Keep most recent 4000 chars + new summary
+          newContext = `${newContext.slice(-4000)}\n\n--- ${new Date().toLocaleDateString()} ---\n${conversationSummary || 'Recent conversation'}`;
+        }
+      } catch (summaryError) {
+        console.warn('Context summarization failed, truncating instead:', summaryError);
+        // Fallback: Keep most recent 4000 chars + new summary
+        newContext = `${newContext.slice(-4000)}\n\n--- ${new Date().toLocaleDateString()} ---\n${conversationSummary || 'Recent conversation'}`;
       }
     }
+    
+    // Final limit to 8000 characters
+    if (newContext.length > 8000) {
+      newContext = newContext.slice(-8000);
+    }
+    
+    updates.context = newContext;
     
     // Store conversation summary
     updates.conversationHistory = [

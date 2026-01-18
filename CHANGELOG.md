@@ -1,5 +1,39 @@
 # Changelog
 
+## [15.0.0] - 2025-01-XX - AI User Profile System & Context Learning
+
+### 🚀 New Major Features
+- **AI User Profile System**: Personalized AI assistant that learns about you over time
+  - Automatically extracts user information from conversations (name, interests, course, study goals)
+  - Saves user name to main profile in `users` collection
+  - Context-aware AI responses based on conversation history
+  - Smart context summarization to keep profile space-efficient
+  - Personalized assistant name (users can rename their AI assistant)
+- **Context Learning**: AI learns from every conversation
+  - All conversations are analyzed and added to user context
+  - AI summarization keeps context concise (max 8000 characters)
+  - Automatic summarization when context grows too large
+  - Preserves important information (name, interests, preferences)
+- **Enhanced AI Help Assistant**: Now remembers user preferences and context
+  - Personalized greetings using user's name
+  - Context-aware responses based on past conversations
+  - Tab-specific AI behavior (SISTC Info, Study Tips, Homework Help)
+  - Conversation history preserved when switching tabs
+
+### 🎨 User Experience
+- **Personalized Experience**: AI assistant remembers your name and preferences
+- **Smart Context Management**: Conversations automatically summarized to save space
+- **Better Memory**: AI remembers your interests, course, and study goals
+- **Consistent Experience**: Profile persists across sessions and tabs
+
+### ⚡ Technical Improvements
+- **Firestore Integration**: User profiles stored in `userProfiles` collection
+- **Smart Summarization**: AI-powered context compression to optimize storage
+- **Profile Synchronization**: Name synced to both `userProfiles` and `users` collections
+- **Optimized Storage**: Context limited to 8000 characters with automatic summarization
+
+---
+
 ## [14.0.0] - 2025-01-XX - Major Update: AI Study Assistant & Visual Collaboration Board
 
 ### 🚀 New Major Features

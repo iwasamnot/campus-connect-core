@@ -327,22 +327,32 @@ const AIHelp = () => {
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
   
-  // Load user profile on mount
+  // Load user profile on mount and when user changes
   useEffect(() => {
     if (user?.uid) {
       getUserProfile(user.uid).then(profile => {
         if (profile) {
           setUserProfile(profile);
           setAssistantNameInput(profile.assistantName || 'AI Assistant');
-          // Update greeting with personalized name
-          if (profile.assistantName && profile.assistantName !== 'AI Assistant') {
-            setMessages([{
-              id: 1,
-              type: 'bot',
-              content: `Hello! I'm ${profile.assistantName}. I can help you with SISTC information, study tips, homework help, and more. What would you like to know?`,
-              timestamp: new Date()
-            }]);
-          }
+          // Update greeting with personalized assistant name and user name
+          const assistantName = profile.assistantName || 'AI Assistant';
+          const userName = profile.userName ? ` ${profile.userName}` : '';
+          const greeting = userName 
+            ? `Hello${userName}! I'm ${assistantName}. I can help you with SISTC information, study tips, homework help, and more. What would you like to know?`
+            : `Hello! I'm ${assistantName}. I can help you with SISTC information, study tips, homework help, and more. What would you like to know?`;
+          
+          // Only update greeting if messages haven't been changed yet (first message is still default)
+          setMessages(prev => {
+            if (prev.length === 1 && prev[0].id === 1) {
+              return [{
+                id: 1,
+                type: 'bot',
+                content: greeting,
+                timestamp: new Date()
+              }];
+            }
+            return prev; // Keep existing messages if conversation has started
+          });
         }
       });
     }
@@ -608,7 +618,7 @@ ${question}
       setMessages(prev => [...prev, botMessage]);
       
       // Update user profile from conversation (debounced)
-      if (user?.uid && messages.length > 2) {
+      if (user?.uid && messages.length > 0) {
         setTimeout(() => {
           updateProfileFromConversation(user.uid, [
             ...messages.filter(m => m.id !== 1),
@@ -855,15 +865,33 @@ ${question}
               <motion.button
                 key={tab.id}
                 onClick={() => {
+                  // Don't reset messages if conversation has already started
+                  if (messages.length > 1) {
+                    setActiveTab(tab.id);
+                    return; // Keep existing conversation
+                  }
+                  
+                  // Only update greeting if it's still the default message
                   setActiveTab(tab.id);
+                  const assistantName = userProfile?.assistantName || 'AI Assistant';
+                  const userName = userProfile?.userName ? ` ${userProfile.userName}` : '';
+                  
+                  const greetings = {
+                    'sistc': userName 
+                      ? `Hello${userName}! I'm ${assistantName}. I can help you with information about courses, campuses, applications, and more.`
+                      : `Hello! I'm ${assistantName}. I can help you with information about courses, campuses, applications, and more.`,
+                    'study-tips': userName
+                      ? `Hello${userName}! I'm ${assistantName}, your study coach! I can help you with time management, memory techniques, productivity tips, and effective learning strategies.`
+                      : `I'm ${assistantName}, your study coach! I can help you with time management, memory techniques, productivity tips, and effective learning strategies.`,
+                    'homework-help': userName
+                      ? `Hello${userName}! I'm ${assistantName}, your homework tutor! I can help you understand concepts, solve problems, and clarify course material. How can I assist you today?`
+                      : `I'm ${assistantName}, your homework tutor! I can help you understand concepts, solve problems, and clarify course material. How can I assist you today?`
+                  };
+                  
                   setMessages([{
                     id: 1,
                     type: 'bot',
-                    content: tab.id === 'sistc' 
-                      ? "Hello! I'm your SISTC AI Assistant. I can help you with information about courses, campuses, applications, and more."
-                      : tab.id === 'study-tips'
-                      ? "I'm your study coach! I can help you with time management, memory techniques, productivity tips, and effective learning strategies."
-                      : "I'm your homework tutor! I can help you understand concepts, solve problems, and clarify course material. How can I assist you today?",
+                    content: greetings[tab.id],
                     timestamp: new Date()
                   }]);
                 }}
