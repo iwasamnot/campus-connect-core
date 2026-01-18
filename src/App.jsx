@@ -147,6 +147,8 @@ const MessageScheduler = createLazyComponent(() => import('./components/MessageS
 const SavedMessages = createLazyComponent(() => import('./components/SavedMessages'), 'Saved Messages');
 const ImageGallery = createLazyComponent(() => import('./components/ImageGallery'), 'Image Gallery');
 const NearbyChat = createLazyComponent(() => import('./components/NearbyChat'), 'Nearby Chat');
+const AIStudyAssistant = createLazyComponent(() => import('./components/AIStudyAssistant'), 'AI Study Assistant');
+const VisualBoard = createLazyComponent(() => import('./components/VisualBoard'), 'Visual Board');
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
   return { default: () => null };
 }));
@@ -480,7 +482,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'private-chat' && (
-                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <PrivateChat />
@@ -521,10 +523,28 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'ai-help' && (
-                  <motion.div key="ai-help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <motion.div key="ai-help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideLeft">
                         <AIHelp />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'study-assistant' && (
+                  <motion.div key="study-assistant" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="slideLeft">
+                        <AIStudyAssistant onClose={() => handleSetActiveView('chat')} />
+                      </AnimatedPage>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'visual-board' && (
+                  <motion.div key="visual-board" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <ErrorBoundary>
+                      <AnimatedPage variant="scale">
+                        <VisualBoard onClose={() => handleSetActiveView('chat')} />
                       </AnimatedPage>
                     </ErrorBoundary>
                   </motion.div>
@@ -539,7 +559,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'groups' && (
-                  <motion.div key="groups" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <motion.div key="groups" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideUp">
                         <Groups 
@@ -567,7 +587,7 @@ function App() {
                   </motion.div>
                 )}
                 {activeView === 'private-chat' && (
-                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <motion.div key="private-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
                     <ErrorBoundary>
                       <AnimatedPage variant="slideRight">
                         <PrivateChat />

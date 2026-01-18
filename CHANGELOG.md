@@ -1,5 +1,52 @@
 # Changelog
 
+## [14.0.0] - 2025-01-XX - Major Update: AI Study Assistant & Visual Collaboration Board
+
+### 🚀 New Major Features
+- **AI Study Assistant**: Intelligent study companion for homework help and learning support
+  - Three specialized modes: General Assistant, Study Tips, and Homework Help
+  - Context-aware responses tailored to student needs
+  - Quick question buttons for common study scenarios
+  - Conversation history for continuous learning support
+- **Visual Collaboration Board (Miro-like)**: Professional whiteboard for brainstorming and visual design
+  - **Real-time Collaboration**: Multiple students can work together simultaneously
+    - Live cursor tracking showing where others are working
+    - Real-time shape synchronization via Firestore
+    - Presence awareness (see who's collaborating)
+    - Automatic conflict resolution with optimistic updates
+  - **Drawing Tools**: Freehand pen tool with customizable stroke width
+  - **Shapes**: Rectangle, circle, triangle, and arrow shapes
+  - **Text Tool**: Add text annotations anywhere on the canvas
+  - **Sticky Notes**: Colorful sticky notes for brainstorming
+  - **Zoom & Pan**: Smooth zoom (50%-300%) and pan navigation
+  - **Grid Background**: Visual grid for alignment
+  - **Color Palette**: 8-color palette for shapes and drawings
+  - **Undo/Redo**: Full history support for all actions
+  - **Selection Tool**: Click to select and manipulate shapes
+  - **Export**: Export boards as images (coming soon)
+  - Perfect for: Flowcharts, mind maps, brainstorming, wireframes, diagrams
+  - **Firestore Integration**: Boards saved to Firestore for persistence and real-time sync
+- **Enhanced Navigation**: Added Study Assistant and Visual Board to main navigation with "NEW" badges
+
+### 🎨 User Experience
+- **Smart Study Support**: Get help with concepts, time management, and problem-solving
+- **Quick Access**: Easy access to study resources from main navigation
+- **Contextual Help**: AI adapts responses based on selected mode
+- **Visual Feedback**: Clear visual indicators for different assistant modes
+
+### 📚 Study Features
+- **Concept Explanation**: Understand complex topics with simplified explanations
+- **Study Tips**: Get personalized advice on time management and productivity
+- **Homework Guidance**: Receive step-by-step guidance (not direct answers)
+- **Learning Strategies**: Discover effective memory and study techniques
+
+### ⚡ Technical Improvements
+- Integrated with multi-AI provider system for reliable responses
+- Optimized for mobile and desktop experiences
+- Responsive layout with proper height constraints
+
+---
+
 ## [13.0.0] - 2025-01-XX - Major Update: Futuristic Features & Modern UX Overhaul
 
 ### 🚀 New Futuristic Features

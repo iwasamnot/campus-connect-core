@@ -4,7 +4,8 @@ import { isAdminRole } from '../utils/helpers';
 import { 
   MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, 
   Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail, Radio,
-  Search, Bell, Command, Star, Clock, TrendingUp, Home, Grid3x3, Menu
+  Search, Bell, Command, Star, Clock, TrendingUp, Home, Grid3x3, Menu, BookOpen, Brain,
+  Layers, Workflow
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CommandPalette from './CommandPalette';
@@ -122,9 +123,11 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
     const items = [
       { id: 'chat', label: 'Campus Chat', icon: MessageSquare, shortcut: 'C', category: 'main' },
       { id: 'ai-help', label: 'AI Help', icon: Bot, shortcut: 'A', category: 'main' },
+      { id: 'study-assistant', label: 'Study Assistant', icon: Brain, shortcut: 'SA', category: 'main', badge: 'NEW' },
       { id: 'groups', label: 'Groups', icon: UserCircle, shortcut: 'G', category: 'main' },
       { id: 'private-chat', label: 'Private Chat', icon: MessageCircle, shortcut: 'P', category: 'main' },
       { id: 'nearby', label: 'Nearby Chat', icon: Radio, shortcut: 'N', category: 'main' },
+      { id: 'visual-board', label: 'Visual Board', icon: Layers, shortcut: 'VB', category: 'tools', badge: 'NEW' },
       { id: 'activity', label: 'Activity', icon: Activity, shortcut: 'D', category: 'tools' },
       { id: 'scheduler', label: 'Scheduler', icon: Calendar, shortcut: 'M', category: 'tools' },
       { id: 'saved', label: 'Saved', icon: Bookmark, shortcut: 'S', category: 'tools' },

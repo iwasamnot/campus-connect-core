@@ -187,7 +187,7 @@ Return ONLY a JSON array, no other text. Example: ["Thanks for the update!", "Th
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide"
+      className="flex items-center gap-2 overflow-x-auto scrollbar-hide max-h-[40px]"
     >
       <div className="flex items-center gap-1 px-2 text-xs text-white/40 whitespace-nowrap">
         <Brain size={12} />

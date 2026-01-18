@@ -276,7 +276,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen h-[100dvh] bg-transparent relative">
+      <div className="flex items-center justify-center h-full min-h-0 bg-transparent relative">
         <FadeIn delay={0.1}>
           <div className="text-center glass-panel rounded-[2rem] p-8 border border-white/10">
             <motion.div
@@ -293,7 +293,7 @@ const Groups = ({ setActiveView, setSelectedGroup }) => {
   }
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] bg-transparent relative overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-transparent relative overflow-hidden">
       {/* Header - Fluid.so aesthetic */}
       <FadeIn delay={0.1}>
         <motion.div 

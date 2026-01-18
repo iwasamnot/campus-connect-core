@@ -643,7 +643,7 @@ ${question}
   };
 
   return (
-    <div className="flex flex-col h-screen bg-transparent relative overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-transparent relative overflow-hidden">
       {/* Header - Fluid.so aesthetic */}
       <FadeIn delay={0.1}>
         <motion.div

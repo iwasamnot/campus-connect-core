@@ -946,7 +946,7 @@ const PrivateChat = () => {
   // If no chat selected, show list of available users - Fluid.so aesthetic
   if (!selectedChatId) {
     return (
-      <div className="h-screen h-[100dvh] flex flex-col bg-transparent relative overflow-hidden">
+      <div className="h-full min-h-0 flex flex-col bg-transparent relative overflow-hidden">
         <FadeIn delay={0.1}>
           <motion.div
             initial={{ opacity: 0, y: -20 }}

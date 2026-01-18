@@ -18,7 +18,8 @@ import {
   clearSyncedMessages,
   onNetworkStatusChange,
   getNetworkStatus,
-  isOnline
+  isOnline,
+  queueOfflineMessage
 } from '../utils/offlineSupport';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedButton, FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';

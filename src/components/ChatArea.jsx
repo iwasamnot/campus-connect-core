@@ -2308,6 +2308,24 @@ const ChatArea = ({ setActiveView }) => {
               </motion.div>
             )}
 
+            {/* AI Smart Replies - Outside form to not affect input layout */}
+            {showSmartReplies && messages.length > 0 && (
+              <div className="mb-2">
+                <AISmartReplies
+                  conversationHistory={messages.slice(-10)}
+                  selectedMessage={selectedMessageForReply}
+                  onSelect={(reply) => {
+                    setNewMessage(reply);
+                    setSelectedMessageForReply(null); // Clear selection after selecting a reply
+                    if (messageInputRef.current) {
+                      messageInputRef.current.focus();
+                    }
+                  }}
+                  userContext={user}
+                />
+              </div>
+            )}
+
             <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
               <div className="flex-1 relative">
                 <label htmlFor="chat-message-input" className="sr-only">Type a message</label>
@@ -2417,22 +2435,6 @@ const ChatArea = ({ setActiveView }) => {
                   />
                 )}
               </div>
-
-              {/* AI Smart Replies */}
-              {showSmartReplies && messages.length > 0 && (
-                <AISmartReplies
-                  conversationHistory={messages.slice(-10)}
-                  selectedMessage={selectedMessageForReply}
-                  onSelect={(reply) => {
-                    setNewMessage(reply);
-                    setSelectedMessageForReply(null); // Clear selection after selecting a reply
-                    if (messageInputRef.current) {
-                      messageInputRef.current.focus();
-                    }
-                  }}
-                  userContext={user}
-                />
-              )}
               
               {/* Action Buttons - Fluid.so aesthetic */}
               <div className="flex items-center gap-2">
