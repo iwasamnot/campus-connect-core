@@ -126,7 +126,7 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
       { id: 'groups', label: 'Groups', icon: UserCircle, shortcut: 'G', category: 'main' },
       { id: 'private-chat', label: 'Private Chat', icon: MessageCircle, shortcut: 'P', category: 'main' },
       { id: 'nearby', label: 'Nearby Chat', icon: Radio, shortcut: 'N', category: 'main' },
-      { id: 'visual-board', label: 'Visual Board', icon: Layers, shortcut: 'VB', category: 'tools', badge: 'NEW' },
+      { id: 'visual-board', label: 'Visual Board', icon: Grid3x3, shortcut: 'VB', category: 'tools', badge: 'NEW' },
       { id: 'activity', label: 'Activity', icon: Activity, shortcut: 'D', category: 'tools' },
       { id: 'scheduler', label: 'Scheduler', icon: Calendar, shortcut: 'M', category: 'tools' },
       { id: 'saved', label: 'Saved', icon: Bookmark, shortcut: 'S', category: 'tools' },

@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layout, Sparkles, Zap, Layers, Grid3x3, Maximize2, Minimize2, X, Settings, Folder, FileText, Clock, TrendingUp } from 'lucide-react';
+import { Layout, Sparkles, Zap, Grid3x3, Maximize2, Minimize2, X, Settings, Folder, FileText, Clock, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { callAI } from '../utils/aiProvider';

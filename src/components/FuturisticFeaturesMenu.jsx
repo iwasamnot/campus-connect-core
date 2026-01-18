@@ -91,7 +91,7 @@ const FuturisticFeaturesMenu = ({
       id: 'quantum-search',
       label: 'Quantum Search',
       description: 'Multiple parallel dimensions',
-      icon: Layers,
+      icon: Grid3x3,
       color: 'blue',
       badge: 'QUANTUM'
     },

@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Sparkles, Zap, Layers, X } from 'lucide-react';
+import { Search, Sparkles, Zap, Grid3x3, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -220,7 +220,7 @@ const QuantumSearch = ({ messages = [], onResultSelect, onClose }) => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Layers className="w-16 h-16 text-white/20 mx-auto mb-4" />
+              <Grid3x3 className="w-16 h-16 text-white/20 mx-auto mb-4" />
               <p className="text-white/40">
                 {isSearching 
                   ? 'Searching across multiple dimensions...'

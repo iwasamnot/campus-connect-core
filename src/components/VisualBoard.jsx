@@ -10,7 +10,7 @@ import {
   Square, Circle, Triangle, ArrowRight, Type, StickyNote, 
   Move, PenTool, Eraser, ZoomIn, ZoomOut, Download, 
   Upload, Trash2, Undo, Redo, Users, X, Minus, Plus,
-  Workflow, Brain, Layers, Link as LinkIcon, FileText, Save,
+  Workflow, Brain, Grid3x3, Link as LinkIcon, FileText, Save,
   Palette, AlignLeft, AlignCenter, AlignRight, ArrowUp, ArrowDown,
   Lock, Unlock, Copy, Scissors, Maximize2, Minimize2, Grid,
   Hexagon, Diamond, Image as ImageIcon, Bold, Italic, Maximize,
