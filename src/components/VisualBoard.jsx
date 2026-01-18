@@ -339,30 +339,47 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       // Cursor position already updated above
     } else if (tool === 'select' && dragStart && (selectedShape || selectedShapes.size > 0)) {
       // Drag selected shape(s) - use proper offset calculation
-      if (!dragStart.shapeX || !dragStart.shapeY) return; // Guard against invalid dragStart
+      if (!dragStart.shapeX || !dragStart.shapeY || lockedShapes.has(selectedShape)) return; // Guard against invalid dragStart and locked shapes
       
       const deltaX = pos.x - dragStart.clickX;
       const deltaY = pos.y - dragStart.clickY;
+      
+      // Don't move if delta is too small (prevents jitter)
+      if (Math.abs(deltaX) < 0.1 && Math.abs(deltaY) < 0.1) return;
       
       const shapeIds = selectedShapes.size > 0 
         ? Array.from(selectedShapes)
         : [selectedShape].filter(Boolean);
       
-      setShapes(shapes.map(s => {
-        if (!shapeIds.includes(s.id) || lockedShapes.has(s.id)) return s;
+      // Move all selected shapes by the same delta
+      // For the first shape, use dragStart positions; for others, maintain relative offset
+      setShapes(prevShapes => {
+        const firstShape = prevShapes.find(s => s.id === selectedShape);
+        if (!firstShape) return prevShapes;
         
-        let newX = s.x + deltaX;
-        let newY = s.y + deltaY;
+        const baseX = dragStart.shapeX !== undefined ? dragStart.shapeX : firstShape.x;
+        const baseY = dragStart.shapeY !== undefined ? dragStart.shapeY : firstShape.y;
+        const newFirstX = baseX + deltaX;
+        const newFirstY = baseY + deltaY;
+        const offsetX = newFirstX - firstShape.x;
+        const offsetY = newFirstY - firstShape.y;
         
-        // Apply snap to grid if enabled
-        if (snapToGrid) {
-          const snap = 20;
-          newX = Math.round(newX / snap) * snap;
-          newY = Math.round(newY / snap) * snap;
-        }
-        
-        return { ...s, x: newX, y: newY };
-      }));
+        return prevShapes.map(s => {
+          if (!shapeIds.includes(s.id) || lockedShapes.has(s.id)) return s;
+          
+          let newX = s.x + offsetX;
+          let newY = s.y + offsetY;
+          
+          // Apply snap to grid if enabled
+          if (snapToGrid) {
+            const snap = 20;
+            newX = Math.round(newX / snap) * snap;
+            newY = Math.round(newY / snap) * snap;
+          }
+          
+          return { ...s, x: newX, y: newY };
+        });
+      });
     }
   };
 
@@ -889,7 +906,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Draw background FIRST (before transform)
+      // Draw background FIRST (before transform) - always cover entire canvas
       ctx.fillStyle = boardBackground;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
@@ -898,24 +915,27 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       ctx.translate(pan.x, pan.y);
       ctx.scale(zoom, zoom);
       
-      // Draw grid (optimized) - only show on dark backgrounds or when snapToGrid is enabled
-      const isLightBackground = boardBackground === '#FFFFFF' || boardBackground === '#F3F4F6';
-      const gridColor = isLightBackground ? '#E5E7EB' : '#1F2937';
+      // Draw grid (optimized) - always show, but with adaptive color
+      const isLightBackground = boardBackground === '#FFFFFF' || boardBackground === '#F3F4F6' || boardBackground === '#FAFAFA';
+      const gridColor = isLightBackground ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
       ctx.strokeStyle = gridColor;
-      ctx.lineWidth = 0.5;
+      ctx.lineWidth = 0.5 / zoom; // Scale line width with zoom for consistency
       const gridSize = 20;
       
-      // Calculate visible grid area accounting for zoom and pan
+      // Calculate visible grid area in canvas coordinates (after transform)
+      // Screen (0,0) maps to canvas (-pan.x/zoom, -pan.y/zoom)
+      // Screen (width,height) maps to canvas ((width-pan.x)/zoom, (height-pan.y)/zoom)
       const viewLeft = -pan.x / zoom;
       const viewTop = -pan.y / zoom;
-      const viewRight = viewLeft + canvas.width / zoom;
-      const viewBottom = viewTop + canvas.height / zoom;
+      const viewRight = (canvas.width - pan.x) / zoom;
+      const viewBottom = (canvas.height - pan.y) / zoom;
       
       const startX = Math.floor(viewLeft / gridSize) * gridSize;
       const startY = Math.floor(viewTop / gridSize) * gridSize;
       const endX = Math.ceil(viewRight / gridSize) * gridSize;
       const endY = Math.ceil(viewBottom / gridSize) * gridSize;
       
+      // Draw grid lines
       for (let x = startX; x <= endX; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, startY);
@@ -936,11 +956,14 @@ const VisualBoard = ({ onClose, boardId = null }) => {
         const isSelected = selectedShape === shape.id || selectedShapes.has(shape.id);
         
         if (shape.type === 'text') {
-          ctx.fillStyle = shape.color || color;
+          ctx.fillStyle = shape.color || color || '#FFFFFF';
           ctx.font = `${shape.fontSize || 16}px sans-serif`;
           ctx.textBaseline = 'top';
           ctx.textAlign = 'left';
-          ctx.fillText(shape.text || '', shape.x, shape.y);
+          const textContent = shape.text || '';
+          if (textContent) {
+            ctx.fillText(textContent, shape.x, shape.y);
+          }
         } else if (shape.type === 'sticky') {
           ctx.fillStyle = shape.color || '#FEF08A';
           ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
@@ -1651,37 +1674,6 @@ const VisualBoard = ({ onClose, boardId = null }) => {
             >
               <Palette size={18} />
             </button>
-            {showColorPicker && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full right-0 mt-2 glass-panel border border-white/10 rounded-xl p-3 z-50"
-              >
-                <p className="text-xs text-white/60 mb-2">Board Color</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {boardColors.map((bc) => (
-                    <button
-                      key={bc.value}
-                      onClick={() => {
-                        setBoardBackground(bc.value);
-                        if (db && currentBoardId) {
-                          updateDoc(doc(db, 'visualBoards', currentBoardId), {
-                            backgroundColor: bc.value
-                          }).catch(() => {});
-                        }
-                        setShowColorPicker(false);
-                      }}
-                      className={`w-8 h-8 rounded transition-all ${
-                        boardBackground === bc.value ? 'ring-2 ring-white' : ''
-                      }`}
-                      style={{ backgroundColor: bc.value }}
-                      title={bc.name}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            )}
           </div>
 
           {onClose && (
@@ -1723,8 +1715,8 @@ const VisualBoard = ({ onClose, boardId = null }) => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute glass-panel border border-white/20 rounded-lg p-2"
               style={{
-                position: 'absolute',
                 left: `${textPosition.x * zoom + pan.x}px`,
                 top: `${textPosition.y * zoom + pan.y}px`,
                 zIndex: 1000
@@ -1782,6 +1774,61 @@ const VisualBoard = ({ onClose, boardId = null }) => {
           </motion.div>
         ))}
       </div>
+
+      {/* Background Color Picker Modal */}
+      <AnimatePresence>
+        {showColorPicker && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100]"
+              onClick={() => setShowColorPicker(false)}
+            />
+            {/* Color Picker */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              className="fixed top-20 right-4 glass-panel border border-white/10 rounded-xl p-3 z-[101] shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-white">Board Color</p>
+                <button
+                  onClick={() => setShowColorPicker(false)}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <X size={16} className="text-white/70" />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {boardColors.map((bc) => (
+                  <button
+                    key={bc.value}
+                    onClick={() => {
+                      setBoardBackground(bc.value);
+                      if (db && currentBoardId) {
+                        updateDoc(doc(db, 'visualBoards', currentBoardId), {
+                          backgroundColor: bc.value
+                        }).catch(() => {});
+                      }
+                      setShowColorPicker(false);
+                    }}
+                    className={`w-10 h-10 rounded transition-all hover:scale-110 ${
+                      boardBackground === bc.value ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900' : ''
+                    }`}
+                    style={{ backgroundColor: bc.value }}
+                    title={bc.name}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Board Manager Modal */}
       <AnimatePresence>
@@ -1873,7 +1920,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
             initial={{ opacity: 0, x: 400 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 400 }}
-            className="absolute right-4 top-20 w-64 glass-panel border border-white/10 rounded-xl p-4 z-30 max-h-[calc(100vh-200px)] overflow-y-auto"
+            className="absolute right-4 top-20 w-64 glass-panel border border-white/10 rounded-xl p-4 z-[90] max-h-[calc(100vh-200px)] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-white">Properties</h3>
