@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, Edit3, Calendar, Brain, CheckSquare, Network, 
-  Mic, X, Zap, TrendingUp, Layout, Users, Heart, Bell
+  Mic, X, Zap, TrendingUp, Layout, Users, Heart, Bell, Grid3x3
 } from 'lucide-react';
 
 /**
