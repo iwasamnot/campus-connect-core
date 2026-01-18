@@ -148,6 +148,9 @@ const SavedMessages = createLazyComponent(() => import('./components/SavedMessag
 const ImageGallery = createLazyComponent(() => import('./components/ImageGallery'), 'Image Gallery');
 const NearbyChat = createLazyComponent(() => import('./components/NearbyChat'), 'Nearby Chat');
 const VisualBoard = createLazyComponent(() => import('./components/VisualBoard'), 'Visual Board');
+const AIMindMap = createLazyComponent(() => import('./components/AIMindMap'), 'AI Mind Map');
+const NeuralMessageComposer = createLazyComponent(() => import('./components/NeuralMessageComposer'), 'Neural Message Composer');
+const QuantumSearch = createLazyComponent(() => import('./components/QuantumSearch'), 'Quantum Search');
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
   return { default: () => null };
 }));

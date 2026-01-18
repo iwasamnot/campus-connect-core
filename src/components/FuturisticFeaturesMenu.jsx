@@ -70,6 +70,30 @@ const FuturisticFeaturesMenu = ({
       icon: Network,
       color: 'cyan',
       badge: 'GRAPH'
+    },
+    {
+      id: 'mindmap',
+      label: 'AI Mind Map',
+      description: 'Visual conversation mapping',
+      icon: Brain,
+      color: 'purple',
+      badge: 'FUTURE'
+    },
+    {
+      id: 'neural-composer',
+      label: 'Neural Composer',
+      description: 'AI writes entire messages',
+      icon: Zap,
+      color: 'cyan',
+      badge: 'NEURAL'
+    },
+    {
+      id: 'quantum-search',
+      label: 'Quantum Search',
+      description: 'Multiple parallel dimensions',
+      icon: Layers,
+      color: 'blue',
+      badge: 'QUANTUM'
     }
   ];
 
