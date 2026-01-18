@@ -151,6 +151,10 @@ const VisualBoard = createLazyComponent(() => import('./components/VisualBoard')
 const AIMindMap = createLazyComponent(() => import('./components/AIMindMap'), 'AI Mind Map');
 const NeuralMessageComposer = createLazyComponent(() => import('./components/NeuralMessageComposer'), 'Neural Message Composer');
 const QuantumSearch = createLazyComponent(() => import('./components/QuantumSearch'), 'Quantum Search');
+const SmartWorkspace = createLazyComponent(() => import('./components/SmartWorkspace'), 'Smart Workspace');
+const AIStudyGroups = createLazyComponent(() => import('./components/AIStudyGroups'), 'AI Study Groups');
+const EmotionPredictionEngine = createLazyComponent(() => import('./components/EmotionPredictionEngine'), 'Emotion Prediction Engine');
+const SmartNotifications = createLazyComponent(() => import('./components/SmartNotifications'), 'Smart Notifications');
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
   return { default: () => null };
 }));

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, Edit3, Calendar, Brain, CheckSquare, Network, 
-  Mic, X, Zap, TrendingUp 
+  Mic, X, Zap, TrendingUp, Layout, Users, Heart, Bell
 } from 'lucide-react';
 
 /**
@@ -94,6 +94,38 @@ const FuturisticFeaturesMenu = ({
       icon: Layers,
       color: 'blue',
       badge: 'QUANTUM'
+    },
+    {
+      id: 'smart-workspace',
+      label: 'Smart Workspace',
+      description: 'AI-organized workspace',
+      icon: Layout,
+      color: 'purple',
+      badge: 'AI'
+    },
+    {
+      id: 'ai-study-groups',
+      label: 'AI Study Groups',
+      description: 'Intelligent group formation',
+      icon: Users,
+      color: 'cyan',
+      badge: 'NEW'
+    },
+    {
+      id: 'emotion-prediction',
+      label: 'Emotion Prediction',
+      description: 'Predict message reception',
+      icon: Heart,
+      color: 'pink',
+      badge: 'NEURAL'
+    },
+    {
+      id: 'smart-notifications',
+      label: 'Smart Notifications',
+      description: 'AI-prioritized alerts',
+      icon: Bell,
+      color: 'blue',
+      badge: 'SMART'
     }
   ];
 
