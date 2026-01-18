@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
-import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles } from 'lucide-react';
+import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Brain, Lightbulb, HelpCircle, Clock, TrendingUp, Book } from 'lucide-react';
+import { callAI } from '../utils/aiProvider';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 
@@ -316,6 +317,7 @@ const AIHelp = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-2.5-flash'); // Default model (latest 2026 version)
+  const [activeTab, setActiveTab] = useState('sistc'); // sistc, study-tips, homework-help
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
@@ -514,24 +516,47 @@ ${question}
     return localAnswer;
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
+  const handleSend = async (e, customQuestion = null) => {
+    if (e) e.preventDefault();
+    const question = customQuestion || input.trim();
+    if (!question || loading) return;
 
     const userMessage = {
       id: Date.now(),
       type: 'user',
-      content: input.trim(),
+      content: question,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    const question = input.trim();
-    setInput('');
+    const questionText = question;
+    if (!customQuestion) setInput('');
     setLoading(true);
 
     try {
-      const answer = await getHybridAIResponse(question);
+      let answer;
+      
+      // Use different AI based on active tab
+      if (activeTab === 'sistc') {
+        // SISTC tab: Use hybrid AI with knowledge base
+        answer = await getHybridAIResponse(questionText);
+      } else {
+        // Study tips/homework: Use multi-provider AI
+        let systemPrompt = 'You are a helpful AI study assistant for university students. Provide clear, educational, and supportive responses.';
+        
+        if (activeTab === 'study-tips') {
+          systemPrompt = 'You are an expert study coach. Provide practical study tips, time management advice, and learning strategies.';
+        } else if (activeTab === 'homework-help') {
+          systemPrompt = 'You are a tutor that helps students understand concepts and solve problems. Guide them to solutions rather than giving direct answers.';
+        }
+
+        const prompt = `${questionText}\n\nProvide a helpful, educational response.`;
+        answer = await callAI(prompt, {
+          systemPrompt,
+          maxTokens: 1000,
+          temperature: 0.7
+        });
+      }
 
       if (!answer || answer.trim() === '') {
         throw new Error('No answer generated');
@@ -546,9 +571,15 @@ ${question}
     } catch (err) {
       console.error('Error getting AI response:', err);
       
-      // Final fallback to local knowledge base
+      // Final fallback to local knowledge base (for SISTC) or error message
       try {
-        const fallbackAnswer = ai.current.processQuestion(question);
+        let fallbackAnswer;
+        if (activeTab === 'sistc') {
+          fallbackAnswer = ai.current.processQuestion(questionText);
+        } else {
+          fallbackAnswer = "I apologize, but I'm having trouble accessing my AI service right now. Please try again later.";
+        }
+        
         const botMessage = {
           id: Date.now() + 1,
           type: 'bot',
@@ -571,23 +602,32 @@ ${question}
     }
   };
 
-  const quickQuestions = [
-    { icon: GraduationCap, text: "What courses do you offer?", question: "What courses do you offer?" },
-    { icon: MapPin, text: "Where are your campuses?", question: "Where are your campuses located?" },
-    { icon: Phone, text: "How can I contact you?", question: "How can I contact SISTC?" },
-    { icon: BookOpen, text: "How do I apply?", question: "What is the application process?" },
-    { icon: Calendar, text: "What are the entry requirements?", question: "What are the entry requirements for the Bachelor program?" }
-  ];
+  const quickQuestions = {
+    'sistc': [
+      { icon: GraduationCap, text: "What courses do you offer?", question: "What courses do you offer?" },
+      { icon: MapPin, text: "Where are your campuses?", question: "Where are your campuses located?" },
+      { icon: Phone, text: "How can I contact you?", question: "How can I contact SISTC?" },
+      { icon: BookOpen, text: "How do I apply?", question: "What is the application process?" },
+      { icon: Calendar, text: "What are the entry requirements?", question: "What are the entry requirements for the Bachelor program?" }
+    ],
+    'study-tips': [
+      { icon: Clock, text: "Time management", question: "How can I better manage my study time?" },
+      { icon: Brain, text: "Memory techniques", question: "What memory techniques work best for exams?" },
+      { icon: TrendingUp, text: "Productivity", question: "How can I be more productive while studying?" },
+      { icon: HelpCircle, text: "Study schedule", question: "How should I organize my study schedule?" },
+      { icon: Lightbulb, text: "Learning strategies", question: "What are effective learning strategies?" }
+    ],
+    'homework-help': [
+      { icon: Book, text: "Problem solving", question: "Can you help me understand how to approach this problem?" },
+      { icon: GraduationCap, text: "Course help", question: "I need help with my course material" },
+      { icon: HelpCircle, text: "Concept clarification", question: "Can you clarify this concept for me?" },
+      { icon: BookOpen, text: "Explain concept", question: "Can you explain this concept in simple terms?" },
+      { icon: Brain, text: "Study techniques", question: "What study techniques work best for this subject?" }
+    ]
+  };
 
   const handleQuickQuestion = (question) => {
-    setInput(question);
-    setTimeout(() => {
-      const form = document.querySelector('form');
-      if (form) {
-        const event = new Event('submit', { bubbles: true, cancelable: true });
-        form.dispatchEvent(event);
-      }
-    }, 100);
+    handleSend(null, question);
   };
 
   const formatMessage = (content) => {
@@ -674,14 +714,53 @@ ${question}
                       Gemini AI
                     </span>
                   )}
+                  <span className="px-2 py-1 bg-gradient-to-r from-indigo-600/40 to-purple-600/40 border border-indigo-500/50 text-indigo-200 text-xs font-semibold rounded-full">
+                    NEW
+                  </span>
                 </div>
                 <p className="text-xs md:text-sm text-white/60 hidden sm:block">
                   {import.meta.env.VITE_GEMINI_API_KEY?.trim()
-                    ? 'Intelligent AI: Powered by Google Gemini enhanced with SISTC knowledge base'
-                    : 'Intelligent answers about SISTC courses, campuses, and more'}
+                    ? 'Intelligent AI: SISTC info, study tips & homework help in one place'
+                    : 'Intelligent answers about SISTC courses, campuses, study tips & more'}
                 </p>
               </div>
             </div>
+          </div>
+          
+          {/* Tabs */}
+          <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+            {[
+              { id: 'sistc', label: 'SISTC Info', icon: GraduationCap },
+              { id: 'study-tips', label: 'Study Tips', icon: Lightbulb },
+              { id: 'homework-help', label: 'Homework', icon: BookOpen }
+            ].map(tab => (
+              <motion.button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setMessages([{
+                    id: 1,
+                    type: 'bot',
+                    content: tab.id === 'sistc' 
+                      ? "Hello! I'm your SISTC AI Assistant. I can help you with information about courses, campuses, applications, and more."
+                      : tab.id === 'study-tips'
+                      ? "I'm your study coach! I can help you with time management, memory techniques, productivity tips, and effective learning strategies."
+                      : "I'm your homework tutor! I can help you understand concepts, solve problems, and clarify course material. How can I assist you today?",
+                    timestamp: new Date()
+                  }]);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                <tab.icon size={16} />
+                <span>{tab.label}</span>
+              </motion.button>
+            ))}
           </div>
         </motion.div>
       </FadeIn>
@@ -694,7 +773,7 @@ ${question}
         className="glass-panel border-b border-white/10 px-4 md:px-6 py-2 md:py-3 flex-shrink-0"
       >
         <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
-          {quickQuestions.map((q, idx) => (
+          {quickQuestions[activeTab]?.map((q, idx) => (
             <motion.button
               key={idx}
               onClick={() => handleQuickQuestion(q.question)}

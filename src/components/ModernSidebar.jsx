@@ -122,8 +122,7 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
   const navItems = useMemo(() => {
     const items = [
       { id: 'chat', label: 'Campus Chat', icon: MessageSquare, shortcut: 'C', category: 'main' },
-      { id: 'ai-help', label: 'AI Help', icon: Bot, shortcut: 'A', category: 'main' },
-      { id: 'study-assistant', label: 'Study Assistant', icon: Brain, shortcut: 'SA', category: 'main', badge: 'NEW' },
+      { id: 'ai-help', label: 'AI Help', icon: Bot, shortcut: 'A', category: 'main', badge: 'NEW' },
       { id: 'groups', label: 'Groups', icon: UserCircle, shortcut: 'G', category: 'main' },
       { id: 'private-chat', label: 'Private Chat', icon: MessageCircle, shortcut: 'P', category: 'main' },
       { id: 'nearby', label: 'Nearby Chat', icon: Radio, shortcut: 'N', category: 'main' },
