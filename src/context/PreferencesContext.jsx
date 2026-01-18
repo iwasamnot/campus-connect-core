@@ -32,7 +32,19 @@ const PreferencesProvider = ({ children }) => {
         autoDeleteDays: 30,
         compactMode: false,
         soundEnabled: true,
-        keyboardShortcuts: true
+        keyboardShortcuts: true,
+        // New preferences
+        messageNotifications: true,
+        groupNotifications: true,
+        mentionNotifications: true,
+        profileVisible: true,
+        locationSharing: false,
+        blockUnknown: false,
+        autoSaveMessages: true,
+        emojiReactions: true,
+        highContrast: false,
+        reduceMotion: false,
+        screenReader: false
       };
     }
     
@@ -57,7 +69,19 @@ const PreferencesProvider = ({ children }) => {
       autoDeleteDays: 30,
       compactMode: false,
       soundEnabled: true,
-      keyboardShortcuts: true
+      keyboardShortcuts: true,
+      // New preferences
+      messageNotifications: true,
+      groupNotifications: true,
+      mentionNotifications: true,
+      profileVisible: true,
+      locationSharing: false,
+      blockUnknown: false,
+      autoSaveMessages: true,
+      emojiReactions: true,
+      highContrast: false,
+      reduceMotion: false,
+      screenReader: false
     };
   });
 
@@ -132,7 +156,19 @@ const PreferencesProvider = ({ children }) => {
       autoDeleteDays: 30,
       compactMode: false,
       soundEnabled: true,
-      keyboardShortcuts: true
+      keyboardShortcuts: true,
+      // New preferences
+      messageNotifications: true,
+      groupNotifications: true,
+      mentionNotifications: true,
+      profileVisible: true,
+      locationSharing: false,
+      blockUnknown: false,
+      autoSaveMessages: true,
+      emojiReactions: true,
+      highContrast: false,
+      reduceMotion: false,
+      screenReader: false
     };
     setPreferences(defaultPrefs);
     localStorage.setItem('userPreferences', JSON.stringify(defaultPrefs));
