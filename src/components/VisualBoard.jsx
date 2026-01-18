@@ -83,9 +83,11 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   const [snapToGrid, setSnapToGrid] = useState(false); // Snap to grid
   const [saving, setSaving] = useState(false); // Auto-save indicator
   const [lockedShapes, setLockedShapes] = useState(new Set()); // Locked shapes
+  const [imageCache, setImageCache] = useState({}); // Cache loaded images
   const fileInputRef = useRef(null); // File input for image upload
   const isLocalUpdate = useRef(false); // Prevent update loops
   const debounceTimer = useRef(null);
+  const imagesLoadedRef = useRef({}); // Track loaded images for canvas
 
   const colors = [
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
@@ -264,6 +266,9 @@ const VisualBoard = ({ onClose, boardId = null }) => {
 
   // Handle mouse move
   const handleMouseMove = (e) => {
+    const pos = getMousePos(e);
+    setCursorPosition(pos); // Always update cursor for connector preview
+    
     if (isPanning) {
       setPan({
         x: e.clientX - panStart.x,
@@ -272,42 +277,99 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       return;
     }
 
-    if (isDrawing && tool === 'pen') {
-      const pos = getMousePos(e);
+    if (isSelecting && tool === 'select') {
+      // Update selection box
+      const startX = selectionBox?.x || pos.x;
+      const startY = selectionBox?.y || pos.y;
+      setSelectionBox({
+        x: Math.min(startX, pos.x),
+        y: Math.min(startY, pos.y),
+        width: Math.abs(pos.x - startX),
+        height: Math.abs(pos.y - startY)
+      });
+    } else if (isDrawing && tool === 'pen') {
       setDrawPath([...drawPath, pos]);
     } else if (tool === 'shape' && selectedShape) {
-      const pos = getMousePos(e);
-      setShapes(shapes.map(s => 
-        s.id === selectedShape
-          ? { ...s, width: pos.x - s.x, height: pos.y - s.y }
-          : s
-      ));
-    } else if (tool === 'connector' && connectorStart) {
-      const pos = getMousePos(e);
-      setCursorPosition(pos); // Update cursor for preview
-    } else if (tool === 'select' && selectedShape) {
-      // Move selected shape
-      const pos = getMousePos(e);
       const shape = shapes.find(s => s.id === selectedShape);
       if (shape) {
-        const dx = pos.x - (shape.x + (shape.width || 0) / 2);
-        const dy = pos.y - (shape.y + (shape.height || 0) / 2);
+        const newWidth = pos.x - shape.x;
+        const newHeight = pos.y - shape.y;
         setShapes(shapes.map(s => 
           s.id === selectedShape
-            ? { ...s, x: s.x + dx, y: s.y + dy }
+            ? { ...s, width: newWidth, height: newHeight }
             : s
         ));
       }
+    } else if (tool === 'connector' && connectorStart) {
+      // Cursor position already updated above
+    } else if (tool === 'select' && dragStart && selectedShape) {
+      // Drag selected shape(s)
+      const deltaX = pos.x - dragStart.x;
+      const deltaY = pos.y - dragStart.y;
+      const newShapeX = dragStart.shapeX + deltaX;
+      const newShapeY = dragStart.shapeY + deltaY;
+      
+      // Apply snap to grid if enabled
+      const snap = snapToGrid ? 20 : 1;
+      const snappedX = Math.round(newShapeX / snap) * snap;
+      const snappedY = Math.round(newShapeY / snap) * snap;
+      
+      const shapeIds = selectedShapes.size > 0 
+        ? Array.from(selectedShapes)
+        : [selectedShape];
+      
+      const shapesToMove = shapes.filter(s => shapeIds.includes(s.id));
+      const minX = Math.min(...shapesToMove.map(s => s.x - (dragStart.shapeX - s.x)));
+      const minY = Math.min(...shapesToMove.map(s => s.y - (dragStart.shapeY - s.y)));
+      
+      setShapes(shapes.map(s => {
+        if (!shapeIds.includes(s.id) || lockedShapes.has(s.id)) return s;
+        const offsetX = s.x - dragStart.shapeX;
+        const offsetY = s.y - dragStart.shapeY;
+        return {
+          ...s,
+          x: snapToGrid ? snappedX + offsetX : newShapeX + offsetX,
+          y: snapToGrid ? snappedY + offsetY : newShapeY + offsetY
+        };
+      }));
     }
   };
 
   // Handle mouse up
   const handleMouseUp = () => {
-    if (isDrawing && tool === 'pen' && drawPath.length > 0) {
+    // Finalize selection box
+    if (isSelecting && selectionBox && selectionBox.width > 5 && selectionBox.height > 5) {
+      const selectedIds = new Set();
+      shapes.forEach(shape => {
+        if (lockedShapes.has(shape.id)) return;
+        const shapeLeft = shape.x;
+        const shapeRight = shape.x + (shape.width || 100);
+        const shapeTop = shape.y;
+        const shapeBottom = shape.y + (shape.height || 100);
+        
+        const boxLeft = Math.min(selectionBox.x, selectionBox.x + selectionBox.width);
+        const boxRight = Math.max(selectionBox.x, selectionBox.x + selectionBox.width);
+        const boxTop = Math.min(selectionBox.y, selectionBox.y + selectionBox.height);
+        const boxBottom = Math.max(selectionBox.y, selectionBox.y + selectionBox.height);
+        
+        // Check if shape overlaps with selection box
+        if (shapeRight > boxLeft && shapeLeft < boxRight && shapeBottom > boxTop && shapeTop < boxBottom) {
+          selectedIds.add(shape.id);
+        }
+      });
+      
+      if (selectedIds.size > 0) {
+        setSelectedShapes(selectedIds);
+        setSelectedShape(Array.from(selectedIds)[0]);
+      }
+      setSelectionBox(null);
+    }
+    
+    if (isDrawing && tool === 'pen' && drawPath.length > 1) {
       const newPath = {
         id: Date.now(),
         type: 'path',
-        points: drawPath,
+        points: [...drawPath],
         color,
         strokeWidth
       };
@@ -318,8 +380,12 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       // Finalize shape on mouse up
       saveToHistory();
     }
+    
     setIsDrawing(false);
     setIsPanning(false);
+    setIsSelecting(false);
+    setDragStart(null);
+    setResizingHandle(null);
   };
 
   // Handle text input
@@ -821,96 +887,100 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       
       // Draw shapes
       shapes.forEach(shape => {
-      if (shape.type === 'text') {
-        ctx.fillStyle = shape.color || color;
-        ctx.font = `${shape.fontSize || 16}px sans-serif`;
-        ctx.textBaseline = 'top'; // Fix text positioning
-        ctx.fillText(shape.text || '', shape.x, shape.y);
-      } else if (shape.type === 'sticky') {
-        ctx.fillStyle = shape.color || '#FEF08A';
-        ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
-        ctx.strokeStyle = '#D97706';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-        ctx.fillStyle = '#000';
-        ctx.font = '14px sans-serif';
-        ctx.textBaseline = 'top'; // Fix text positioning
-        ctx.fillText(shape.text || 'New note', shape.x + 10, shape.y + 20);
-      } else if (shape.type === 'connector') {
-        // Draw connector line between shapes
-        ctx.strokeStyle = shape.color || '#666';
-        ctx.lineWidth = shape.strokeWidth || 2;
-        ctx.beginPath();
-        ctx.moveTo(shape.fromX, shape.fromY);
-        ctx.lineTo(shape.toX, shape.toY);
-        ctx.stroke();
-        // Draw arrowhead
-        const angle = Math.atan2(shape.toY - shape.fromY, shape.toX - shape.fromX);
-        ctx.beginPath();
-        ctx.moveTo(shape.toX, shape.toY);
-        ctx.lineTo(shape.toX - 10 * Math.cos(angle - Math.PI / 6), shape.toY - 10 * Math.sin(angle - Math.PI / 6));
-        ctx.moveTo(shape.toX, shape.toY);
-        ctx.lineTo(shape.toX - 10 * Math.cos(angle + Math.PI / 6), shape.toY - 10 * Math.sin(angle + Math.PI / 6));
-        ctx.stroke();
-      } else if (shape.type === 'image') {
-        // Draw image shape
-        if (shape.url || shape.src) {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            ctx.drawImage(img, shape.x, shape.y, shape.width || img.width, shape.height || img.height);
-          };
-          img.src = shape.url || shape.src;
-        } else {
-          // Placeholder if image not loaded
-          ctx.fillStyle = '#666';
-          ctx.fillRect(shape.x, shape.y, shape.width || 200, shape.height || 150);
-          ctx.strokeStyle = '#999';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(shape.x, shape.y, shape.width || 200, shape.height || 150);
-        }
-      } else {
-        drawShape(ctx, shape);
-      }
-      
-      // Draw lock indicator
-      if (lockedShapes.has(shape.id)) {
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.8)'; // Yellow overlay
-        ctx.fillRect(shape.x - 2, shape.y - 2, (shape.width || 100) + 4, (shape.height || 100) + 4);
-        ctx.fillStyle = '#000';
-        ctx.font = '20px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('🔒', shape.x + (shape.width || 100) / 2, shape.y + (shape.height || 100) / 2);
-      }
-      
-      // Draw selection (single and multi-select)
-      if (selectedShape === shape.id || selectedShapes.has(shape.id)) {
-        ctx.strokeStyle = '#3B82F6';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
-        ctx.strokeRect(shape.x - 5, shape.y - 5, 
-          (shape.width || 100) + 10, (shape.height || 100) + 10);
-        ctx.setLineDash([]);
+        // Skip locked shapes - they'll be drawn with overlay later
+        const isLocked = lockedShapes.has(shape.id);
+        const isSelected = selectedShape === shape.id || selectedShapes.has(shape.id);
         
-        // Draw resize handles for selected shapes
-        if (selectedShape === shape.id && (shape.type === 'rectangle' || shape.type === 'circle' || shape.type === 'sticky')) {
-          const handles = [
-            { x: shape.x - 5, y: shape.y - 5 },
-            { x: shape.x + (shape.width || 0) + 5, y: shape.y - 5 },
-            { x: shape.x - 5, y: shape.y + (shape.height || 0) + 5 },
-            { x: shape.x + (shape.width || 0) + 5, y: shape.y + (shape.height || 0) + 5 }
-          ];
-          handles.forEach(handle => {
-            ctx.fillStyle = '#3B82F6';
-            ctx.fillRect(handle.x - 3, handle.y - 3, 6, 6);
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(handle.x - 3, handle.y - 3, 6, 6);
-          });
+        if (shape.type === 'text') {
+          ctx.fillStyle = shape.color || color;
+          ctx.font = `${shape.fontSize || 16}px sans-serif`;
+          ctx.textBaseline = 'top';
+          ctx.textAlign = 'left';
+          ctx.fillText(shape.text || '', shape.x, shape.y);
+        } else if (shape.type === 'sticky') {
+          ctx.fillStyle = shape.color || '#FEF08A';
+          ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
+          ctx.strokeStyle = '#D97706';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+          ctx.fillStyle = '#000';
+          ctx.font = '14px sans-serif';
+          ctx.textBaseline = 'top';
+          ctx.textAlign = 'left';
+          ctx.fillText(shape.text || 'New note', shape.x + 10, shape.y + 20);
+        } else if (shape.type === 'connector') {
+          // Draw connector line between shapes
+          ctx.strokeStyle = shape.color || '#666';
+          ctx.lineWidth = shape.strokeWidth || 2;
+          ctx.beginPath();
+          ctx.moveTo(shape.fromX, shape.fromY);
+          ctx.lineTo(shape.toX, shape.toY);
+          ctx.stroke();
+          // Draw arrowhead
+          const angle = Math.atan2(shape.toY - shape.fromY, shape.toX - shape.fromX);
+          ctx.beginPath();
+          ctx.moveTo(shape.toX, shape.toY);
+          ctx.lineTo(shape.toX - 10 * Math.cos(angle - Math.PI / 6), shape.toY - 10 * Math.sin(angle - Math.PI / 6));
+          ctx.moveTo(shape.toX, shape.toY);
+          ctx.lineTo(shape.toX - 10 * Math.cos(angle + Math.PI / 6), shape.toY - 10 * Math.sin(angle + Math.PI / 6));
+          ctx.stroke();
+        } else if (shape.type === 'image') {
+          // Draw image if loaded, otherwise placeholder
+          const imgUrl = shape.url || shape.src;
+          const cachedImg = imagesLoadedRef.current[imgUrl];
+          if (cachedImg && cachedImg.complete) {
+            ctx.drawImage(cachedImg, shape.x, shape.y, shape.width || 200, shape.height || 150);
+          } else {
+            // Placeholder while loading
+            ctx.fillStyle = '#666';
+            ctx.fillRect(shape.x, shape.y, shape.width || 200, shape.height || 150);
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(shape.x, shape.y, shape.width || 200, shape.height || 150);
+          }
+        } else {
+          drawShape(ctx, shape);
         }
-      }
-    });
+        
+        // Draw lock overlay on top of shape
+        if (isLocked) {
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.5)';
+          ctx.fillRect(shape.x - 2, shape.y - 2, (shape.width || 100) + 4, (shape.height || 100) + 4);
+          ctx.fillStyle = '#000';
+          ctx.font = '16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🔒', shape.x + (shape.width || 100) / 2, shape.y + (shape.height || 100) / 2);
+        }
+        
+        // Draw selection outline (drawn after shape)
+        if (isSelected && !isLocked) {
+          ctx.strokeStyle = '#3B82F6';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          const shapeWidth = shape.width || 100;
+          const shapeHeight = shape.height || 100;
+          ctx.strokeRect(shape.x - 5, shape.y - 5, shapeWidth + 10, shapeHeight + 10);
+          ctx.setLineDash([]);
+          
+          // Draw resize handles for selected single shape
+          if (selectedShape === shape.id && (shape.type === 'rectangle' || shape.type === 'circle' || shape.type === 'sticky' || shape.type === 'image')) {
+            const handles = [
+              { x: shape.x - 5, y: shape.y - 5 },
+              { x: shape.x + shapeWidth + 5, y: shape.y - 5 },
+              { x: shape.x - 5, y: shape.y + shapeHeight + 5 },
+              { x: shape.x + shapeWidth + 5, y: shape.y + shapeHeight + 5 }
+            ];
+            handles.forEach(handle => {
+              ctx.fillStyle = '#3B82F6';
+              ctx.fillRect(handle.x - 3, handle.y - 3, 6, 6);
+              ctx.strokeStyle = '#fff';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(handle.x - 3, handle.y - 3, 6, 6);
+            });
+          }
+        }
+      });
     
     // Draw selection box
     if (selectionBox) {
@@ -973,6 +1043,26 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     window.addEventListener('resize', updateCanvasSize);
     return () => window.removeEventListener('resize', updateCanvasSize);
   }, []);
+
+  // Load images for image shapes
+  useEffect(() => {
+    shapes.filter(s => s.type === 'image').forEach(shape => {
+      const imgUrl = shape.url || shape.src;
+      if (!imgUrl || imagesLoadedRef.current[imgUrl]) return;
+      
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        imagesLoadedRef.current[imgUrl] = img;
+        // Trigger re-render
+        setImageCache(prev => ({ ...prev, [imgUrl]: true }));
+      };
+      img.onerror = () => {
+        console.warn('Failed to load image:', imgUrl);
+      };
+      img.src = imgUrl;
+    });
+  }, [shapes]);
 
   // Load user's boards
   useEffect(() => {
@@ -1044,14 +1134,16 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       const boardData = snapshot.data();
       const remoteShapes = boardData.shapes || [];
       
-      // Only update if change came from another user
-      if (!isLocalUpdate.current) {
+      // Only update if change came from another user (not our local update)
+      // Use a flag to prevent update loops
+      const isOurUpdate = debounceTimer.current !== null;
+      
+      if (!isOurUpdate && JSON.stringify(remoteShapes) !== JSON.stringify(shapes)) {
         setShapes(remoteShapes);
         if (boardData.backgroundColor && boardData.backgroundColor !== boardBackground) {
           setBoardBackground(boardData.backgroundColor);
         }
       }
-      isLocalUpdate.current = false;
     });
 
     return () => unsubscribe();
