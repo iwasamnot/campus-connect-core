@@ -2112,7 +2112,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
           className="absolute right-4 top-20 p-2 glass-panel border border-white/10 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all z-20"
           title="Show Properties"
         >
-          <Layers size={18} />
+          <Grid3x3 size={18} />
         </motion.button>
       )}
 
