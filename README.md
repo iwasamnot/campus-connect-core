@@ -224,6 +224,68 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - ↑: Edit last message
   - Tab: Autocomplete mentions
   - Esc: Close modals
+- **Command Palette**: Fast navigation and command execution (Ctrl/Cmd + K)
+  - Search and navigate to any view instantly
+  - Keyboard shortcuts for all features
+  - Quick actions for common tasks
+  - Admin commands (if admin)
+  - Fuzzy search with smart filtering
+- **Notification Center**: Centralized notification management
+  - Real-time notifications for messages, mentions, and updates
+  - Mark as read/unread
+  - Filter and search notifications
+  - Notification preferences
+- **Voice Commands**: Hands-free navigation using natural language
+  - Navigate using voice commands
+  - "Go to chat", "Open AI Help", etc.
+  - Voice-activated actions
+  - Browser Speech Recognition API integration
+- **AI Predictive Typing**: Intelligent autocomplete as you type
+  - Context-aware suggestions based on conversation history
+  - AI-powered completion
+  - Learns from your writing style
+  - Saves typing time with smart predictions
+- **Contextual Actions**: Smart action suggestions based on message content
+  - AI analyzes message content to suggest actions
+  - Smart suggestions like "Create poll", "Schedule reminder", etc.
+  - Context-aware recommendations
+- **Smart Categorization**: Automatic message tagging using AI
+  - AI automatically tags messages by topic
+  - Categorizes: Questions, Announcements, Discussions, etc.
+  - Filter messages by category
+  - Improves message organization
+- **Relationship Graph**: Visual communication network analysis
+  - See your communication network visually
+  - Identify key connections and communities
+  - Network visualization with interactive graphs
+  - Relationship strength indicators
+- **Smart Task Extractor**: Automatic task extraction from conversations
+  - AI extracts tasks and action items from messages
+  - Creates task lists automatically
+  - Reminders for extracted tasks
+  - Integration with message scheduler
+- **AI Conversation Insights**: Deep analytics dashboard with sentiment analysis
+  - Conversation sentiment tracking (positive/neutral/negative)
+  - Engagement metrics and patterns
+  - Topic analysis and trending subjects
+  - Key points extraction
+  - Suggestions for better communication
+- **Predictive Scheduler**: AI-optimized message send times
+  - AI suggests optimal send times based on recipient behavior
+  - Considers time zones and activity patterns
+  - Multiple time suggestions per message
+  - Behavioral learning over time
+- **Voice Emotion Detection**: Real-time emotion recognition from voice
+  - Detects emotions from voice tone (happy, sad, neutral, etc.)
+  - Real-time emotion analysis during voice messages
+  - Emotion confidence scoring
+  - Transcript with emotion tags
+- **Collaborative Editor**: Multi-user real-time text editing
+  - Multiple users can edit simultaneously
+  - Live cursor tracking showing where others are working
+  - Real-time synchronization via Firestore
+  - Conflict resolution with optimistic updates
+  - Presence awareness
 - **Message Drafts**: Auto-save drafts as you type
   - Automatically saves drafts as you type (debounced)
   - Restores when returning to chat
