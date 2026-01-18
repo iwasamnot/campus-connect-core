@@ -5,7 +5,7 @@ import {
   MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, 
   Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail, Radio,
   Search, Bell, Command, Star, Clock, TrendingUp, Home, Grid3x3, Menu, BookOpen, Brain,
-  Grid3x3, Workflow
+  Workflow
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CommandPalette from './CommandPalette';
