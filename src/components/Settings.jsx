@@ -8,7 +8,7 @@ const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole
   ? window.__isAdminRole 
   : (role) => role === 'admin' || role === 'admin1';
 import { 
-  Moon, Sun, LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, 
+  LogOut, User, Settings as SettingsIcon, Bell, Shield, HelpCircle, Info, 
   Palette, Type, Eye, EyeOff, Forward, Keyboard, Volume2, VolumeX, RotateCcw, Sparkles, 
   Minus, Droplet, Database, Download, Trash2, Lock, Globe, Smartphone, Monitor, Laptop,
   HardDrive, Wifi, WifiOff, Mic, MicOff, Camera, CameraOff, MapPin, MapPinOff, 
@@ -21,7 +21,7 @@ import { useToast } from '../context/ToastContext';
 
 const Settings = ({ setActiveView }) => {
   const { user, userRole, signOut } = useAuth();
-  const { darkMode, toggleDarkMode, themeStyle, changeThemeStyle } = useTheme();
+  const { themeStyle, changeThemeStyle } = useTheme();
   const { preferences, updatePreference, resetPreferences } = usePreferences();
   const { success, error: showError } = useToast();
   const [activeTab, setActiveTab] = useState('appearance');
@@ -211,14 +211,7 @@ const Settings = ({ setActiveView }) => {
               >
                 <SettingSection title="Theme" icon={Palette}>
                   <div className="space-y-4">
-                    <SettingToggle
-                      label={darkMode ? 'Light Mode' : 'Dark Mode'}
-                      desc="Switch between light and dark themes"
-                      icon={darkMode ? Sun : Moon}
-                      value={darkMode}
-                      onChange={toggleDarkMode}
-                    />
-                    <div className="pt-4 border-t border-white/10">
+                    <div className="pt-4">
                       <div className="mb-4">
                         <p className="font-medium text-white mb-2">Theme Style</p>
                         <p className="text-sm text-white/60">Choose your preferred design style</p>

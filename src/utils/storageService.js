@@ -16,7 +16,7 @@ const uploadToCloudinary = async (file, folder = 'messages') => {
     const missing = [];
     if (!CLOUDINARY_CLOUD_NAME) missing.push('VITE_CLOUDINARY_CLOUD_NAME');
     if (!CLOUDINARY_UPLOAD_PRESET) missing.push('VITE_CLOUDINARY_UPLOAD_PRESET');
-    throw new Error(`Cloudinary configuration missing: ${missing.join(', ')}. Please set these environment variables in GitHub Secrets or .env file.`);
+    throw new Error(`Cloudinary configuration missing: ${missing.join(', ')}. Please set these environment variables in .env file.`);
   }
 
   // Validate cloud name is not empty

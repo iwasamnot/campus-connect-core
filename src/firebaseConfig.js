@@ -6,7 +6,7 @@ import { getFunctions } from 'firebase/functions';
 
 // Firebase configuration from environment variables
 // IMPORTANT: Never hardcode API keys or secrets in source code!
-// Set these in .env file for local development and GitHub Secrets for production
+// Set these in .env file for local development and production
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -27,7 +27,7 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   
   console.error('❌ Firebase configuration is missing required fields:', missingFields.join(', '));
   console.error('📝 Please set these in your .env file for local development');
-  console.error('📝 For production, add them to GitHub Secrets (Settings → Secrets → Actions)');
+  console.error('📝 For production, add them to your deployment environment variables');
   console.error('📚 See README.md for setup instructions');
   
   // Show error on screen for mobile debugging
