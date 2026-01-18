@@ -109,9 +109,7 @@ jobs:
           VITE_STORAGE_PROVIDER=cloudinary
           VITE_GROQ_API_KEY=${{ secrets.VITE_GROQ_API_KEY }}
           VITE_HUGGINGFACE_API_KEY=${{ secrets.VITE_HUGGINGFACE_API_KEY }}
-          VITE_OPENAI_API_KEY=${{ secrets.VITE_OPENAI_API_KEY }}
           VITE_ANTHROPIC_API_KEY=${{ secrets.VITE_ANTHROPIC_API_KEY }}
-          VITE_GEMINI_API_KEY=${{ secrets.VITE_GEMINI_API_KEY }}
           EOF
           echo "✅ .env file created (values hidden for security)"
           # Verify .env file was created (without exposing values)
