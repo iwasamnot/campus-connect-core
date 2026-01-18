@@ -43,7 +43,6 @@ const Settings = ({ setActiveView }) => {
       const data = {
         preferences,
         themeStyle,
-        darkMode,
         exportDate: new Date().toISOString(),
         version: '8.3.0'
       };
