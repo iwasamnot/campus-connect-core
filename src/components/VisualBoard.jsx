@@ -11,7 +11,7 @@ import {
   Move, PenTool, Eraser, ZoomIn, ZoomOut, Download, 
   Upload, Trash2, Undo, Redo, Users, X, Minus, Plus,
   Workflow, Brain, Layers, Link as LinkIcon, FileText, Save,
-  Palette, AlignLeft, AlignCenter, AlignRight, AlignTop, AlignBottom,
+  Palette, AlignLeft, AlignCenter, AlignRight, ArrowUp, ArrowDown,
   Lock, Unlock, Copy, Scissors, Maximize2, Minimize2, Grid,
   Hexagon, Diamond, Image as ImageIcon, Bold, Italic, Maximize,
   MoreVertical, GitBranch, ArrowUpCircle, ArrowDownCircle, RotateCw,
@@ -725,10 +725,11 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       case 'rectangle':
         ctx.rect(shape.x, shape.y, shape.width, shape.height);
         break;
-      case 'circle':
+      case 'circle': {
         const radius = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 2;
         ctx.arc(shape.x + shape.width / 2, shape.y + shape.height / 2, radius, 0, Math.PI * 2);
         break;
+      }
       case 'triangle':
         ctx.moveTo(shape.x + shape.width / 2, shape.y);
         ctx.lineTo(shape.x + shape.width, shape.y + shape.height);
@@ -742,7 +743,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
         ctx.lineTo(shape.x + shape.width, shape.y + shape.height);
         ctx.lineTo(shape.x + shape.width - 10, shape.y + shape.height + 10);
         break;
-      case 'diamond':
+      case 'diamond': {
         const dx = shape.width / 2;
         const dy = shape.height / 2;
         ctx.moveTo(shape.x + dx, shape.y);
@@ -751,19 +752,21 @@ const VisualBoard = ({ onClose, boardId = null }) => {
         ctx.lineTo(shape.x, shape.y + dy);
         ctx.closePath();
         break;
-      case 'hexagon':
+      }
+      case 'hexagon': {
         const centerX = shape.x + shape.width / 2;
         const centerY = shape.y + shape.height / 2;
-        const radius = Math.min(shape.width, shape.height) / 2;
+        const hexRadius = Math.min(shape.width, shape.height) / 2;
         for (let i = 0; i < 6; i++) {
           const angle = (Math.PI / 3) * i;
-          const x = centerX + radius * Math.cos(angle);
-          const y = centerY + radius * Math.sin(angle);
+          const x = centerX + hexRadius * Math.cos(angle);
+          const y = centerY + hexRadius * Math.sin(angle);
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         ctx.closePath();
         break;
+      }
       case 'path':
         if (shape.points && shape.points.length > 0) {
           ctx.moveTo(shape.points[0].x, shape.points[0].y);
@@ -778,13 +781,14 @@ const VisualBoard = ({ onClose, boardId = null }) => {
 
   // Optimized canvas rendering with requestAnimationFrame
   const animationFrameRef = useRef(null);
-  const renderCanvas = useCallback(() => {
+  
+  // Render canvas
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     
-    // Use requestAnimationFrame for smooth rendering
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
@@ -943,7 +947,22 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     }
     
     ctx.restore();
-  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox]);
+    };
+    
+    render();
+    animationFrameRef.current = requestAnimationFrame(render);
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes]);
+  
+  // Call renderCanvas when dependencies change
+  useEffect(() => {
+    renderCanvas();
+  }, [renderCanvas]);
 
   // Update canvas size
   useEffect(() => {
@@ -1343,7 +1362,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                 title="Align Top"
                 disabled={selectedShapes.size > 0 ? selectedShapes.size < 2 : true}
               >
-                <AlignTop size={18} />
+                <ArrowUp size={18} />
               </button>
               <button
                 onClick={() => handleAlign('middle')}
@@ -1359,7 +1378,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                 title="Align Bottom"
                 disabled={selectedShapes.size > 0 ? selectedShapes.size < 2 : true}
               >
-                <AlignBottom size={18} />
+                <ArrowDown size={18} />
               </button>
             </div>
           )}

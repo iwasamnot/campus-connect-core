@@ -34,7 +34,7 @@ export const initializeRAG = async () => {
 /**
  * Generate RAG-powered response
  */
-export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash') => {
+export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '') => {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
     console.warn('RAG: Gemini API key not available');
     return null;
@@ -58,13 +58,14 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
         ).join('\n\n')}\n\n`
       : '';
     
+    const userContextSection = userContext ? `\n\n**User Context:**\n${userContext}\n` : '';
+    
     const prompt = `You are an intelligent AI assistant for Sydney International School of Technology and Commerce (SISTC).
 
 **Retrieved Knowledge Base Context:**
 ${context || 'No specific context retrieved. Use your general knowledge about universities and student services.'}
 
-${historyContext}
-
+${historyContext}${userContextSection}
 **User Question:**
 ${query}
 
@@ -72,6 +73,7 @@ ${query}
 - Use the retrieved context as your primary source of information for SISTC-specific questions
 - If the context contains relevant information, prioritize it in your response
 - Maintain continuity with the conversation history when relevant
+- Use the user context to personalize your responses when appropriate
 - For questions not fully covered by the context, supplement with your general knowledge
 - Provide comprehensive, well-structured answers using markdown formatting
 - Be helpful, empathetic, and professional

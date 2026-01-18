@@ -530,5 +530,11 @@ service cloud.firestore {
         isAdmin()
       );
     }
+    
+    // User profiles for AI context
+    match /userProfiles/{userId} {
+      // Users can only read/write their own profile
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
   }
 }

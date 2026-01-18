@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
-import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Brain, Lightbulb, HelpCircle, Clock, TrendingUp, Book } from 'lucide-react';
+import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Brain, Lightbulb, HelpCircle, Clock, TrendingUp, Book, User, Edit2, X, Check } from 'lucide-react';
 import { callAI } from '../utils/aiProvider';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { getUserProfile, updateProfileFromConversation, getPersonalizedSystemPrompt, updateAssistantName } from '../utils/userProfileAI';
+import { useAuth } from '../context/AuthContext';
 
 
 // Enhanced SISTC Knowledge Base with more detailed information
@@ -306,11 +308,12 @@ class IntelligentAI {
 const AIHelp = () => {
   const { darkMode } = useTheme();
   const { success, error: showError, warning } = useToast();
+  const { user } = useAuth();
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: 'bot',
-      content: "Hello! I'm the SISTC AI Assistant. I can help you with information about courses, campuses, applications, requirements, fees, and more. What would you like to know?",
+      content: "Hello! I'm your AI Assistant. I can help you with SISTC information, study tips, homework help, and more. What would you like to know?",
       timestamp: new Date()
     }
   ]);
@@ -318,8 +321,32 @@ const AIHelp = () => {
   const [loading, setLoading] = useState(false);
   const [selectedGeminiModel, setSelectedGeminiModel] = useState('gemini-2.5-flash'); // Default model (latest 2026 version)
   const [activeTab, setActiveTab] = useState('sistc'); // sistc, study-tips, homework-help
+  const [userProfile, setUserProfile] = useState(null);
+  const [editingAssistantName, setEditingAssistantName] = useState(false);
+  const [assistantNameInput, setAssistantNameInput] = useState('AI Assistant');
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
+  
+  // Load user profile on mount
+  useEffect(() => {
+    if (user?.uid) {
+      getUserProfile(user.uid).then(profile => {
+        if (profile) {
+          setUserProfile(profile);
+          setAssistantNameInput(profile.assistantName || 'AI Assistant');
+          // Update greeting with personalized name
+          if (profile.assistantName && profile.assistantName !== 'AI Assistant') {
+            setMessages([{
+              id: 1,
+              type: 'bot',
+              content: `Hello! I'm ${profile.assistantName}. I can help you with SISTC information, study tips, homework help, and more. What would you like to know?`,
+              timestamp: new Date()
+            }]);
+          }
+        }
+      });
+    }
+  }, [user]);
 
   // Available Gemini models
   const geminiModels = [
@@ -488,6 +515,9 @@ ${question}
         content: msg.content
       }));
     
+    // Add user profile context to prompt
+    const userContext = userProfile ? getPersonalizedSystemPrompt(userProfile, 'sistc') : '';
+    
     // Try RAG-enhanced Gemini if API key is available
     const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     
@@ -495,7 +525,7 @@ ${question}
       try {
         // Import RAG system dynamically
         const { generateRAGResponse } = await import('../utils/ragSystem');
-        const ragAnswer = await generateRAGResponse(question, conversationHistory, selectedGeminiModel);
+        const ragAnswer = await generateRAGResponse(question, conversationHistory, selectedGeminiModel, userContext);
         if (ragAnswer && ragAnswer.trim() !== '') {
           return ragAnswer;
         }
@@ -503,9 +533,12 @@ ${question}
         console.warn('RAG system error, falling back to standard Gemini:', ragError);
       }
       
-      // Fallback to AI with local knowledge base
+      // Fallback to AI with local knowledge base and user context
       const localAnswer = ai.current.processQuestion(question);
-      const aiAnswer = await callAIWithHistory(question, localAnswer, conversationHistory);
+      const enhancedPrompt = userContext 
+        ? `${userContext}\n\n${question}`
+        : question;
+      const aiAnswer = await callAIWithHistory(enhancedPrompt, localAnswer, conversationHistory);
       if (aiAnswer && aiAnswer.trim() !== '') {
         return aiAnswer;
       }
@@ -541,13 +574,18 @@ ${question}
         // SISTC tab: Use hybrid AI with knowledge base
         answer = await getHybridAIResponse(questionText);
       } else {
-        // Study tips/homework: Use multi-provider AI
-        let systemPrompt = 'You are a helpful AI study assistant for university students. Provide clear, educational, and supportive responses.';
+        // Study tips/homework: Use multi-provider AI with personalized context
+        const personalizedPrompt = getPersonalizedSystemPrompt(userProfile, activeTab);
         
-        if (activeTab === 'study-tips') {
-          systemPrompt = 'You are an expert study coach. Provide practical study tips, time management advice, and learning strategies.';
-        } else if (activeTab === 'homework-help') {
-          systemPrompt = 'You are a tutor that helps students understand concepts and solve problems. Guide them to solutions rather than giving direct answers.';
+        let systemPrompt = personalizedPrompt;
+        
+        if (!userProfile) {
+          // Fallback if no profile
+          if (activeTab === 'study-tips') {
+            systemPrompt = 'You are an expert study coach. Provide practical study tips, time management advice, and learning strategies.';
+          } else if (activeTab === 'homework-help') {
+            systemPrompt = 'You are a tutor that helps students understand concepts and solve problems. Guide them to solutions rather than giving direct answers.';
+          }
         }
 
         const prompt = `${questionText}\n\nProvide a helpful, educational response.`;
@@ -568,6 +606,22 @@ ${question}
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
+      
+      // Update user profile from conversation (debounced)
+      if (user?.uid && messages.length > 2) {
+        setTimeout(() => {
+          updateProfileFromConversation(user.uid, [
+            ...messages.filter(m => m.id !== 1),
+            userMessage,
+            botMessage
+          ]).then(() => {
+            // Refresh profile after update
+            getUserProfile(user.uid).then(profile => {
+              if (profile) setUserProfile(profile);
+            });
+          });
+        }, 2000); // Wait 2 seconds after response
+      }
     } catch (err) {
       console.error('Error getting AI response:', err);
       
@@ -707,7 +761,71 @@ ${question}
               </motion.div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-lg md:text-2xl font-bold text-white text-glow">AI Help Assistant</h2>
+                  {editingAssistantName ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={assistantNameInput}
+                        onChange={(e) => setAssistantNameInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            if (user?.uid && assistantNameInput.trim()) {
+                              updateAssistantName(user.uid, assistantNameInput.trim()).then(() => {
+                                setUserProfile(prev => ({ ...prev, assistantName: assistantNameInput.trim() }));
+                                setEditingAssistantName(false);
+                                success('Assistant name updated!');
+                              }).catch(() => {
+                                showError('Failed to update name');
+                              });
+                            }
+                          } else if (e.key === 'Escape') {
+                            setEditingAssistantName(false);
+                            setAssistantNameInput(userProfile?.assistantName || 'AI Assistant');
+                          }
+                        }}
+                        className="px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          if (user?.uid && assistantNameInput.trim()) {
+                            updateAssistantName(user.uid, assistantNameInput.trim()).then(() => {
+                              setUserProfile(prev => ({ ...prev, assistantName: assistantNameInput.trim() }));
+                              setEditingAssistantName(false);
+                              success('Assistant name updated!');
+                            }).catch(() => {
+                              showError('Failed to update name');
+                            });
+                          }
+                        }}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                      >
+                        <Check size={16} className="text-green-400" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingAssistantName(false);
+                          setAssistantNameInput(userProfile?.assistantName || 'AI Assistant');
+                        }}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                      >
+                        <X size={16} className="text-white/70" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h2 className="text-base sm:text-lg md:text-2xl font-bold text-white text-glow">
+                        {userProfile?.assistantName || 'AI Help Assistant'}
+                      </h2>
+                      <button
+                        onClick={() => setEditingAssistantName(true)}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                        title="Rename Assistant"
+                      >
+                        <Edit2 size={14} className="text-white/60 hover:text-white" />
+                      </button>
+                    </>
+                  )}
                   <Sparkles className="text-indigo-400 hidden sm:block" size={20} />
                   {import.meta.env.VITE_GEMINI_API_KEY?.trim() && (
                     <span className="px-2 py-1 bg-indigo-600/30 border border-indigo-500/50 text-indigo-200 text-xs font-semibold rounded-full">
