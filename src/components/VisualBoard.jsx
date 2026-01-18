@@ -129,13 +129,15 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     }
   };
 
-  // Get mouse position relative to canvas
+  // Get mouse position relative to canvas (works with event or {clientX, clientY} object)
   const getMousePos = (e) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
+    const clientX = e.clientX || e.x || 0;
+    const clientY = e.clientY || e.y || 0;
     return {
-      x: (e.clientX - rect.left - pan.x) / zoom,
-      y: (e.clientY - rect.top - pan.y) / zoom
+      x: (clientX - rect.left - pan.x) / zoom,
+      y: (clientY - rect.top - pan.y) / zoom
     };
   };
 
@@ -143,16 +145,41 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   const handleMouseDown = (e) => {
     const pos = getMousePos(e);
     
-    if (tool === 'select') {
-      // Check if clicking on a shape
+      if (tool === 'select') {
+      // Check if clicking on a shape (from top to bottom, topmost selected first)
       const clickedShape = [...shapes].reverse().find(s => {
-        if (s.type === 'text' || s.type === 'sticky') {
-          return pos.x >= s.x && pos.x <= s.x + (s.width || 100) && 
-                 pos.y >= s.y && pos.y <= s.y + (s.height || 30);
+        // Skip locked shapes during selection (but allow clicking to see it's locked)
+        if (lockedShapes.has(s.id) && tool !== 'connector') return false;
+        
+        if (s.type === 'text') {
+          // Better text hit test - approximate text width
+          const text = s.text || '';
+          const fontSize = s.fontSize || 16;
+          const textWidth = text.length * fontSize * 0.6; // Approximate character width
+          const textHeight = fontSize;
+          return pos.x >= s.x && pos.x <= s.x + textWidth && 
+                 pos.y >= s.y && pos.y <= s.y + textHeight;
+        } else if (s.type === 'sticky') {
+          return pos.x >= s.x && pos.x <= s.x + (s.width || 200) && 
+                 pos.y >= s.y && pos.y <= s.y + (s.height || 150);
+        } else if (s.type === 'image') {
+          return pos.x >= s.x && pos.x <= s.x + (s.width || 200) && 
+                 pos.y >= s.y && pos.y <= s.y + (s.height || 150);
+        } else if (s.type === 'path') {
+          // Check if click is near any point in path (within 10px)
+          if (s.points && s.points.length > 0) {
+            return s.points.some(point => 
+              Math.abs(pos.x - point.x) < 10 && Math.abs(pos.y - point.y) < 10
+            );
+          }
+          return false;
+        } else {
+          // Better hit test for shapes - use bounding box
+          const width = Math.abs(s.width || 50);
+          const height = Math.abs(s.height || 50);
+          return pos.x >= s.x && pos.x <= s.x + width && 
+                 pos.y >= s.y && pos.y <= s.y + height;
         }
-        // Simple hit test for shapes
-        return Math.abs(pos.x - (s.x + (s.width || 0) / 2)) < Math.abs(s.width || 50) / 2 && 
-               Math.abs(pos.y - (s.y + (s.height || 0) / 2)) < Math.abs(s.height || 50) / 2;
       });
       
       if (clickedShape) {
@@ -178,17 +205,25 @@ const VisualBoard = ({ onClose, boardId = null }) => {
           setTextPosition({ x: clickedShape.x, y: clickedShape.y });
           setShowTextInput(true);
         }
-        // Start dragging
-        setDragStart({ x: pos.x - clickedShape.x, y: pos.y - clickedShape.y });
+        // Start dragging - store click position and shape position for proper offset calculation
+        setDragStart({ 
+          clickX: pos.x, 
+          clickY: pos.y,
+          shapeX: clickedShape.x, 
+          shapeY: clickedShape.y 
+        });
       } else {
-        if (!e.shiftKey) {
+        // Clicked on empty space - start selection box if not shift
+        if (!e.shiftKey && e.button === 0) {
           setSelectedShape(null);
           setSelectedShapes(new Set());
+          setIsSelecting(true);
+          setSelectionBox({ x: pos.x, y: pos.y, width: 0, height: 0 });
         }
       }
       
-      // Start panning with space or middle mouse
-      if (e.button === 1 || e.shiftKey) {
+      // Start panning with middle mouse button (not shift + left click)
+      if (e.button === 1) {
         setIsPanning(true);
         setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
       }
@@ -302,35 +337,31 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       }
     } else if (tool === 'connector' && connectorStart) {
       // Cursor position already updated above
-    } else if (tool === 'select' && dragStart && selectedShape) {
-      // Drag selected shape(s)
-      const deltaX = pos.x - dragStart.x;
-      const deltaY = pos.y - dragStart.y;
-      const newShapeX = dragStart.shapeX + deltaX;
-      const newShapeY = dragStart.shapeY + deltaY;
+    } else if (tool === 'select' && dragStart && (selectedShape || selectedShapes.size > 0)) {
+      // Drag selected shape(s) - use proper offset calculation
+      if (!dragStart.shapeX || !dragStart.shapeY) return; // Guard against invalid dragStart
       
-      // Apply snap to grid if enabled
-      const snap = snapToGrid ? 20 : 1;
-      const snappedX = Math.round(newShapeX / snap) * snap;
-      const snappedY = Math.round(newShapeY / snap) * snap;
+      const deltaX = pos.x - dragStart.clickX;
+      const deltaY = pos.y - dragStart.clickY;
       
       const shapeIds = selectedShapes.size > 0 
         ? Array.from(selectedShapes)
-        : [selectedShape];
-      
-      const shapesToMove = shapes.filter(s => shapeIds.includes(s.id));
-      const minX = Math.min(...shapesToMove.map(s => s.x - (dragStart.shapeX - s.x)));
-      const minY = Math.min(...shapesToMove.map(s => s.y - (dragStart.shapeY - s.y)));
+        : [selectedShape].filter(Boolean);
       
       setShapes(shapes.map(s => {
         if (!shapeIds.includes(s.id) || lockedShapes.has(s.id)) return s;
-        const offsetX = s.x - dragStart.shapeX;
-        const offsetY = s.y - dragStart.shapeY;
-        return {
-          ...s,
-          x: snapToGrid ? snappedX + offsetX : newShapeX + offsetX,
-          y: snapToGrid ? snappedY + offsetY : newShapeY + offsetY
-        };
+        
+        let newX = s.x + deltaX;
+        let newY = s.y + deltaY;
+        
+        // Apply snap to grid if enabled
+        if (snapToGrid) {
+          const snap = 20;
+          newX = Math.round(newX / snap) * snap;
+          newY = Math.round(newY / snap) * snap;
+        }
+        
+        return { ...s, x: newX, y: newY };
       }));
     }
   };
@@ -858,27 +889,40 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
+      // Draw background FIRST (before transform)
+      ctx.fillStyle = boardBackground;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
       // Apply zoom and pan
       ctx.save();
       ctx.translate(pan.x, pan.y);
       ctx.scale(zoom, zoom);
       
-      // Draw grid (optimized)
-      ctx.strokeStyle = '#1F2937';
+      // Draw grid (optimized) - only show on dark backgrounds or when snapToGrid is enabled
+      const isLightBackground = boardBackground === '#FFFFFF' || boardBackground === '#F3F4F6';
+      const gridColor = isLightBackground ? '#E5E7EB' : '#1F2937';
+      ctx.strokeStyle = gridColor;
       ctx.lineWidth = 0.5;
       const gridSize = 20;
-      const startX = Math.floor(-pan.x / zoom / gridSize) * gridSize;
-      const startY = Math.floor(-pan.y / zoom / gridSize) * gridSize;
-      const endX = canvas.width / zoom - pan.x / zoom;
-      const endY = canvas.height / zoom - pan.y / zoom;
       
-      for (let x = startX; x < endX; x += gridSize) {
+      // Calculate visible grid area accounting for zoom and pan
+      const viewLeft = -pan.x / zoom;
+      const viewTop = -pan.y / zoom;
+      const viewRight = viewLeft + canvas.width / zoom;
+      const viewBottom = viewTop + canvas.height / zoom;
+      
+      const startX = Math.floor(viewLeft / gridSize) * gridSize;
+      const startY = Math.floor(viewTop / gridSize) * gridSize;
+      const endX = Math.ceil(viewRight / gridSize) * gridSize;
+      const endY = Math.ceil(viewBottom / gridSize) * gridSize;
+      
+      for (let x = startX; x <= endX; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, startY);
         ctx.lineTo(x, endY);
         ctx.stroke();
       }
-      for (let y = startY; y < endY; y += gridSize) {
+      for (let y = startY; y <= endY; y += gridSize) {
         ctx.beginPath();
         ctx.moveTo(startX, y);
         ctx.lineTo(endX, y);
@@ -953,40 +997,43 @@ const VisualBoard = ({ onClose, boardId = null }) => {
           ctx.fillText('🔒', shape.x + (shape.width || 100) / 2, shape.y + (shape.height || 100) / 2);
         }
         
-        // Draw selection outline (drawn after shape)
+        // Draw selection outline (drawn after shape) - account for zoom
         if (isSelected && !isLocked) {
+          const shapeWidth = Math.abs(shape.width || 100);
+          const shapeHeight = Math.abs(shape.height || 100);
+          const padding = 5 / zoom; // Account for zoom so padding stays constant
+          
           ctx.strokeStyle = '#3B82F6';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([5, 5]);
-          const shapeWidth = shape.width || 100;
-          const shapeHeight = shape.height || 100;
-          ctx.strokeRect(shape.x - 5, shape.y - 5, shapeWidth + 10, shapeHeight + 10);
+          ctx.lineWidth = 2 / zoom; // Account for zoom so line width stays constant
+          ctx.setLineDash([5 / zoom, 5 / zoom]); // Account for zoom
+          ctx.strokeRect(shape.x - padding, shape.y - padding, shapeWidth + 2 * padding, shapeHeight + 2 * padding);
           ctx.setLineDash([]);
           
-          // Draw resize handles for selected single shape
+          // Draw resize handles for selected single shape (only if not locked)
           if (selectedShape === shape.id && (shape.type === 'rectangle' || shape.type === 'circle' || shape.type === 'sticky' || shape.type === 'image')) {
+            const handleSize = 6 / zoom;
             const handles = [
-              { x: shape.x - 5, y: shape.y - 5 },
-              { x: shape.x + shapeWidth + 5, y: shape.y - 5 },
-              { x: shape.x - 5, y: shape.y + shapeHeight + 5 },
-              { x: shape.x + shapeWidth + 5, y: shape.y + shapeHeight + 5 }
+              { x: shape.x - padding, y: shape.y - padding }, // Top-left
+              { x: shape.x + shapeWidth + padding, y: shape.y - padding }, // Top-right
+              { x: shape.x - padding, y: shape.y + shapeHeight + padding }, // Bottom-left
+              { x: shape.x + shapeWidth + padding, y: shape.y + shapeHeight + padding } // Bottom-right
             ];
             handles.forEach(handle => {
               ctx.fillStyle = '#3B82F6';
-              ctx.fillRect(handle.x - 3, handle.y - 3, 6, 6);
+              ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
               ctx.strokeStyle = '#fff';
-              ctx.lineWidth = 1;
-              ctx.strokeRect(handle.x - 3, handle.y - 3, 6, 6);
+              ctx.lineWidth = 1 / zoom; // Account for zoom
+              ctx.strokeRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
             });
           }
         }
       });
     
-    // Draw selection box
-    if (selectionBox) {
+    // Draw selection box (already in canvas coordinates from getMousePos)
+    if (selectionBox && selectionBox.width > 0 && selectionBox.height > 0) {
       ctx.strokeStyle = '#3B82F6';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 2 / zoom; // Account for zoom so line width stays constant
+      ctx.setLineDash([5 / zoom, 5 / zoom]); // Account for zoom
       ctx.strokeRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
       ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
       ctx.fillRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
@@ -1019,15 +1066,16 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     ctx.restore();
     };
     
-    render();
-    animationFrameRef.current = requestAnimationFrame(render);
+    // Use requestAnimationFrame properly - don't create infinite loop
+    const frameId = requestAnimationFrame(render);
+    animationFrameRef.current = frameId;
     
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes]);
+  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes, boardBackground, imageCache, snapToGrid]);
 
   // Update canvas size
   useEffect(() => {
@@ -1135,19 +1183,34 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       const remoteShapes = boardData.shapes || [];
       
       // Only update if change came from another user (not our local update)
-      // Use a flag to prevent update loops
-      const isOurUpdate = debounceTimer.current !== null;
+      // Check if this is our local update by checking if debounce timer is active
+      const isOurUpdate = isLocalUpdate.current || debounceTimer.current !== null;
       
-      if (!isOurUpdate && JSON.stringify(remoteShapes) !== JSON.stringify(shapes)) {
+      // Deep comparison to avoid unnecessary updates
+      const currentShapesStr = JSON.stringify(shapes);
+      const remoteShapesStr = JSON.stringify(remoteShapes);
+      
+      if (!isOurUpdate && currentShapesStr !== remoteShapesStr) {
         setShapes(remoteShapes);
+        // Update history when receiving remote changes
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push(remoteShapesStr);
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+        
         if (boardData.backgroundColor && boardData.backgroundColor !== boardBackground) {
           setBoardBackground(boardData.backgroundColor);
         }
       }
+      
+      // Reset local update flag after processing
+      if (isLocalUpdate.current) {
+        isLocalUpdate.current = false;
+      }
     });
 
     return () => unsubscribe();
-  }, [user, currentBoardId, db, success, boardBackground]);
+  }, [user, currentBoardId, db, success]);
 
   // Sync shapes to Firestore (debounced)
   useEffect(() => {
@@ -1649,8 +1712,8 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       >
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 cursor-crosshair"
-          style={{ background: boardBackground }}
+          className="absolute inset-0"
+          style={{ cursor: tool === 'select' ? 'default' : 'crosshair' }}
         />
         
         {/* Text Input Overlay */}
@@ -1664,8 +1727,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                 position: 'absolute',
                 left: `${textPosition.x * zoom + pan.x}px`,
                 top: `${textPosition.y * zoom + pan.y}px`,
-                transform: 'scale(' + zoom + ')',
-                transformOrigin: 'top left'
+                zIndex: 1000
               }}
             >
               <input
