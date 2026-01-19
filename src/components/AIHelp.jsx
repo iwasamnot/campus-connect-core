@@ -326,6 +326,14 @@ const AIHelp = () => {
   const [assistantNameInput, setAssistantNameInput] = useState('AI Assistant');
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
+
+  // Debug: Log component mount
+  useEffect(() => {
+    console.log('AIHelp component mounted');
+    return () => {
+      console.log('AIHelp component unmounted');
+    };
+  }, []);
   
   // Load user profile on mount and when user changes
   useEffect(() => {
@@ -448,7 +456,8 @@ const AIHelp = () => {
   // Call AI with conversation history (multi-provider support)
   const callAIWithHistory = async (question, localContext, conversationHistory = []) => {
     try {
-      const { callAI } = await import('../utils/aiProvider');
+      // Use the already imported callAI instead of dynamic import
+      // callAI is already imported at the top of the file
       
       // Build conversation history for context
       const historyContext = conversationHistory.length > 0 

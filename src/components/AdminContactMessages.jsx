@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
@@ -8,15 +8,17 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  addDoc,
   orderBy,
+  where,
   serverTimestamp
 } from 'firebase/firestore';
 // Use window.__firebaseDb to avoid import/export issues in production builds
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { motion } from 'framer-motion';
-import { Mail, User, MessageSquare, Trash2, CheckCircle, XCircle, Eye, Clock, Search, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, User, MessageSquare, Trash2, CheckCircle, XCircle, Eye, Clock, Search, Filter, Send, Bot, X } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
   ? window.__LogoComponent 
@@ -25,13 +27,21 @@ const Logo = typeof window !== 'undefined' && window.__LogoComponent
 const AdminContactMessages = () => {
   const { user } = useAuth();
   const { success, error: showError } = useToast();
+  const [activeTab, setActiveTab] = useState('contact'); // 'contact' or 'live-chat'
   const [contactMessages, setContactMessages] = useState([]);
+  const [supportChats, setSupportChats] = useState([]); // Live support chats grouped by userEmail
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'new', 'read', 'replied', 'resolved'
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [selectedChat, setSelectedChat] = useState(null); // Selected live chat thread
+  const [chatMessages, setChatMessages] = useState([]); // Messages for selected chat
+  const [replyText, setReplyText] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [updating, setUpdating] = useState(null);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   // Fetch contact messages
   useEffect(() => {
@@ -61,6 +71,135 @@ const AdminContactMessages = () => {
 
     return () => unsubscribe();
   }, [user, showError]);
+
+  // Fetch live support chats
+  useEffect(() => {
+    if (!user || !db || activeTab !== 'live-chat') return;
+
+    const q = query(
+      collection(db, 'adminSupportChat'),
+      orderBy('timestamp', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const allMessages = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // Group messages by userEmail
+        const chatsByEmail = {};
+        allMessages.forEach(msg => {
+          const email = msg.userEmail;
+          if (!email) return;
+          
+          if (!chatsByEmail[email]) {
+            chatsByEmail[email] = {
+              userEmail: email,
+              userName: msg.userName || 'User',
+              userId: msg.userId,
+              messages: [],
+              lastMessage: msg.text || '',
+              lastMessageTime: msg.timestamp,
+              unreadCount: 0
+            };
+          }
+          
+          chatsByEmail[email].messages.push(msg);
+          if (msg.timestamp && (!chatsByEmail[email].lastMessageTime || 
+              (msg.timestamp.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp)) > 
+              (chatsByEmail[email].lastMessageTime.toDate ? chatsByEmail[email].lastMessageTime.toDate() : new Date(chatsByEmail[email].lastMessageTime)))) {
+            chatsByEmail[email].lastMessage = msg.text || '';
+            chatsByEmail[email].lastMessageTime = msg.timestamp;
+          }
+          if (!msg.read && msg.isFromUser) {
+            chatsByEmail[email].unreadCount++;
+          }
+        });
+        
+        // Convert to array and sort by last message time
+        const chatsArray = Object.values(chatsByEmail).sort((a, b) => {
+          const aTime = a.lastMessageTime?.toDate?.() || new Date(a.lastMessageTime || 0);
+          const bTime = b.lastMessageTime?.toDate?.() || new Date(b.lastMessageTime || 0);
+          return bTime - aTime;
+        });
+        
+        setSupportChats(chatsArray);
+      },
+      (error) => {
+        console.error('Error fetching support chats:', error);
+        showError('Failed to load support chats.');
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user, db, activeTab, showError]);
+
+  // Fetch messages for selected chat
+  useEffect(() => {
+    if (!selectedChat || !db) {
+      setChatMessages([]);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'adminSupportChat'),
+      where('userEmail', '==', selectedChat.userEmail),
+      orderBy('timestamp', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const messages = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setChatMessages(messages);
+        
+        // Scroll to bottom
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      },
+      (error) => {
+        console.error('Error fetching chat messages:', error);
+        showError('Failed to load chat messages.');
+      }
+    );
+
+    return () => unsubscribe();
+  }, [selectedChat, db, showError]);
+
+  // Send admin reply
+  const handleSendReply = async (e) => {
+    e.preventDefault();
+    if (!replyText.trim() || !selectedChat || !user || !db || sendingReply) return;
+
+    setSendingReply(true);
+    try {
+      await addDoc(collection(db, 'adminSupportChat'), {
+        userId: user.uid,
+        userEmail: selectedChat.userEmail,
+        userName: user.displayName || 'Admin',
+        text: replyText.trim(),
+        isFromUser: false,
+        isFromAdmin: true,
+        timestamp: serverTimestamp(),
+        read: false
+      });
+
+      setReplyText('');
+      success('Reply sent!');
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      showError('Failed to send reply. Please try again.');
+    } finally {
+      setSendingReply(false);
+    }
+  };
 
   // Filter and search messages
   const filteredMessages = useMemo(() => {
@@ -194,12 +333,48 @@ const AdminContactMessages = () => {
             <Logo size="small" showText={false} />
             <div>
               <h2 className="text-base sm:text-lg md:text-2xl font-bold text-white text-glow">
-                Contact Messages
+                Contact & Support
               </h2>
               <p className="text-xs md:text-sm text-white/60">
-                Messages from non-users
+                Contact messages and live support chats
               </p>
             </div>
+          </div>
+          {/* Tabs */}
+          <div className="flex gap-2 mt-3 lg:mt-0 lg:ml-auto">
+            <button
+              onClick={() => {
+                setActiveTab('contact');
+                setSelectedMessage(null);
+                setSelectedChat(null);
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'contact'
+                  ? 'bg-indigo-600 text-white'
+                  : 'glass-panel bg-white/5 border border-white/10 text-white/70 hover:bg-white/10'
+              }`}
+            >
+              Contact Messages
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('live-chat');
+                setSelectedMessage(null);
+                setSelectedChat(null);
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${
+                activeTab === 'live-chat'
+                  ? 'bg-indigo-600 text-white'
+                  : 'glass-panel bg-white/5 border border-white/10 text-white/70 hover:bg-white/10'
+              }`}
+            >
+              Live Support Chats
+              {supportChats.some(chat => chat.unreadCount > 0) && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center">
+                  {supportChats.reduce((sum, chat) => sum + chat.unreadCount, 0)}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -244,7 +419,60 @@ const AdminContactMessages = () => {
       <div className="flex-1 overflow-hidden flex">
         {/* Messages List */}
         <div className="w-full md:w-1/2 lg:w-1/3 border-r border-white/10 overflow-y-auto">
-          {loading ? (
+          {activeTab === 'live-chat' ? (
+            // Live Support Chats List
+            loading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto"></div>
+                  <p className="mt-4 text-white/60 font-medium">Loading chats...</p>
+                </div>
+              </div>
+            ) : supportChats.length === 0 ? (
+              <div className="flex items-center justify-center h-full p-8">
+                <div className="text-center">
+                  <MessageSquare className="mx-auto text-white/40 mb-4" size={48} />
+                  <p className="text-white/60 font-medium">No active support chats yet.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/10">
+                {supportChats.map((chat) => (
+                  <div
+                    key={chat.userEmail}
+                    onClick={() => setSelectedChat(chat)}
+                    className={`p-4 cursor-pointer glass-panel border border-white/10 hover:border-white/20 rounded-xl transition-all ${
+                      selectedChat?.userEmail === chat.userEmail ? 'bg-indigo-600/20 border-indigo-500/30' : ''
+                    } ${chat.unreadCount > 0 ? 'border-l-4 border-blue-500' : ''}`}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-white truncate">
+                          {chat.userName || chat.userEmail}
+                        </h3>
+                        <p className="text-sm text-white/60 truncate">
+                          {chat.userEmail}
+                        </p>
+                      </div>
+                      {chat.unreadCount > 0 && (
+                        <span className="px-2 py-1 rounded-full bg-blue-600 text-white text-xs font-medium">
+                          {chat.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-white/60 line-clamp-2">
+                      {chat.lastMessage}
+                    </p>
+                    <p className="text-xs text-white/50 mt-2">
+                      {formatTimestamp(chat.lastMessageTime)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            <>
+            {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto"></div>
@@ -300,11 +528,129 @@ const AdminContactMessages = () => {
               ))}
             </div>
           )}
+            </>
+          )}
         </div>
 
-        {/* Message Detail */}
+        {/* Message Detail / Chat View */}
         <div className="hidden md:flex flex-1 flex-col glass-panel border-l border-white/10 backdrop-blur-xl">
-          {selectedMessage ? (
+          {activeTab === 'live-chat' && selectedChat ? (
+            // Live Chat View
+            <div className="flex flex-col h-full">
+              {/* Chat Header */}
+              <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white text-glow">
+                    {selectedChat.userName || selectedChat.userEmail}
+                  </h2>
+                  <p className="text-sm text-white/60">{selectedChat.userEmail}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedChat(null)}
+                  className="p-2 glass-panel border border-white/10 rounded-xl hover:border-white/20 text-white/70 hover:text-white transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Messages */}
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
+              >
+                {chatMessages.map((message, index) => {
+                  const isAdmin = message.isFromAdmin;
+                  return (
+                    <motion.div
+                      key={message.id || index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`flex items-start gap-2 max-w-[75%] ${isAdmin ? 'flex-row-reverse' : 'flex-row'}`}>
+                        {/* Avatar */}
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                          isAdmin 
+                            ? 'bg-indigo-600' 
+                            : 'bg-white/10 border border-white/20'
+                        }`}>
+                          {isAdmin ? (
+                            <User className="w-4 h-4 text-white" />
+                          ) : (
+                            <Bot className="w-4 h-4 text-indigo-300" />
+                          )}
+                        </div>
+
+                        {/* Message Bubble */}
+                        <div className={`rounded-2xl px-4 py-2.5 ${
+                          isAdmin
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-white/10 border border-white/20 text-white/90'
+                        }`}>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                            {message.text || message.message}
+                          </p>
+                          {message.timestamp && (
+                            <p className={`text-xs mt-1.5 ${
+                              isAdmin ? 'text-indigo-200' : 'text-white/50'
+                            }`}>
+                              {formatTimestamp(message.timestamp)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Reply Input */}
+              <div className="border-t border-white/10 px-6 py-4">
+                <form onSubmit={handleSendReply} className="flex items-end gap-3">
+                  <div className="flex-1 relative">
+                    <textarea
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Type your reply..."
+                      rows={1}
+                      className="w-full px-4 py-3 pr-12 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:bg-white/10 transition-all duration-300 resize-none"
+                      disabled={sendingReply}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendReply(e);
+                        }
+                      }}
+                      style={{
+                        minHeight: '48px',
+                        maxHeight: '120px'
+                      }}
+                    />
+                  </div>
+                  <motion.button
+                    type="submit"
+                    disabled={!replyText.trim() || sendingReply}
+                    whileHover={{ scale: sendingReply ? 1 : 1.05 }}
+                    whileTap={{ scale: sendingReply ? 1 : 0.95 }}
+                    className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all disabled:transform-none flex-shrink-0"
+                  >
+                    {sendingReply ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                      />
+                    ) : (
+                      <Send size={20} />
+                    )}
+                  </motion.button>
+                </form>
+              </div>
+            </div>
+          ) : activeTab === 'contact' ? (
+            <>
+            {selectedMessage ? (
             <div className="flex-1 overflow-y-auto p-6">
               {/* Message Header */}
               <div className="mb-6 pb-6 border-b border-white/10">
@@ -417,6 +763,17 @@ const AdminContactMessages = () => {
               <div className="text-center">
                 <MessageSquare className="mx-auto text-white/40 mb-4" size={48} />
                 <p className="text-white/60 font-medium">Select a message to view details</p>
+              </div>
+            </div>
+          )}
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <MessageSquare className="mx-auto text-white/40 mb-4" size={48} />
+                <p className="text-white/60 font-medium">
+                  {activeTab === 'live-chat' ? 'Select a chat to view messages' : 'Select a message to view details'}
+                </p>
               </div>
             </div>
           )}

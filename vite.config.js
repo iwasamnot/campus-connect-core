@@ -320,8 +320,7 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
-        type: 'module',
-        navigateFallback: 'index.html'
+        type: 'module'
       },
       injectRegister: 'auto',
       strategies: 'generateSW'

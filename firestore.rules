@@ -3,6 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Helper function to check if user is admin
     // More robust: checks if user document exists and has admin role
+    // Returns false (not admin) if user document doesn't exist yet (prevents errors)
     function isAdmin() {
       return request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
@@ -30,18 +31,20 @@ service cloud.firestore {
       // - Users can update emailVerified from false/undefined to true (when they verify email)
       // - Users CANNOT change their role after it's been set - only admins can
       // - Users CANNOT change emailVerified from true to false - only admins can
-      // - Users can update isOnline and lastSeen for presence tracking
+      // - Users can update isOnline and lastSeen for presence tracking (always allowed)
       allow update: if isAuthenticated() && (
         // Admin updating any user (can update emailVerified and role freely)
         isAdmin() ||
         // User updating their own profile
         (request.auth.uid == userId && (
-          // Allow updating presence fields (isOnline, lastSeen)
+          // Always allow updating presence fields (isOnline, lastSeen) - most common operation
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isOnline', 'lastSeen'])) ||
+          // Allow updating presence fields with other non-restricted fields
+          (request.resource.data.diff(resource.data).affectedKeys().hasAll(['isOnline', 'lastSeen']) &&
+           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified', 'role'])) ||
           // Allow updating fields other than role and emailVerified
           (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified', 'role'])) ||
           // Allow setting role ONLY if it doesn't exist yet (first time setup during login)
-          // Check if 'role' key is not in resource.data.keys()
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
            !('role' in resource.data)) ||
           // Allow updating emailVerified from false/undefined to true (user verified their email)
@@ -50,7 +53,11 @@ service cloud.firestore {
            (!('emailVerified' in resource.data) || resource.data.emailVerified == false)) ||
           // Allow setting both role and emailVerified if role doesn't exist (first login)
           (request.resource.data.diff(resource.data).affectedKeys().hasAll(['role', 'emailVerified']) &&
-           !('role' in resource.data))
+           !('role' in resource.data)) ||
+          // Allow creating document with presence fields and other initial fields (when document doesn't exist)
+          (!exists(/databases/$(database)/documents/users/$(userId)) &&
+           request.resource.data.isOnline != null &&
+           request.resource.data.lastSeen != null)
         ))
       );
       
@@ -391,6 +398,92 @@ service cloud.firestore {
       
       // Only admins can delete contact messages
       allow delete: if isAdmin();
+    }
+
+    // Admin support chat collection (live chat between users and admins)
+    // IMPORTANT: Allows unauthenticated users to contact admins in real-time
+    match /adminSupportChat/{messageId} {
+      // Admins can read all messages
+      // Authenticated users can read their own messages (by userId or email)
+      // Unauthenticated users can read ALL messages in their thread (both user and admin messages)
+      // This allows back-and-forth conversation
+      allow read: if (
+        // Admin can read all messages
+        (isAuthenticated() && isAdmin()) ||
+        // Authenticated user reading messages in their thread (both user and admin messages)
+        (isAuthenticated() && (
+          (resource.data.userEmail != null && 
+           resource.data.userEmail == request.auth.token.email) ||
+          (resource.data.userId != null && 
+           resource.data.userId == request.auth.uid)
+        )) ||
+        // Unauthenticated user reading messages in their thread
+        // Can read BOTH user messages (isFromUser) AND admin replies (isFromAdmin)
+        // The query filters by userEmail, so they only see their own thread
+        (request.auth == null && 
+         resource.data.userEmail != null)
+      );
+      
+      // Allow both authenticated and unauthenticated users to create messages
+      // Admins can create admin messages
+      allow create: if (
+        // Admin creating admin message (must be authenticated)
+        (isAuthenticated() && 
+         isAdmin() &&
+         request.resource.data.isFromAdmin == true &&
+         request.resource.data.isFromUser == false &&
+         request.resource.data.userId != null &&
+         request.resource.data.userEmail != null) ||
+        // User creating their own message (authenticated or unauthenticated)
+        (request.resource.data.isFromUser == true &&
+         request.resource.data.isFromAdmin == false &&
+         request.resource.data.userEmail != null &&
+         request.resource.data.text != null &&
+         request.resource.data.timestamp != null &&
+         // If authenticated, userId must match
+         // If unauthenticated, userId can be a guest ID (format: guest-email)
+         (request.auth == null || 
+          request.resource.data.userId == request.auth.uid ||
+          (request.resource.data.userId != null && 
+           request.resource.data.userId.size() > 6 &&
+           request.resource.data.userId[0:6] == 'guest-')))
+      );
+      
+      // Users can update their own messages (for editing)
+      // Admins can update any message
+      // Also allow updating read status
+      allow update: if (
+        // Admin can update any message
+        (isAuthenticated() && isAdmin()) ||
+        // Authenticated user updating their own message
+        (isAuthenticated() && 
+         ((resource.data.userId == request.auth.uid ||
+           resource.data.userEmail == request.auth.token.email) &&
+          request.resource.data.userId == resource.data.userId &&
+          request.resource.data.userEmail == resource.data.userEmail)) ||
+        // Unauthenticated user updating their own message (by email)
+        (request.auth == null &&
+         resource.data.userEmail != null &&
+         request.resource.data.userEmail == resource.data.userEmail &&
+         request.resource.data.isFromUser == true) ||
+        // Allow updating read status (anyone can mark as read)
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+      );
+      
+      // Users can delete their own messages
+      // Admins can delete any message
+      allow delete: if (
+        // Admin can delete any message
+        (isAuthenticated() && isAdmin()) ||
+        // Authenticated user deleting their own message
+        (isAuthenticated() && 
+         (resource.data.userId == request.auth.uid ||
+          resource.data.userEmail == request.auth.token.email)) ||
+        // Unauthenticated user deleting their own message (by email)
+        (request.auth == null &&
+         resource.data.userEmail != null &&
+         resource.data.isFromUser == true)
+      );
     }
     
     // Polls collection (for Campus Chat)
