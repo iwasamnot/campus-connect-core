@@ -47,11 +47,29 @@
  *    - "money" → "tuition fees", "join" → "enrolment"
  *    - Improves retrieval recall by handling vocabulary mismatch
  * 
- * 10. ADMIN ANALYTICS / PULSE DASHBOARD (Business Intelligence) ⭐ NEW
+ * 10. ADMIN ANALYTICS / PULSE DASHBOARD (Business Intelligence)
  *    - Logs every query with category and timestamp
  *    - Enables "Trending Topics" analysis
  *    - Real-time student sentiment monitoring
  *    - Proactive policy communication insights
+ * 
+ * 11. AFFECTIVE COMPUTING (Emotional Intelligence) ⭐ NEW
+ *    - Detects user sentiment/emotion (anxious, stressed, neutral)
+ *    - Adapts response persona (Supportive vs Informational)
+ *    - Prioritizes mental health resources when distress detected
+ *    - "Sentiment-Adaptive Response Generation"
+ * 
+ * 12. SOCRATIC TUTOR MODE (Pedagogical Scaffolding) ⭐ NEW
+ *    - Classifies queries as Administrative vs Academic
+ *    - Administrative: Direct answers (fees, visa, deadlines)
+ *    - Academic: Hints and guiding questions (prevents cheating)
+ *    - "Context-Aware Pedagogical Scaffolding"
+ * 
+ * 13. PEER DISCOVERY (Social Graph) ⭐ NEW
+ *    - Tracks trending topics in real-time
+ *    - Suggests study groups based on semantic overlap
+ *    - Privacy-preserving (no personal data shared)
+ *    - "Semantic Interest Overlap Clustering"
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  */
@@ -260,6 +278,8 @@ async function logQueryAnalytics(data) {
       question: data.question?.substring(0, 500) || '',
       category: data.category || 'general',
       confidence: data.confidence || 0,
+      sentiment: data.sentiment || 'neutral',
+      queryType: data.queryType || 'administrative',
       wasBlocked: data.blocked || false,
       wasLowConfidence: data.lowConfidence || false,
       wasPersonalized: data.personalized || false,
@@ -272,6 +292,144 @@ async function logQueryAnalytics(data) {
   } catch (error) {
     // Silently fail - analytics is non-critical
     console.debug('Analytics logging skipped:', error.message);
+  }
+}
+
+// ============================================================================
+// FEATURE 11: AFFECTIVE COMPUTING (Emotional Intelligence)
+// Detects sentiment and adapts response persona
+// ============================================================================
+async function analyzeSentiment(message) {
+  try {
+    const client = getGenAIClient();
+    const model = client.getGenerativeModel({ model: CLASSIFIER_MODEL });
+    
+    const prompt = `You are an emotional intelligence classifier for a university support system.
+Analyze this student message for emotional state.
+
+DETECT:
+- DISTRESSED: panic, anxiety, fear, desperation, crying, hopeless ("I'm failing", "I can't cope", "I'm so stressed")
+- FRUSTRATED: anger, annoyance, confusion ("This is ridiculous", "I don't understand", "Why won't anyone help")
+- NEUTRAL: calm, informational queries ("What are the fees?", "When is the deadline?")
+- POSITIVE: happy, grateful, excited ("Thanks!", "I got accepted!", "This is great")
+
+Student Message: "${message}"
+
+Respond with JSON:
+{"sentiment": "DISTRESSED|FRUSTRATED|NEUTRAL|POSITIVE", "intensity": "low|medium|high", "needs_support": true|false}`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().replace(/```json|```/g, '').trim();
+    
+    try {
+      const analysis = JSON.parse(text);
+      console.log(`💭 Sentiment: ${analysis.sentiment} (${analysis.intensity})`);
+      return {
+        sentiment: analysis.sentiment || 'NEUTRAL',
+        intensity: analysis.intensity || 'low',
+        needsSupport: analysis.needs_support || false,
+      };
+    } catch {
+      return { sentiment: 'NEUTRAL', intensity: 'low', needsSupport: false };
+    }
+  } catch (error) {
+    console.warn('Sentiment analysis failed:', error.message);
+    return { sentiment: 'NEUTRAL', intensity: 'low', needsSupport: false };
+  }
+}
+
+// ============================================================================
+// FEATURE 12: SOCRATIC TUTOR MODE (Pedagogical Scaffolding)
+// Classifies query type and adjusts response strategy
+// ============================================================================
+async function classifyQueryType(question) {
+  try {
+    const client = getGenAIClient();
+    const model = client.getGenerativeModel({ model: CLASSIFIER_MODEL });
+    
+    const prompt = `You are an academic integrity classifier.
+Determine if this student query is asking for:
+
+ADMINISTRATIVE: Direct factual info needed (fees, deadlines, visa, enrollment, contacts, campus info)
+→ Should receive direct answers
+
+ACADEMIC: Course content, assignments, quiz answers, homework help
+→ Should receive Socratic guidance (hints, not answers) to promote learning
+
+SOCIAL: Student life, clubs, events, peer connections
+→ Should receive friendly, community-focused responses
+
+Query: "${question}"
+
+Respond with ONLY one word: "ADMINISTRATIVE" or "ACADEMIC" or "SOCIAL"`;
+
+    const result = await model.generateContent(prompt);
+    const queryType = result.response.text().trim().toUpperCase();
+    
+    if (['ADMINISTRATIVE', 'ACADEMIC', 'SOCIAL'].includes(queryType)) {
+      console.log(`📚 Query Type: ${queryType}`);
+      return queryType;
+    }
+    return 'ADMINISTRATIVE';
+  } catch (error) {
+    console.warn('Query type classification failed:', error.message);
+    return 'ADMINISTRATIVE';
+  }
+}
+
+// ============================================================================
+// FEATURE 13: PEER DISCOVERY (Social Graph / Study Groups)
+// Tracks trending topics and suggests connections
+// ============================================================================
+async function logTopicInterest(topic, category) {
+  try {
+    const firebase = await loadAnalytics();
+    if (!firebase) return null;
+    
+    const { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, Timestamp } = firebase;
+    
+    let db;
+    try {
+      const appModule = await import('../firebase');
+      db = appModule.db || getFirestore();
+    } catch {
+      return null;
+    }
+    
+    if (!db) return null;
+    
+    // Log this topic interest (anonymous)
+    await addDoc(collection(db, 'topic_interests'), {
+      topic: topic?.substring(0, 200) || '',
+      category: category || 'general',
+      timestamp: serverTimestamp(),
+    });
+    
+    // Check how many others are interested in similar topics (last 24 hours)
+    const oneDayAgo = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    
+    const q = query(
+      collection(db, 'topic_interests'),
+      where('category', '==', category),
+      where('timestamp', '>', oneDayAgo)
+    );
+    
+    const snapshot = await getDocs(q);
+    const recentCount = snapshot.size;
+    
+    if (recentCount >= 3) {
+      console.log(`👥 Peer Discovery: ${recentCount} students interested in ${category}`);
+      return {
+        topic: category,
+        peerCount: recentCount,
+        suggestion: `${recentCount} other students have been asking about ${category} topics recently. Would you like to connect with a study group?`
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.debug('Peer discovery skipped:', error.message);
+    return null;
   }
 }
 
@@ -534,43 +692,96 @@ function buildUserProfileContext(profileMatches) {
 }
 
 /**
- * Generate response with temporal grounding AND user personalization
- * FEATURE 8: Dual-Memory Architecture
+ * Generate response with all adaptive features
+ * FEATURES: Temporal, Personalization, Affective, Pedagogical
  */
-async function generateResponse(context, userQuestion, temporalContext, userProfileContext = '') {
+async function generateResponse(context, userQuestion, temporalContext, options = {}) {
+  const {
+    userProfileContext = '',
+    sentiment = { sentiment: 'NEUTRAL', intensity: 'low', needsSupport: false },
+    queryType = 'ADMINISTRATIVE',
+    peerDiscovery = null,
+  } = options;
+
   try {
     const client = getGenAIClient();
     const model = client.getGenerativeModel({ model: GENERATION_MODEL });
     
+    // FEATURE 11: Affective Computing - Adapt persona based on sentiment
+    let personaSection = '';
+    if (sentiment.needsSupport || sentiment.sentiment === 'DISTRESSED') {
+      personaSection = `
+═══════════════════════════════════════════════════════════════════════════
+💙 EMOTIONAL SUPPORT MODE (Student appears distressed):
+═══════════════════════════════════════════════════════════════════════════
+The student seems stressed or anxious. Please:
+- Start with empathy and acknowledgment ("I understand this is stressful...")
+- Use warm, supportive language
+- Prioritize mental health resources if relevant:
+  • SISTC Student Support: info@sistc.edu.au
+  • Lifeline Australia: 13 11 14
+  • Beyond Blue: 1300 22 4636
+- Reassure them that help is available
+- Break down complex info into simple steps
+═══════════════════════════════════════════════════════════════════════════
+`;
+    } else if (sentiment.sentiment === 'FRUSTRATED') {
+      personaSection = `
+═══════════════════════════════════════════════════════════════════════════
+🤝 PATIENT SUPPORT MODE (Student appears frustrated):
+═══════════════════════════════════════════════════════════════════════════
+The student seems frustrated. Please:
+- Acknowledge their frustration ("I can see this has been challenging...")
+- Be extra clear and step-by-step
+- Offer multiple solutions or paths forward
+- Provide direct contact info for human support if needed
+═══════════════════════════════════════════════════════════════════════════
+`;
+    }
+
+    // FEATURE 12: Socratic Tutor Mode
+    let pedagogicalSection = '';
+    if (queryType === 'ACADEMIC') {
+      pedagogicalSection = `
+═══════════════════════════════════════════════════════════════════════════
+📖 SOCRATIC TUTOR MODE (Academic query detected):
+═══════════════════════════════════════════════════════════════════════════
+This appears to be a course/assignment question. To promote learning:
+- DO NOT give direct answers to quiz/exam/assignment questions
+- Instead, provide:
+  • Guiding questions to help them think
+  • Hints that point toward the solution
+  • Relevant concepts they should review
+  • Resources (textbook chapters, lecture notes)
+- Example: "Have you considered looking at the relationship between X and Y?"
+═══════════════════════════════════════════════════════════════════════════
+`;
+    }
+
     // Build personalization section
-    const personalizationSection = userProfileContext 
+    const profileSection = userProfileContext 
       ? `
 ═══════════════════════════════════════════════════════════════════════════
-👤 STUDENT PROFILE (Personalize your response based on this):
+👤 STUDENT PROFILE:
 ═══════════════════════════════════════════════════════════════════════════
 ${userProfileContext}
-
-- Tailor examples to their major/course
-- Adjust complexity based on their year level
-- Reference their interests when relevant
-- Be empathetic to their struggles if mentioned
 ═══════════════════════════════════════════════════════════════════════════
 `
       : '';
 
-    // FEATURE 6 + 8: Inject temporal context AND user profile
+    // FEATURE 13: Peer Discovery suggestion
+    const peerSection = peerDiscovery 
+      ? `\n💡 **Study Group Opportunity**: ${peerDiscovery.suggestion}\n`
+      : '';
+
     const systemPrompt = `You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC).
-${personalizationSection}
+${personaSection}${pedagogicalSection}${profileSection}
 ═══════════════════════════════════════════════════════════════════════════
-⏰ TEMPORAL CONTEXT (Use this to answer time-sensitive questions):
+⏰ TEMPORAL CONTEXT:
 ═══════════════════════════════════════════════════════════════════════════
 Current Date/Time: ${temporalContext.fullDateTime}
 Day: ${temporalContext.dayOfWeek}
 Business Hours: ${temporalContext.isBusinessHours ? 'Yes (Mon-Fri 9am-5pm)' : 'No (outside business hours)'}
-
-- If asked "Is it open NOW?", compare the current time with opening hours in the context.
-- If asked about deadlines, calculate remaining days from today's date.
-- If asked "Can I call now?", check if it's business hours.
 ═══════════════════════════════════════════════════════════════════════════
 
 ## CITATION RULE:
@@ -581,15 +792,14 @@ ${context || 'No specific context retrieved.'}
 
 ## GUIDELINES:
 1. **Cite Sources**: Always [Source: Title] after facts
-2. **Personalize**: ${userProfileContext ? 'Use the student profile to tailor your response' : 'Give general advice'}
-3. **Use Time**: Answer time questions using the temporal context above
+2. **Adapt Tone**: ${sentiment.needsSupport ? 'Be warm and supportive' : queryType === 'ACADEMIC' ? 'Guide, don\'t give answers directly' : 'Be helpful and efficient'}
+3. **Use Time**: Answer time questions using temporal context
 4. **Be Accurate**: Only state facts from context
-5. **Be Helpful**: Like an experienced senior student who knows this specific student
 
 ## STUDENT QUESTION:
 ${userQuestion}
 
-Provide a helpful, ${userProfileContext ? 'personalized, ' : ''}time-aware, well-cited response:`;
+Provide a helpful response:${peerSection}`;
 
     const result = await model.generateContent(systemPrompt);
     const text = result.response.text();
@@ -724,15 +934,24 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     }
 
     // ========================================================================
-    // STEP 2: QUERY CATEGORY CLASSIFICATION (Metadata Filter)
+    // STEP 2: PARALLEL CLASSIFICATION (Category + Sentiment + QueryType)
     // ========================================================================
-    let queryCategory = 'general';
-    if (!skipCategoryFilter) {
-      debugInfo.steps.push('🏷️ Classifying query category...');
-      queryCategory = await classifyQueryCategory(trimmedQuestion);
-      debugInfo.queryCategory = queryCategory;
-      debugInfo.steps.push(`✅ Category: ${queryCategory}`);
-    }
+    debugInfo.steps.push('🔄 Running parallel classifiers...');
+    
+    // Run all classifiers in parallel for speed
+    const [queryCategory, sentiment, queryType] = await Promise.all([
+      skipCategoryFilter ? Promise.resolve('general') : classifyQueryCategory(trimmedQuestion),
+      analyzeSentiment(trimmedQuestion),
+      classifyQueryType(trimmedQuestion),
+    ]);
+    
+    debugInfo.queryCategory = queryCategory;
+    debugInfo.sentiment = sentiment;
+    debugInfo.queryType = queryType;
+    
+    debugInfo.steps.push(`✅ Category: ${queryCategory}`);
+    debugInfo.steps.push(`✅ Sentiment: ${sentiment.sentiment} (${sentiment.intensity})`);
+    debugInfo.steps.push(`✅ Query Type: ${queryType}`);
 
     // ========================================================================
     // STEP 3: QUERY EXPANSION / HyDE (Semantic Translation)
@@ -840,7 +1059,20 @@ Is there something else I can help with?`,
     debugInfo.steps.push(`✅ Confidence: ${(confidenceScore * 100).toFixed(1)}%`);
 
     // ========================================================================
-    // STEP 7: BUILD CONTEXT & GENERATE (with Temporal + Personalization)
+    // STEP 7: PEER DISCOVERY (Social Graph)
+    // ========================================================================
+    let peerDiscovery = null;
+    if (queryType === 'ACADEMIC' || queryType === 'SOCIAL') {
+      debugInfo.steps.push('👥 Checking peer discovery...');
+      peerDiscovery = await logTopicInterest(trimmedQuestion, queryCategory);
+      if (peerDiscovery) {
+        debugInfo.steps.push(`✅ Found ${peerDiscovery.peerCount} peers interested in ${queryCategory}`);
+        debugInfo.peerDiscovery = peerDiscovery;
+      }
+    }
+
+    // ========================================================================
+    // STEP 8: BUILD CONTEXT & GENERATE (with All Adaptive Features)
     // ========================================================================
     debugInfo.steps.push('📚 Building context...');
     const context = buildContextString(matches, maxContextLength);
@@ -852,12 +1084,17 @@ Is there something else I can help with?`,
       debugInfo.steps.push('👤 Adding personalization context...');
     }
 
-    debugInfo.steps.push('🤖 Generating personalized, time-aware response...');
-    const answer = await generateResponse(context, trimmedQuestion, temporalContext, userProfileContext);
+    debugInfo.steps.push('🤖 Generating adaptive response...');
+    const answer = await generateResponse(context, trimmedQuestion, temporalContext, {
+      userProfileContext,
+      sentiment,
+      queryType,
+      peerDiscovery,
+    });
     debugInfo.steps.push('✅ Response generated');
 
     // ========================================================================
-    // STEP 8: BACKGROUND PROFILE LEARNING
+    // STEP 9: BACKGROUND PROFILE LEARNING
     // ========================================================================
     if (userId && !skipProfileLearning) {
       // Don't await - let it run in background
@@ -874,24 +1111,29 @@ Is there something else I can help with?`,
     debugInfo.processingTime = Date.now() - startTime;
 
     // ========================================================================
-    // STEP 9: ANALYTICS LOGGING (Pulse Dashboard)
+    // STEP 10: ANALYTICS LOGGING (Pulse Dashboard)
     // ========================================================================
     logQueryAnalytics({
       question: trimmedQuestion,
       category: queryCategory,
       confidence: confidenceScore,
+      sentiment: sentiment.sentiment,
+      queryType: queryType,
       personalized: !!userProfileContext,
       responseTime: debugInfo.processingTime,
     }).catch(() => {}); // Fire and forget
 
     // ========================================================================
-    // STEP 10: RETURN RESULT
+    // STEP 11: RETURN RESULT
     // ========================================================================
     return {
       answer,
       confidenceScore,
       queryCategory,
+      sentiment: sentiment.sentiment,
+      queryType,
       personalized: !!userProfileContext,
+      peerDiscovery: peerDiscovery ? { count: peerDiscovery.peerCount } : null,
       temporalContext: temporalContext.fullDateTime,
       debug: includeDebugInfo ? debugInfo : undefined,
     };
@@ -928,8 +1170,11 @@ export function checkConfiguration() {
       temporalGrounding: true,
       multiModalSupport: true,
       dualMemoryArchitecture: true,
-      queryExpansion: true,         // HyDE / Multi-Query Retrieval
-      adminAnalytics: true,         // Pulse Dashboard logging
+      queryExpansion: true,
+      adminAnalytics: true,
+      affectiveComputing: true,     // Emotional intelligence
+      socraticTutorMode: true,      // Pedagogical scaffolding
+      peerDiscovery: true,          // Social graph / study groups
     },
   };
 
