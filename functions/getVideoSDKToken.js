@@ -25,9 +25,11 @@ const axios = require('axios');
 const API_KEY = '0cd81014-abab-4f45-968d-b3ddae835a82';
 
 // Firebase Functions v2 with Secret Manager, CORS, and Region
+// Note: secrets array removed to allow deployment without the secret being set
+// The function will check for the secret at runtime and return an error if not configured
 exports.getVideoSDKToken = onCall(
   {
-    secrets: ['VIDEOSDK_SECRET'],
+    // secrets: ['VIDEOSDK_SECRET'], // Commented out to allow deployment - secret checked at runtime
     region: 'us-central1', // Match the region specified in firebaseConfig.js
     cors: [
       'http://localhost:5173', // Vite dev server

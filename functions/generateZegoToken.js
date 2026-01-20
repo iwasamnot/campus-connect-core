@@ -31,9 +31,11 @@ const APP_ID = 128222087; // Number type
 
 // Firebase Functions v2 with Secret Manager
 // The secret ZEGO_SERVER_SECRET must be set using: firebase functions:secrets:set ZEGO_SERVER_SECRET
+// Note: secrets array removed to allow deployment without the secret being set
+// The function will check for the secret at runtime and return an error if not configured
 exports.generateZegoToken = onCall(
   {
-    secrets: ['ZEGO_SERVER_SECRET']
+    // secrets: ['ZEGO_SERVER_SECRET'] // Commented out to allow deployment - secret checked at runtime
   },
   async (request) => {
     // Verify user is authenticated
