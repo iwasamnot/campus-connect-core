@@ -155,6 +155,12 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMPUS_CONNECT_SISTC }}
+
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Deploy Cloud Functions
+        run: firebase deploy --only functions --project campus-connect-sistc --non-interactive
       
       - name: Deploy Firestore Rules
         run: firebase deploy --only firestore:rules --project campus-connect-sistc --non-interactive
