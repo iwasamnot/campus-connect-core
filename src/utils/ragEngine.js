@@ -32,7 +32,7 @@ const GEMINI_API_KEY = getEnvVar('VITE_GEMINI_API_KEY', 'GEMINI_API_KEY');
 
 // Model configurations
 const EMBEDDING_MODEL = 'text-embedding-004';
-const GENERATION_MODEL = 'gemini-1.5-flash';
+const GENERATION_MODEL = 'gemini-2.0-flash'; // Updated to working model
 const TOP_K_MATCHES = 3;
 
 // Lazy-initialized clients
