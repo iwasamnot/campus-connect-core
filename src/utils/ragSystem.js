@@ -1,24 +1,47 @@
 /**
  * RAG System - Main Integration
  * Combines retrieval and generation for RAG-powered responses
+ * 
+ * Priority order:
+ * 1. Direct Pinecone RAG Engine (askVirtualSenior) - fastest, serverless
+ * 2. Firebase Cloud Functions RAG (searchRag) - fallback
+ * 3. Local in-memory retrieval - offline fallback
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ensureKnowledgeBaseIndexed, searchRag } from './ragClient';
 import { processKnowledgeBase } from './knowledgeBaseProcessor';
 import { ragRetrieval } from './ragRetrieval';
+import { askVirtualSenior, checkConfiguration } from './ragEngine';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim() || '';
+
+/**
+ * Check if the direct Pinecone RAG Engine is configured
+ */
+const isPineconeRAGConfigured = () => {
+  try {
+    const config = checkConfiguration();
+    return config.isConfigured;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * Initialize RAG system with knowledge base (client triggers a one-time upsert to Pinecone)
  */
 export const initializeRAG = async () => {
+  // Check if direct Pinecone RAG is configured
+  if (isPineconeRAGConfigured()) {
+    console.log('RAG: Direct Pinecone RAG Engine is configured and ready');
+  }
+
   try {
-    // Attempt to upsert the static knowledge base to Pinecone (one-time per browser)
+    // Attempt to upsert the static knowledge base to Pinecone via Firebase (one-time per browser)
     await ensureKnowledgeBaseIndexed();
   } catch (error) {
-    console.warn('RAG: initialize fallback to local knowledge base', error);
+    console.warn('RAG: Firebase RAG upsert skipped (will use direct Pinecone if configured)', error);
   }
 
   // Keep local fallback initialized for offline / failure cases
@@ -32,6 +55,11 @@ export const initializeRAG = async () => {
 
 /**
  * Generate RAG-powered response
+ * 
+ * Priority:
+ * 1. Direct Pinecone RAG Engine (askVirtualSenior)
+ * 2. Firebase Cloud Functions RAG
+ * 3. Local retrieval fallback
  */
 export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '') => {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
@@ -39,16 +67,30 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
     return null;
   }
 
-  // 1) Try vector search via Pinecone
+  // 1) Try Direct Pinecone RAG Engine first (fastest, serverless)
+  if (isPineconeRAGConfigured()) {
+    try {
+      console.log('RAG: Using direct Pinecone RAG Engine');
+      const result = await askVirtualSenior(query, { topK: 5 });
+      if (result.answer && !result.error) {
+        return result.answer;
+      }
+      console.warn('RAG: Direct Pinecone returned error, trying fallback:', result.error);
+    } catch (pineconeError) {
+      console.warn('RAG: Direct Pinecone RAG failed, trying Firebase fallback:', pineconeError);
+    }
+  }
+
+  // 2) Try Firebase Cloud Functions RAG (fallback)
   let context = '';
   try {
     const matches = await searchRag(query, 8);
     context = formatMatches(matches, 2400);
   } catch (error) {
-    console.warn('RAG: vector search failed, will fallback', error);
+    console.warn('RAG: Firebase vector search failed, will use local fallback', error);
   }
 
-  // 2) Fallback to in-memory retrieval if needed
+  // 3) Fallback to in-memory retrieval if needed
   if (!context || context.trim().length === 0) {
     try {
       const retrievedDocs = await ragRetrieval.retrieve(query, 5, 0.2);
