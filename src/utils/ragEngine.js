@@ -35,11 +35,23 @@
  *    - Gemini 2.0 Flash natively processes images + text
  *    - Enables "What building is this?" or error screenshot analysis
  * 
- * 8. DUAL-MEMORY ARCHITECTURE (Long-Term Personalization) ⭐ NEW
+ * 8. DUAL-MEMORY ARCHITECTURE (Long-Term Personalization)
  *    - Memory A: University Knowledge (static, shared)
  *    - Memory B: User Profile (dynamic, per-student)
  *    - Multi-Hop Retrieval: Fetches both simultaneously
  *    - Personalized responses based on student's major, year, interests
+ * 
+ * 9. QUERY EXPANSION / HyDE (Semantic Translation) ⭐ NEW
+ *    - Generates 3 alternative academic phrasings
+ *    - Converts slang to institutional terminology
+ *    - "money" → "tuition fees", "join" → "enrolment"
+ *    - Improves retrieval recall by handling vocabulary mismatch
+ * 
+ * 10. ADMIN ANALYTICS / PULSE DASHBOARD (Business Intelligence) ⭐ NEW
+ *    - Logs every query with category and timestamp
+ *    - Enables "Trending Topics" analysis
+ *    - Real-time student sentiment monitoring
+ *    - Proactive policy communication insights
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  */
@@ -160,6 +172,107 @@ function getGenAIClient() {
     genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   }
   return genAI;
+}
+
+// ============================================================================
+// FEATURE 9: QUERY EXPANSION / HyDE (Semantic Translation)
+// Converts colloquial input to institutional terminology
+// ============================================================================
+async function expandQuery(originalQuestion) {
+  try {
+    const client = getGenAIClient();
+    const model = client.getGenerativeModel({ model: CLASSIFIER_MODEL });
+    
+    const prompt = `You are a university search query optimizer.
+Generate 3 alternative phrasings of this student question using formal academic terminology.
+
+Convert slang/informal terms:
+- "money" → "tuition fees" or "cost"
+- "join" → "enrolment" or "admission"
+- "paper" → "assignment" or "coursework"
+- "prof" → "lecturer" or "academic staff"
+
+Student Question: "${originalQuestion}"
+
+Output ONLY 3 alternative queries, one per line (no numbering, no explanation):`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const queries = text.split('\n')
+      .map(q => q.trim())
+      .filter(q => q.length > 0 && q.length < 200);
+    
+    // Return max 3 expansions
+    const expansions = queries.slice(0, 3);
+    
+    if (expansions.length > 0) {
+      console.log(`🔄 Query Expansion: "${originalQuestion.substring(0, 30)}..." → ${expansions.length} variants`);
+    }
+    
+    return expansions;
+  } catch (error) {
+    console.warn('Query expansion failed:', error.message);
+    return []; // Return empty, continue with original query
+  }
+}
+
+// ============================================================================
+// FEATURE 10: ADMIN ANALYTICS / PULSE DASHBOARD
+// Logs queries for trending topics analysis
+// ============================================================================
+let analyticsModule = null;
+
+async function loadAnalytics() {
+  if (analyticsModule === null) {
+    try {
+      // Dynamic import to avoid breaking if Firebase not configured
+      const firebase = await import('firebase/firestore');
+      analyticsModule = firebase;
+    } catch (e) {
+      console.warn('Analytics module not available');
+      analyticsModule = false;
+    }
+  }
+  return analyticsModule || null;
+}
+
+async function logQueryAnalytics(data) {
+  try {
+    const firebase = await loadAnalytics();
+    if (!firebase) return;
+    
+    // Try to get Firestore instance
+    const { getFirestore, collection, addDoc, serverTimestamp } = firebase;
+    
+    // Get the app's Firestore instance
+    let db;
+    try {
+      const appModule = await import('../firebase');
+      db = appModule.db || getFirestore();
+    } catch {
+      // If firebase module doesn't export db, skip logging
+      return;
+    }
+    
+    if (!db) return;
+    
+    await addDoc(collection(db, 'rag_analytics'), {
+      question: data.question?.substring(0, 500) || '',
+      category: data.category || 'general',
+      confidence: data.confidence || 0,
+      wasBlocked: data.blocked || false,
+      wasLowConfidence: data.lowConfidence || false,
+      wasPersonalized: data.personalized || false,
+      responseTime: data.responseTime || 0,
+      timestamp: serverTimestamp(),
+      // Anonymous - no user ID for privacy
+    });
+    
+    console.log('📊 Analytics logged:', data.category);
+  } catch (error) {
+    // Silently fail - analytics is non-critical
+    console.debug('Analytics logging skipped:', error.message);
+  }
 }
 
 // ============================================================================
@@ -622,18 +735,33 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     }
 
     // ========================================================================
-    // STEP 3: CONVERSATIONAL MEMORY (Context Awareness)
+    // STEP 3: QUERY EXPANSION / HyDE (Semantic Translation)
+    // ========================================================================
+    debugInfo.steps.push('🔄 Expanding query with academic terminology...');
+    const expandedQueries = await expandQuery(trimmedQuestion);
+    debugInfo.expandedQueries = expandedQueries;
+    if (expandedQueries.length > 0) {
+      debugInfo.steps.push(`✅ Generated ${expandedQueries.length} query variants`);
+    }
+
+    // ========================================================================
+    // STEP 4: CONVERSATIONAL MEMORY (Context Awareness)
     // ========================================================================
     let searchQuery = trimmedQuestion;
     
+    // Combine original + expanded queries for better retrieval
+    if (expandedQueries.length > 0) {
+      searchQuery = `${trimmedQuestion} ${expandedQueries.join(' ')}`;
+    }
+    
     if (previousAnswer && previousAnswer.trim().length > 0) {
       const contextSnippet = previousAnswer.substring(0, 300);
-      searchQuery = `Previous context: ${contextSnippet}\n\nCurrent question: ${trimmedQuestion}`;
+      searchQuery = `Previous context: ${contextSnippet}\n\nCurrent question: ${searchQuery}`;
       debugInfo.steps.push('📝 Added conversational context');
     }
 
     // ========================================================================
-    // STEP 4: EMBEDDING & DUAL-MEMORY RETRIEVAL (Multi-Hop)
+    // STEP 5: EMBEDDING & DUAL-MEMORY RETRIEVAL (Multi-Hop)
     // ========================================================================
     debugInfo.steps.push('🧮 Generating embedding...');
     const questionEmbedding = await generateEmbedding(searchQuery);
@@ -667,7 +795,7 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     }));
 
     // ========================================================================
-    // STEP 5: CONFIDENCE THRESHOLDING (Honesty Protocol)
+    // STEP 6: CONFIDENCE THRESHOLDING (Honesty Protocol)
     // ========================================================================
     const bestMatch = matches[0];
     const confidenceScore = bestMatch?.score || 0;
@@ -683,6 +811,15 @@ export async function askVirtualSenior(userQuestion, options = {}) {
           console.warn('Background profile learning failed:', e.message)
         );
       }
+      
+      // Log analytics for low confidence query
+      logQueryAnalytics({
+        question: trimmedQuestion,
+        category: queryCategory,
+        confidence: confidenceScore,
+        lowConfidence: true,
+        responseTime: Date.now() - startTime,
+      }).catch(() => {});
       
       return {
         answer: `I couldn't find specific information about that in the SISTC knowledge base (confidence: ${(confidenceScore * 100).toFixed(0)}%). 
@@ -703,7 +840,7 @@ Is there something else I can help with?`,
     debugInfo.steps.push(`✅ Confidence: ${(confidenceScore * 100).toFixed(1)}%`);
 
     // ========================================================================
-    // STEP 6: BUILD CONTEXT & GENERATE (with Temporal + Personalization)
+    // STEP 7: BUILD CONTEXT & GENERATE (with Temporal + Personalization)
     // ========================================================================
     debugInfo.steps.push('📚 Building context...');
     const context = buildContextString(matches, maxContextLength);
@@ -720,7 +857,7 @@ Is there something else I can help with?`,
     debugInfo.steps.push('✅ Response generated');
 
     // ========================================================================
-    // STEP 7: BACKGROUND PROFILE LEARNING
+    // STEP 8: BACKGROUND PROFILE LEARNING
     // ========================================================================
     if (userId && !skipProfileLearning) {
       // Don't await - let it run in background
@@ -737,7 +874,18 @@ Is there something else I can help with?`,
     debugInfo.processingTime = Date.now() - startTime;
 
     // ========================================================================
-    // STEP 8: RETURN RESULT
+    // STEP 9: ANALYTICS LOGGING (Pulse Dashboard)
+    // ========================================================================
+    logQueryAnalytics({
+      question: trimmedQuestion,
+      category: queryCategory,
+      confidence: confidenceScore,
+      personalized: !!userProfileContext,
+      responseTime: debugInfo.processingTime,
+    }).catch(() => {}); // Fire and forget
+
+    // ========================================================================
+    // STEP 10: RETURN RESULT
     // ========================================================================
     return {
       answer,
@@ -779,7 +927,9 @@ export function checkConfiguration() {
       metadataFiltering: true,
       temporalGrounding: true,
       multiModalSupport: true,
-      dualMemoryArchitecture: true,  // Long-term personalization
+      dualMemoryArchitecture: true,
+      queryExpansion: true,         // HyDE / Multi-Query Retrieval
+      adminAnalytics: true,         // Pulse Dashboard logging
     },
   };
 
