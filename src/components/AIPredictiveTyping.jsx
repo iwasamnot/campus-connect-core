@@ -22,68 +22,13 @@ const AIPredictiveTyping = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef(null);
 
+  // Economy mode: completely disable cloud AI predictive typing to save quota.
+  // This component will currently not call any external APIs.
   const generateSuggestions = useCallback(async (text) => {
-    if (!text.trim() || text.length < 3 || disabled) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Analyze conversation context and current input
-      const recentMessages = conversationHistory.slice(-3).map(msg => 
-        `${msg.userName || 'User'}: ${msg.text || msg.displayText || ''}`
-      ).join('\n');
-
-      const prompt = `Based on this conversation and the user's current typing, generate 3 smart autocomplete suggestions to complete their thought.
-
-Conversation Context:
-${recentMessages}
-
-Current Input: "${text}"
-
-Generate 3 completion suggestions that:
-- Continue the user's thought naturally
-- Match the conversation tone
-- Are 5-30 words long
-- Feel natural and conversational
-- Complete the sentence or thought
-
-Return ONLY a JSON array of 3 strings, no other text. Example: ["suggestion 1", "suggestion 2", "suggestion 3"]`;
-
-      const response = await callAI(prompt, {
-        systemPrompt: 'You are a helpful AI that predicts what users want to type next.',
-        maxTokens: 150,
-        temperature: 0.7,
-      });
-
-      // Parse JSON response
-      let parsed = [];
-      try {
-        const jsonMatch = response.match(/\[.*\]/s);
-        if (jsonMatch) {
-          parsed = JSON.parse(jsonMatch[0]);
-        }
-      } catch (e) {
-        // Fallback: split by lines
-        parsed = response.split('\n')
-          .filter(line => line.trim() && !line.startsWith('```'))
-          .map(line => line.replace(/^[-*]\s*/, '').replace(/["']/g, '').trim())
-          .slice(0, 3);
-      }
-
-      if (parsed.length > 0) {
-        setSuggestions(parsed);
-        setShowSuggestions(true);
-        setSelectedIndex(0);
-      }
-    } catch (error) {
-      console.error('Error generating predictions:', error);
-      setSuggestions([]);
-    } finally {
-      setLoading(false);
-    }
+    // In economy mode, we don't generate AI suggestions at all.
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setLoading(false);
   }, [conversationHistory, disabled]);
 
   // Debounced suggestion generation
