@@ -77,11 +77,12 @@ exports.ragUpsert = functions
         );
       }
 
+      // If vector service is not fully configured, skip silently and let frontend fallback handle it
       if (!openai || !pineconeClient) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Vector service is not configured'
+        console.warn(
+          'ragUpsert: Vector service not configured (missing Pinecone or Groq). Skipping upsert and returning success.'
         );
+        return { upserted: 0 };
       }
 
       const index = getIndex();
@@ -133,11 +134,12 @@ exports.ragSearch = functions
         );
       }
 
+      // If vector service is not fully configured, return empty results and let frontend fallback handle it
       if (!openai || !pineconeClient) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Vector service is not configured'
+        console.warn(
+          'ragSearch: Vector service not configured (missing Pinecone or Groq). Returning empty matches.'
         );
+        return { matches: [] };
       }
 
       const index = getIndex();
