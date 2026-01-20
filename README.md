@@ -619,6 +619,7 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - **Update Firestore security rules** from `firestore.rules`
    - **Get your Firebase configuration values** from Firebase Console → Project Settings → General → Your apps
 
+<<<<<<< HEAD
 3. **Configure Environment Variables**
    - Create a `.env` file in the root directory (copy from `.env.example`)
    - Add your Firebase configuration:
@@ -657,6 +658,23 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - **Important**: Restart the dev server after adding environment variables
    - If no API key is provided, the AI will use the local knowledge base
    - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)
+   
+3. **Configure API Keys**
+   - **Firebase**: This repository is already wired to the Firebase project `campus-connect-sistc` using a hardcoded config in `src/firebaseConfig.js`:
+     - If you are using the same Firebase project, **no `.env` is required for Firebase**.
+     - If you fork this project for your own Firebase project, update `src/firebaseConfig.js` with your own config snippet from Firebase Console → Project Settings → Web app config.
+   - **Gemini API Key** (optional but recommended for full AI features):
+     - Get a key from `https://makersuite.google.com/app/apikey`.
+     - For local dev, you can either:
+       - Create a `.env` file with:
+         ```
+         VITE_GEMINI_API_KEY=your-gemini-api-key-here
+         ```
+       - Or hardcode it in your own fork (not recommended for public repos).
+   - **ZEGOCLOUD App ID** (optional, for voice/video calling):
+     - Get from `https://console.zegocloud.com`.
+     - You can set `VITE_ZEGOCLOUD_APP_ID` in `.env` or hardcode it similarly if you control the deployment.
+     - Server secret stays in Firebase Secrets (see `docs/ZEGOCLOUD_TOKEN_SETUP.md`).
 
 4. **Run Development Server**
    ```bash
@@ -670,26 +688,65 @@ A secure, student-only messaging platform for universities with AI-powered conte
    npm run build
    ```
 
-## Firebase Configuration
+## Cloud Architecture & Firebase Configuration
 
-The Firebase configuration is now managed through environment variables for better security and flexibility.
+### Firebase Project
 
-### Local Development
-Create a `.env` file in the root directory with your Firebase configuration (see `.env.example` for template):
+This project is configured for the Firebase project:
 
-```env
-VITE_FIREBASE_API_KEY=your-firebase-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-VITE_FIREBASE_APP_ID=your-app-id
-VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
-```
+- **Project ID**: `campus-connect-sistc`
+- **Hosting site**: `campus-connect-sistc`
+- **App ID**: `1:680423970030:web:f0b732dd11717d17a80fff`
 
-Get these values from Firebase Console → Project Settings → General → Your apps → Web app config.
+The client-side Firebase config lives in `src/firebaseConfig.js` and uses the official snippet from Firebase Console:
 
-**Note**: The app includes fallback values for backward compatibility, but it's recommended to use environment variables.
+- Initializes **Auth**, **Firestore**, **Storage**, and **Cloud Functions** (region `us-central1`).
+- For this deployment, the config is **hardcoded** for simplicity (no `.env` required for Firebase).
+- If you want to use **GitHub Secrets + env-based config**, you can revert to `import.meta.env.VITE_*` in `firebaseConfig.js` and set those vars in your CI workflow.
+
+### Cloud Services
+
+- **Firebase Hosting**: Serves the production PWA from `dist` at:
+  - Primary domain: `https://campus-connect-sistc.web.app`
+  - Custom domain: `https://sistc.app` (configured in Firebase Hosting)
+- **Cloud Firestore**: Primary database for messages, users, groups, visual boards (`visualBoards`), analytics, and more (see `firestore.rules`).
+- **Cloud Functions (Node.js 20)**:
+  - `ragSearch` and `ragUpsert` power the serverless vector RAG engine.
+  - Functions are called via HTTPS callable from `src/utils/ragClient.js`.
+- **Firebase Storage**: Stores images, voice messages, and VisualBoard images with strict rules.
+
+### RAG & AI Cloud Stack
+
+- **Google Gemini** (via `@google/generative-ai`):
+  - Used by `AIHelp` and moderation for toxicity detection and intelligent responses.
+  - Default model: `gemini-2.5-flash` (2026-era model).
+- **Serverless Vector RAG Engine**:
+  - `src/utils/ragSystem.js` orchestrates:
+    - `ensureKnowledgeBaseIndexed()` → triggers `ragUpsert` to upsert a static knowledge base (SISTC docs) into a vector store (e.g. Pinecone) via Cloud Functions.
+    - `searchRag()` → calls `ragSearch` to retrieve top-K matches.
+  - If the **vector service is not configured** or returns an error (e.g. 400 “Vector service is not configured”), the client:
+    - Logs a warning and falls back to local in-memory retrieval (`ragRetrieval`) + Gemini.
+    - Never crashes the UI (RAG is “best effort”).
+
+### Deployment
+
+- **Manual deploy (current)**:
+  1. Build:
+     ```bash
+     npm run build
+     ```
+  2. Deploy:
+     ```bash
+     firebase deploy --only "hosting"
+     # or, if you also changed rules/indexes:
+     firebase deploy --only "firestore,hosting"
+     ```
+
+- **GitHub Actions (optional)**:
+  - Recommended secrets:
+    - `FIREBASE_TOKEN` for `firebase deploy`.
+    - `VITE_GEMINI_API_KEY` and any vector/RAG secrets if you choose an env-driven setup.
+  - In your workflow, map secrets to `VITE_*` env vars before `npm run build` so Vite can bake them into the bundle.
 
 ## Firestore Rules
 

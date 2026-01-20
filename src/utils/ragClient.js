@@ -30,7 +30,16 @@ export const ensureKnowledgeBaseIndexed = async () => {
     localStorage.setItem(LOCAL_FLAG_KEY, '1');
     console.info(`RAG: Upserted ${documents.length} knowledge base docs`);
   } catch (error) {
-    console.warn('RAG: Failed to upsert knowledge base', error);
+    // Gracefully handle RAG upsert failures - this is non-critical
+    // The app will fall back to local knowledge base and standard Gemini
+    if (error.code === 'functions/unavailable' || 
+        error.message?.includes('Vector service is not configured') ||
+        error.message?.includes('400')) {
+      console.info('RAG: Vector service not configured, using local fallback');
+    } else {
+      console.warn('RAG: Failed to upsert knowledge base', error);
+    }
+    // Don't set the flag so it can retry on next load if service becomes available
   }
 };
 
@@ -42,8 +51,16 @@ export const searchRag = async (query, topK = 8) => {
     const { data } = await ragSearchFn()({ query, topK });
     return data?.matches || [];
   } catch (error) {
+    // Gracefully handle RAG search failures - return empty array for fallback
+    if (error.code === 'functions/unavailable' || 
+        error.message?.includes('Vector service is not configured') ||
+        error.message?.includes('400')) {
+      // Silent fallback - this is expected if vector service isn't configured
+      return [];
+    }
     console.warn('RAG: search fallback (vector service unavailable)', error);
     return [];
   }
 };
+
 

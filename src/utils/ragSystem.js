@@ -258,4 +258,3 @@ const formatMatches = (matches = [], maxLength = 2400) => {
   }
   return context.trim();
 };
-

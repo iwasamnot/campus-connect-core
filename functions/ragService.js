@@ -159,3 +159,8 @@ exports.ragSearch = functions
       throw new functions.https.HttpsError('internal', error.message);
     }
   });
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> e1a463c (Fix: Hardcode Firebase config, add VisualBoard Firestore rules, improve RAG error handling, update README with cloud architecture and sistc.app domain)

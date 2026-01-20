@@ -400,6 +400,44 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Visual Boards collection (collaborative whiteboards)
+    match /visualBoards/{boardId} {
+      // Allow authenticated users to read boards they're participants in
+      allow read: if isAuthenticated() && 
+        (resource.data.participants != null && 
+         request.auth.uid in resource.data.participants);
+      
+      // Allow authenticated users to create boards (must include themselves as participant)
+      allow create: if isAuthenticated() && 
+        request.resource.data.participants != null &&
+        request.auth.uid in request.resource.data.participants;
+      
+      // Allow participants to update boards
+      allow update: if isAuthenticated() && 
+        resource.data.participants != null &&
+        request.auth.uid in resource.data.participants;
+      
+      // Allow participants to delete boards
+      allow delete: if isAuthenticated() && 
+        resource.data.participants != null &&
+        request.auth.uid in resource.data.participants;
+
+      // Cursors subcollection (for real-time cursor positions)
+      match /cursors/{userId} {
+        // Allow authenticated users to read all cursors in a board they're part of
+        allow read: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/visualBoards/$(boardId)).data.participants;
+        
+        // Allow users to create/update their own cursor
+        allow create, update: if isAuthenticated() && 
+          request.auth.uid == userId &&
+          request.auth.uid in get(/databases/$(database)/documents/visualBoards/$(boardId)).data.participants;
+        
+        // Allow users to delete their own cursor
+        allow delete: if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
+
     // Admin support chat collection (live chat between users and admins)
     // IMPORTANT: Allows unauthenticated users to contact admins in real-time
     match /adminSupportChat/{messageId} {
