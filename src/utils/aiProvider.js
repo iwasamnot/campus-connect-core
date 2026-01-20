@@ -27,7 +27,7 @@ export const getAIProvider = () => {
     return {
       provider: 'gemini',
       apiKey: geminiApiKey,
-      model: 'gemini-1.5-flash', // Fast and reliable with huge limits
+      model: 'gemini-2.0-flash', // Fast and reliable with huge limits
       baseUrl: null, // Uses GoogleGenerativeAI SDK
       maxTokens: 2048,
       temperature: 0.7
@@ -303,7 +303,7 @@ const getProviderConfig = (providerName) => {
         return {
           provider: 'gemini',
           apiKey: geminiKey,
-          model: 'gemini-1.5-flash', // Reliable with 1M TPM limit
+          model: 'gemini-2.0-flash', // Reliable with 1M TPM limit
           baseUrl: null,
           maxTokens: 2048,
           temperature: 0.7

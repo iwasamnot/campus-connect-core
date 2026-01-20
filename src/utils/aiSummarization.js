@@ -29,11 +29,11 @@ export const summarizeConversation = async (messages, maxLength = 100) => {
     try {
       model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', modelError);
+      console.warn('gemini-2.5-flash not available, trying gemini-2.0-flash:', modelError);
       try {
-        model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       } catch (fallbackError) {
-        console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', fallbackError);
+        console.warn('gemini-2.0-flash not available, trying gemini-1.5-pro:', fallbackError);
         model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       }
     }
@@ -111,11 +111,11 @@ export const extractKeyPoints = async (messages) => {
     try {
       model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', modelError);
+      console.warn('gemini-2.5-flash not available, trying gemini-2.0-flash:', modelError);
       try {
-        model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       } catch (fallbackError) {
-        console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', fallbackError);
+        console.warn('gemini-2.0-flash not available, trying gemini-1.5-pro:', fallbackError);
         model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       }
     }
@@ -196,11 +196,11 @@ export const generateMeetingNotes = async (messages, title = null) => {
     try {
       model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     } catch (modelError) {
-      console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', modelError);
+      console.warn('gemini-2.5-flash not available, trying gemini-2.0-flash:', modelError);
       try {
-        model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       } catch (fallbackError) {
-        console.warn('gemini-1.5-flash not available, trying gemini-1.5-pro:', fallbackError);
+        console.warn('gemini-2.0-flash not available, trying gemini-1.5-pro:', fallbackError);
         model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       }
     }

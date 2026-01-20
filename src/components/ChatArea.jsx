@@ -272,8 +272,8 @@ const ChatArea = ({ setActiveView }) => {
   // Available Gemini models
   const geminiModels = [
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Latest 2026 Model - Fast & Efficient (Recommended)', free: true },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient', free: true },
-    { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', description: 'Free - Fast & Efficient', free: true },
+    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite', description: 'Free - Lightweight & Fast', free: true },
     { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
     { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 2.5 Flash instead', free: false },
   ];
@@ -314,16 +314,16 @@ const ChatArea = ({ setActiveView }) => {
       return model;
     } catch (error) {
       console.error('Error initializing Gemini model:', error);
-      // Fallback to gemini-2.5-flash, then gemini-1.5-flash if the selected model fails
+      // Fallback to gemini-2.5-flash, then gemini-2.0-flash if the selected model fails
       if (modelName !== 'gemini-2.5-flash') {
         try {
           const genAI = new GoogleGenerativeAI(apiKey);
           return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         } catch (fallbackError) {
-          console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', fallbackError);
+          console.warn('gemini-2.5-flash not available, trying gemini-2.0-flash:', fallbackError);
           try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
           } catch (secondFallbackError) {
             console.error('Fallback models also failed:', secondFallbackError);
             return null;
