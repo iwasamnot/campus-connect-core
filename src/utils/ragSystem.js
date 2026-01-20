@@ -57,9 +57,15 @@ export const initializeRAG = async () => {
  * Generate RAG-powered response
  * 
  * Priority:
- * 1. Direct Pinecone RAG Engine (askVirtualSenior)
- * 2. Firebase Cloud Functions RAG
- * 3. Local retrieval fallback
+ * 1. Direct Pinecone RAG Engine (askVirtualSenior) - with advanced features
+ * 2. Firebase Cloud Functions RAG (searchRag) - fallback
+ * 3. Local in-memory retrieval - offline fallback
+ * 
+ * Advanced Features (via askVirtualSenior):
+ * - Semantic Guardrails: Blocks unsafe/adversarial queries
+ * - Confidence Thresholding: Admits when it doesn't know
+ * - Conversational Memory: Uses previous answer for context
+ * - Source Citations: Cites knowledge base documents
  */
 export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '') => {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
@@ -67,12 +73,37 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
     return null;
   }
 
+  // Extract previous assistant response for conversational memory
+  const previousAssistantMessages = conversationHistory.filter(msg => 
+    msg.type === 'assistant' || msg.sender === 'ai' || msg.role === 'assistant'
+  );
+  const lastAssistantMessage = previousAssistantMessages.length > 0 
+    ? previousAssistantMessages[previousAssistantMessages.length - 1]?.content || ''
+    : '';
+
   // 1) Try Direct Pinecone RAG Engine first (fastest, serverless)
   if (isPineconeRAGConfigured()) {
     try {
-      console.log('RAG: Using direct Pinecone RAG Engine');
-      const result = await askVirtualSenior(query, { topK: 5 });
+      console.log('RAG: Using direct Pinecone RAG Engine (with Safety + Memory + Confidence features)');
+      const result = await askVirtualSenior(query, { 
+        topK: 5,
+        previousAnswer: lastAssistantMessage, // CONVERSATIONAL MEMORY
+      });
+      
+      // Handle blocked queries (safety filter)
+      if (result.blocked) {
+        console.log('RAG: Query blocked by safety filter');
+        return result.answer;
+      }
+      
+      // Handle low confidence (honesty protocol)
+      if (result.lowConfidence) {
+        console.log(`RAG: Low confidence response (${(result.confidenceScore * 100).toFixed(1)}%)`);
+        return result.answer;
+      }
+      
       if (result.answer && !result.error) {
+        console.log(`RAG: Success (confidence: ${(result.confidenceScore * 100).toFixed(1)}%)`);
         return result.answer;
       }
       console.warn('RAG: Direct Pinecone returned error, trying fallback:', result.error);
