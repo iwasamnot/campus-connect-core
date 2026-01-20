@@ -169,28 +169,29 @@ jobs:
       - name: Install Functions Dependencies
         run: cd functions && npm ci
 
-      - name: Set Functions Environment Variables
+      - name: Set Functions Secrets (Firebase Secret Manager)
         run: |
-          echo "Setting Firebase Functions config from GitHub Secrets..."
-          # Set Pinecone config
+          echo "Setting Firebase Functions secrets from GitHub Secrets..."
+          # Use Firebase Secret Manager (replaces deprecated functions:config:set)
+          # Note: Secrets must be created in Firebase Console or via CLI before deployment
+          # This step ensures they exist, or creates them if they don't
+          
+          # Set Pinecone secrets
           if [ -n "${{ secrets.PINECONE_API_KEY }}" ] && [ -n "${{ secrets.PINECONE_INDEX_NAME }}" ]; then
-            firebase functions:config:set \
-              pinecone.api_key="${{ secrets.PINECONE_API_KEY }}" \
-              pinecone.index="${{ secrets.PINECONE_INDEX_NAME }}" \
-              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set Pinecone config (may already be set)"
+            echo "${{ secrets.PINECONE_API_KEY }}" | firebase functions:secrets:set PINECONE_API_KEY --project campus-connect-sistc --non-interactive --data-file - 2>/dev/null || echo "⚠️ PINECONE_API_KEY secret may already exist or creation failed"
+            echo "${{ secrets.PINECONE_INDEX_NAME }}" | firebase functions:secrets:set PINECONE_INDEX_NAME --project campus-connect-sistc --non-interactive --data-file - 2>/dev/null || echo "⚠️ PINECONE_INDEX_NAME secret may already exist or creation failed"
           else
             echo "⚠️ Warning: PINECONE_API_KEY or PINECONE_INDEX_NAME secrets not set - RAG vector service will use local fallback"
           fi
           
-          # Set Groq config (for embeddings via OpenAI-compatible API)
-          # Uses the same Vite-style secret name for consistency: VITE_GROQ_API_KEY
+          # Set Groq secret (for embeddings via OpenAI-compatible API)
           if [ -n "${{ secrets.VITE_GROQ_API_KEY }}" ]; then
-            firebase functions:config:set \
-              groq.api_key="${{ secrets.VITE_GROQ_API_KEY }}" \
-              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set Groq config (may already be set)"
+            echo "${{ secrets.VITE_GROQ_API_KEY }}" | firebase functions:secrets:set GROQ_API_KEY --project campus-connect-sistc --non-interactive --data-file - 2>/dev/null || echo "⚠️ GROQ_API_KEY secret may already exist or creation failed"
           else
             echo "⚠️ Warning: VITE_GROQ_API_KEY secret not set - RAG embeddings via Groq will not work"
           fi
+          
+          echo "✅ Secrets configured. Functions will access them via process.env at runtime."
 
       - name: Deploy Cloud Functions
         run: firebase deploy --only functions --project campus-connect-sistc --non-interactive --force

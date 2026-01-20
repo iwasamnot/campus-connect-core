@@ -63,7 +63,11 @@ const embedText = async (text) => {
 };
 
 // Upsert a batch of documents into Pinecone
+// Secrets are bound via functions.runWith() and accessed via process.env
 exports.ragUpsert = functions
+  .runWith({
+    secrets: ['PINECONE_API_KEY', 'PINECONE_INDEX_NAME', 'GROQ_API_KEY'],
+  })
   .region('us-central1')
   .https.onCall(async (data, context) => {
     try {
@@ -118,7 +122,11 @@ exports.ragUpsert = functions
   });
 
 // Search Pinecone and return top matches with metadata
+// Secrets are bound via functions.runWith() and accessed via process.env
 exports.ragSearch = functions
+  .runWith({
+    secrets: ['PINECONE_API_KEY', 'PINECONE_INDEX_NAME', 'GROQ_API_KEY'],
+  })
   .region('us-central1')
   .https.onCall(async (data, context) => {
     try {

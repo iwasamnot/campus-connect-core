@@ -257,16 +257,59 @@ const callAnthropic = async (prompt, config, options) => {
 };
 
 /**
- * Call Gemini API (existing implementation)
+ * Call Gemini API with automatic retry on 503 errors
  */
 const callGemini = async (prompt, config, options) => {
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(config.apiKey);
   const model = genAI.getGenerativeModel({ model: config.model });
   
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text();
+  // Retry logic for 503 (overloaded) and other transient errors
+  const maxRetries = 3;
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      lastError = error;
+      const errorMessage = error.message || error.toString();
+      
+      // Retry on 503 (overloaded) or network errors
+      if (errorMessage.includes('503') || 
+          errorMessage.includes('overloaded') || 
+          errorMessage.includes('network') ||
+          errorMessage.includes('ECONNRESET')) {
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Exponential backoff, max 5s
+          console.warn(`Gemini API attempt ${attempt}/${maxRetries} failed (${errorMessage}), retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+      
+      // Don't retry on auth errors (403, 401) or invalid requests (400)
+      if (errorMessage.includes('403') || 
+          errorMessage.includes('401') || 
+          errorMessage.includes('400') ||
+          errorMessage.includes('leaked')) {
+        throw error;
+      }
+      
+      // For other errors, retry if we have attempts left
+      if (attempt < maxRetries) {
+        const delay = 1000 * attempt;
+        console.warn(`Gemini API attempt ${attempt}/${maxRetries} failed, retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+    }
+  }
+  
+  // All retries exhausted
+  throw lastError;
 };
 
 /**
@@ -312,7 +355,7 @@ const getProviderConfig = (providerName) => {
         return {
           provider: 'gemini',
           apiKey: geminiKey,
-          model: 'gemini-2.0-flash', // Reliable with 1M TPM limit
+          model: 'gemini-2.5-flash', // Latest 2026 model - reliable with 1M TPM limit
           baseUrl: null,
           maxTokens: 2048,
           temperature: 0.7
