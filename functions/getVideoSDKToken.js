@@ -24,8 +24,8 @@ const axios = require('axios');
 // VideoSDK API Key (hardcoded)
 const API_KEY = '0cd81014-abab-4f45-968d-b3ddae835a82';
 
-// Firebase Functions v1
-exports.getVideoSDKToken = functions.https.onCall(async (data, context) => {
+// Firebase Functions v1 - renamed to avoid v2 upgrade conflict
+exports.getVideoSDKTokenV1 = functions.https.onCall(async (data, context) => {
     // Verify user is authenticated
     if (!context.auth) {
       throw new functions.https.HttpsError(

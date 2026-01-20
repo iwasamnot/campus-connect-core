@@ -29,8 +29,8 @@ const { generateToken04 } = require('./zegoTokenGenerator');
 // ZEGOCLOUD App ID (hardcoded, must be a NUMBER, not a string)
 const APP_ID = 128222087; // Number type
 
-// Firebase Functions v1 - using config instead of secrets
-exports.generateZegoToken = functions.https.onCall(async (data, context) => {
+// Firebase Functions v1 - renamed to avoid v2 upgrade conflict
+exports.generateZegoTokenV1 = functions.https.onCall(async (data, context) => {
   // Verify user is authenticated
   if (!context.auth) {
     throw new functions.https.HttpsError(
