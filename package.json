@@ -11,7 +11,8 @@
     "cap:ios": "npm run build && npx cap sync && npx cap open ios",
     "cap:android": "npm run build && npx cap sync && npx cap open android",
     "cap:copy": "npx cap copy",
-    "cap:update": "npx cap update"
+    "cap:update": "npx cap update",
+    "rag:upload": "node scripts/uploadToPinecone.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
@@ -19,6 +20,8 @@
     "@capacitor/core": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
     "@google/generative-ai": "^0.24.1",
+    "@pinecone-database/pinecone": "^4.0.0",
+    "dotenv": "^16.4.7",
     "@react-spring/web": "^10.0.3",
     "@videosdk.live/react-sdk": "^0.6.7",
     "firebase": "^12.7.0",

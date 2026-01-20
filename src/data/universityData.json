@@ -1,0 +1,122 @@
+[
+  {
+    "id": "about-sistc-overview",
+    "title": "About SISTC",
+    "category": "about",
+    "text": "Sydney International School of Technology and Commerce (SISTC) opened its doors in 2020. We offer innovative courses designed to prepare students for careers in Information Technology. SISTC focuses on providing quality IT education with industry partnerships and work-integrated learning opportunities. SISTC is an Accredited Institute of Higher Education. TEQSA PRV14311, CRICOS 03836J, ABN 746 130 55440."
+  },
+  {
+    "id": "about-mission",
+    "title": "SISTC Mission",
+    "category": "about",
+    "text": "Our mission is to provide innovative IT education that prepares students for successful careers in the information economy. We focus on practical skills, industry connections, and preparing students for the digital future."
+  },
+  {
+    "id": "course-bachelor-it",
+    "title": "Bachelor of Information Technology",
+    "category": "courses",
+    "text": "The Bachelor of Information Technology is a 3-year full-time undergraduate degree. It is ACS Certified and offers two majors: Business Information Systems and Digital Enterprise. This comprehensive IT degree focuses on business applications and digital transformation. Nested qualifications include Diploma of Business Information Systems and Diploma of Information Technology."
+  },
+  {
+    "id": "course-master-it",
+    "title": "Master of Information Technology",
+    "category": "courses",
+    "text": "The Master of Information Technology is a 2-year full-time postgraduate degree. It is ACS Certified and offers three specialisations: Data Analytics, Digital Leadership, and Cyber Security Major. This advanced IT degree is designed for career advancement. Nested qualifications include Graduate Diploma in IT and Graduate Certificate in IT."
+  },
+  {
+    "id": "location-sydney",
+    "title": "Sydney CBD Campus",
+    "category": "locations",
+    "text": "The Sydney CBD campus is located in the heart of Sydney's Central Business District, amidst cafes, shopping, and entertainment. Highlights include iconic landmarks at Sydney Harbour, world-class shopping in CBD, and diverse dining across the city. Address: Sydney CBD, New South Wales."
+  },
+  {
+    "id": "location-parramatta",
+    "title": "Parramatta Campus",
+    "category": "locations",
+    "text": "Parramatta is a vibrant and rapidly growing city located in the heart of Greater Western Sydney. Highlights include fantastic shopping at Westfield Parramatta, global cuisine on Church Street, and historic landmarks in Parramatta Park. Address: Parramatta, Greater Western Sydney, New South Wales."
+  },
+  {
+    "id": "location-melbourne",
+    "title": "Melbourne Campus",
+    "category": "locations",
+    "text": "Melbourne is a vibrant city known for its trendy shopping, diverse dining, rich arts scene, beautiful parks, and world-class sporting events. Highlights include trendy shopping on Collins Street, laneway cafés and global cuisine, and iconic arts and music festivals. Address: Melbourne, Victoria."
+  },
+  {
+    "id": "contact-info",
+    "title": "Contact Information",
+    "category": "contact",
+    "text": "Contact SISTC: Phone: +61 (2) 9061 5900. Website: https://sistc.edu.au/. General enquiries are available through the website contact form. Campuses are located in Sydney, Parramatta, and Melbourne."
+  },
+  {
+    "id": "statistics",
+    "title": "SISTC Statistics and Achievements",
+    "category": "statistics",
+    "text": "SISTC has 500+ students across Sydney and Melbourne campuses. Teaching Practices: 85.1% rated positively (National average: 79.8%). Support Services: 85.4% rated positively (National average: 72.7%). Skill Development: 82.4% rated positively (National average: 79.8%). Based on Undergraduate Student Experience Survey 2021-2022."
+  },
+  {
+    "id": "applying-process",
+    "title": "Application Process",
+    "category": "applying",
+    "text": "How to apply to SISTC: A Student visa is required for International Students. You must always follow the conditions of your visa. Steps include: 1) Check entry requirements for your chosen course, 2) Apply for credit for prior learning if applicable, 3) Contact an education agent or apply directly, 4) Submit application with required documents, 5) Pay application fees, 6) Receive offer and accept, 7) Apply for student visa (international students)."
+  },
+  {
+    "id": "support-services",
+    "title": "Student Support Services",
+    "category": "support",
+    "text": "SISTC offers comprehensive student support including Student Support services, Digital Library access, and Graduation support. Academic support includes Academic Integrity guidance, Work Integrated Learning opportunities, and Capstone Projects Expo. Health & Wellbeing support is also available. The Digital Library provides extensive resources for research and learning."
+  },
+  {
+    "id": "student-life",
+    "title": "Student Life at SISTC",
+    "category": "life",
+    "text": "SISTC offers a vibrant student life with various activities and support services. Special programs include Women in IT to support female students in technology careers. The Capstone Projects Expo showcases student work and achievements. Work Integrated Learning opportunities provide real-world industry experience."
+  },
+  {
+    "id": "acs-certification",
+    "title": "ACS Certification",
+    "category": "accreditation",
+    "text": "SISTC courses are certified by the Australian Computer Society (ACS). ACS is the professional association for Australia's Information and Communication Technology (ICT) sector. ACS certification ensures our graduates meet industry standards and are recognized by employers across Australia."
+  },
+  {
+    "id": "work-integrated-learning",
+    "title": "Work Integrated Learning",
+    "category": "programs",
+    "text": "Work Integrated Learning (WIL) at SISTC provides students with practical industry experience. This includes internships, industry projects, and professional placements. WIL helps students build professional networks, gain real-world skills, and enhance their employability after graduation."
+  },
+  {
+    "id": "entry-requirements",
+    "title": "Entry Requirements",
+    "category": "applying",
+    "text": "Entry requirements for SISTC programs vary by course level. Undergraduate programs require completion of Year 12 or equivalent qualification. Postgraduate programs require a bachelor's degree or equivalent. English language proficiency requirements apply for international students. Credit for prior learning may be available."
+  },
+  {
+    "id": "fees-scholarships",
+    "title": "Fees and Scholarships",
+    "category": "financial",
+    "text": "SISTC offers competitive tuition fees for both domestic and international students. Various scholarship opportunities are available based on academic merit and other criteria. Payment plans may be available. Contact the admissions office for current fee schedules and scholarship information."
+  },
+  {
+    "id": "cyber-security-specialisation",
+    "title": "Cyber Security Specialisation",
+    "category": "courses",
+    "text": "The Cyber Security specialisation within the Master of Information Technology prepares students for careers in information security. Topics covered include network security, ethical hacking, security governance, risk management, and incident response. Graduates are prepared for roles such as Security Analyst, Penetration Tester, and Security Consultant."
+  },
+  {
+    "id": "data-analytics-specialisation",
+    "title": "Data Analytics Specialisation",
+    "category": "courses",
+    "text": "The Data Analytics specialisation within the Master of Information Technology focuses on extracting insights from data. Students learn data mining, statistical analysis, machine learning, data visualization, and big data technologies. Career opportunities include Data Analyst, Business Intelligence Developer, and Data Scientist roles."
+  },
+  {
+    "id": "digital-leadership-specialisation",
+    "title": "Digital Leadership Specialisation",
+    "category": "courses",
+    "text": "The Digital Leadership specialisation prepares students to lead digital transformation initiatives. Topics include IT strategy, project management, change management, digital innovation, and technology governance. Graduates are prepared for IT management and leadership roles in organizations."
+  },
+  {
+    "id": "international-students",
+    "title": "International Students Information",
+    "category": "international",
+    "text": "SISTC welcomes international students from around the world. We are registered on CRICOS (03836J) to enroll international students. Support services for international students include visa guidance, accommodation assistance, airport pickup, orientation programs, and ongoing student support throughout your studies."
+  }
+]
