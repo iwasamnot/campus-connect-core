@@ -96,7 +96,16 @@ export const callAI = async (prompt, options = {}) => {
   const config = getAIProvider();
   
   if (!config) {
-    throw new Error('No AI provider configured. Please set at least one API key in environment variables.');
+    // Graceful no-op when no AI provider is configured.
+    // This allows the app to run with ONLY local logic (no external AI),
+    // while higher-level features can detect a null/empty response and
+    // either skip AI features or fall back to local heuristics.
+    console.warn(
+      'AIProvider: No AI provider configured. ' +
+      'Set at least one of VITE_GEMINI_API_KEY, VITE_GROQ_API_KEY, VITE_OPENAI_API_KEY, ' +
+      'VITE_HUGGINGFACE_API_KEY, or VITE_ANTHROPIC_API_KEY to enable cloud AI features.'
+    );
+    return null;
   }
 
   try {

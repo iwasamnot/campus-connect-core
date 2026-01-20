@@ -620,61 +620,34 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - **Get your Firebase configuration values** from Firebase Console → Project Settings → General → Your apps
 
 <<<<<<< HEAD
-3. **Configure Environment Variables**
-   - Create a `.env` file in the root directory (copy from `.env.example`)
-   - Add your Firebase configuration:
-     ```
-     VITE_FIREBASE_API_KEY=your-firebase-api-key
-     VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-     VITE_FIREBASE_PROJECT_ID=your-project-id
-     VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-     VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-     VITE_FIREBASE_APP_ID=your-app-id
-     VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
-     ```
-   - Add your AI API keys:
-     ```
-     VITE_GEMINI_API_KEY=your-gemini-api-key-here
-     VITE_GROQ_API_KEY=your-groq-api-key-here  # Optional, faster inference
-     ```
-   - Add Pinecone for RAG (optional, for advanced AI features):
-     ```
-     VITE_PINECONE_API_KEY=your-pinecone-api-key
-     VITE_PINECONE_INDEX_NAME=campus-connect-index
-     ```
-   - Add your ZEGOCLOUD App ID (optional, for voice/video calling):
-     ```
-     VITE_ZEGOCLOUD_APP_ID=your-zegocloud-app-id
-     ```
-   - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for AI Help Assistant, Virtual Senior, and toxicity detection)
-   - **Groq API Key**: Get from https://console.groq.com (optional, for faster AI responses)
-   - **Pinecone API Key**: Get from https://app.pinecone.io (for RAG vector search)
-   - **ZEGOCLOUD Setup**: Get from https://console.zegocloud.com (for voice and video calling features)
-     - App ID: Found in Project Configuration → Basic Information (add to `.env` as `VITE_ZEGOCLOUD_APP_ID`)
-     - Server Secret: Found in Project Configuration → Basic Configurations → ServerSecret
-     - **Important**: Server Secret is stored securely in Firebase Secret Manager (NOT in `.env` file)
-     - See `docs/ZEGOCLOUD_TOKEN_SETUP.md` for complete setup instructions
-     - Setup command: `firebase functions:secrets:set ZEGO_SERVER_SECRET`
-   - **Important**: Restart the dev server after adding environment variables
-   - If no API key is provided, the AI will use the local knowledge base
-   - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)
+3. **Configure AI Features (Full Setup)**
    
-3. **Configure API Keys**
-   - **Firebase**: This repository is already wired to the Firebase project `campus-connect-sistc` using a hardcoded config in `src/firebaseConfig.js`:
-     - If you are using the same Firebase project, **no `.env` is required for Firebase**.
-     - If you fork this project for your own Firebase project, update `src/firebaseConfig.js` with your own config snippet from Firebase Console → Project Settings → Web app config.
-   - **Gemini API Key** (optional but recommended for full AI features):
-     - Get a key from `https://makersuite.google.com/app/apikey`.
-     - For local dev, you can either:
-       - Create a `.env` file with:
-         ```
-         VITE_GEMINI_API_KEY=your-gemini-api-key-here
-         ```
-       - Or hardcode it in your own fork (not recommended for public repos).
-   - **ZEGOCLOUD App ID** (optional, for voice/video calling):
-     - Get from `https://console.zegocloud.com`.
-     - You can set `VITE_ZEGOCLOUD_APP_ID` in `.env` or hardcode it similarly if you control the deployment.
-     - Server secret stays in Firebase Secrets (see `docs/ZEGOCLOUD_TOKEN_SETUP.md`).
+   📚 **See `docs/AI_SETUP_GUIDE.md` for complete step-by-step instructions!**
+   
+   **Quick Start:**
+   
+   - **Local Development:**
+     1. Copy `.env.example` to `.env`:
+        ```bash
+        cp .env.example .env
+        ```
+     2. Add your Gemini API key (minimum required):
+        ```env
+        VITE_GEMINI_API_KEY=your-gemini-api-key-here
+        ```
+        Get from: https://makersuite.google.com/app/apikey
+     3. Restart dev server: `npm run dev`
+   
+   - **Production (GitHub Actions):**
+     1. Go to **GitHub → Settings → Secrets and variables → Actions**
+     2. Add these secrets:
+        - `VITE_GEMINI_API_KEY` - **Required** for full AI features
+        - `PINECONE_API_KEY` - For RAG vector service (optional)
+        - `PINECONE_INDEX_NAME` - For RAG vector service (optional)
+        - `OPENAI_API_KEY` - For RAG embeddings (optional)
+     3. Push to `master` → Auto-deploys with full AI!
+   
+   **Firebase Config:** Already hardcoded in `src/firebaseConfig.js` - no `.env` needed for Firebase!
 
 4. **Run Development Server**
    ```bash
