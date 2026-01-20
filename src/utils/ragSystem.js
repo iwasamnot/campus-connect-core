@@ -1,18 +1,27 @@
 /**
  * RAG System - Main Integration
- * Combines retrieval and generation for RAG-powered responses
+ * Research-Grade RAG with Advanced Features
  * 
  * Priority order:
  * 1. Direct Pinecone RAG Engine (askVirtualSenior) - fastest, serverless
  * 2. Firebase Cloud Functions RAG (searchRag) - fallback
  * 3. Local in-memory retrieval - offline fallback
+ * 
+ * Advanced Features (via askVirtualSenior):
+ * - Semantic Guardrails: Blocks adversarial queries
+ * - Confidence Thresholding: Admits when it doesn't know
+ * - Conversational Memory: Resolves coreferences
+ * - Source Citations: Cites knowledge base documents
+ * - Metadata Filtering: Category-based search optimization
+ * - Temporal Grounding: Time-aware responses
+ * - Multi-Modal Support: Image analysis
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ensureKnowledgeBaseIndexed, searchRag } from './ragClient';
 import { processKnowledgeBase } from './knowledgeBaseProcessor';
 import { ragRetrieval } from './ragRetrieval';
-import { askVirtualSenior, checkConfiguration } from './ragEngine';
+import { askVirtualSenior, checkConfiguration, getTemporalContext } from './ragEngine';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim() || '';
 
@@ -81,29 +90,41 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
     ? previousAssistantMessages[previousAssistantMessages.length - 1]?.content || ''
     : '';
 
-  // 1) Try Direct Pinecone RAG Engine first (fastest, serverless)
+  // 1) Try Direct Pinecone RAG Engine first (Research-Grade features)
   if (isPineconeRAGConfigured()) {
     try {
-      console.log('RAG: Using direct Pinecone RAG Engine (with Safety + Memory + Confidence features)');
+      const temporal = getTemporalContext();
+      console.log(`RAG: Using Research-Grade RAG Engine @ ${temporal.time}`);
+      console.log('RAG: Features: Safety + Memory + Confidence + Categories + Temporal');
+      
       const result = await askVirtualSenior(query, { 
         topK: 5,
         previousAnswer: lastAssistantMessage, // CONVERSATIONAL MEMORY
+        includeDebugInfo: false,
       });
       
       // Handle blocked queries (safety filter)
       if (result.blocked) {
-        console.log('RAG: Query blocked by safety filter');
+        console.log('RAG: 🛡️ Query blocked by safety filter');
         return result.answer;
       }
       
       // Handle low confidence (honesty protocol)
       if (result.lowConfidence) {
-        console.log(`RAG: Low confidence response (${(result.confidenceScore * 100).toFixed(1)}%)`);
+        console.log(`RAG: ⚠️ Low confidence (${(result.confidenceScore * 100).toFixed(1)}%)`);
+        return result.answer;
+      }
+      
+      // Handle multi-modal responses
+      if (result.multiModal) {
+        console.log('RAG: 🖼️ Multi-modal response generated');
         return result.answer;
       }
       
       if (result.answer && !result.error) {
-        console.log(`RAG: Success (confidence: ${(result.confidenceScore * 100).toFixed(1)}%)`);
+        const category = result.queryCategory || 'general';
+        const confidence = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) : 'N/A';
+        console.log(`RAG: ✅ Success [${category}] (${confidence}% confidence)`);
         return result.answer;
       }
       console.warn('RAG: Direct Pinecone returned error, trying fallback:', result.error);
