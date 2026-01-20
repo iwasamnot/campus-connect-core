@@ -1,20 +1,26 @@
 /**
  * RAG System - Main Integration
- * Research-Grade RAG with Advanced Features
+ * Research-Grade RAG with Human-Centric AI Features
  * 
  * Priority order:
  * 1. Direct Pinecone RAG Engine (askVirtualSenior) - fastest, serverless
  * 2. Firebase Cloud Functions RAG (searchRag) - fallback
  * 3. Local in-memory retrieval - offline fallback
  * 
- * Advanced Features (via askVirtualSenior):
- * - Semantic Guardrails: Blocks adversarial queries
- * - Confidence Thresholding: Admits when it doesn't know
- * - Conversational Memory: Resolves coreferences
- * - Source Citations: Cites knowledge base documents
- * - Metadata Filtering: Category-based search optimization
- * - Temporal Grounding: Time-aware responses
- * - Multi-Modal Support: Image analysis
+ * Advanced Features (13 total via askVirtualSenior):
+ * 1. Semantic Guardrails - Blocks adversarial queries
+ * 2. Confidence Thresholding - Admits when it doesn't know
+ * 3. Conversational Memory - Resolves coreferences
+ * 4. Source Citations - Cites knowledge base documents
+ * 5. Metadata Filtering - Category-based search optimization
+ * 6. Temporal Grounding - Time-aware responses
+ * 7. Multi-Modal Support - Image analysis
+ * 8. Dual-Memory Architecture - Long-term personalization
+ * 9. Query Expansion (HyDE) - Semantic translation
+ * 10. Admin Analytics - Pulse Dashboard
+ * 11. Affective Computing - Emotional intelligence
+ * 12. Socratic Tutor Mode - Pedagogical scaffolding
+ * 13. Peer Discovery - Social graph / study groups
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -70,22 +76,21 @@ export const initializeRAG = async () => {
  * 2. Firebase Cloud Functions RAG (searchRag) - fallback
  * 3. Local in-memory retrieval - offline fallback
  * 
- * Advanced Features (via askVirtualSenior):
- * - Semantic Guardrails: Blocks unsafe/adversarial queries
- * - Confidence Thresholding: Admits when it doesn't know
- * - Conversational Memory: Uses previous answer for context
- * - Source Citations: Cites knowledge base documents
- * - Metadata Filtering: Category-based search optimization
- * - Temporal Grounding: Time-aware responses
- * - Dual-Memory Architecture: Personalization via user profiles
+ * All 13 Advanced Features (via askVirtualSenior):
+ * - Safety, Confidence, Memory, Citations, Filtering, Temporal
+ * - Multi-Modal, Dual-Memory, Query Expansion, Analytics
+ * - Affective Computing, Socratic Mode, Peer Discovery
  * 
  * @param {string} query - The user's question
  * @param {Array} conversationHistory - Previous messages for context
  * @param {string} modelName - The Gemini model to use
  * @param {string} userContext - Additional context about the user
  * @param {string} userId - User ID for personalization (optional)
+ * @param {Object} options - Additional options
+ * @param {Object} options.imageData - Image data for multi-modal queries
+ * @returns {Promise<Object|string>} - Response object or string
  */
-export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '', userId = null) => {
+export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '', userId = null, options = {}) => {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
     console.warn('RAG: Gemini API key not available');
     return null;
@@ -103,40 +108,58 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
   if (isPineconeRAGConfigured()) {
     try {
       const temporal = getTemporalContext();
-      console.log(`RAG: Using Research-Grade RAG Engine @ ${temporal.time}`);
-      console.log('RAG: Features: Safety + Memory + Confidence + Categories + Temporal + Personalization');
+      console.log(`RAG: Using Human-Centric RAG Engine @ ${temporal.time}`);
+      console.log('RAG: Features: Safety + Affective + Socratic + Memory + Peer Discovery + 8 more');
       
       const result = await askVirtualSenior(query, { 
         userId: userId,                          // DUAL-MEMORY: User personalization
         topK: 5,
         previousAnswer: lastAssistantMessage,    // CONVERSATIONAL MEMORY
+        imageData: options.imageData || null,    // MULTI-MODAL: Image analysis
         includeDebugInfo: false,
       });
       
       // Handle blocked queries (safety filter)
       if (result.blocked) {
         console.log('RAG: 🛡️ Query blocked by safety filter');
-        return result.answer;
+        return { answer: result.answer, blocked: true };
       }
       
       // Handle low confidence (honesty protocol)
       if (result.lowConfidence) {
         console.log(`RAG: ⚠️ Low confidence (${(result.confidenceScore * 100).toFixed(1)}%)`);
-        return result.answer;
+        return { answer: result.answer, lowConfidence: true };
       }
       
       // Handle multi-modal responses
       if (result.multiModal) {
         console.log('RAG: 🖼️ Multi-modal response generated');
-        return result.answer;
+        return { answer: result.answer, multiModal: true };
       }
       
       if (result.answer && !result.error) {
         const category = result.queryCategory || 'general';
         const confidence = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) : 'N/A';
-        const personalized = result.personalized ? '👤 Personalized' : '';
-        console.log(`RAG: ✅ Success [${category}] (${confidence}% confidence) ${personalized}`);
-        return result.answer;
+        const sentiment = result.sentiment || 'NEUTRAL';
+        const queryType = result.queryType || 'ADMINISTRATIVE';
+        const personalized = result.personalized ? '👤' : '';
+        const peers = result.peerDiscovery ? `👥${result.peerDiscovery.count}` : '';
+        
+        console.log(`RAG: ✅ [${category}] ${sentiment} ${queryType} (${confidence}%) ${personalized} ${peers}`);
+        
+        // Return rich response object for UI to use
+        return {
+          answer: result.answer,
+          metadata: {
+            category,
+            confidence: result.confidenceScore,
+            sentiment,
+            queryType,
+            personalized: result.personalized,
+            peerDiscovery: result.peerDiscovery,
+            temporalContext: result.temporalContext,
+          }
+        };
       }
       console.warn('RAG: Direct Pinecone returned error, trying fallback:', result.error);
     } catch (pineconeError) {

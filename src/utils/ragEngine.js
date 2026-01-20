@@ -265,7 +265,7 @@ async function logQueryAnalytics(data) {
     // Get the app's Firestore instance
     let db;
     try {
-      const appModule = await import('../firebase');
+      const appModule = await import('../firebaseConfig');
       db = appModule.db || getFirestore();
     } catch {
       // If firebase module doesn't export db, skip logging
@@ -390,7 +390,7 @@ async function logTopicInterest(topic, category) {
     
     let db;
     try {
-      const appModule = await import('../firebase');
+      const appModule = await import('../firebaseConfig');
       db = appModule.db || getFirestore();
     } catch {
       return null;

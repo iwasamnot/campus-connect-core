@@ -544,9 +544,19 @@ ${question}
       try {
         // Import RAG system dynamically
         const { generateRAGResponse } = await import('../utils/ragSystem');
-        const ragAnswer = await generateRAGResponse(question, conversationHistory, selectedGeminiModel, userContext);
-        if (ragAnswer && ragAnswer.trim() !== '') {
-          return ragAnswer;
+        const userId = currentUser?.uid || null; // Pass user ID for personalization
+        const ragResult = await generateRAGResponse(question, conversationHistory, selectedGeminiModel, userContext, userId);
+        
+        // Handle new response format (object with answer and metadata)
+        if (ragResult) {
+          const answer = typeof ragResult === 'string' ? ragResult : ragResult.answer;
+          if (answer && answer.trim() !== '') {
+            // Log metadata for debugging (sentiment, queryType, etc.)
+            if (ragResult.metadata) {
+              console.log('RAG Metadata:', ragResult.metadata);
+            }
+            return answer;
+          }
         }
       } catch (ragError) {
         console.warn('RAG system error, falling back to standard Gemini:', ragError);

@@ -642,12 +642,22 @@ const ChatArea = ({ setActiveView }) => {
     }
 
     try {
-      // Try RAG-enhanced response first
+      // Try RAG-enhanced response first (with all 13 advanced features)
       try {
         const { generateRAGResponse } = await import('../utils/ragSystem');
-        const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel);
-        if (ragResponse && ragResponse.trim() !== '') {
-          return ragResponse.trim();
+        const userId = user?.uid || null; // Pass user ID for personalization
+        const ragResult = await generateRAGResponse(userMessage, [], selectedGeminiModel, '', userId);
+        
+        // Handle new response format (object with answer and metadata)
+        if (ragResult) {
+          const answer = typeof ragResult === 'string' ? ragResult : ragResult.answer;
+          if (answer && answer.trim() !== '') {
+            // Log metadata for debugging
+            if (ragResult.metadata) {
+              console.log('RAG Metadata:', ragResult.metadata);
+            }
+            return answer.trim();
+          }
         }
       } catch (ragError) {
         console.warn('RAG system error, falling back to standard Gemini:', ragError);
