@@ -26,9 +26,9 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Configuration
-const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
-const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME || 'campus-connect-index';
+// Configuration - Support both regular and VITE_ prefixed env vars
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY || process.env.VITE_PINECONE_API_KEY;
+const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME || process.env.VITE_PINECONE_INDEX_NAME || 'campus-connect-index';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 // Embedding model configuration
@@ -42,7 +42,7 @@ function validateEnvironment() {
   const errors = [];
   
   if (!PINECONE_API_KEY) {
-    errors.push('PINECONE_API_KEY is not set');
+    errors.push('PINECONE_API_KEY (or VITE_PINECONE_API_KEY) is not set');
   }
   
   if (!GEMINI_API_KEY) {
@@ -52,11 +52,14 @@ function validateEnvironment() {
   if (errors.length > 0) {
     console.error('❌ Environment validation failed:');
     errors.forEach(err => console.error(`   - ${err}`));
-    console.error('\nPlease set the required environment variables in your .env file.');
+    console.error('\nPlease set the required environment variables:');
+    console.error('   For GitHub Actions: Add secrets in repository settings');
+    console.error('   For local: Create a .env file with PINECONE_API_KEY and GEMINI_API_KEY');
     process.exit(1);
   }
   
   console.log('✅ Environment variables validated');
+  console.log(`   Index: ${PINECONE_INDEX_NAME}`);
 }
 
 /**
