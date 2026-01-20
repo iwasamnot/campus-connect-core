@@ -12,11 +12,11 @@
  * Returns: { token: string, meetingId: string }
  * 
  * Setup:
- * 1. Set secret: firebase functions:secrets:set VIDEOSDK_SECRET
+ * 1. Set config: firebase functions:config:set videosdk.secret="YOUR_SECRET"
  * 2. Deploy function: firebase deploy --only functions:getVideoSDKToken
  */
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const functions = require('firebase-functions');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
@@ -24,53 +24,35 @@ const axios = require('axios');
 // VideoSDK API Key (hardcoded)
 const API_KEY = '0cd81014-abab-4f45-968d-b3ddae835a82';
 
-// Firebase Functions v2 with Secret Manager, CORS, and Region
-// Note: secrets array removed to allow deployment without the secret being set
-// The function will check for the secret at runtime and return an error if not configured
-exports.getVideoSDKToken = onCall(
-  {
-    // secrets: ['VIDEOSDK_SECRET'], // Commented out to allow deployment - secret checked at runtime
-    region: 'us-central1', // Match the region specified in firebaseConfig.js
-    cors: [
-      'http://localhost:5173', // Vite dev server
-      'http://localhost:5174', // Alternative Vite port
-      'http://localhost:3000', // Alternative dev server port
-      'https://campus-connect-sistc.web.app', // Production URL
-      'https://campus-connect-sistc.firebaseapp.com' // Alternative production URL
-    ]
-  },
-  async (request) => {
+// Firebase Functions v1
+exports.getVideoSDKToken = functions
+  .region('us-central1')
+  .https.onCall(async (data, context) => {
     // Verify user is authenticated
-    if (!request.auth) {
-      throw new HttpsError(
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
         'unauthenticated',
         'User must be authenticated to generate tokens'
       );
     }
 
-    // Get Server Secret from Secret Manager (v2)
-    const SECRET = process.env.VIDEOSDK_SECRET;
-    
-    // Debug logging for secret verification
-    if (SECRET) {
-      console.log(`DEBUG: Secret length: ${SECRET.length} (expected: 64)`);
-      console.log(`DEBUG: Secret first 10 chars: ${SECRET.substring(0, 10)}`);
-      console.log(`DEBUG: Secret last 10 chars: ${SECRET.substring(SECRET.length - 10)}`);
-    }
+    // Get Server Secret from config or environment
+    const SECRET = process.env.VIDEOSDK_SECRET || 
+                   functions.config().videosdk?.secret;
     
     // Validate input
-    const { userId, meetingId } = request.data;
+    const { userId, meetingId } = data;
     
     if (!userId) {
-      throw new HttpsError(
+      throw new functions.https.HttpsError(
         'invalid-argument',
         'userId is required'
       );
     }
 
     // Verify userId matches authenticated user (security check)
-    if (userId !== request.auth.uid) {
-      throw new HttpsError(
+    if (userId !== context.auth.uid) {
+      throw new functions.https.HttpsError(
         'permission-denied',
         'User can only generate tokens for themselves'
       );
@@ -78,67 +60,49 @@ exports.getVideoSDKToken = onCall(
 
     // Check if Server Secret is configured
     if (!SECRET) {
-      console.error('=== VIDEOSDK_SECRET Configuration Error ===');
-      console.error('VIDEOSDK_SECRET is not set in Secret Manager');
-      console.error('===================================================');
-      console.error('');
-      console.error('📝 To fix this, run:');
-      console.error('   firebase functions:secrets:set VIDEOSDK_SECRET');
-      console.error('   (Enter your 64-character hex Server Secret when prompted)');
-      console.error('   firebase deploy --only functions:getVideoSDKToken');
-      console.error('');
-      throw new HttpsError(
+      console.error('VIDEOSDK_SECRET is not configured');
+      throw new functions.https.HttpsError(
         'failed-precondition',
-        'VideoSDK Server Secret is not configured. Check function logs for setup instructions.'
+        'VideoSDK Secret is not configured. Run: firebase functions:config:set videosdk.secret="YOUR_SECRET"'
       );
     }
 
     try {
-      // Step 1: Generate JWT token first (needed to create room)
+      // Generate JWT token
       const now = Math.floor(Date.now() / 1000);
       const payload = {
         apikey: API_KEY,
-        permissions: ['allow_join', 'allow_mod'], // Required permissions
-        version: 2, // CRITICAL: Required for modern VideoSDK clusters
-        iat: now, // Issued at time (seconds since epoch)
-        exp: now + (24 * 60 * 60), // Expires in 24 hours (seconds since epoch)
-        jti: uuidv4() // CRITICAL: Unique ID for this token (JWT ID)
+        permissions: ['allow_join', 'allow_mod'],
+        version: 2,
+        iat: now,
+        exp: now + (24 * 60 * 60), // 24 hours
+        jti: uuidv4()
       };
 
-      // Sign the token using HS256 algorithm
       const token = jwt.sign(payload, SECRET, {
         algorithm: 'HS256'
       });
 
-      console.log(`✅ VideoSDK token generated for user ${userId}`);
-      console.log(`Token length: ${token.length}`);
+      console.log(`VideoSDK token generated for user ${userId}`);
 
-      // Step 2: Create a real meeting/room via VideoSDK API
-      // VideoSDK requires rooms to be created via their API first
+      // Create VideoSDK room
       let realMeetingId;
       try {
-        console.log('🔄 Creating VideoSDK room...');
         const roomResponse = await axios.post(
           'https://api.videosdk.live/v2/rooms',
-          {}, // Empty body
+          {},
           {
             headers: {
-              'Authorization': token, // Use the JWT token for authentication
+              'Authorization': token,
               'Content-Type': 'application/json'
             }
           }
         );
-        
         realMeetingId = roomResponse.data.roomId;
-        console.log(`✅ VideoSDK room created: ${realMeetingId}`);
+        console.log(`VideoSDK room created: ${realMeetingId}`);
       } catch (roomError) {
-        console.error('❌ Error creating VideoSDK room:', roomError.response?.data || roomError.message);
-        console.error('Room creation error details:', {
-          status: roomError.response?.status,
-          statusText: roomError.response?.statusText,
-          data: roomError.response?.data
-        });
-        throw new HttpsError(
+        console.error('Error creating VideoSDK room:', roomError.response?.data || roomError.message);
+        throw new functions.https.HttpsError(
           'internal',
           'Failed to create VideoSDK room',
           roomError.response?.data?.message || roomError.message
@@ -147,17 +111,14 @@ exports.getVideoSDKToken = onCall(
 
       return {
         token,
-        meetingId: realMeetingId // Return the real meeting ID from VideoSDK
+        meetingId: realMeetingId
       };
     } catch (error) {
       console.error('Error generating VideoSDK token:', error);
-      console.error('Error stack:', error.stack);
-      throw new HttpsError(
+      throw new functions.https.HttpsError(
         'internal',
         'Failed to generate token',
         error.message
       );
     }
-  }
-);
-
+  });
