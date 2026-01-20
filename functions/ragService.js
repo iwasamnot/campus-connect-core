@@ -4,12 +4,16 @@ const { v4: uuidv4 } = require('uuid');
 const OpenAI = require('openai');
 
 // Read secrets from runtime config or environment variables
+// Pinecone credentials
 const PINECONE_API_KEY =
   process.env.PINECONE_API_KEY || functions.config().pinecone?.api_key;
 const PINECONE_INDEX_NAME =
   process.env.PINECONE_INDEX_NAME || functions.config().pinecone?.index;
-const OPENAI_API_KEY =
-  process.env.OPENAI_API_KEY || functions.config().openai?.api_key;
+
+// Groq API key for embeddings (we use Groq's OpenAI-compatible API instead of OpenAI)
+// This avoids depending on OpenAI while keeping the same embeddings flow.
+const GROQ_API_KEY =
+  process.env.GROQ_API_KEY || functions.config().groq?.api_key;
 
 // Validate configuration early
 if (!PINECONE_API_KEY) {
@@ -18,8 +22,8 @@ if (!PINECONE_API_KEY) {
 if (!PINECONE_INDEX_NAME) {
   console.warn('ragService: PINECONE_INDEX_NAME is not set');
 }
-if (!OPENAI_API_KEY) {
-  console.warn('ragService: OPENAI_API_KEY is not set');
+if (!GROQ_API_KEY) {
+  console.warn('ragService: GROQ_API_KEY is not set (RAG embeddings will be disabled)');
 }
 
 const pineconeClient =
@@ -27,7 +31,11 @@ const pineconeClient =
     ? new Pinecone({ apiKey: PINECONE_API_KEY })
     : null;
 
-const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
+// Use Groq's OpenAI-compatible API as the embeddings provider
+// Base URL: https://api.groq.com/openai/v1
+const openai = GROQ_API_KEY
+  ? new OpenAI({ apiKey: GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' })
+  : null;
 
 const getIndex = () => {
   if (!pineconeClient || !PINECONE_INDEX_NAME) {
@@ -43,7 +51,7 @@ const embedText = async (text) => {
   if (!openai) {
     throw new functions.https.HttpsError(
       'failed-precondition',
-      'OpenAI is not configured'
+      'Groq embeddings are not configured'
     );
   }
   const trimmed = (text || '').slice(0, 6000); // keep prompt small for embeddings

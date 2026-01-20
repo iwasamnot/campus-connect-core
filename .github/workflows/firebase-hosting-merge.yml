@@ -182,13 +182,13 @@ jobs:
             echo "⚠️ Warning: PINECONE_API_KEY or PINECONE_INDEX_NAME secrets not set - RAG vector service will use local fallback"
           fi
           
-          # Set OpenAI config
-          if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
+          # Set Groq config (for embeddings via OpenAI-compatible API)
+          if [ -n "${{ secrets.GROQ_API_KEY }}" ]; then
             firebase functions:config:set \
-              openai.api_key="${{ secrets.OPENAI_API_KEY }}" \
-              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set OpenAI config (may already be set)"
+              groq.api_key="${{ secrets.GROQ_API_KEY }}" \
+              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set Groq config (may already be set)"
           else
-            echo "⚠️ Warning: OPENAI_API_KEY secret not set - RAG embeddings will not work"
+            echo "⚠️ Warning: GROQ_API_KEY secret not set - RAG embeddings via Groq will not work"
           fi
 
       - name: Deploy Cloud Functions
