@@ -75,8 +75,17 @@ export const initializeRAG = async () => {
  * - Confidence Thresholding: Admits when it doesn't know
  * - Conversational Memory: Uses previous answer for context
  * - Source Citations: Cites knowledge base documents
+ * - Metadata Filtering: Category-based search optimization
+ * - Temporal Grounding: Time-aware responses
+ * - Dual-Memory Architecture: Personalization via user profiles
+ * 
+ * @param {string} query - The user's question
+ * @param {Array} conversationHistory - Previous messages for context
+ * @param {string} modelName - The Gemini model to use
+ * @param {string} userContext - Additional context about the user
+ * @param {string} userId - User ID for personalization (optional)
  */
-export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '') => {
+export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '', userId = null) => {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
     console.warn('RAG: Gemini API key not available');
     return null;
@@ -95,11 +104,12 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
     try {
       const temporal = getTemporalContext();
       console.log(`RAG: Using Research-Grade RAG Engine @ ${temporal.time}`);
-      console.log('RAG: Features: Safety + Memory + Confidence + Categories + Temporal');
+      console.log('RAG: Features: Safety + Memory + Confidence + Categories + Temporal + Personalization');
       
       const result = await askVirtualSenior(query, { 
+        userId: userId,                          // DUAL-MEMORY: User personalization
         topK: 5,
-        previousAnswer: lastAssistantMessage, // CONVERSATIONAL MEMORY
+        previousAnswer: lastAssistantMessage,    // CONVERSATIONAL MEMORY
         includeDebugInfo: false,
       });
       
@@ -124,7 +134,8 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
       if (result.answer && !result.error) {
         const category = result.queryCategory || 'general';
         const confidence = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) : 'N/A';
-        console.log(`RAG: ✅ Success [${category}] (${confidence}% confidence)`);
+        const personalized = result.personalized ? '👤 Personalized' : '';
+        console.log(`RAG: ✅ Success [${category}] (${confidence}% confidence) ${personalized}`);
         return result.answer;
       }
       console.warn('RAG: Direct Pinecone returned error, trying fallback:', result.error);

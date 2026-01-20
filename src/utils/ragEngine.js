@@ -20,26 +20,33 @@
  * 4. SOURCE CITATIONS (Grounded Attribution)
  *    - Every fact cites [Source: Document Title]
  * 
- * 5. METADATA-FILTERED RETRIEVAL (Search Space Optimization) ⭐ NEW
+ * 5. METADATA-FILTERED RETRIEVAL (Search Space Optimization)
  *    - Pre-classifies query into category (Fees, Courses, Campus, etc.)
  *    - Filters Pinecone search to relevant namespace
  *    - 10x more efficient and accurate retrieval
  * 
- * 6. TEMPORAL GROUNDING (Time-Aware RAG) ⭐ NEW
+ * 6. TEMPORAL GROUNDING (Time-Aware RAG)
  *    - Injects real-time server timestamp into inference
  *    - Enables relative date calculations ("Is it open now?")
  *    - Supports deadline awareness ("How many days until census?")
  * 
- * 7. MULTI-MODAL RETRIEVAL (Vision-Augmented RAG) ⭐ NEW
+ * 7. MULTI-MODAL RETRIEVAL (Vision-Augmented RAG)
  *    - Accepts image data (screenshots, photos)
  *    - Gemini 2.0 Flash natively processes images + text
  *    - Enables "What building is this?" or error screenshot analysis
+ * 
+ * 8. DUAL-MEMORY ARCHITECTURE (Long-Term Personalization) ⭐ NEW
+ *    - Memory A: University Knowledge (static, shared)
+ *    - Memory B: User Profile (dynamic, per-student)
+ *    - Multi-Hop Retrieval: Fetches both simultaneously
+ *    - Personalized responses based on student's major, year, interests
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import { Pinecone } from '@pinecone-database/pinecone';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getUserProfile, updateUserProfile } from './profileLearner';
 
 // Configuration
 const getEnvVar = (viteName, regularName, defaultValue = '') => {
@@ -356,16 +363,49 @@ function buildContextString(matches, maxLength = 3000) {
 }
 
 /**
- * Generate response with temporal grounding
+ * Build user profile context string from profile matches
  */
-async function generateResponse(context, userQuestion, temporalContext) {
+function buildUserProfileContext(profileMatches) {
+  if (!profileMatches || profileMatches.length === 0) {
+    return '';
+  }
+  
+  const facts = profileMatches
+    .filter(m => m.metadata?.text)
+    .map(m => `• ${m.metadata.text}`)
+    .join('\n');
+  
+  return facts || '';
+}
+
+/**
+ * Generate response with temporal grounding AND user personalization
+ * FEATURE 8: Dual-Memory Architecture
+ */
+async function generateResponse(context, userQuestion, temporalContext, userProfileContext = '') {
   try {
     const client = getGenAIClient();
     const model = client.getGenerativeModel({ model: GENERATION_MODEL });
     
-    // FEATURE 6: Inject temporal context
-    const systemPrompt = `You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC).
+    // Build personalization section
+    const personalizationSection = userProfileContext 
+      ? `
+═══════════════════════════════════════════════════════════════════════════
+👤 STUDENT PROFILE (Personalize your response based on this):
+═══════════════════════════════════════════════════════════════════════════
+${userProfileContext}
 
+- Tailor examples to their major/course
+- Adjust complexity based on their year level
+- Reference their interests when relevant
+- Be empathetic to their struggles if mentioned
+═══════════════════════════════════════════════════════════════════════════
+`
+      : '';
+
+    // FEATURE 6 + 8: Inject temporal context AND user profile
+    const systemPrompt = `You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC).
+${personalizationSection}
 ═══════════════════════════════════════════════════════════════════════════
 ⏰ TEMPORAL CONTEXT (Use this to answer time-sensitive questions):
 ═══════════════════════════════════════════════════════════════════════════
@@ -386,14 +426,15 @@ ${context || 'No specific context retrieved.'}
 
 ## GUIDELINES:
 1. **Cite Sources**: Always [Source: Title] after facts
-2. **Use Time**: Answer time questions using the temporal context above
-3. **Be Accurate**: Only state facts from context
-4. **Be Helpful**: Like an experienced senior student
+2. **Personalize**: ${userProfileContext ? 'Use the student profile to tailor your response' : 'Give general advice'}
+3. **Use Time**: Answer time questions using the temporal context above
+4. **Be Accurate**: Only state facts from context
+5. **Be Helpful**: Like an experienced senior student who knows this specific student
 
 ## STUDENT QUESTION:
 ${userQuestion}
 
-Provide a helpful, time-aware, well-cited response:`;
+Provide a helpful, ${userProfileContext ? 'personalized, ' : ''}time-aware, well-cited response:`;
 
     const result = await model.generateContent(systemPrompt);
     const text = result.response.text();
@@ -411,7 +452,7 @@ Provide a helpful, time-aware, well-cited response:`;
 
 // ============================================================================
 // MAIN FUNCTION: askVirtualSenior
-// Research-Grade RAG with all 7 advanced features
+// Research-Grade RAG with all 8 advanced features
 // ============================================================================
 
 /**
@@ -419,6 +460,7 @@ Provide a helpful, time-aware, well-cited response:`;
  * 
  * @param {string} userQuestion - The user's question
  * @param {Object} options - Configuration options
+ * @param {string} options.userId - User ID for personalization (Feature 8)
  * @param {string} options.previousAnswer - Previous AI response (Memory)
  * @param {Object} options.imageData - Image data for multi-modal queries
  * @param {string} options.imageData.base64 - Base64 encoded image
@@ -428,10 +470,12 @@ Provide a helpful, time-aware, well-cited response:`;
  * @param {boolean} options.includeDebugInfo - Include debug info
  * @param {boolean} options.skipSafetyCheck - Skip safety check
  * @param {boolean} options.skipCategoryFilter - Skip metadata filtering
+ * @param {boolean} options.skipProfileLearning - Skip profile learning
  * @returns {Promise<Object>} - Response object
  */
 export async function askVirtualSenior(userQuestion, options = {}) {
   const {
+    userId = null,             // FEATURE 8: User identification for personalization
     previousAnswer = '',
     imageData = null,          // FEATURE 7: Multi-modal
     topK = TOP_K_MATCHES,
@@ -439,6 +483,7 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     includeDebugInfo = false,
     skipSafetyCheck = false,
     skipCategoryFilter = false,
+    skipProfileLearning = false,
   } = options;
 
   // Validate input
@@ -462,14 +507,17 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     question: trimmedQuestion,
     steps: [],
     matches: [],
+    profileFacts: [],
     contextLength: 0,
     processingTime: 0,
     safetyPassed: false,
     confidenceScore: 0,
     hadPreviousContext: !!previousAnswer,
     hadImage: !!imageData,
+    hadUserId: !!userId,
     queryCategory: null,
     temporalContext: temporalContext.fullDateTime,
+    profileLearned: false,
   };
 
   const startTime = Date.now();
@@ -543,15 +591,31 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     }
 
     // ========================================================================
-    // STEP 4: EMBEDDING & FILTERED PINECONE SEARCH
+    // STEP 4: EMBEDDING & DUAL-MEMORY RETRIEVAL (Multi-Hop)
     // ========================================================================
     debugInfo.steps.push('🧮 Generating embedding...');
     const questionEmbedding = await generateEmbedding(searchQuery);
     debugInfo.steps.push(`✅ Embedding (${questionEmbedding.length}d)`);
 
-    debugInfo.steps.push('🔍 Querying knowledge base...');
-    const matches = await queryPinecone(questionEmbedding, topK, queryCategory);
-    debugInfo.steps.push(`✅ Found ${matches.length} matches`);
+    // FEATURE 8: Dual-Memory Retrieval - Parallel search for Knowledge AND Profile
+    debugInfo.steps.push('🔍 Dual-memory retrieval (Knowledge + Profile)...');
+    
+    // Memory A: University Knowledge
+    const knowledgePromise = queryPinecone(questionEmbedding, topK, queryCategory);
+    
+    // Memory B: User Profile (if userId provided)
+    const profilePromise = userId 
+      ? getUserProfile(userId, questionEmbedding, 3)
+      : Promise.resolve([]);
+    
+    // Execute both searches in parallel
+    const [matches, profileMatches] = await Promise.all([knowledgePromise, profilePromise]);
+    
+    debugInfo.steps.push(`✅ Knowledge: ${matches.length} matches`);
+    if (userId && profileMatches.length > 0) {
+      debugInfo.steps.push(`✅ Profile: ${profileMatches.length} facts found`);
+      debugInfo.profileFacts = profileMatches.map(m => m.metadata?.text || '');
+    }
     
     debugInfo.matches = matches.map(m => ({
       id: m.id,
@@ -570,6 +634,13 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     if (!bestMatch || confidenceScore < CONFIDENCE_THRESHOLD) {
       debugInfo.steps.push(`⚠️ Low confidence (${(confidenceScore * 100).toFixed(1)}%)`);
       debugInfo.processingTime = Date.now() - startTime;
+      
+      // Still trigger profile learning even on low confidence
+      if (userId && !skipProfileLearning) {
+        updateUserProfile(userId, trimmedQuestion).catch(e => 
+          console.warn('Background profile learning failed:', e.message)
+        );
+      }
       
       return {
         answer: `I couldn't find specific information about that in the SISTC knowledge base (confidence: ${(confidenceScore * 100).toFixed(0)}%). 
@@ -590,25 +661,47 @@ Is there something else I can help with?`,
     debugInfo.steps.push(`✅ Confidence: ${(confidenceScore * 100).toFixed(1)}%`);
 
     // ========================================================================
-    // STEP 6: BUILD CONTEXT & GENERATE (with Temporal Grounding)
+    // STEP 6: BUILD CONTEXT & GENERATE (with Temporal + Personalization)
     // ========================================================================
     debugInfo.steps.push('📚 Building context...');
     const context = buildContextString(matches, maxContextLength);
     debugInfo.contextLength = context.length;
+    
+    // FEATURE 8: Build user profile context for personalization
+    const userProfileContext = buildUserProfileContext(profileMatches);
+    if (userProfileContext) {
+      debugInfo.steps.push('👤 Adding personalization context...');
+    }
 
-    debugInfo.steps.push('🤖 Generating time-aware response...');
-    const answer = await generateResponse(context, trimmedQuestion, temporalContext);
+    debugInfo.steps.push('🤖 Generating personalized, time-aware response...');
+    const answer = await generateResponse(context, trimmedQuestion, temporalContext, userProfileContext);
     debugInfo.steps.push('✅ Response generated');
+
+    // ========================================================================
+    // STEP 7: BACKGROUND PROFILE LEARNING
+    // ========================================================================
+    if (userId && !skipProfileLearning) {
+      // Don't await - let it run in background
+      updateUserProfile(userId, trimmedQuestion)
+        .then(result => {
+          if (result.learned) {
+            console.log(`🧠 Learned ${result.totalStored} new facts about user`);
+          }
+        })
+        .catch(e => console.warn('Background profile learning failed:', e.message));
+      debugInfo.profileLearned = true;
+    }
 
     debugInfo.processingTime = Date.now() - startTime;
 
     // ========================================================================
-    // STEP 7: RETURN RESULT
+    // STEP 8: RETURN RESULT
     // ========================================================================
     return {
       answer,
       confidenceScore,
       queryCategory,
+      personalized: !!userProfileContext,
       temporalContext: temporalContext.fullDateTime,
       debug: includeDebugInfo ? debugInfo : undefined,
     };
@@ -641,9 +734,10 @@ export function checkConfiguration() {
       confidenceThreshold: CONFIDENCE_THRESHOLD,
       conversationalMemory: true,
       sourceCitations: true,
-      metadataFiltering: true,      // NEW
-      temporalGrounding: true,       // NEW
-      multiModalSupport: true,       // NEW
+      metadataFiltering: true,
+      temporalGrounding: true,
+      multiModalSupport: true,
+      dualMemoryArchitecture: true,  // Long-term personalization
     },
   };
 
