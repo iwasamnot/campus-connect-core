@@ -12,10 +12,22 @@
     "text": "Our mission is to provide innovative IT education that prepares students for successful careers in the information economy. We focus on practical skills, industry connections, and preparing students for the digital future."
   },
   {
+    "id": "about-values",
+    "title": "SISTC Core Values",
+    "category": "about",
+    "text": "SISTC is built on core values of excellence, innovation, integrity, and student success. We believe in providing quality education that is accessible, practical, and industry-relevant. Our commitment to student outcomes drives everything we do."
+  },
+  {
     "id": "course-bachelor-it",
     "title": "Bachelor of Information Technology",
     "category": "courses",
     "text": "The Bachelor of Information Technology is a 3-year full-time undergraduate degree. It is ACS Certified and offers two majors: Business Information Systems and Digital Enterprise. This comprehensive IT degree focuses on business applications and digital transformation. Nested qualifications include Diploma of Business Information Systems and Diploma of Information Technology."
+  },
+  {
+    "id": "course-bachelor-it-details",
+    "title": "Bachelor of IT Course Structure",
+    "category": "courses",
+    "text": "The Bachelor of Information Technology consists of 24 units over 3 years. Core units cover programming, database management, systems analysis, networking, and project management. Students can exit with a Diploma after completing the first year. The degree includes a capstone project in the final year."
   },
   {
     "id": "course-master-it",
@@ -24,28 +36,64 @@
     "text": "The Master of Information Technology is a 2-year full-time postgraduate degree. It is ACS Certified and offers three specialisations: Data Analytics, Digital Leadership, and Cyber Security Major. This advanced IT degree is designed for career advancement. Nested qualifications include Graduate Diploma in IT and Graduate Certificate in IT."
   },
   {
+    "id": "course-master-it-details",
+    "title": "Master of IT Course Structure",
+    "category": "courses",
+    "text": "The Master of Information Technology consists of 16 units over 2 years. Students complete core units in advanced IT concepts before specialising in their chosen area. The program includes a research project or industry placement in the final semester. Students can exit with a Graduate Certificate after 4 units or Graduate Diploma after 8 units."
+  },
+  {
+    "id": "diploma-bit",
+    "title": "Diploma of Business Information Systems",
+    "category": "courses",
+    "text": "The Diploma of Business Information Systems is an exit-only qualification from the Bachelor of IT. Students who complete the first year of the Bachelor program can exit with this diploma. The diploma covers fundamental IT concepts, programming basics, and business systems analysis."
+  },
+  {
+    "id": "diploma-it",
+    "title": "Diploma of Information Technology",
+    "category": "courses",
+    "text": "The Diploma of Information Technology is an exit-only qualification available to students in the Bachelor of IT program. It provides foundational IT knowledge and skills suitable for entry-level IT positions."
+  },
+  {
+    "id": "graduate-cert-it",
+    "title": "Graduate Certificate in IT",
+    "category": "courses",
+    "text": "The Graduate Certificate in Information Technology is an exit-only qualification from the Master of IT program. Students who complete 4 units can exit with this certificate. It provides a pathway into the full Master's degree for students who need to build foundational knowledge."
+  },
+  {
+    "id": "graduate-diploma-it",
+    "title": "Graduate Diploma in IT",
+    "category": "courses",
+    "text": "The Graduate Diploma in Information Technology is an exit-only qualification from the Master of IT program. Students who complete 8 units can exit with this diploma. It provides substantial IT knowledge suitable for career advancement."
+  },
+  {
     "id": "location-sydney",
     "title": "Sydney CBD Campus",
     "category": "locations",
-    "text": "The Sydney CBD campus is located in the heart of Sydney's Central Business District, amidst cafes, shopping, and entertainment. Highlights include iconic landmarks at Sydney Harbour, world-class shopping in CBD, and diverse dining across the city. Address: Sydney CBD, New South Wales."
+    "text": "The Sydney CBD campus is located in the heart of Sydney's Central Business District, amidst cafes, shopping, and entertainment. Highlights include iconic landmarks at Sydney Harbour, world-class shopping in CBD, and diverse dining across the city. Address: Sydney CBD, New South Wales. The campus features modern facilities, computer labs, and collaborative learning spaces."
   },
   {
     "id": "location-parramatta",
     "title": "Parramatta Campus",
     "category": "locations",
-    "text": "Parramatta is a vibrant and rapidly growing city located in the heart of Greater Western Sydney. Highlights include fantastic shopping at Westfield Parramatta, global cuisine on Church Street, and historic landmarks in Parramatta Park. Address: Parramatta, Greater Western Sydney, New South Wales."
+    "text": "Parramatta is a vibrant and rapidly growing city located in the heart of Greater Western Sydney. Highlights include fantastic shopping at Westfield Parramatta, global cuisine on Church Street, and historic landmarks in Parramatta Park. Address: Parramatta, Greater Western Sydney, New South Wales. The campus is well-connected by public transport."
   },
   {
     "id": "location-melbourne",
     "title": "Melbourne Campus",
     "category": "locations",
-    "text": "Melbourne is a vibrant city known for its trendy shopping, diverse dining, rich arts scene, beautiful parks, and world-class sporting events. Highlights include trendy shopping on Collins Street, laneway cafés and global cuisine, and iconic arts and music festivals. Address: Melbourne, Victoria."
+    "text": "Melbourne is a vibrant city known for its trendy shopping, diverse dining, rich arts scene, beautiful parks, and world-class sporting events. Highlights include trendy shopping on Collins Street, laneway cafés and global cuisine, and iconic arts and music festivals. Address: Melbourne, Victoria. The campus is centrally located with easy access to public transport."
   },
   {
     "id": "contact-info",
     "title": "Contact Information",
     "category": "contact",
-    "text": "Contact SISTC: Phone: +61 (2) 9061 5900. Website: https://sistc.edu.au/. General enquiries are available through the website contact form. Campuses are located in Sydney, Parramatta, and Melbourne."
+    "text": "Contact SISTC: Phone: +61 (2) 9061 5900. Website: https://sistc.edu.au/. General enquiries are available through the website contact form. Campuses are located in Sydney, Parramatta, and Melbourne. Office hours are Monday to Friday, 9:00 AM to 5:00 PM AEST."
+  },
+  {
+    "id": "contact-admissions",
+    "title": "Admissions Contact",
+    "category": "contact",
+    "text": "For admissions enquiries, visit the SISTC website at https://sistc.edu.au/ or call +61 (2) 9061 5900. You can also contact an authorized education agent in your country. The admissions team can help with course information, entry requirements, and application assistance."
   },
   {
     "id": "statistics",
@@ -60,10 +108,28 @@
     "text": "How to apply to SISTC: A Student visa is required for International Students. You must always follow the conditions of your visa. Steps include: 1) Check entry requirements for your chosen course, 2) Apply for credit for prior learning if applicable, 3) Contact an education agent or apply directly, 4) Submit application with required documents, 5) Pay application fees, 6) Receive offer and accept, 7) Apply for student visa (international students)."
   },
   {
+    "id": "applying-documents",
+    "title": "Required Application Documents",
+    "category": "applying",
+    "text": "Documents required for SISTC application: Academic transcripts from previous studies, English language test results (IELTS, TOEFL, PTE, or equivalent), Copy of passport, Statement of Purpose (for postgraduate programs), Resume/CV (recommended for postgraduate), and any relevant work experience certificates."
+  },
+  {
     "id": "support-services",
     "title": "Student Support Services",
     "category": "support",
     "text": "SISTC offers comprehensive student support including Student Support services, Digital Library access, and Graduation support. Academic support includes Academic Integrity guidance, Work Integrated Learning opportunities, and Capstone Projects Expo. Health & Wellbeing support is also available. The Digital Library provides extensive resources for research and learning."
+  },
+  {
+    "id": "support-academic",
+    "title": "Academic Support",
+    "category": "support",
+    "text": "SISTC provides academic support services including tutoring, study skills workshops, assignment help, and academic advising. Students can access learning support specialists who can help with essay writing, research skills, and exam preparation. Academic integrity workshops are also available."
+  },
+  {
+    "id": "support-wellbeing",
+    "title": "Health and Wellbeing Support",
+    "category": "support",
+    "text": "SISTC offers health and wellbeing support for all students. This includes access to counseling services, mental health resources, and wellness programs. Students can speak confidentially with support staff about any personal or academic challenges they may be facing."
   },
   {
     "id": "student-life",
@@ -72,10 +138,28 @@
     "text": "SISTC offers a vibrant student life with various activities and support services. Special programs include Women in IT to support female students in technology careers. The Capstone Projects Expo showcases student work and achievements. Work Integrated Learning opportunities provide real-world industry experience."
   },
   {
+    "id": "student-events",
+    "title": "Student Events and Activities",
+    "category": "life",
+    "text": "SISTC organizes various student events throughout the year including orientation week, industry networking events, tech workshops, hackathons, cultural celebrations, and graduation ceremonies. These events help students build connections and enhance their university experience."
+  },
+  {
     "id": "acs-certification",
     "title": "ACS Certification",
     "category": "accreditation",
     "text": "SISTC courses are certified by the Australian Computer Society (ACS). ACS is the professional association for Australia's Information and Communication Technology (ICT) sector. ACS certification ensures our graduates meet industry standards and are recognized by employers across Australia."
+  },
+  {
+    "id": "teqsa-accreditation",
+    "title": "TEQSA Accreditation",
+    "category": "accreditation",
+    "text": "SISTC is accredited by the Tertiary Education Quality and Standards Agency (TEQSA), the national regulator for higher education in Australia. TEQSA Provider ID: PRV14311. This accreditation ensures our courses meet Australian higher education standards."
+  },
+  {
+    "id": "cricos-registration",
+    "title": "CRICOS Registration",
+    "category": "accreditation",
+    "text": "SISTC is registered on the Commonwealth Register of Institutions and Courses for Overseas Students (CRICOS). CRICOS Code: 03836J. This registration allows SISTC to enroll international students on student visas in Australia."
   },
   {
     "id": "work-integrated-learning",
@@ -84,16 +168,70 @@
     "text": "Work Integrated Learning (WIL) at SISTC provides students with practical industry experience. This includes internships, industry projects, and professional placements. WIL helps students build professional networks, gain real-world skills, and enhance their employability after graduation."
   },
   {
+    "id": "capstone-projects",
+    "title": "Capstone Projects",
+    "category": "programs",
+    "text": "SISTC students complete a capstone project in their final year. Capstone projects allow students to apply their learning to real-world problems, often in collaboration with industry partners. Projects are showcased at the annual Capstone Projects Expo where students present their work to industry professionals."
+  },
+  {
+    "id": "women-in-it",
+    "title": "Women in IT Program",
+    "category": "programs",
+    "text": "SISTC's Women in IT program supports female students pursuing technology careers. The program includes mentorship opportunities, networking events, and workshops designed to empower women in the IT industry. SISTC is committed to promoting diversity and inclusion in technology."
+  },
+  {
     "id": "entry-requirements",
     "title": "Entry Requirements",
     "category": "applying",
     "text": "Entry requirements for SISTC programs vary by course level. Undergraduate programs require completion of Year 12 or equivalent qualification. Postgraduate programs require a bachelor's degree or equivalent. English language proficiency requirements apply for international students. Credit for prior learning may be available."
   },
   {
+    "id": "entry-requirements-undergraduate",
+    "title": "Undergraduate Entry Requirements",
+    "category": "applying",
+    "text": "To enter the Bachelor of Information Technology, students need: Completion of Australian Year 12 or equivalent international qualification, Meeting minimum academic requirements, English language proficiency (IELTS 6.0 overall with no band less than 5.5, or equivalent). Mature age entry and pathway programs may also be available."
+  },
+  {
+    "id": "entry-requirements-postgraduate",
+    "title": "Postgraduate Entry Requirements",
+    "category": "applying",
+    "text": "To enter the Master of Information Technology, students need: A bachelor's degree in any discipline (IT background not required), English language proficiency (IELTS 6.5 overall with no band less than 6.0, or equivalent). Students without an IT background may need to complete bridging units."
+  },
+  {
+    "id": "english-requirements",
+    "title": "English Language Requirements",
+    "category": "applying",
+    "text": "SISTC accepts various English language tests: IELTS (Academic), TOEFL iBT, PTE Academic, Cambridge English. Undergraduate minimum: IELTS 6.0 overall (no band less than 5.5). Postgraduate minimum: IELTS 6.5 overall (no band less than 6.0). English pathway programs may be available for students who don't meet requirements."
+  },
+  {
+    "id": "credit-recognition",
+    "title": "Credit for Prior Learning",
+    "category": "applying",
+    "text": "SISTC offers credit for prior learning (CPL) for students with relevant qualifications or experience. This can reduce the duration and cost of your degree. Apply for CPL as part of your application by providing transcripts and course outlines from previous studies. The admissions team will assess your eligibility."
+  },
+  {
     "id": "fees-scholarships",
     "title": "Fees and Scholarships",
     "category": "financial",
     "text": "SISTC offers competitive tuition fees for both domestic and international students. Various scholarship opportunities are available based on academic merit and other criteria. Payment plans may be available. Contact the admissions office for current fee schedules and scholarship information."
+  },
+  {
+    "id": "fees-domestic",
+    "title": "Domestic Student Fees",
+    "category": "financial",
+    "text": "Australian domestic students may be eligible for FEE-HELP, a government loan scheme that helps eligible students pay their tuition fees. FEE-HELP allows you to defer payment of your fees until you are earning above the repayment threshold. Contact the admissions office for current domestic fee information."
+  },
+  {
+    "id": "fees-international",
+    "title": "International Student Fees",
+    "category": "financial",
+    "text": "International students pay tuition fees per study period. Fees vary by course and are subject to annual review. Additional costs include Overseas Student Health Cover (OSHC), living expenses, and study materials. Visit the SISTC website or contact admissions for current international fee schedules."
+  },
+  {
+    "id": "payment-plans",
+    "title": "Payment Plans",
+    "category": "financial",
+    "text": "SISTC offers flexible payment options for students. Payment plans may be available to help spread the cost of tuition over the study period. Speak with the finance office to discuss payment options and set up a plan that works for you."
   },
   {
     "id": "cyber-security-specialisation",
@@ -114,9 +252,111 @@
     "text": "The Digital Leadership specialisation prepares students to lead digital transformation initiatives. Topics include IT strategy, project management, change management, digital innovation, and technology governance. Graduates are prepared for IT management and leadership roles in organizations."
   },
   {
+    "id": "business-information-systems-major",
+    "title": "Business Information Systems Major",
+    "category": "courses",
+    "text": "The Business Information Systems major within the Bachelor of IT focuses on the intersection of business and technology. Students learn how to analyze business processes, design information systems, and implement technology solutions that meet organizational needs. Career paths include Business Analyst, Systems Analyst, and IT Consultant."
+  },
+  {
+    "id": "digital-enterprise-major",
+    "title": "Digital Enterprise Major",
+    "category": "courses",
+    "text": "The Digital Enterprise major within the Bachelor of IT prepares students for the digital economy. Topics include digital business models, e-commerce, digital marketing technologies, cloud computing, and enterprise systems. Graduates are prepared for roles in digital transformation and enterprise technology."
+  },
+  {
     "id": "international-students",
     "title": "International Students Information",
     "category": "international",
     "text": "SISTC welcomes international students from around the world. We are registered on CRICOS (03836J) to enroll international students. Support services for international students include visa guidance, accommodation assistance, airport pickup, orientation programs, and ongoing student support throughout your studies."
+  },
+  {
+    "id": "student-visa",
+    "title": "Student Visa Information",
+    "category": "international",
+    "text": "International students studying at SISTC require a Student visa (subclass 500). To apply for a student visa, you need a Confirmation of Enrolment (CoE) from SISTC, proof of English proficiency, evidence of financial capacity, and Overseas Student Health Cover (OSHC). SISTC can provide guidance on the visa application process."
+  },
+  {
+    "id": "oshc-insurance",
+    "title": "Overseas Student Health Cover",
+    "category": "international",
+    "text": "International students on a student visa must have Overseas Student Health Cover (OSHC) for the duration of their stay in Australia. OSHC provides cover for medical and hospital care. SISTC can help arrange OSHC through a preferred provider. Make sure your OSHC covers your entire visa period."
+  },
+  {
+    "id": "accommodation",
+    "title": "Student Accommodation",
+    "category": "international",
+    "text": "SISTC can assist international students with accommodation options. Options include on-campus accommodation (where available), private rentals, homestay with Australian families, and student accommodation providers. The international student support team can provide guidance on finding suitable accommodation near your campus."
+  },
+  {
+    "id": "digital-library",
+    "title": "Digital Library Resources",
+    "category": "support",
+    "text": "SISTC's Digital Library provides students with access to extensive online resources including academic journals, e-books, databases, and research tools. Students can access the library remotely 24/7 using their student login. Library staff are available to help with research and finding resources."
+  },
+  {
+    "id": "it-facilities",
+    "title": "IT Facilities and Labs",
+    "category": "facilities",
+    "text": "SISTC provides modern IT facilities including computer labs with the latest hardware and software, high-speed internet access, collaborative workspaces, and specialized labs for programming, networking, and cyber security. Students have access to industry-standard tools and technologies used in the workplace."
+  },
+  {
+    "id": "career-services",
+    "title": "Career Services",
+    "category": "support",
+    "text": "SISTC's career services help students prepare for employment. Services include resume writing workshops, interview preparation, job search assistance, industry networking events, and career counseling. The careers team can help connect students with employment opportunities in the IT industry."
+  },
+  {
+    "id": "graduation",
+    "title": "Graduation Information",
+    "category": "support",
+    "text": "SISTC holds graduation ceremonies to celebrate student achievements. Graduating students receive their testamur (degree certificate) and academic transcript. Graduation ceremonies are held multiple times per year at prestigious venues. Family and friends are welcome to attend and celebrate with graduates."
+  },
+  {
+    "id": "study-modes",
+    "title": "Study Modes",
+    "category": "courses",
+    "text": "SISTC offers flexible study modes to suit different student needs. Options include full-time study (typically 4 units per trimester) and part-time study (reduced unit load). Some units may be available online or in blended format. Contact the admissions team to discuss the best study mode for your circumstances."
+  },
+  {
+    "id": "trimester-system",
+    "title": "Academic Calendar and Trimesters",
+    "category": "courses",
+    "text": "SISTC operates on a trimester system with three study periods per year. This allows students to complete their degree faster or spread their study load across more periods. Trimester dates are published on the SISTC website. Students can choose to take breaks between trimesters if needed."
+  },
+  {
+    "id": "education-agents",
+    "title": "Education Agents",
+    "category": "applying",
+    "text": "SISTC works with authorized education agents worldwide to help international students with the application process. Education agents can provide information in your language, assist with applications, and guide you through the visa process. Find an authorized SISTC agent on our website or contact us directly."
+  },
+  {
+    "id": "orientation",
+    "title": "Student Orientation",
+    "category": "life",
+    "text": "All new students attend orientation before starting their studies at SISTC. Orientation includes campus tours, introduction to student services, academic information sessions, IT account setup, and social activities to meet other students. International students receive additional orientation covering life in Australia."
+  },
+  {
+    "id": "faq-course-duration",
+    "title": "FAQ: How long are the courses?",
+    "category": "faq",
+    "text": "Course durations at SISTC: Bachelor of Information Technology is 3 years full-time (or part-time equivalent). Master of Information Technology is 2 years full-time (or part-time equivalent). Duration may be reduced with credit for prior learning. Students can also exit with nested qualifications earlier."
+  },
+  {
+    "id": "faq-start-dates",
+    "title": "FAQ: When can I start?",
+    "category": "faq",
+    "text": "SISTC has multiple intake dates throughout the year due to our trimester system. This means you can start your studies in Trimester 1 (February/March), Trimester 2 (May/June), or Trimester 3 (September/October). Check the SISTC website for specific dates and application deadlines."
+  },
+  {
+    "id": "faq-work-while-studying",
+    "title": "FAQ: Can I work while studying?",
+    "category": "faq",
+    "text": "International students on a student visa can work up to 48 hours per fortnight during study periods and unlimited hours during scheduled breaks. This allows students to gain work experience and supplement their income while studying. Always check your visa conditions for the most current information."
+  },
+  {
+    "id": "faq-postgraduate-requirements",
+    "title": "FAQ: Do I need an IT degree for the Master's?",
+    "category": "faq",
+    "text": "No, you don't need an IT bachelor's degree to study the Master of Information Technology at SISTC. The program accepts students from any discipline. Students without an IT background may need to complete some bridging units to build foundational knowledge. This makes the Master's accessible to career changers."
   }
 ]
