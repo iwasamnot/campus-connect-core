@@ -2,7 +2,7 @@
  * Serverless Vector RAG Engine - Query Logic
  * 
  * This module provides RAG (Retrieval-Augmented Generation) functionality
- * using Pinecone for vector search and Google Gemini for embeddings and generation.
+ * using Pinecone for vector search and Google Gemini/Groq for embeddings and generation.
  * 
  * Main function: askVirtualSenior(userQuestion)
  * 
@@ -10,6 +10,7 @@
  *   - VITE_PINECONE_API_KEY or PINECONE_API_KEY: Your Pinecone API key
  *   - VITE_PINECONE_INDEX_NAME or PINECONE_INDEX_NAME: The Pinecone index name
  *   - VITE_GEMINI_API_KEY or GEMINI_API_KEY: Your Google Gemini API key
+ *   - VITE_GROQ_API_KEY or GROQ_API_KEY: (Optional) Groq API key for faster inference
  */
 
 import { Pinecone } from '@pinecone-database/pinecone';
@@ -29,11 +30,16 @@ const getEnvVar = (viteName, regularName, defaultValue = '') => {
 const PINECONE_API_KEY = getEnvVar('VITE_PINECONE_API_KEY', 'PINECONE_API_KEY');
 const PINECONE_INDEX_NAME = getEnvVar('VITE_PINECONE_INDEX_NAME', 'PINECONE_INDEX_NAME', 'campus-connect-index');
 const GEMINI_API_KEY = getEnvVar('VITE_GEMINI_API_KEY', 'GEMINI_API_KEY');
+const GROQ_API_KEY = getEnvVar('VITE_GROQ_API_KEY', 'GROQ_API_KEY');
 
 // Model configurations
 const EMBEDDING_MODEL = 'text-embedding-004';
-const GENERATION_MODEL = 'gemini-2.0-flash'; // Updated to working model
+const GEMINI_MODEL = 'gemini-2.0-flash';
+const GROQ_MODEL = 'llama-3.3-70b-versatile'; // Fast and capable Groq model
 const TOP_K_MATCHES = 3;
+
+// Prefer Groq if available (faster), fallback to Gemini
+const USE_GROQ = !!GROQ_API_KEY;
 
 // Lazy-initialized clients
 let pineconeClient = null;
@@ -175,18 +181,10 @@ function buildContextString(matches, maxLength = 3000) {
 }
 
 /**
- * Step D: Pass Context + User Question to Gemini for generation
- * 
- * @param {string} context - The retrieved context from Pinecone
- * @param {string} userQuestion - The user's original question
- * @returns {Promise<string>} - The AI-generated response
+ * Build the system prompt for the Virtual Senior
  */
-async function generateResponse(context, userQuestion) {
-  try {
-    const client = getGenAIClient();
-    const model = client.getGenerativeModel({ model: GENERATION_MODEL });
-    
-    const systemPrompt = `You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC). Your role is to assist students, prospective students, and visitors with questions about the institution.
+function buildSystemPrompt(context, userQuestion) {
+  return `You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC). Your role is to assist students, prospective students, and visitors with questions about the institution.
 
 ## Your Knowledge Base:
 ${context || 'No specific context was retrieved. Please rely on your general knowledge about educational institutions.'}
@@ -203,16 +201,94 @@ ${context || 'No specific context was retrieved. Please rely on your general kno
 ${userQuestion}
 
 Please provide a helpful response:`;
+}
 
-    const result = await model.generateContent(systemPrompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    if (!text || text.trim().length === 0) {
-      throw new Error('Empty response from generation model');
+/**
+ * Generate response using Groq API (OpenAI-compatible)
+ */
+async function generateWithGroq(context, userQuestion) {
+  const prompt = buildSystemPrompt(context, userQuestion);
+  
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC).'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 2048,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Groq API error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+  
+  if (!text || text.trim().length === 0) {
+    throw new Error('Empty response from Groq');
+  }
+  
+  return text.trim();
+}
+
+/**
+ * Generate response using Gemini API
+ */
+async function generateWithGemini(context, userQuestion) {
+  const client = getGenAIClient();
+  const model = client.getGenerativeModel({ model: GEMINI_MODEL });
+  const prompt = buildSystemPrompt(context, userQuestion);
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+  
+  if (!text || text.trim().length === 0) {
+    throw new Error('Empty response from Gemini');
+  }
+  
+  return text.trim();
+}
+
+/**
+ * Step D: Pass Context + User Question to LLM for generation
+ * Uses Groq if available (faster), falls back to Gemini
+ * 
+ * @param {string} context - The retrieved context from Pinecone
+ * @param {string} userQuestion - The user's original question
+ * @returns {Promise<string>} - The AI-generated response
+ */
+async function generateResponse(context, userQuestion) {
+  // Try Groq first if available (faster inference)
+  if (USE_GROQ) {
+    try {
+      console.log('RAG Engine: Using Groq for generation');
+      return await generateWithGroq(context, userQuestion);
+    } catch (groqError) {
+      console.warn('RAG Engine: Groq failed, falling back to Gemini:', groqError.message);
     }
-    
-    return text.trim();
+  }
+
+  // Fallback to Gemini
+  try {
+    console.log('RAG Engine: Using Gemini for generation');
+    return await generateWithGemini(context, userQuestion);
   } catch (error) {
     console.error('RAG Engine: Error generating response:', error);
     throw new Error(`Failed to generate response: ${error.message}`);
@@ -347,16 +423,23 @@ export function checkConfiguration() {
     status.configured.push('Pinecone API Key');
   }
 
-  if (!GEMINI_API_KEY) {
+  // Need at least one LLM provider (Groq or Gemini)
+  if (!GEMINI_API_KEY && !GROQ_API_KEY) {
     status.isConfigured = false;
-    status.missing.push('GEMINI_API_KEY (or VITE_GEMINI_API_KEY)');
+    status.missing.push('GEMINI_API_KEY or GROQ_API_KEY (need at least one)');
   } else {
-    status.configured.push('Gemini API Key');
+    if (GROQ_API_KEY) {
+      status.configured.push('Groq API Key (primary)');
+    }
+    if (GEMINI_API_KEY) {
+      status.configured.push('Gemini API Key' + (GROQ_API_KEY ? ' (fallback)' : ' (primary)'));
+    }
   }
 
   status.indexName = PINECONE_INDEX_NAME;
   status.embeddingModel = EMBEDDING_MODEL;
-  status.generationModel = GENERATION_MODEL;
+  status.generationModel = USE_GROQ ? GROQ_MODEL : GEMINI_MODEL;
+  status.usingGroq = USE_GROQ;
 
   return status;
 }
