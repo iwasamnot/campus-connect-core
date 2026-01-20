@@ -154,16 +154,18 @@ function buildContextString(matches, maxLength = 3000) {
   for (const match of matches) {
     const title = match.metadata?.title || 'Information';
     const text = match.metadata?.text || '';
-    const score = match.score ? `(relevance: ${(match.score * 100).toFixed(1)}%)` : '';
+    const score = match.score ? `(${(match.score * 100).toFixed(0)}% match)` : '';
     
-    const chunk = `### ${title} ${score}\n${text}\n\n`;
+    // Format with clear document title for easy citation
+    // The AI should cite as [Source: {title}]
+    const chunk = `📄 DOCUMENT: "${title}" ${score}\n${text}\n---\n\n`;
     
     // Stop if we exceed max length
     if (context.length + chunk.length > maxLength) {
       // Add truncated version if there's room
       const remaining = maxLength - context.length - 50;
       if (remaining > 100) {
-        context += `### ${title}\n${text.substring(0, remaining)}...\n\n`;
+        context += `📄 DOCUMENT: "${title}"\n${text.substring(0, remaining)}...\n---\n\n`;
       }
       break;
     }
@@ -188,21 +190,29 @@ async function generateResponse(context, userQuestion) {
     
     const systemPrompt = `You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC). Your role is to assist students, prospective students, and visitors with questions about the institution.
 
+## CRITICAL RULE - Source Citations:
+You MUST cite the source document title for every fact you mention. This builds trust and proves your answers are grounded in real data.
+
+**Citation Format:** Include [Source: Document Title] after each key fact.
+
+**Example Response:**
+"The Bachelor of IT is a 3-year degree [Source: Bachelor of Information Technology]. You can apply online through our website [Source: Application Process]. The course is ACS accredited [Source: ACS Certification]."
+
 ## Your Knowledge Base:
 ${context || 'No specific context was retrieved. Please rely on your general knowledge about educational institutions.'}
 
 ## Guidelines:
-1. **Be Helpful and Friendly**: Answer questions in a warm, supportive manner like an experienced senior student would.
-2. **Use the Context**: Base your answers primarily on the provided knowledge base when relevant information is available.
-3. **Be Accurate**: If the context doesn't contain enough information to fully answer a question, acknowledge this honestly.
-4. **Be Concise**: Provide clear, well-structured answers. Use bullet points or numbered lists when appropriate.
-5. **Stay On Topic**: Focus on questions related to SISTC, courses, student life, applications, and related topics.
-6. **Offer to Help Further**: When appropriate, suggest what else you can help with or where they can find more information.
+1. **Cite Your Sources**: Always include [Source: Title] after facts from the knowledge base.
+2. **Be Helpful and Friendly**: Answer like an experienced senior student would.
+3. **Use the Context**: Base answers primarily on the provided knowledge base.
+4. **Be Accurate**: If context doesn't contain enough info, say so honestly.
+5. **Be Concise**: Use bullet points or numbered lists when appropriate.
+6. **Stay On Topic**: Focus on SISTC, courses, student life, applications.
 
 ## User Question:
 ${userQuestion}
 
-Please provide a helpful response:`;
+Provide a helpful, well-cited response:`;
 
     const result = await model.generateContent(systemPrompt);
     const response = await result.response;
