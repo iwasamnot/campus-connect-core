@@ -544,8 +544,14 @@ ${question}
       try {
         // Import RAG system dynamically
         const { generateRAGResponse } = await import('../utils/ragSystem');
-        const userId = currentUser?.uid || null; // Pass user ID for personalization
-        const ragResult = await generateRAGResponse(question, conversationHistory, selectedGeminiModel, userContext, userId);
+        const userId = user?.uid || null; // Pass user ID for personalization
+        const ragResult = await generateRAGResponse(
+          question,
+          conversationHistory,
+          selectedGeminiModel,
+          userContext,
+          userId
+        );
         
         // Handle new response format (object with answer and metadata)
         if (ragResult) {
