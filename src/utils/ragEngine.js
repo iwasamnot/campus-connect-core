@@ -112,7 +112,9 @@ const TOP_K_MATCHES = 5;
 // ============================================================================
 // FEATURE CONFIG: Confidence Threshold (Honesty Protocol)
 // ============================================================================
-const CONFIDENCE_THRESHOLD = 0.70;
+// Lowered from 0.70 to 0.55 - semantic search scores are typically 50-80%
+// 70% was too strict and rejected valid results
+const CONFIDENCE_THRESHOLD = 0.55;
 
 // ============================================================================
 // FEATURE CONFIG: Query Categories for Metadata Filtering
