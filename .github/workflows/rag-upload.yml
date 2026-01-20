@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload to Pinecone
         env:
-          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY || secrets.VITE_PINECONE_API_KEY }}
           PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME || 'campus-connect-index' }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.VITE_GEMINI_API_KEY }}
         run: npm run rag:upload
