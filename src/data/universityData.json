@@ -1,434 +1,512 @@
 [
   {
-    "id": "about-sistc-main",
-    "title": "About SISTC - Overview",
+    "id": "about-sistc-overview",
+    "title": "About SISTC",
     "category": "about",
-    "text": "Sydney International School of Technology and Commerce (SISTC) is an Australian higher education provider established in 2020. SISTC is dedicated to providing innovative, industry-focused IT education that prepares students for successful careers in the digital economy. We are committed to excellence in teaching, student support, and creating pathways to employment in the technology sector."
+    "text": "Sydney International School of Technology and Commerce (SISTC) opened its doors in 2020. We offer innovative courses designed to prepare students for careers in Information Technology. SISTC focuses on providing quality IT education with industry partnerships and work-integrated learning opportunities. SISTC is an Accredited Institute of Higher Education. TEQSA PRV14311, CRICOS 03836J, ABN 746 130 55440."
   },
   {
-    "id": "about-accreditation",
-    "title": "SISTC Accreditation and Registration",
+    "id": "about-mission",
+    "title": "SISTC Mission",
     "category": "about",
-    "text": "SISTC is fully accredited and registered with Australian regulatory bodies. TEQSA Provider ID: PRV14311. CRICOS Provider Code: 03836J. ABN: 74 613 055 440. Our courses are accredited by the Australian Computer Society (ACS), ensuring graduates meet industry standards and are recognized by employers across Australia and internationally."
+    "text": "Our mission is to provide innovative IT education that prepares students for successful careers in the information economy. We focus on practical skills, industry connections, and preparing students for the digital future."
   },
   {
-    "id": "about-mission-vision",
-    "title": "SISTC Mission and Vision",
-    "category": "about",
-    "text": "Our Mission: To provide innovative IT education that prepares students for successful careers in the information economy. Our Vision: To be a leading provider of quality IT education, recognized for our industry partnerships, student outcomes, and contribution to the digital workforce. We focus on practical skills, industry connections, and preparing students for the digital future."
-  },
-  {
-    "id": "about-why-sistc",
-    "title": "Why Choose SISTC",
-    "category": "about",
-    "text": "Why study at SISTC? ACS Accredited courses ensuring industry recognition. Small class sizes for personalized attention. Industry-experienced lecturers. Work Integrated Learning opportunities. Modern campus facilities in prime locations. Comprehensive student support services. Pathways to employment through industry connections. Flexible study options with trimester system."
-  },
-  {
-    "id": "course-bit-overview",
-    "title": "Bachelor of Information Technology - Overview",
+    "id": "course-bachelor-it",
+    "title": "Bachelor of Information Technology",
     "category": "courses",
-    "text": "The Bachelor of Information Technology (BIT) is a 3-year full-time undergraduate degree designed to provide students with comprehensive knowledge and practical skills in information technology. The program is ACS (Australian Computer Society) accredited, ensuring graduates meet industry standards. Students can choose from two majors: Business Information Systems or Digital Enterprise. Course Code: BIT. Duration: 3 years full-time (6 trimesters). Credit Points: 240 credit points (24 units at 10 credit points each)."
+    "text": "The Bachelor of Information Technology is a 3-year full-time undergraduate degree. It is ACS Certified and offers two majors: Business Information Systems and Digital Enterprise. This comprehensive IT degree focuses on business applications and digital transformation. Nested qualifications include Diploma of Business Information Systems and Diploma of Information Technology."
   },
   {
-    "id": "course-bit-majors",
-    "title": "Bachelor of IT - Available Majors",
+    "id": "course-master-it",
+    "title": "Master of Information Technology",
     "category": "courses",
-    "text": "The Bachelor of Information Technology offers two specialization majors: 1) Business Information Systems Major - focuses on the intersection of business and technology, teaching students to analyze business processes, design information systems, and implement technology solutions. Career paths include Business Analyst, Systems Analyst, IT Consultant. 2) Digital Enterprise Major - prepares students for the digital economy with topics including digital business models, e-commerce, cloud computing, and enterprise systems. Career paths include Digital Transformation Specialist, Enterprise Systems Analyst."
+    "text": "The Master of Information Technology is a 2-year full-time postgraduate degree. It is ACS Certified and offers three specialisations: Data Analytics, Digital Leadership, and Cyber Security Major. This advanced IT degree is designed for career advancement. Nested qualifications include Graduate Diploma in IT and Graduate Certificate in IT."
   },
   {
-    "id": "course-bit-structure",
-    "title": "Bachelor of IT - Course Structure",
-    "category": "courses",
-    "text": "Bachelor of Information Technology Course Structure: Year 1 - Foundation units covering programming fundamentals, database concepts, systems analysis, and professional skills. Students completing Year 1 may exit with Diploma of Information Technology. Year 2 - Advanced units in networking, web development, project management, and chosen major subjects. Year 3 - Specialization units, capstone project, and Work Integrated Learning. Total: 24 units across 6 trimesters."
-  },
-  {
-    "id": "course-bit-core-units",
-    "title": "Bachelor of IT - Core Units",
-    "category": "courses",
-    "text": "Bachelor of IT Core Units include: Programming Fundamentals, Database Design and Development, Systems Analysis and Design, Computer Networks, Web Technologies, IT Project Management, Professional Practice in IT, Information Security Fundamentals, Data Structures and Algorithms, Software Engineering, Cloud Computing Fundamentals, Business Intelligence and Analytics."
-  },
-  {
-    "id": "course-bit-entry",
-    "title": "Bachelor of IT - Entry Requirements",
-    "category": "courses",
-    "text": "Bachelor of Information Technology Entry Requirements: Academic: Completion of Australian Year 12 or equivalent international qualification with satisfactory academic performance. English Language: IELTS 6.0 overall with no band less than 5.5, or equivalent (TOEFL iBT 60, PTE Academic 50). Mature Age Entry: Applicants 21+ without formal qualifications may be considered based on work experience. Pathway: Completion of a relevant Diploma or Certificate IV may provide entry with advanced standing."
-  },
-  {
-    "id": "course-mit-overview",
-    "title": "Master of Information Technology - Overview",
-    "category": "courses",
-    "text": "The Master of Information Technology (MIT) is a 2-year full-time postgraduate degree designed for career advancement in the IT industry. The program is ACS (Australian Computer Society) accredited. Students can specialize in one of three areas: Data Analytics, Digital Leadership, or Cyber Security. Course Code: MIT. Duration: 2 years full-time (4 trimesters). Credit Points: 160 credit points (16 units at 10 credit points each). No IT background required - the program accepts graduates from any discipline."
-  },
-  {
-    "id": "course-mit-specialisations",
-    "title": "Master of IT - Specialisations",
-    "category": "courses",
-    "text": "Master of Information Technology Specialisations: 1) Data Analytics - Learn data mining, statistical analysis, machine learning, data visualization, and big data technologies. Careers: Data Analyst, Data Scientist, Business Intelligence Developer. 2) Digital Leadership - IT strategy, project management, change management, digital innovation, technology governance. Careers: IT Manager, CTO, Digital Transformation Lead. 3) Cyber Security - Network security, ethical hacking, security governance, risk management, incident response. Careers: Security Analyst, Penetration Tester, Security Consultant."
-  },
-  {
-    "id": "course-mit-structure",
-    "title": "Master of IT - Course Structure",
-    "category": "courses",
-    "text": "Master of Information Technology Course Structure: Semester 1-2: Core units covering advanced IT concepts, research methods, and foundation subjects. Students completing 4 units may exit with Graduate Certificate in IT. Semester 3: Specialisation units in chosen area. Students completing 8 units may exit with Graduate Diploma in IT. Semester 4: Advanced specialisation units, industry project or research project. Total: 16 units across 4 trimesters."
-  },
-  {
-    "id": "course-mit-entry",
-    "title": "Master of IT - Entry Requirements",
-    "category": "courses",
-    "text": "Master of Information Technology Entry Requirements: Academic: Bachelor's degree in any discipline from a recognized institution (IT background NOT required). English Language: IELTS 6.5 overall with no band less than 6.0, or equivalent (TOEFL iBT 79, PTE Academic 58). Work Experience: While not mandatory, relevant work experience is valued. Pathway: Graduate Certificate or Graduate Diploma in IT may provide entry for those without a bachelor's degree."
-  },
-  {
-    "id": "course-diploma-bit",
-    "title": "Diploma of Business Information Systems",
-    "category": "courses",
-    "text": "Diploma of Business Information Systems is an exit-only qualification from the Bachelor of Information Technology. Students who complete the first year (8 units) of the BIT program with the Business Information Systems major can exit with this diploma. The qualification provides foundational knowledge in IT and business systems, suitable for entry-level positions in IT support, junior analyst roles, or as a pathway to further study."
-  },
-  {
-    "id": "course-diploma-it",
-    "title": "Diploma of Information Technology",
-    "category": "courses",
-    "text": "Diploma of Information Technology is an exit-only qualification from the Bachelor of Information Technology. Students who complete the first year (8 units) of the BIT program with the Digital Enterprise major can exit with this diploma. The qualification covers fundamental IT skills including programming, databases, and networking, suitable for entry-level IT positions or as a pathway to further study."
-  },
-  {
-    "id": "course-grad-cert",
-    "title": "Graduate Certificate in Information Technology",
-    "category": "courses",
-    "text": "Graduate Certificate in Information Technology is an exit-only qualification from the Master of IT program. Students completing 4 units (40 credit points) can exit with this certificate. Duration: 1 trimester full-time. The Graduate Certificate provides foundational postgraduate IT knowledge and can be used as a pathway to the full Master's degree for students who need to build their skills before committing to the full program."
-  },
-  {
-    "id": "course-grad-dip",
-    "title": "Graduate Diploma in Information Technology",
-    "category": "courses",
-    "text": "Graduate Diploma in Information Technology is an exit-only qualification from the Master of IT program. Students completing 8 units (80 credit points) can exit with this diploma. Duration: 2 trimesters full-time. The Graduate Diploma provides substantial postgraduate IT knowledge suitable for career advancement without completing the full Master's program."
-  },
-  {
-    "id": "location-sydney-cbd",
+    "id": "location-sydney",
     "title": "Sydney CBD Campus",
     "category": "locations",
-    "text": "SISTC Sydney CBD Campus is located in the heart of Sydney's Central Business District. The campus features modern classrooms, computer labs with latest hardware and software, collaborative learning spaces, and student common areas. Located near public transport (trains, buses, light rail), surrounded by cafes, restaurants, and shopping. Address: Sydney CBD, New South Wales. The vibrant CBD location provides students with access to industry networking opportunities and employment prospects."
-  },
-  {
-    "id": "location-sydney-highlights",
-    "title": "Sydney CBD Campus - Highlights",
-    "category": "locations",
-    "text": "Sydney CBD Campus Highlights: Central location in Australia's largest city. Walking distance to Sydney Harbour and Opera House. World-class shopping at Pitt Street Mall and QVB. Diverse dining options from casual to fine dining. Easy access via Central Station, Town Hall Station, and Wynyard Station. Close to major tech companies and startups. Vibrant nightlife and cultural attractions. Beautiful parks including Hyde Park and Royal Botanic Gardens."
+    "text": "The Sydney CBD campus is located in the heart of Sydney's Central Business District, amidst cafes, shopping, and entertainment. Highlights include iconic landmarks at Sydney Harbour, world-class shopping in CBD, and diverse dining across the city. Address: Sydney CBD, New South Wales."
   },
   {
     "id": "location-parramatta",
     "title": "Parramatta Campus",
     "category": "locations",
-    "text": "SISTC Parramatta Campus is located in the heart of Greater Western Sydney, Australia's fastest-growing economic region. The campus offers modern facilities, computer labs, and collaborative spaces. Excellent public transport connections via Parramatta Station and bus routes. Address: Parramatta, Greater Western Sydney, New South Wales. The Parramatta location provides access to growing tech industry opportunities in Western Sydney."
-  },
-  {
-    "id": "location-parramatta-highlights",
-    "title": "Parramatta Campus - Highlights",
-    "category": "locations",
-    "text": "Parramatta Campus Highlights: Heart of Western Sydney's economic hub. Westfield Parramatta for shopping and entertainment. Church Street dining precinct with global cuisines. Historic Parramatta Park and Old Government House. Excellent transport links to Sydney CBD (30 mins by train). Growing tech and business district. Affordable living compared to Sydney CBD. Diverse multicultural community."
+    "text": "Parramatta is a vibrant and rapidly growing city located in the heart of Greater Western Sydney. Highlights include fantastic shopping at Westfield Parramatta, global cuisine on Church Street, and historic landmarks in Parramatta Park. Address: Parramatta, Greater Western Sydney, New South Wales."
   },
   {
     "id": "location-melbourne",
     "title": "Melbourne Campus",
     "category": "locations",
-    "text": "SISTC Melbourne Campus is located in Melbourne's CBD, Victoria's capital and Australia's second-largest city. The campus features modern teaching facilities, computer labs, and student spaces. Excellent public transport via trams, trains, and buses. Address: Melbourne CBD, Victoria. Melbourne is known for its vibrant culture, arts scene, and strong tech industry presence."
+    "text": "Melbourne is a vibrant city known for its trendy shopping, diverse dining, rich arts scene, beautiful parks, and world-class sporting events. Highlights include trendy shopping on Collins Street, laneway cafés and global cuisine, and iconic arts and music festivals. Address: Melbourne, Victoria."
   },
   {
-    "id": "location-melbourne-highlights",
-    "title": "Melbourne Campus - Highlights",
-    "category": "locations",
-    "text": "Melbourne Campus Highlights: Australia's cultural capital. Famous laneway cafes and coffee culture. Collins Street and Bourke Street shopping. World-class arts, music, and sporting events. Free tram zone in CBD. Federation Square and Southbank. Strong tech startup ecosystem. Ranked among world's most liveable cities. Diverse food scene with restaurants from every cuisine."
+    "id": "contact-info",
+    "title": "Contact Information",
+    "category": "contact",
+    "text": "Contact SISTC: Phone: +61 (2) 9061 5900. Website: https://sistc.edu.au/. General enquiries are available through the website contact form. Campuses are located in Sydney, Parramatta, and Melbourne."
   },
   {
-    "id": "fees-overview",
-    "title": "Tuition Fees Overview",
-    "category": "fees",
-    "text": "SISTC offers competitive tuition fees for all programs. Fees are charged per unit/subject and vary by program level. Bachelor of Information Technology: Fees apply per trimester based on enrolled units. Master of Information Technology: Fees apply per trimester based on enrolled units. Additional costs may include: Student Services and Amenities Fee (SSAF), textbooks and materials, Overseas Student Health Cover (OSHC) for international students. Contact admissions for current fee schedules: Phone +61 (2) 9061 5900 or visit sistc.edu.au."
+    "id": "statistics",
+    "title": "SISTC Statistics and Achievements",
+    "category": "statistics",
+    "text": "SISTC has 500+ students across Sydney and Melbourne campuses. Teaching Practices: 85.1% rated positively (National average: 79.8%). Support Services: 85.4% rated positively (National average: 72.7%). Skill Development: 82.4% rated positively (National average: 79.8%). Based on Undergraduate Student Experience Survey 2021-2022."
   },
   {
-    "id": "fees-domestic",
-    "title": "Domestic Student Fees and FEE-HELP",
-    "category": "fees",
-    "text": "Domestic Student Fees: Australian citizens and permanent residents may be eligible for FEE-HELP, a government loan scheme. FEE-HELP allows eligible students to defer tuition fees until earning above the repayment threshold. No upfront payment required if using FEE-HELP. Repayments are made through the tax system once income exceeds the threshold. Commonwealth Supported Places (CSP) are not available at SISTC - all domestic students are full-fee paying. Contact Student Services for current domestic fee information."
-  },
-  {
-    "id": "fees-international",
-    "title": "International Student Fees",
-    "category": "fees",
-    "text": "International Student Fees: Tuition fees for international students are published on the SISTC website and in offer letters. Fees are subject to annual review. Additional costs for international students include: Overseas Student Health Cover (OSHC) - mandatory for student visa holders. Living expenses (accommodation, food, transport, personal). Study materials and textbooks. Visa application fees. Payment plans may be available - contact the finance office. Visit sistc.edu.au for current international fee schedules."
-  },
-  {
-    "id": "fees-payment",
-    "title": "Payment Options and Plans",
-    "category": "fees",
-    "text": "SISTC Payment Options: Full upfront payment before census date. FEE-HELP for eligible domestic students. Payment plans may be available for students facing financial hardship. Bank transfer, credit card, and BPAY accepted. Census Date: The deadline to pay fees or submit FEE-HELP application. Students who withdraw after census date remain liable for fees. Contact the Finance Office to discuss payment options: Phone +61 (2) 9061 5900."
-  },
-  {
-    "id": "scholarships",
-    "title": "Scholarships and Financial Assistance",
-    "category": "fees",
-    "text": "SISTC Scholarships: Various scholarship opportunities may be available based on academic merit, financial need, or specific criteria. Merit-based scholarships for high-achieving students. International student scholarships. Women in IT scholarships to support female students in technology. Contact the Admissions Office for current scholarship availability and application procedures. Email or call +61 (2) 9061 5900 to inquire about scholarships."
-  },
-  {
-    "id": "apply-process",
-    "title": "How to Apply to SISTC",
+    "id": "applying-process",
+    "title": "Application Process",
     "category": "applying",
-    "text": "How to Apply to SISTC: Step 1: Choose your course (Bachelor of IT or Master of IT). Step 2: Check entry requirements for your chosen course. Step 3: Gather required documents (transcripts, English test results, passport copy). Step 4: Submit application online at sistc.edu.au or through an authorized education agent. Step 5: Receive assessment and offer letter. Step 6: Accept offer and pay deposit. Step 7: Receive Confirmation of Enrolment (CoE). Step 8: Apply for student visa (international students). Step 9: Attend orientation and commence studies."
+    "text": "How to apply to SISTC: A Student visa is required for International Students. You must always follow the conditions of your visa. Steps include: 1) Check entry requirements for your chosen course, 2) Apply for credit for prior learning if applicable, 3) Contact an education agent or apply directly, 4) Submit application with required documents, 5) Pay application fees, 6) Receive offer and accept, 7) Apply for student visa (international students)."
   },
   {
-    "id": "apply-documents",
-    "title": "Required Application Documents",
-    "category": "applying",
-    "text": "Required Documents for SISTC Application: Academic transcripts from all previous studies (certified copies). Completion certificates/testamurs. English language test results (IELTS, TOEFL, PTE, or equivalent). Copy of passport (international students). Statement of Purpose (recommended for postgraduate). Resume/CV showing work experience (recommended for postgraduate). Any relevant professional certifications. Credit for Prior Learning application (if applicable). All documents must be certified copies or originals."
-  },
-  {
-    "id": "apply-english",
-    "title": "English Language Requirements",
-    "category": "applying",
-    "text": "SISTC English Language Requirements: Bachelor Programs: IELTS 6.0 overall (no band less than 5.5), TOEFL iBT 60, PTE Academic 50, Cambridge FCE Grade C, or equivalent. Master Programs: IELTS 6.5 overall (no band less than 6.0), TOEFL iBT 79, PTE Academic 58, Cambridge FCE Grade B, or equivalent. English pathway programs may be available for students who don't meet direct entry requirements. Native English speakers from approved countries may be exempt."
-  },
-  {
-    "id": "apply-credit",
-    "title": "Credit for Prior Learning (RPL)",
-    "category": "applying",
-    "text": "Credit for Prior Learning (CPL/RPL): SISTC recognizes prior learning and may grant credit for relevant qualifications or experience. This can reduce course duration and cost. To apply for credit: Submit CPL application form with your main application. Provide detailed transcripts and unit outlines from previous studies. Credit decisions are made by the Academic Board. Maximum credit varies by program. Apply for credit as early as possible - ideally with your initial application. Contact Admissions for guidance on credit eligibility."
-  },
-  {
-    "id": "apply-agents",
-    "title": "Education Agents",
-    "category": "applying",
-    "text": "SISTC Education Agents: SISTC works with authorized education agents worldwide to assist international students. Agents can help with: Course information and advice. Application submission and tracking. Visa guidance. Pre-departure preparation. Accommodation assistance. Find an authorized SISTC agent at sistc.meshedhe.com.au/Publics/PublicsPages/AgentListByCountry.aspx or contact SISTC directly. Only use SISTC-authorized agents to ensure correct information and support."
-  },
-  {
-    "id": "agents-asia",
-    "title": "Education Agents - Asia",
-    "category": "agents",
-    "text": "SISTC has authorized education agents across Asia including: India, Nepal, Bangladesh, Sri Lanka, Pakistan, China, Vietnam, Thailand, Philippines, Indonesia, Malaysia, and other Asian countries. Agents speak local languages and understand regional education systems. They can guide students through the application and visa process. Visit sistc.meshedhe.com.au/Publics/PublicsPages/AgentListByCountry.aspx for the complete agent list by country."
-  },
-  {
-    "id": "agents-other",
-    "title": "Education Agents - Other Regions",
-    "category": "agents",
-    "text": "SISTC has authorized education agents in regions including: Middle East (UAE, Saudi Arabia, Oman, etc.), Africa (Nigeria, Kenya, Ghana, etc.), South America (Brazil, Colombia, etc.), and other regions worldwide. If you cannot find an agent in your country, you can apply directly through sistc.edu.au or contact the International Office at +61 (2) 9061 5900."
-  },
-  {
-    "id": "international-overview",
-    "title": "International Students - Overview",
-    "category": "international",
-    "text": "SISTC welcomes international students from around the world. CRICOS Provider Code: 03836J allows SISTC to enroll international students on student visas. Dedicated support for international students including: Pre-arrival assistance. Airport pickup service. Orientation programs. Ongoing academic and personal support. Career services. International students bring diverse perspectives and enrich the SISTC community. Contact the International Office: +61 (2) 9061 5900."
-  },
-  {
-    "id": "international-visa",
-    "title": "Student Visa Information",
-    "category": "international",
-    "text": "Student Visa (Subclass 500): International students need a Student visa to study at SISTC. Requirements: Confirmation of Enrolment (CoE) from SISTC. Genuine Temporary Entrant (GTE) requirement. English language proficiency evidence. Financial capacity evidence (tuition + living expenses). Overseas Student Health Cover (OSHC). Health and character requirements. Student visa allows: Full-time study at SISTC. Work up to 48 hours per fortnight during study periods. Unlimited work during scheduled breaks. Visit homeaffairs.gov.au for visa application details."
-  },
-  {
-    "id": "international-oshc",
-    "title": "Overseas Student Health Cover (OSHC)",
-    "category": "international",
-    "text": "Overseas Student Health Cover (OSHC): OSHC is mandatory health insurance for international students on student visas. OSHC covers: Doctor visits. Hospital treatment. Some prescription medicines. Ambulance services. SISTC can arrange OSHC through preferred providers. OSHC must cover your entire visa period. Students with families can get OSHC Family cover. Keep your OSHC card with you at all times. Contact Student Services for OSHC assistance."
-  },
-  {
-    "id": "international-accommodation",
-    "title": "Student Accommodation",
-    "category": "international",
-    "text": "Accommodation Options for SISTC Students: Homestay - live with an Australian family, meals included, cultural immersion. Student Accommodation - purpose-built student housing near campuses. Private Rental - apartments or shared houses (most affordable long-term). Temporary Accommodation - hostels/hotels while finding permanent housing. SISTC Student Services can provide: Accommodation provider recommendations. Guidance on rental processes. Information about tenant rights. Average weekly costs: Homestay $250-350, Student housing $300-450, Private rental $200-400. Start searching early before arrival."
-  },
-  {
-    "id": "international-arrival",
-    "title": "Pre-Arrival and Arrival Support",
-    "category": "international",
-    "text": "SISTC Pre-Arrival and Arrival Support: Pre-arrival: Pre-departure information and checklists. Accommodation assistance. OSHC arrangement. On arrival: Airport pickup service (request in advance). Welcome pack with essential information. Assistance opening bank account. Getting mobile phone SIM. Obtaining Tax File Number (TFN). Public transport information (Opal card Sydney, Myki Melbourne). Orientation Week activities before classes begin. Contact International Office: +61 (2) 9061 5900."
-  },
-  {
-    "id": "support-academic",
-    "title": "Academic Support Services",
+    "id": "support-services",
+    "title": "Student Support Services",
     "category": "support",
-    "text": "SISTC Academic Support Services: Academic Skills Workshops - study skills, time management, exam preparation. Writing Support - essay writing, research skills, referencing. Learning Support Specialists - one-on-one assistance. Tutorial Support - additional help with course content. Academic Advisors - course planning and progression advice. Study Groups - peer learning opportunities. Academic Integrity Training - understanding plagiarism and proper citation. Special Consideration - for students facing difficult circumstances. Access support through Student Services or the Learning Management System."
-  },
-  {
-    "id": "support-library",
-    "title": "Digital Library Resources",
-    "category": "support",
-    "text": "SISTC Digital Library: Extensive online resources available 24/7. Access includes: Academic databases (ProQuest, EBSCO, etc.). E-books covering IT and business topics. Academic journals and research papers. Industry reports and standards. Online tutorials and learning resources. Referencing tools and guides. Library staff available for research assistance. Remote access with student login credentials. Training sessions on using library resources effectively. Contact library@sistc.edu.au for assistance."
-  },
-  {
-    "id": "support-wellbeing",
-    "title": "Health and Wellbeing Support",
-    "category": "support",
-    "text": "SISTC Health and Wellbeing Support: Free confidential counseling services. Mental health resources and referrals. Disability support and accessibility services. Financial hardship assistance. Emergency support services. Peer support programs. Wellness workshops (stress management, mindfulness). First aid facilities on campus. Information about external health services. Critical incident support. If you're struggling, reach out to Student Services - we're here to help. Emergency: Call 000. Lifeline: 13 11 14. Beyond Blue: 1300 22 4636."
-  },
-  {
-    "id": "support-career",
-    "title": "Career Services",
-    "category": "support",
-    "text": "SISTC Career Services: Resume and cover letter reviews. Interview preparation and mock interviews. Job search strategies and techniques. LinkedIn profile optimization. Industry networking events. Career counseling and planning. Graduate employment assistance. Internship and placement support. Industry guest speakers. Career workshops throughout the year. Alumni career network. Access Career Services through Student Services or attend regular career events. Building your career starts before graduation!"
-  },
-  {
-    "id": "support-it",
-    "title": "IT Facilities and Support",
-    "category": "support",
-    "text": "SISTC IT Facilities: Modern computer labs with latest hardware and software. High-speed WiFi across all campuses. Access to industry-standard development tools. Cloud computing resources. Specialized software for programming, databases, networking, and cyber security. Student email and Microsoft 365 access. Learning Management System (LMS) for course materials. IT Help Desk for technical support. Print and scan facilities. Labs open extended hours for student use."
-  },
-  {
-    "id": "wil-overview",
-    "title": "Work Integrated Learning (WIL)",
-    "category": "programs",
-    "text": "Work Integrated Learning at SISTC: WIL provides real-world experience as part of your degree. Components include: Industry Projects - work on real business problems. Professional Placements - gain workplace experience. Capstone Projects - comprehensive final-year projects with industry partners. Guest Lectures - learn from industry professionals. Site Visits - see technology in action at leading companies. WIL helps students: Build professional networks. Apply classroom learning. Develop employability skills. Enhance graduate outcomes. WIL is integrated throughout SISTC programs."
-  },
-  {
-    "id": "capstone-projects",
-    "title": "Capstone Projects Expo",
-    "category": "programs",
-    "text": "SISTC Capstone Projects Expo: Final-year students complete substantial capstone projects demonstrating their skills. Projects address real-world problems, often in partnership with industry. Annual Capstone Expo showcases student work to: Industry professionals and potential employers. Academic staff and external examiners. Fellow students and families. Media and public. Expo provides networking opportunities and has led to job offers for graduating students. Projects cover areas like software development, data analytics, cyber security solutions, and digital transformation initiatives."
-  },
-  {
-    "id": "women-in-it",
-    "title": "Women in IT Program",
-    "category": "programs",
-    "text": "SISTC Women in IT Program: Supporting female students in technology careers. Program includes: Mentorship from women in tech industry. Networking events with female IT professionals. Workshops on career development and leadership. Scholarship opportunities for female students. Community building among female IT students. Guest speakers sharing success stories. SISTC is committed to diversity and inclusion in technology. Women in IT participants gain additional support, connections, and opportunities to thrive in the tech industry."
+    "text": "SISTC offers comprehensive student support including Student Support services, Digital Library access, and Graduation support. Academic support includes Academic Integrity guidance, Work Integrated Learning opportunities, and Capstone Projects Expo. Health & Wellbeing support is also available. The Digital Library provides extensive resources for research and learning."
   },
   {
     "id": "student-life",
     "title": "Student Life at SISTC",
     "category": "life",
-    "text": "Student Life at SISTC: Vibrant community with students from diverse backgrounds. Activities include: Orientation Week - meet classmates and learn about SISTC. Social events throughout the year. Cultural celebrations and festivals. Student clubs and interest groups. Sports and recreation activities. Networking events with industry. Graduation ceremonies at prestigious venues. Online community through student portal. SISTC provides a supportive environment where students can learn, grow, and build lifelong connections."
+    "text": "SISTC offers a vibrant student life with various activities and support services. Special programs include Women in IT to support female students in technology careers. The Capstone Projects Expo showcases student work and achievements. Work Integrated Learning opportunities provide real-world industry experience."
   },
   {
-    "id": "orientation",
-    "title": "Student Orientation",
-    "category": "life",
-    "text": "SISTC Orientation Week: All new students attend orientation before classes begin. Activities include: Campus tour and facility introduction. Meet academic and support staff. IT account and system setup. Library and learning resources introduction. Student services overview. Course enrollment assistance. Meet your classmates and lecturers. Social activities and icebreakers. International students receive additional sessions on: Living in Australia. Opening bank accounts. Transport and getting around. Understanding Australian culture. Orientation is mandatory and sets you up for success."
-  },
-  {
-    "id": "graduation",
-    "title": "Graduation Information",
-    "category": "life",
-    "text": "SISTC Graduation: Graduation ceremonies celebrate student achievements. Ceremonies held at prestigious venues in Sydney and Melbourne. Multiple ceremonies per year to accommodate graduating students. Graduates receive: Testamur (degree certificate). Academic transcript. Graduates can invite family and friends to celebrate. Academic dress (cap and gown) available for hire. Professional photography available. Graduation is a memorable milestone marking your academic achievement. Keep your contact details updated to receive graduation information."
-  },
-  {
-    "id": "trimester-system",
-    "title": "Academic Calendar - Trimester System",
-    "category": "academic",
-    "text": "SISTC Trimester System: SISTC operates on a trimester system with three study periods per year. Trimester 1: February/March - May/June. Trimester 2: June - September. Trimester 3: September/October - January. Benefits of trimester system: Complete your degree faster (3 trimesters per year vs 2 semesters). More flexibility in course planning. Multiple entry points throughout the year. Option to take breaks between trimesters. Full-time load: 4 units per trimester. Part-time load: 1-3 units per trimester. Check sistc.edu.au for specific trimester dates."
-  },
-  {
-    "id": "intake-dates",
-    "title": "Intake Dates and Start Times",
-    "category": "academic",
-    "text": "SISTC Intake Dates: Multiple intakes throughout the year. Trimester 1 intake: February/March start. Trimester 2 intake: June start. Trimester 3 intake: September/October start. Application deadlines are typically 4-6 weeks before trimester start. International students should apply earlier to allow time for visa processing. Late applications may be considered subject to availability. Check sistc.edu.au for exact dates and application deadlines for each intake."
-  },
-  {
-    "id": "study-modes",
-    "title": "Study Modes and Flexibility",
-    "category": "academic",
-    "text": "SISTC Study Modes: Full-time: 4 units per trimester (standard load). Part-time: 1-3 units per trimester (extend course duration). International students on student visas must maintain full-time enrollment. Some units may offer flexible delivery options. Evening classes may be available for some units. Online resources supplement face-to-face learning. Contact Course Advisor to discuss best study mode for your circumstances."
-  },
-  {
-    "id": "acs-accreditation",
-    "title": "ACS Accreditation",
+    "id": "acs-certification",
+    "title": "ACS Certification",
     "category": "accreditation",
-    "text": "Australian Computer Society (ACS) Accreditation: SISTC Bachelor and Master of IT programs are ACS accredited. ACS is the professional association for Australia's ICT sector. Benefits of ACS accreditation: Industry recognition of your qualification. Pathway to ACS professional membership. Meets requirements for skilled migration assessment. Demonstrates curriculum meets industry standards. Graduates eligible to apply for ACS membership levels. ACS accreditation is reviewed regularly to ensure ongoing compliance with standards."
+    "text": "SISTC courses are certified by the Australian Computer Society (ACS). ACS is the professional association for Australia's Information and Communication Technology (ICT) sector. ACS certification ensures our graduates meet industry standards and are recognized by employers across Australia."
   },
   {
-    "id": "teqsa-info",
-    "title": "TEQSA Registration",
-    "category": "accreditation",
-    "text": "TEQSA (Tertiary Education Quality and Standards Agency): SISTC is registered with TEQSA as an Australian higher education provider. TEQSA Provider ID: PRV14311. TEQSA registration ensures: SISTC meets Australian higher education standards. Courses are nationally recognized qualifications. Students are protected under Australian consumer laws. Quality assurance and continuous improvement. TEQSA conducts regular reviews of registered providers. Students can verify SISTC's registration on the TEQSA National Register."
+    "id": "work-integrated-learning",
+    "title": "Work Integrated Learning",
+    "category": "programs",
+    "text": "Work Integrated Learning (WIL) at SISTC provides students with practical industry experience. This includes internships, industry projects, and professional placements. WIL helps students build professional networks, gain real-world skills, and enhance their employability after graduation."
   },
   {
-    "id": "cricos-info",
-    "title": "CRICOS Registration",
-    "category": "accreditation",
-    "text": "CRICOS (Commonwealth Register of Institutions and Courses for Overseas Students): SISTC CRICOS Provider Code: 03836J. CRICOS registration allows SISTC to enroll international students on student visas. All courses offered to international students are CRICOS registered. CRICOS registration ensures: Compliance with the Education Services for Overseas Students (ESOS) Act. Protection for international students under the ESOS framework. Tuition Protection Service (TPS) coverage. Verify SISTC's CRICOS registration at cricos.education.gov.au."
+    "id": "entry-requirements",
+    "title": "Entry Requirements",
+    "category": "applying",
+    "text": "Entry requirements for SISTC programs vary by course level. Undergraduate programs require completion of Year 12 or equivalent qualification. Postgraduate programs require a bachelor's degree or equivalent. English language proficiency requirements apply for international students. Credit for prior learning may be available."
   },
   {
-    "id": "contact-main",
-    "title": "Contact SISTC",
-    "category": "contact",
-    "text": "Contact SISTC: Phone: +61 (2) 9061 5900. Website: https://sistc.edu.au/. Student Portal: sistc.meshedhe.com.au. Office Hours: Monday to Friday, 9:00 AM - 5:00 PM (AEST/AEDT). For course information and applications, contact the Admissions team. For current student enquiries, contact Student Services. For international student enquiries, contact the International Office. Visit us at any of our campuses in Sydney CBD, Parramatta, or Melbourne."
+    "id": "fees-scholarships",
+    "title": "Fees and Scholarships",
+    "category": "financial",
+    "text": "SISTC offers competitive tuition fees for both domestic and international students. Various scholarship opportunities are available based on academic merit and other criteria. Payment plans may be available. Contact the admissions office for current fee schedules and scholarship information."
   },
   {
-    "id": "contact-admissions",
-    "title": "Admissions Contact",
-    "category": "contact",
-    "text": "SISTC Admissions: For prospective students and application enquiries. Phone: +61 (2) 9061 5900. Apply online: sistc.edu.au. Course information: sistc.meshedhe.com.au/Publics/PublicsPages/CourseInfo.aspx. The Admissions team can help with: Course selection and advice. Entry requirements. Application status. Credit for prior learning enquiries. Scholarship information. Respond times: Usually within 2-3 business days."
-  },
-  {
-    "id": "contact-international",
-    "title": "International Office Contact",
-    "category": "contact",
-    "text": "SISTC International Office: Support for international students and prospective international applicants. Phone: +61 (2) 9061 5900. Find an agent: sistc.meshedhe.com.au/Publics/PublicsPages/AgentListByCountry.aspx. The International Office can assist with: Application and admission. Visa guidance. OSHC information. Accommodation support. Pre-departure preparation. On-campus support. Agent coordination. International students are welcome to contact us with any questions about studying at SISTC."
-  },
-  {
-    "id": "faq-duration",
-    "title": "FAQ: How long are the courses?",
-    "category": "faq",
-    "text": "FAQ - Course Duration: Bachelor of Information Technology: 3 years full-time (6 trimesters), or part-time equivalent. Master of Information Technology: 2 years full-time (4 trimesters), or part-time equivalent. Duration may be reduced with Credit for Prior Learning. Exit qualifications: Diploma after Year 1 of Bachelor, Graduate Certificate after Semester 1 of Master, Graduate Diploma after Semester 2 of Master."
-  },
-  {
-    "id": "faq-start",
-    "title": "FAQ: When can I start?",
-    "category": "faq",
-    "text": "FAQ - When Can I Start: SISTC has three intakes per year. Trimester 1: Start February/March. Trimester 2: Start June. Trimester 3: Start September/October. Apply early to secure your place. International students should apply at least 8-12 weeks before intake to allow visa processing time. Check sistc.edu.au for specific dates and deadlines."
-  },
-  {
-    "id": "faq-work",
-    "title": "FAQ: Can I work while studying?",
-    "category": "faq",
-    "text": "FAQ - Working While Studying: International students on Student visa (subclass 500): Can work up to 48 hours per fortnight during study periods. Can work unlimited hours during scheduled course breaks. Must not start work until course has commenced. Domestic students: No work restrictions. Working can help with living expenses and provide valuable experience. SISTC Career Services can help with job search. Balance work and study carefully to maintain academic progress."
-  },
-  {
-    "id": "faq-background",
-    "title": "FAQ: Do I need an IT background?",
-    "category": "faq",
-    "text": "FAQ - IT Background Requirements: Bachelor of Information Technology: No IT background required. The program starts from fundamentals and builds knowledge progressively. Students from any educational background welcome. Master of Information Technology: No IT background required. The program accepts graduates from any discipline. Students without IT background may take bridging/foundation units. The MIT is designed for career changers wanting to enter the IT industry."
-  },
-  {
-    "id": "faq-online",
-    "title": "FAQ: Is online study available?",
-    "category": "faq",
-    "text": "FAQ - Online Study: SISTC primarily offers face-to-face instruction at our campuses. Benefits of on-campus study: Direct interaction with lecturers. Collaboration with classmates. Access to campus facilities. Networking opportunities. International students on student visas must study on-campus as per visa conditions. Online resources and learning materials supplement face-to-face classes through our Learning Management System."
-  },
-  {
-    "id": "faq-accommodation",
-    "title": "FAQ: Where can I live?",
-    "category": "faq",
-    "text": "FAQ - Accommodation: SISTC does not have on-campus accommodation, but we can help you find suitable housing. Options include: Homestay with Australian families ($250-350/week including meals). Purpose-built student accommodation ($300-450/week). Private rental apartments or shared houses ($200-400/week). Start looking for accommodation 4-8 weeks before arrival. Contact Student Services for accommodation provider recommendations and guidance."
-  },
-  {
-    "id": "faq-fees",
-    "title": "FAQ: How much does it cost?",
-    "category": "faq",
-    "text": "FAQ - Course Fees: Tuition fees vary by program and are published on sistc.edu.au. Additional costs: Student Services and Amenities Fee (SSAF). OSHC for international students (approx. $500-700/year). Textbooks and materials. Living expenses (estimate $21,000-25,000/year). Domestic students may be eligible for FEE-HELP loans. Payment plans may be available. Contact Admissions for current fee information: +61 (2) 9061 5900."
-  },
-  {
-    "id": "statistics-students",
-    "title": "SISTC Student Statistics",
-    "category": "statistics",
-    "text": "SISTC Student Statistics: 500+ students across Sydney and Melbourne campuses. Students from 40+ countries. Small class sizes for personalized learning. High student satisfaction rates. Growing alumni network in IT industry. Student diversity brings rich perspectives to classroom discussions and group work."
-  },
-  {
-    "id": "statistics-outcomes",
-    "title": "SISTC Student Satisfaction and Outcomes",
-    "category": "statistics",
-    "text": "SISTC Student Experience Survey Results: Teaching Practices: 85.1% positive rating (National average: 79.8%). Support Services: 85.4% positive rating (National average: 72.7%). Skill Development: 82.4% positive rating (National average: 79.8%). Based on Undergraduate Student Experience Survey 2021-2022. SISTC performs above national average across key indicators, demonstrating our commitment to quality education and student support."
-  },
-  {
-    "id": "data-analytics-detail",
-    "title": "Data Analytics Specialisation - Details",
+    "id": "cyber-security-specialisation",
+    "title": "Cyber Security Specialisation",
     "category": "courses",
-    "text": "Master of IT - Data Analytics Specialisation: Comprehensive training in extracting insights from data. Core topics: Statistical analysis and modeling. Machine learning and AI fundamentals. Data visualization techniques. Big data technologies (Hadoop, Spark). Business intelligence and reporting. Data mining and pattern recognition. Python and R programming for data science. Database management and SQL. Tools: Python, R, Tableau, Power BI, SQL, cloud platforms. Career paths: Data Analyst, Data Scientist, Business Intelligence Developer, Machine Learning Engineer, Analytics Consultant."
+    "text": "The Cyber Security specialisation within the Master of Information Technology prepares students for careers in information security. Topics covered include network security, ethical hacking, security governance, risk management, and incident response. Graduates are prepared for roles such as Security Analyst, Penetration Tester, and Security Consultant."
   },
   {
-    "id": "cyber-security-detail",
-    "title": "Cyber Security Specialisation - Details",
+    "id": "data-analytics-specialisation",
+    "title": "Data Analytics Specialisation",
     "category": "courses",
-    "text": "Master of IT - Cyber Security Specialisation: Comprehensive training in protecting information systems. Core topics: Network security fundamentals. Ethical hacking and penetration testing. Security governance and compliance. Risk assessment and management. Incident response and forensics. Cryptography fundamentals. Cloud security. Security operations. Tools: Kali Linux, Wireshark, Metasploit, SIEM tools, vulnerability scanners. Career paths: Security Analyst, Penetration Tester, Security Consultant, SOC Analyst, Security Engineer, CISO pathway."
+    "text": "The Data Analytics specialisation within the Master of Information Technology focuses on extracting insights from data. Students learn data mining, statistical analysis, machine learning, data visualization, and big data technologies. Career opportunities include Data Analyst, Business Intelligence Developer, and Data Scientist roles."
   },
   {
-    "id": "digital-leadership-detail",
-    "title": "Digital Leadership Specialisation - Details",
+    "id": "digital-leadership-specialisation",
+    "title": "Digital Leadership Specialisation",
     "category": "courses",
-    "text": "Master of IT - Digital Leadership Specialisation: Preparing future IT leaders and technology executives. Core topics: IT strategy and governance. Digital transformation management. Project and program management. Change management. IT service management (ITIL). Enterprise architecture. Innovation management. Leadership and team management. Stakeholder engagement. Career paths: IT Manager, Project Manager, Digital Transformation Lead, CIO/CTO pathway, IT Consultant, Enterprise Architect."
+    "text": "The Digital Leadership specialisation prepares students to lead digital transformation initiatives. Topics include IT strategy, project management, change management, digital innovation, and technology governance. Graduates are prepared for IT management and leadership roles in organizations."
+  },
+  {
+    "id": "international-students",
+    "title": "International Students Information",
+    "category": "international",
+    "text": "SISTC welcomes international students from around the world. We are registered on CRICOS (03836J) to enroll international students. Support services for international students include visa guidance, accommodation assistance, airport pickup, orientation programs, and ongoing student support throughout your studies."
+  },
+  {
+    "id": "agents-overview",
+    "title": "SISTC Education Agents Overview",
+    "category": "agents",
+    "text": "SISTC has representative education agents in multiple countries including Australia, Nepal, Pakistan, India, UAE, UK, and Canada. These authorized agents can help prospective students with applications, visa guidance, and enrollment. Students can apply through an agent or directly to SISTC. For the full list of agents, visit https://sistc.meshedhe.com.au/Publics/PublicsPages/AgentListByCountry.aspx"
+  },
+  {
+    "id": "agents-australia-sydney-1",
+    "title": "SISTC Agents in Sydney NSW - Part 1",
+    "category": "agents",
+    "text": "Sydney NSW Agents: 3 BEES EDUCATION AND MIGRATION - Suite 301, Level 3, 363-367 Pitt Street, Sydney NSW 2000, Tel: 02 9290 1647, Email: sydney@3beesgroup.com.au. ACM Global - Suite 605, Level 6, 368 Sussex Street, Sydney NSW 2000, Tel: 0280345150, Email: admin@acmglobal.com.au. AE Global - Suite 304, Level 3, 250 Pitt Street, Sydney NSW 2000, Tel: 02 9267 3353, Email: k.lamichhane@aenepal.net. Apollo International - Level 16, Suite 1602/87-89 Liverpool Street, Sydney NSW 2000, Tel: 0279223848, Email: info@apollointl.com.au."
+  },
+  {
+    "id": "agents-australia-sydney-2",
+    "title": "SISTC Agents in Sydney NSW - Part 2",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: Advice Consulting - Suite 2, Level 7/60-62 York Street, Sydney NSW 2000, Tel: 0433823661, Email: info@adviceconsulting.com.au. Brainstorm Education - Level 7, Suite 702, 32 York Street, Sydney NSW 2000, Tel: 02 8592 2737, Email: admin@brainstormeducation.com.au. Blueprint Education - Level 13, Suite 7A, Sydney NSW 2000, Tel: 0432827511, Email: ceo@blueprintedu.com.au. BMW Educational Consultancy - Suite 3, Level 1, 49 York Street, Sydney NSW 2000, Tel: 61451219989, Email: mani@bmwconsutancy.com.au."
+  },
+  {
+    "id": "agents-australia-sydney-3",
+    "title": "SISTC Agents in Sydney NSW - Part 3",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: College Search - Suite 202, Level 2, 309 Pitt Street, Sydney NSW 2000, Tel: 0424188410, Email: dinesh.collegesearch@gmail.com. Decodebest Consultancy - Suite 512, Level 5, 321 Pitt St, Sydney NSW 2000, Tel: 0292618001, Email: info@decodebest.com. Education and Migration Corner - Suite 405A, 332-336 Pitt Street, Sydney NSW 2000, Tel: 02 8084 0236, Email: info@educationmigration.com. Education Connect - Suite 403A, Level 4, 368 Sussex Street, Sydney NSW 2000, Tel: 0432520172, Email: golam@educationconnect.com.au."
+  },
+  {
+    "id": "agents-australia-sydney-4",
+    "title": "SISTC Agents in Sydney NSW - Part 4",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: Grace International Group - Suite 453, Level 5, 311 Castlereagh Street, Sydney NSW 2000, Tel: +610292863447, Email: sydney@graceintlgroup.com. Guidance Education - Suite 110, Level 1, 250 Pitt St, Sydney NSW 2000, Tel: 0401537238, Email: info@guidanceeducation.com.au. HIMA-AUS Education - Level 15, 327 Pitt St, Sydney NSW 2000, Tel: 0411553893, Email: info@g5global.com.au. Himalaya Global (Fusion OZ) - Suite 302/683 George St, Sydney NSW 2000, Tel: 0433241857, Email: david@fusionoz.com."
+  },
+  {
+    "id": "agents-australia-sydney-5",
+    "title": "SISTC Agents in Sydney NSW - Part 5",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: KTM Consulting Group - Suite 143, Level 3, 416-418 Pitt Street, Haymarket NSW 2000, Tel: 0280211000, Email: offer@ktmconsultingroup.com, Web: www.ktmconsultingroup.com. MG Associates - Level 8, Suite 807, 370 Pitt Street, Sydney NSW 2000, Tel: 0290085522, Email: info@mgassociates.com.au. Moves International - Level 3, 533-539 Kent Street, Sydney NSW 2000, Tel: +610279019800, Email: admissions@mieducation.com.au. Nepcoms Services - Suite 402, Level 4, 276 Pitt Street, Sydney NSW 2000, Tel: 02 9267 0006, Email: admission@nepcoms.com."
+  },
+  {
+    "id": "agents-australia-sydney-6",
+    "title": "SISTC Agents in Sydney NSW - Part 6",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: Nepoz Education - Suite 103, 332 Pitt St, Sydney NSW 2000, Tel: 0415718856, Email: apris@nepozedu.com.au. Our Dream Associates - Suite 1502, Level 15, 447 Kent Street, Sydney NSW 2000, Tel: 61433055529, Email: admissions@ourdreamassociates.com.au. Oxford Education and Visa - Suite 507, 321 Pitt Street, Sydney NSW 2000, Tel: 0410937005, Email: ck@oxfordeduvisas.com.au. POSSIBLE INTERNATIONAL - Suite 204, Level 2, 309 Pitt Street, Sydney NSW 2000, Tel: 0280342951, Email: info@possibleinternational.com."
+  },
+  {
+    "id": "agents-australia-sydney-7",
+    "title": "SISTC Agents in Sydney NSW - Part 7",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: PRISMS Education & Visa - Suite 611, Level 6, 321 Pitt Street, Sydney NSW 2000, Tel: 0424383457, Email: admin@prismseducation.com.au. Progress Study Consultancy - Suite 503, Level 5, 379 Pitt Street, Sydney NSW 2000, Tel: 9267 8866, Email: sydney@progress-study.com. Profound Services - 250 Pitt Street, Sydney NSW 2000, Tel: 02 9264 4439, Email: info@profoundservices.com.au. RealOz Education & Migration - Level 18, 233 Castlereagh St, Sydney NSW 2000, Tel: 0280069888, Email: visa@realozmigration.com."
+  },
+  {
+    "id": "agents-australia-sydney-8",
+    "title": "SISTC Agents in Sydney NSW - Part 8",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: Scholar Hub - 805, 50 Clarence Street, Sydney NSW 2000, Tel: 02 9279 2775, Email: accounts@scholarhub.com.au. Smart Direction Education - Suite 102, Level 1, 127 York Street, Sydney NSW 2000, Tel: 0458940732, Email: admin@sdirection.info. SNS Migration and Education - Suite 53, Level 10, 88 Pitt Street, Sydney NSW 2000, Tel: 0426866267, Email: edu@snsmigration.com.au. Sydney Express Education - Suite 301, Level 3, 491 Kent Street, Sydney NSW 2000, Tel: 0292991908, Email: admissions@sydneyxpress.com."
+  },
+  {
+    "id": "agents-australia-sydney-9",
+    "title": "SISTC Agents in Sydney NSW - Part 9",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: Team Consult - Suite 28, Level 17, 329 Pitt Street, Sydney NSW 2000, Tel: 0452528238, Email: teamconsult.au@gmail.com. Tilicho Consulting Group - Suite 1003, Level 10, 46 Market Street, Sydney NSW 2000, Tel: 0285925506, Email: pradeep@tilicho.com.au. The Next Education - 233 Castlereagh St, Sydney NSW 2000, Tel: 02 8084 6249, Email: info@thenext.com.au. Universal Thought Consult - Suite 403, Level 4, 235 Clarence St, Sydney NSW 2000, Tel: 0452507165, Email: shail@utcedu.com."
+  },
+  {
+    "id": "agents-australia-sydney-10",
+    "title": "SISTC Agents in Sydney NSW - Part 10",
+    "category": "agents",
+    "text": "Sydney NSW Agents continued: Yes Study World - Suite 10, Level 14/327-329 Pitt St, Sydney NSW 2000, Tel: 0420922795, Email: bishnu@yesstudyworld.com.au. Newstars Education Counselors - 7/263 Clarence St, Sydney NSW 2000, Tel: 92645388, Email: alex@newstarsec.com.au. Monkey King Student Service - 309 Pitt Street, Sydney NSW 2000, Tel: 02 9212 0099, Email: info@monkeyking.com.au. ASPIRE EDUCATION & MIGRATION - Suite 518, Level 5, 368 Sussex Street, Sydney NSW 2000, Tel: 61285407868, Email: bdm@aspireeducationandmigration.com.au."
+  },
+  {
+    "id": "agents-australia-parramatta-1",
+    "title": "SISTC Agents in Parramatta NSW - Part 1",
+    "category": "agents",
+    "text": "Parramatta NSW Agents: Aussizz Migration - Level 2, 24 Hunter Street, Parramatta NSW 2150, Tel: 0452442021, Email: tianii.tran@aussizzgroup.com. Beginning Education Services - Level 49, Suite 146, 8 Parramatta Square, Parramatta NSW 2150, Tel: 04514800917, Email: saurav@beginedu.com.au. EDP Overseas - Suite F 1/110 George St, Parramatta NSW 2150, Tel: 0404473387, Email: admin@edpoverseas.com.au. GoGrad Global - Level 6/150 George St, Parramatta NSW 2150, Tel: +61414868141, Email: admissions@gogradglobal.com."
+  },
+  {
+    "id": "agents-australia-parramatta-2",
+    "title": "SISTC Agents in Parramatta NSW - Part 2",
+    "category": "agents",
+    "text": "Parramatta NSW Agents continued: Golden Pave - 20 Pitt Street, Parramatta NSW 2150, Tel: 0468404619, Email: goldenpave.au@gmail.com. Greenscope Education - 28/2 O'Connell Street, Parramatta NSW 2150, Tel: 0288596690, Email: priyanka@greenscope.com.au. Immigo Consulting - Level 1, 91 George Street, Parramatta NSW 2150, Tel: 61478247680, Email: manoj@immigo.com.au. International Student Educational - 314 Church St, Parramatta NSW 2150, Tel: 0298939990, Email: offshoreadmin@isems.com.au."
+  },
+  {
+    "id": "agents-australia-parramatta-3",
+    "title": "SISTC Agents in Parramatta NSW - Part 3",
+    "category": "agents",
+    "text": "Parramatta NSW Agents continued: Journey to Aus Edu - Suite 8.04, 89 York St, Sydney NSW 2000, Tel: 0452365380, Email: parbat@journeytoaustralia.com. Kansal Pty Ltd - Suite 417-418, 48 George Street, Parramatta NSW 2150, Tel: 0414129699, Email: amit@successvisa.com.au. KR Education and Migration - Suite 52, 48-50 George Street, Parramatta NSW 2150, Tel: 0468329646, Email: ruchi@kreducationandmigration.com. Lawbrella Lawyers - Suite 14, 76 Station Street, Wentworthville NSW 2145, Tel: 0451400601, Email: jsingh@lawbrellalawyers.com.au."
+  },
+  {
+    "id": "agents-australia-parramatta-4",
+    "title": "SISTC Agents in Parramatta NSW - Part 4",
+    "category": "agents",
+    "text": "Parramatta NSW Agents continued: Needs Migration - Suite 33, Level 3, 181 Church Street, Parramatta NSW 2150, Tel: 0405881808, Email: admissions@needsmigration.com.au. Nice International - 314 Church Street, Parramatta NSW 2150, Tel: +977 9851039901, Email: 388355@gmail.com. Panda Education - Shop 2, 38-40 George Street, Parramatta NSW 2150, Tel: +61403610610, Email: info@pandaeducation.com.au, Web: pandaeducation.com.au. Skillverse Education - Suite 603, 93 George Street, Parramatta NSW 2150, Tel: 0470639227, Email: disha@skillverse.com.au."
+  },
+  {
+    "id": "agents-australia-parramatta-5",
+    "title": "SISTC Agents in Parramatta NSW - Part 5",
+    "category": "agents",
+    "text": "Parramatta NSW Agents continued: Study World Global - Level 2, 20 Hunter Street, Parramatta NSW 2150, Tel: 0482050999, Email: info@studyworldaustralia.com.au. The Migration - Office 2, 16 Kendall St, Harris Park NSW 2150, Tel: +61493294529, Email: minhaz@themigration.com.au. Winzoy Group - Suite 3, 71A Macquarie Street, Parramatta NSW 2150, Tel: 61424687577, Email: info@winzoygroup.com. Prudential International - 5-96-98, Harris Park NSW, Tel: 0286774050, Email: offerprud@gmail.com."
+  },
+  {
+    "id": "agents-australia-melbourne-1",
+    "title": "SISTC Agents in Melbourne VIC - Part 1",
+    "category": "agents",
+    "text": "Melbourne VIC Agents: ABC Overseas Consultants - Level 8, Suite 813/530 Little Collins St, Melbourne VIC 3000, Tel: 0422806669, Email: info@abcoverseasconsultants.com.au. ACEA Global - Suite 7.06, 365 Little Collins Street, Melbourne VIC 3000, Tel: 0497811164, Email: gopal@aceaglobal.in, Web: www.aceaglobal.com.au. ACME Consultants - Suite 303, 530 Lt. Collins Street, Melbourne VIC 3000, Email: sunaina@acmemigration.com. AS Global Education - Level 10, 365 Little Collins Street, Melbourne VIC 3000, Tel: 0420706647, Email: gaurav@asglobaleducation.com."
+  },
+  {
+    "id": "agents-australia-melbourne-2",
+    "title": "SISTC Agents in Melbourne VIC - Part 2",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Asees Migration - Suite 5&6/279 Springvale Rd, Springvale VIC 3171, Tel: 03 8376 1730, Email: admissions@aseesmigration.com.au. Asia Pacific Education - Level 10, 276 Flinders Street, Melbourne VIC 3000, Tel: 0451017518, Email: bdm@asiapacificgroup.com. Ausin Associates - Suite 401, 365 Little Collins St, Melbourne VIC 3000, Tel: +61396002545, Email: reception.ausin@gmail.com. Ausgateway - Suite 614, Level 6, 343 Little Collins Street, Melbourne VIC 3000, Tel: 61390786300, Email: education@noblecareergurus.com."
+  },
+  {
+    "id": "agents-australia-melbourne-3",
+    "title": "SISTC Agents in Melbourne VIC - Part 3",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Aussie ASEAN Education - Suite 411, Level 4, 365 Little Collins Street, Melbourne VIC 3000, Tel: 03 90412442, Email: apply@ozaseaneducation.com. Aussizz Group Melbourne - Level 1, Block Court, 288-290 Collins Street, Melbourne VIC 3000, Tel: 61296023435, Email: mel@aussizz.com. Australian Education Expert - Level 12, 50 Queen Street, Melbourne VIC 3000, Tel: 61396201773, Email: melbourne@pfecglobal.com.au. AVEC Global - Unit 3, 380 Clayton Road, Clayton VIC 3168, Tel: 0390346484, Email: admission@avec-global.com."
+  },
+  {
+    "id": "agents-australia-melbourne-4",
+    "title": "SISTC Agents in Melbourne VIC - Part 4",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: AVM Global Migration - Level 14, 330 Collins Street, Melbourne VIC 3000, Tel: 0468400119, Email: admissions@avmglobal.com.au, Web: avmglobal.au. Bajwa Immigration - Suite 505, Level 5, 125 Swanston Street, Melbourne VIC 3000, Tel: 0390770507, Email: admissions@bajwaimmigration.com. Big Brother Group - Suite 804, Level 6, 276 Flinders St, Melbourne VIC 3000, Tel: 0481033481, Email: arun@bigbrothergroup.com.au, Web: www.bigbrothergroup.com.au. Blue Horse Education - Suite 109C, 530 Little Collins Street, Melbourne VIC 3000, Tel: 41664729355, Email: bheoverseas@bluehorseedu.com."
+  },
+  {
+    "id": "agents-australia-melbourne-5",
+    "title": "SISTC Agents in Melbourne VIC - Part 5",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Bluebird Migration - Level 7, 276 Flinders Street, Melbourne VIC 3000, Tel: 0450530225, Email: info@bluebirdmigration.com.au, Web: www.bluebirdmigration.com. Career Education Consultancy - Level 7, Suite 703, 227 Collins St, Melbourne VIC 3000, Tel: 0499473562, Email: commission1@ceca.com.au. EDLINK EDUCATION - Level 4, 20 Collins Street, Melbourne VIC 3000, Tel: 0434316758, Email: education@edlinkservices.info. Gratus Education - 57 Betula Avenue, Vermont VIC 3133, Tel: 0435417907, Email: info@gratusconsultants.com.au."
+  },
+  {
+    "id": "agents-australia-melbourne-6",
+    "title": "SISTC Agents in Melbourne VIC - Part 6",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Infinite Education - Level 2, 313 Flinders Lane, Melbourne VIC 3000, Tel: 0422360937, Email: info@goiems.com. Innovative Creation Services - Suite 114, Level 1, 343 Little Collins Street, Melbourne VIC 3000, Tel: 0452569177, Email: ksapkota@icsintledu.com. IWise Education - 203/365 Little Collins Street, Melbourne VIC 3000, Tel: +61431156829, Email: admissions@iwiseeducation.com. Journey Group - Suite 104, Level 1, 365 Little Collins Street, Melbourne VIC 3000, Tel: 0416330901, Email: edu@journeygrp.com."
+  },
+  {
+    "id": "agents-australia-melbourne-7",
+    "title": "SISTC Agents in Melbourne VIC - Part 7",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Kandel Consultant - L-10, 230 Collins St, Melbourne VIC 3000, Tel: 0425779082, Email: raj@kandelconsultant.com, Web: kandelconsultancy.com.au. Mahi Education Services - Suite 811, 9 Yarra Street, South Yarra VIC 3141, Tel: 0497896152, Email: admission@mahivisaservices.com. MAVEN Consulting - 203/365 Little Collins Street, Melbourne VIC 3000, Tel: +61396025683, Email: admissions@iwiseeducation.com, Web: www.mymavenedu.com. Millennium Consultants - 4.04, Level 4, Melbourne VIC 3000, Tel: 0479186000, Email: vijay@millenniumconsultants.com.au."
+  },
+  {
+    "id": "agents-australia-melbourne-8",
+    "title": "SISTC Agents in Melbourne VIC - Part 8",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Mirage Consulting - Suite 8.06, Level 8/365 Little Collins Street, Melbourne VIC 3000, Tel: 0435377179, Email: info@themirage.com.au. New Page International - Suite 114, 365 Little Collins Street, Melbourne VIC 3000, Tel: 0397736060, Email: info@newpageau.com. Oracle Immigration - Suite 504, 365 Little Collins Street, Melbourne VIC 3000, Tel: 0450140007, Email: jaspal.singh@oracleimmi.com. Prime Foreign Education - Level 12, 50 Queen Street, Melbourne VIC 3000, Tel: +61396201773, Email: melbourne@pfecglobal.com.au."
+  },
+  {
+    "id": "agents-australia-melbourne-9",
+    "title": "SISTC Agents in Melbourne VIC - Part 9",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: RK Education - Suite 3.07, Level 3, 365 Little Collins St, Melbourne VIC 3000, Tel: 0400079771, Email: info@rkeducation.com.au, Web: www.rkeducation.com.au. Saga Studies - Suite 210, 480 Collins Street, Melbourne VIC 3000, Tel: 0370509366, Email: admissions3@sagastudies.com, Web: www.sagastudies.com.au. Sky High Consultancy - Suite 704-A, Level 7, 227 Collins Street, Melbourne VIC 3000, Tel: 0433041399, Email: info@sky-high.net.au. SMG Education Group - Suite 7.06, 365 Little Collins Street, Melbourne VIC 3000, Tel: 61469337251, Email: priyankav90g@gmail.com."
+  },
+  {
+    "id": "agents-australia-melbourne-10",
+    "title": "SISTC Agents in Melbourne VIC - Part 10",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Splendor Education Care - Suite 8.07, Level 8, Little Collins Street, Melbourne VIC 3000, Tel: +61414136354, Email: enrolments@splendormigration.com. Study Directions - 510, 530 Little Collins Street, Melbourne VIC 3000, Tel: 0406153388, Email: info@studydirections.com. Study Professionals - Suite 8.07, 365 Little Collins Street, Melbourne VIC 3000, Tel: 0401513542, Email: info@studyprofessionals.com.au. Studytrack Consultants - Suite 401, 530 Little Collins Street, Melbourne VIC 3000, Tel: 0424552021, Email: admin@studytrack.co."
+  },
+  {
+    "id": "agents-australia-melbourne-11",
+    "title": "SISTC Agents in Melbourne VIC - Part 11",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: The Miigrators Melbourne - Level 4, 402, 530 Little Collins Street, Melbourne VIC 3000, Tel: 0490067340, Email: applications@themiigrators.com. Think Higher Education - Level 3/105 Queen St, Melbourne VIC 3000, Tel: +61435600610, Email: admissions4@thinkhigher.com.au. Tricon Consulting Group - Suite 506, Level 5, 55 Swanston Street, Melbourne VIC 3000, Tel: 0435 889 049, Email: admissions@triconcgp.com. UMEC Pty Ltd - Level 4, 2 Queen Street, Melbourne VIC 3000, Tel: 61488816665, Email: admission@uprightmigration.com.au."
+  },
+  {
+    "id": "agents-australia-melbourne-12",
+    "title": "SISTC Agents in Melbourne VIC - Part 12",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: V CAN Migration - Suite 1926, Level 19, 180 Lonsdale Street, Melbourne VIC 3000, Tel: 0416827751, Email: navjot@vcanmigration.com.au, Web: www.vcanmigration.com.au. Visa Craft - Suite 10.08, 365 Little Collins Street, Melbourne VIC 3000, Tel: 04 68 8300 68, Email: navneet@visacraft.com.au. Vision Consultants Australia - Level 5, 1 Elizabeth Street, Melbourne VIC 3000, Tel: 0399390545, Email: adm@visionglobal.com.au, Web: www.visionaus.com.au. Viva Immigration - 215/530 Little Collins Street, Melbourne VIC 3000, Tel: 61390779733, Email: admission@vivaimmigration.com.au."
+  },
+  {
+    "id": "agents-australia-melbourne-13",
+    "title": "SISTC Agents in Melbourne VIC - Part 13",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: VXL Migration & Education - Level 7, Suite 13, 365 Collins Street, Melbourne VIC 3000, Tel: +61383832074, Email: admissions@vxlmigration.com.au, Web: www.vxlmigration.com.au. Wales Overseas Consultants - Level 3, Suite 305, 125 Swanston Street, Melbourne VIC 3000, Tel: 0423947800, Email: info@walesoverseas.com. Western Overseas Study - Level 1, Suite 102, 2 Queen Street, Melbourne VIC 3000, Tel: +61 430 409 035, Email: anil@westernoverseas.com.au. World Class Consultants - Suite 693, 585 Little Collins Street, Melbourne VIC 3000, Tel: 0458 655 695, Email: info@worldclassconsultants.com.au."
+  },
+  {
+    "id": "agents-australia-melbourne-14",
+    "title": "SISTC Agents in Melbourne VIC - Part 14",
+    "category": "agents",
+    "text": "Melbourne VIC Agents continued: Zen Migration & Education - Level 8, 99 Queen Street, Melbourne VIC 3000, Tel: 0431822223, Email: education@zenmigration.com.au. Student Destiny Education - 10/785 Pascoe Vale Road, Glenroy VIC 3046, Tel: +610420472727, Email: admissions@studentdestiny.com.au, Web: www.studentdestiny.com.au. The Nirvana Education - 1/225 High Street, Thomastown VIC 3074, Tel: 0466449955, Email: arpanagautam@thenirvanaeducation.com. Campus Edu Services - 61 Regatta Drive, Craigieburn VIC 3064, Tel: 0469845713, Email: navdeep1384@gmail.com."
+  },
+  {
+    "id": "agents-australia-other-nsw",
+    "title": "SISTC Agents in Other NSW Locations",
+    "category": "agents",
+    "text": "Other NSW Agents: ABK Consultancy - Suite 37, Level 2, 1 Railway Parade, Burwood NSW 2134, Tel: 0290555476, Email: info@abkconsultancy.com.au. Affable International - Suite 7, 80-82 Bathurst, Liverpool NSW 2170, Tel: +61480583070, Email: affablemigration@gmail.com. Alliance Education - 12 East Street, Granville NSW 2142, Tel: 0420609653, Email: shikha@aemservices.com.au. AussieGlobe Education - Suite 16/10-12 King St, Rockdale NSW 2216, Tel: 0420498555, Email: rkhatiwada@aussieglobe.com.au. COACH Education - 43B Haldon St, Lakemba NSW 2195, Tel: 0433452922, Email: info@coachedu.com.au."
+  },
+  {
+    "id": "agents-australia-other-nsw-2",
+    "title": "SISTC Agents in Other NSW Locations - Part 2",
+    "category": "agents",
+    "text": "Other NSW Agents continued: Destiny Australia - 3/57 Stapleton Street, Pendle Hill NSW 2145, Tel: +61432710440, Email: amit@destinyaustralia.org. GM Education Consultants - 1307/12 East Street, Granville NSW 2142, Tel: 0432673552, Email: sarosh@gmconsultants.com.au. Gloria Education Services - Unit 7, 221-223 Dunmore Street, Pendle Hill NSW 2145, Tel: 0469964461, Email: admissions@gloriaeducation.com.au. GROWSMART EDUCATION - Suite 7, Level 1, 12-20 Main Street, Blacktown NSW 2148, Tel: 0449943434, Email: admission@growsmarteducation.com.au."
+  },
+  {
+    "id": "agents-australia-other-nsw-3",
+    "title": "SISTC Agents in Other NSW Locations - Part 3",
+    "category": "agents",
+    "text": "Other NSW Agents continued: Koala Solutions - Suite 6, Level 2, 208 Forest Road, Hurstville NSW 2220, Tel: 02 9567 6045, Email: visa@koalaz.com.au. Migration Corp Australia - Suite 1A, 40 Raymond Street, Bankstown NSW 2200, Tel: 0297900050, Email: admissions@migrationcorp.com.au. PIXAR EDUCATIONAL - Suite 5/534 Princes Highway, Rockdale NSW 2216, Tel: 0425347175, Email: info@pixaredu.com.au. Primo Education - Suite 27, Level 3, Sydney NSW 2000, Tel: 0280569505, Email: admin@primoedu.com.au."
+  },
+  {
+    "id": "agents-australia-other-nsw-4",
+    "title": "SISTC Agents in Other NSW Locations - Part 4",
+    "category": "agents",
+    "text": "Other NSW Agents continued: Pro Info & Edu Consultant - Suite 1/38 Railway Parade, Lakemba NSW 2195, Tel: 0451111995, Email: info@proinfoedu.com.au. Ready To Study - 258 Railway Parade, Kogarah NSW 2217, Tel: 61426243477, Email: info@readytostudy.com.au. RS Migration Services - Suite 7, Level 2, 24 Main Street, Blacktown NSW 2148, Tel: 0466616463, Email: rs@rsmigration.com.au. Student Care Education - Suite 6, 68 Haldon Street, Lakemba NSW 2195, Tel: 0403 791 116, Email: danish@studentcareedu.com.au."
+  },
+  {
+    "id": "agents-australia-other-nsw-5",
+    "title": "SISTC Agents in Other NSW Locations - Part 5",
+    "category": "agents",
+    "text": "Other NSW Agents continued: Student Solution Centre - 34-35/48-50 George Street, Parramatta NSW 2150, Tel: 0280846453, Email: studentssolutioncenter@hotmail.com. Tejani Consultancy - Suite 209, 111 Harrington Street, The Rocks NSW 2000, Tel: 0412987534, Email: sam@tejanilawyers.com.au, Web: www.tejaniconsultancy.com. Unique Education - Suite 206, The Boulevard, Strathfield NSW 2135, Tel: 0289702398, Email: uniquemigration@gmail.com. WEB INTERNATIONAL EDUCATION - 26 Bay Street, Rockdale NSW 2216, Tel: 0289588163, Email: websydney.australia@gmail.com."
+  },
+  {
+    "id": "agents-australia-qld",
+    "title": "SISTC Agents in Queensland",
+    "category": "agents",
+    "text": "Queensland Agents: Achieve Migration Consultant - Unit 1, 43 Selhurst Street, Coopers Plains QLD 4108, Tel: 0450078899, Email: info@achievevisa.com.au. Qbase Education & Visa - Suite 7, 2092 Logan RD, Upper Mount Gravatt QLD 4122, Tel: 0430 324 248, Email: mithun@qbaseeducation.com. Rightway Migration - Shop 2/1933 Logan Road, Upper Mount Gravatt QLD 4122, Tel: 0430070131, Email: info@rightwaymigration.com.au. The Trustee for Bajwa Trading - 10/11 Hi Tech Court, Eight Mile Plains QLD 4113, Tel: 0405055024, Email: info@migrationevolution.com.au. Visa Empire - 2072 Logan Road, Upper Mount Gravatt QLD 4122, Tel: 0735206600, Email: manvi@visaempire.com.au."
+  },
+  {
+    "id": "agents-australia-sa",
+    "title": "SISTC Agents in South Australia",
+    "category": "agents",
+    "text": "South Australia Agents: Acha Parhlo - 13 Yates Street, Mawson Lakes SA, Tel: 0450890490, Email: connect@achaparhlo.com. Millennium Career Consultants - 18 Rodney Avenue, Ingle Farm SA 5098, Tel: 0423032115, Email: admissions@mccvisas.com. Sky Consultants Group - Unit 3, 3 Stephens Avenue, Torrensville SA 5031, Tel: 61426179366, Email: info@skyconsultants.com.au. Zodiac Migration - Level 5/108 King William Street, Adelaide SA 5000, Tel: 61426363689, Email: admission@zodiacgroup.com.au."
+  },
+  {
+    "id": "agents-australia-tas",
+    "title": "SISTC Agents in Tasmania",
+    "category": "agents",
+    "text": "Tasmania Agents: Capital Education and Visa Services - 21 O'Brien Street, Glenorchy TAS 7010, Tel: 61433925506, Email: prapticapital2010@gmail.com. Merit Services - 16/133 Main Road Moonah, Moonah TAS 7009, Tel: 0362009531, Email: ram@meritservices.com.au. One Point Education Services - 6B 113 Main Road, Moonah TAS 7009, Tel: 0429388905, Email: info@onepointeducationservices.com. Yomari Groups (Global Mark Education) - 149b Liverpool Street, Hobart TAS 7000, Tel: (03) 6231 1246, Email: liza@gmeducation.com.au, Web: www.gmeducation.com.au."
+  },
+  {
+    "id": "agents-australia-wa-act-nt",
+    "title": "SISTC Agents in WA, ACT, and NT",
+    "category": "agents",
+    "text": "Western Australia Agents: Internik Consultants - U 6, Canning Vale WA 6155, Tel: 61452053123, Email: SHAHZAD.PERVEZ47@GMAIL.COM. ACT Agents: Headstart Global Consultants - 490 Northbourne Avenue, Dickson ACT 2602, Tel: 0426758795, Email: info@headstartgc.com. KBA Global - Suite 4, Darwin ACT 0800, Tel: 9855082154, Email: uttam.sapkota@kbaglobal.com. Northern Territory Agents: Contact SISTC directly for agent referrals in NT."
+  },
+  {
+    "id": "agents-australia-regional-vic",
+    "title": "SISTC Agents in Regional Victoria",
+    "category": "agents",
+    "text": "Regional Victoria Agents: 6Brothers Consultancy - 24 Socrates Way, Rockbank VIC 3335, Tel: +923035280879, Email: 6brothersconsultancy@gmail.com. Aggarwal Consultants - 21/567 Collins Street, East Melbourne VIC 3000, Tel: 0433582001, Email: infoaggarwal3@gmail.com. Aussie Immi Pathways - Suite 6, Unit 204/2 Infinity Drive, Truganina VIC 3029, Tel: 0416204677, Email: rose@aussieimmipathways.com. BANSAL EDUCATION GROUP - 18 Henry Street, Pakenham VIC 3810, Tel: 0452 175 706, Email: apply@bansaleducation.com.au."
+  },
+  {
+    "id": "agents-australia-regional-vic-2",
+    "title": "SISTC Agents in Regional Victoria - Part 2",
+    "category": "agents",
+    "text": "Regional Victoria Agents continued: CG Migration - 16 Inglewood Drive, Burnside Heights VIC 3023, Tel: 0450409940, Email: info@cgms.com.au. Holistic Students Services - Level 1, 23 Koornang Rd, Carnegie VIC 3163, Email: Manbir@holisticgroup.com.au. Johal Immigration Specialists - 1003 Edgars Road, Wollert VIC 3750, Tel: 0426027965, Email: satwinder@johalimmigrationspecialists.com. Kanav Migration Consultancy - Kurunjang VIC 3337, Tel: 0451799752, Email: admissions.kanav@gmail.com."
+  },
+  {
+    "id": "agents-australia-regional-vic-3",
+    "title": "SISTC Agents in Regional Victoria - Part 3",
+    "category": "agents",
+    "text": "Regional Victoria Agents continued: Navigators Overseas Solutions - 3/162 Hilton Street, Glenroy VIC 3046, Tel: 0424669699, Email: australia@navigatorsoverseas.org, Web: www.navigatorsoverseas.org. Outlook Immigration - 26 Rainer Cres, Clyde North VIC 3978, Tel: +61414200044, Email: rachin@outlookimmigration.com. Oz Migration - 3 Nandaly Place, Cranbourne West VIC 3977, Tel: 0430446799, Email: contact.ozmigration@gmail.com. Sanguine Migration - Unit 10, 9 Moretti Ct, Marshall VIC 3216, Tel: +61 426 955 000, Email: enq.melb@sanguinemigration.com."
+  },
+  {
+    "id": "agents-australia-regional-vic-4",
+    "title": "SISTC Agents in Regional Victoria - Part 4",
+    "category": "agents",
+    "text": "Regional Victoria Agents continued: Shri Krishna Education - 23A Old Geelong Road, Hoppers Crossing VIC 3029, Tel: 0421243060, Email: info1@shrikrishnaconsultants.com. SINGH Education Consultants - 84 Hotham St, Preston VIC 3072, Tel: +61 (0) 451 830 003, Email: singheducationsonsultants@yahoo.com, Web: www.singhvisa.com.au. Singhcomms (Star Education Consultants) - 21 Stanhope Road, Tarneit VIC 3029, Tel: 0403608872, Email: starmigrationoz@gmail.com. Skywings Migration - 2/47 Walker Street, Dandenong VIC 3175, Tel: 0430343009, Email: satvinder@skywings.com.au."
+  },
+  {
+    "id": "agents-australia-regional-vic-5",
+    "title": "SISTC Agents in Regional Victoria - Part 5",
+    "category": "agents",
+    "text": "Regional Victoria Agents continued: Smart Visa Solutions - 24 Callistemon Drive, Hoppers Crossing VIC 3029, Tel: 0433108248, Email: svseducationconsultants@gmail.com. Student Guide Australia - 58 Mount Alexander Road, Travancore VIC 3032, Tel: 0416027540, Email: saad@studentguideaustralia.com.au. Study Direct Global - Unit A11/2A Westall Road, Clayton VIC 3168, Tel: 61433935366, Email: kavindu@studydirectglobal.com.au. Target Education - 26 Kingloch Parade, Wantirna VIC 3152, Tel: 0432452750, Email: targeteducation88@gmail.com."
+  },
+  {
+    "id": "agents-australia-regional-vic-6",
+    "title": "SISTC Agents in Regional Victoria - Part 6",
+    "category": "agents",
+    "text": "Regional Victoria Agents continued: Virk Immigration Consultants - 1/16 Prosperity St, Truganina VIC 3029, Tel: 0480485012, Email: admission@virkimmigration.com. Visa World Immigration (Causeway Immigration) - 63 Quarters Boulevard, Cranbourne West VIC 3977, Tel: 0424865267, Email: immicauseway@gmail.com. OM Education & Migration - 100 Herbert Street, Northcote VIC 3070, Tel: 0427883368, Email: info@omconsultants.com.au. OSIYAN CONSULTANTS - 32 Reita Avenue, Wantirna South VIC 3152, Tel: 0490190570, Email: osiyanconsultants@gmail.com."
+  },
+  {
+    "id": "agents-nepal-kathmandu-1",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 1",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents: Abroad Application Educational Consultant Global - 5th Floor, Putalisadak, Kathmandu, Tel: 9779851079317, Email: admin@aaecglobal.com. Abroad Hub Pvt. Ltd - Putalisadak, Kathmandu, Tel: 9779841850326, Email: abroadhub@gmail.com. ACE Network - Dillibazar-29, Kathmandu, Tel: 9551170908, Email: abroadcounseling7@gmail.com, Web: www.acenetwork.edu.np. Arushi International Consultancy - Bagbazar-28, Kathmandu, Tel: 9779851119112, Email: info@arushieducation.com."
+  },
+  {
+    "id": "agents-nepal-kathmandu-2",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 2",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Asian International Education - Putalisadak-30, Kathmandu, Tel: 97798520741777, Email: info@asian.edu.np. Auspark Education Network - Putalisadak-2, Kathmandu, Tel: 9779841583533, Email: rupesh@auspark.edu.np. Blueberry Education Consultancy - Putalisadak, Kathmandu, Tel: 97714425256, Email: mahendra@blueberry.edu.np. C.B International Consultancy - Bagbazar-28, Kathmandu, Tel: 9779851053789, Email: sudip@cbintl.com.np."
+  },
+  {
+    "id": "agents-nepal-kathmandu-3",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 3",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Career Wings Pvt. Ltd - Putalisadak, Kathmandu 44600, Tel: 9779808776058, Email: admin@careerwings.edu.np. Carving Career Foundation - Putalisadak-28, Kathmandu, Tel: 9779851073802, Email: info@ccf.com.np. Channel International Education - Devkots Sadak, New Baneshwor, Kathmandu, Tel: 9779841450575, Email: info@channelintledu.com. Connect Globe Education - Putalisadak-31, Kathmandu 44600, Tel: 9779851014436, Email: suraj@connectglobe.edu.np."
+  },
+  {
+    "id": "agents-nepal-kathmandu-4",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 4",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Detail Education Consultancy - New Baneshwor, Kathmandu 44600, Tel: 9779861028744, Email: chauhanyogen43@gmail.com. Dream On Educational Consultancy - Dillibazar, Kathmandu, Tel: 9779851156423, Email: bhimonon@gmail.com. Education Tree Global - Kamalpokhari 01, Kathmandu, Tel: 9851278944, Email: kshitij@educationtreeglobal.com. Golden Wave International - Kathmandu-28, Putalisadak, Tel: 9779840096468, Email: info@goldenwave.edu.np."
+  },
+  {
+    "id": "agents-nepal-kathmandu-5",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 5",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Goodlike Education Consultancy - Putalisadak-28, Kathmandu, Tel: 9779845005700, Email: goodlikeeducation@gmail.com. Guideline Education Consultancy - Kathmandu Metropolitan City-29, Tel: 9779851135251, Email: bibhutiraj@guideline.edu.np. Hi-Tech International Educational - Dillibazzar-32, Kathmandu, Tel: 9779843709882, Email: info@hitechintl.edu.np. Ignite Education Consultancy - Pepsicola-32, Kathmandu, Tel: 9779851172296, Email: bishnu.igniteedu@gmail.com."
+  },
+  {
+    "id": "agents-nepal-kathmandu-6",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 6",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Kavya Global Network - Aloknagar-31, Kathmandu, Tel: 9779860233416, Email: krishna.kavyagn@gmail.com. Kiama Education Services - Kamaladi, Kathmandu 310327, Tel: 9818607350, Email: janvi16@gmail.com. Leaf Education Consultancy - Putalisadak, Kathmandu, Tel: 9779851126749, Email: leafedunepal@gmail.com. Lotus International Education Foundation (LIEF) - Bagbazaar, Kathmandu, Tel: 9841472325, Email: visacollaborate@gmail.com."
+  },
+  {
+    "id": "agents-nepal-kathmandu-7",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 7",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: MARK EDUCATION FOUNDATION - 5th Floor Kumari Bank Building, New Baneshor, Kathmandu, Tel: 9779851157908, Email: PRITHVI@MARK.EDU.NP. New Era International Education - 28 Putalisadak, Kathmandu, Tel: 9779851034631, Email: manish@newera.edu.np. Oxford Study Global - Bagbazar-28, Kathmandu 44600, Tel: +61433711758, Email: oxfordstudyglobal@gmail.com. Plan International Education - Putalisadak Chowk Way to Dillibazar, Kathmandu, Tel: 97798413841364308, Email: bpravan@gmail.com."
+  },
+  {
+    "id": "agents-nepal-kathmandu-8",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 8",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Platform Education Foundation - Bagbazar-32, Kathmandu, Tel: 9779851083391, Email: sunil@platform.edu.np. Pragmatic International Education - New Baneshwor, Kathmandu, Tel: 9779869361573, Email: prakash@pragmaticintl.com. Presidential International Academic - Kathmandu Metropolitan City-28, Bagbazar, Tel: 9779851190378, Email: ashish@presidentialnepal.edu.np. Professional Visa and Education - Putalisadak, Kathmandu, Tel: 9851029011, Email: info@provisa.com.np."
+  },
+  {
+    "id": "agents-nepal-kathmandu-9",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 9",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Raffles Educare Associates - Putasiladak (way to Dillibazar), Kathmandu, Tel: 9779851086208, Email: dinesh@raffleseducare.com. Shatakshee Educational Foundation - Dillibazar, Kathmandu, Tel: 9779851002559, Email: umesh@shatakshee.edu.np. Silicon Education Network - 44605 Dillibazar Height, Kathmandu, Tel: 9779851167389, Email: kunwarvibash@gmail.com. St Xavier Education Consultancy - New Baneshwor Plaza, Block C, Kathmandu, Tel: 9779851007320, Email: info@stxavieredu.com.np."
+  },
+  {
+    "id": "agents-nepal-kathmandu-10",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 10",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Steps International Education - Leknath Marg, Thamel, Kathmandu, Tel: 9779851209664, Email: info@steps.com.np. Sunrise Education Consultancy - Putalisadak, Kathmandu, Tel: 9779851132250, Email: siecnepal.immi@gmail.com. Thomas International Education - Putalisadak, Kathmandu, Tel: 9779857001541, Email: info.thomaseducation@gmail.com. Uniglobal International Educational - Bhakti Thapa Marga, New Baneshwor-10, Kathmandu, Tel: 0097714482453, Email: info@uniglobal.edu.np."
+  },
+  {
+    "id": "agents-nepal-kathmandu-11",
+    "title": "SISTC Agents in Kathmandu Nepal - Part 11",
+    "category": "agents",
+    "text": "Kathmandu Nepal Agents continued: Vito Education - Dillibazar, Behind Nepal Investment Bank, Putalisadak Branch, Kathmandu, Tel: 97714425701, Email: info@vitoeducation.com. Welhan Abroad Study - New Baneshwor 31, Kathmandu, Tel: 9779851088364, Email: partners@welhanabroadstudy.com. WI Education - New Plaza-29, Putalisadak, Kathmandu, Tel: +977 9860580274, Email: shilpawi20@gmail.com."
+  },
+  {
+    "id": "agents-nepal-other",
+    "title": "SISTC Agents in Other Nepal Locations",
+    "category": "agents",
+    "text": "Other Nepal Agents: Brighton Career Consultants - Bharatpur-02 Lions Chowk, Narayanghat, Chitwan, Tel: 9779846454390, Email: brightoncareerconsultants@gmail.com. Migrow Education and Consultancy - Khairani 10, Parsa, Chitwan, Tel: 9779865037621, Email: manish.goswami@migrow.org. Nmark Education - Opposite to TradeMall, Pokhara, Tel: 97761544051, Email: nabin@nmark.edu.np. Oxford Academia Chitwan - Narayangarh, Chitwan, Tel: 9779855016969, Email: oxfordachitwan@outlook.com."
+  },
+  {
+    "id": "agents-pakistan-1",
+    "title": "SISTC Agents in Pakistan - Part 1",
+    "category": "agents",
+    "text": "Pakistan Agents: ARSA Study Consultants - H#12M Block Model Town Extension Near Jilal Sons, Lahore, Punjab 54000, Tel: 923458512324, Email: asifraza81@gmail.com. Asian Education Consultants - G.T Road, Opposite old fruit Market, Gujrat 50700, Tel: 923009623731, Email: admin@aecpakistan.com. AV Education Consultant - Office No 611, 6th Floor, Islamabad, Tel: +923351506315, Email: av.consultant95@yahoo.com. Central Global Consultants - Level 1, Jalalpur Jattan Road Near Nasrullah, Gujrat, Punjab 50700, Tel: 920342649867, Email: shoaib.arshad@centralglobalconsultants.com."
+  },
+  {
+    "id": "agents-pakistan-2",
+    "title": "SISTC Agents in Pakistan - Part 2",
+    "category": "agents",
+    "text": "Pakistan Agents continued: HJ Consultants - Vanike Road Near Causeway College, Hafizabad, Tel: 923410000712, Email: hjconsultants.ayesha@gmail.com. Horizon International - Office # 501 & 502, 5th Floor, 49-Shadman Mall, Shadman Market, Lahore, Punjab 54000, Tel: 92 321 4019098, Email: ali.meer@hi.edu.pk. MA Education Consultants - Suite 13-14, First Floor, Shahnawaz Plaza, Sector I-10 Markaz, Islamabad 44800, Tel: +923349901772, Email: apply@maeduconsultants.com. Pure Consulting - GF 17 Divine Center New Airport Road, Lahore Cantt, Tel: 923008864084, Email: mumraiz.munir@pureconsultings.com."
+  },
+  {
+    "id": "agents-pakistan-3",
+    "title": "SISTC Agents in Pakistan - Part 3",
+    "category": "agents",
+    "text": "Pakistan Agents continued: Roots Education Consultant - Plaza 44Q, 3rd Floor DHA1 Business Bay, Sector F, Bharia Town, Phase 7, Islamabad, Tel: 092321502556, Email: rootsedu83@gmail.com. Shimlians Associates - Awan Plaza Phase 2 Mandian Abbotabad, Abbotabad, Tel: 923185551889, Email: shimlians.associates@gmail.com. The Study Solution - Office No .512, Westland Trade Center, KECHS Society, Karachi, Tel: 0092 331 2260 462, Email: info@thestudysolution.org. Visa Prompt Consultant - Suite # B1001, 1st Floor, Safari Omega View, Gulistan-e-Johar, Block 13, Karachi, Tel: 923242170324, Email: info@visaprompt.com."
+  },
+  {
+    "id": "agents-india-1",
+    "title": "SISTC Agents in India - Part 1",
+    "category": "agents",
+    "text": "India Agents: American Overseas Career Consultants - SCF-1, Vikas Vihar, Ambala City, Haryana 134003, Tel: +919541215669, Email: bdmindia@americanoverseas.in. A-One Global Services - HP Complex, Upper Gadigarh, Jammu, J&K, Tel: +919906080479, Email: aoneglobalservice@gmail.com. Auscan Consultants - S.C.O. No - 11, Sector - 17-E, Above Tejees, Chandigarh, Tel: 91 172 5002055, Email: auscanadmissions@gmail.com. Bharti Education & Immigration - SCF 19-20, 2nd floor, Phase 10, Mohali, Punjab 160064, Tel: 91 172 4267700, Email: info@bhartigroup.in."
+  },
+  {
+    "id": "agents-india-2",
+    "title": "SISTC Agents in India - Part 2",
+    "category": "agents",
+    "text": "India Agents continued: Kanoor International - D-Wing - 620, Plaza, Navi Mumbai 400703, Tel: +919815105577, Email: australia@kanoorinternational.com. Sharpmind Educational Services - 112, First Floor, Shree Kuber Complex, Ranjit Nagar, Opp. Bus Stand, Jalandhar 144001, Tel: 911815029900, Email: jalotavikas@sharpmindedu.com. Smart Education Solutions - SCO-13, Model Town Extension, Tuition, Market, Ludhiana 141002, Tel: 919815105577, Email: info@smarteducationsollutions.com. Success Heights Immigration Consultancy - SCO 6, 4th Floor, B-Block Ranjit Avenue, Amritsar, Punjab 143001, Tel: +61451336303, Email: gouravsonik@successheights.com.au."
+  },
+  {
+    "id": "agents-india-3",
+    "title": "SISTC Agents in India - Part 3",
+    "category": "agents",
+    "text": "India Agents continued: The Trustee for CAAN World Migration - 83A, Jyoti Nagar, Cool Road, Jalandhar, Punjab 144001, Tel: 61416096943, Email: caanworldvisa@gmail.com."
+  },
+  {
+    "id": "agents-other-countries",
+    "title": "SISTC Agents in Other Countries",
+    "category": "agents",
+    "text": "Other International Agents: UAE - Iconic Solutions - Aspin Commercial Tower - 4003, Sheikh Zayed Rd, Trade Centre, Dubai, Tel: +971501440360, Email: kamil.hussain@iconicsolutionsuae.com. UK - The IEIS Education Group Ltd - 48 Hall St, Dudley, England DY2 7BS, Tel: 441384686456, Email: ausnz@ieis.org.uk. Canada - UVN Education International - 6-14453 72 Ave, Surrey, British Columbia V3S2E6, Tel: 16047839599, Email: vivek@uvninternational.com."
+  },
+  {
+    "id": "agents-how-to-find",
+    "title": "How to Find a SISTC Education Agent",
+    "category": "agents",
+    "text": "To find an authorized SISTC education agent near you: 1) Visit the official agent list at https://sistc.meshedhe.com.au/Publics/PublicsPages/AgentListByCountry.aspx 2) Search by country or region 3) Contact the agent directly via phone or email 4) Verify they are authorized to represent SISTC. Agents can help with: Course selection, Application submission, Visa guidance, Accommodation assistance, Pre-departure support. You can also apply directly to SISTC through the website: https://sistc.edu.au/"
   }
 ]

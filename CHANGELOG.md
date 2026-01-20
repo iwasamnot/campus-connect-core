@@ -4,6 +4,109 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [18.0.0] - 2025-01-20 - Serverless Vector RAG Engine
+
+### 🚀 New Major Features
+
+#### Serverless Vector RAG Engine
+- **Pinecone Vector Database Integration**: Enterprise-grade vector search for intelligent information retrieval
+  - Automatic index management with dimension validation (768 dimensions for text-embedding-004)
+  - Cosine similarity matching for semantic search
+  - Top-K retrieval with relevance scoring
+  - AWS serverless deployment (us-east-1 region)
+
+- **Google Gemini AI Integration**: Dual-use for embeddings and text generation
+  - `text-embedding-004` model for high-quality 768-dimensional embeddings
+  - `gemini-2.0-flash` model for fast, intelligent response generation
+  - Context-aware Virtual Senior responses
+
+- **Groq LLM Integration**: Alternative high-speed inference provider
+  - `llama-3.3-70b-versatile` model for blazing-fast responses
+  - Automatic failover from Groq to Gemini
+  - OpenAI-compatible API integration
+  - Prioritized for speed when GROQ_API_KEY is configured
+
+- **Data Ingestion System** (`scripts/uploadToPinecone.js`):
+  - Batch processing with rate limiting
+  - Automatic index creation and dimension validation
+  - Progress tracking and verification
+  - Comprehensive error handling
+
+- **RAG Query Engine** (`src/utils/ragEngine.js`):
+  - `askVirtualSenior(userQuestion)` - Main RAG query function
+  - `checkConfiguration()` - Validate API keys and settings
+  - `testRAGEngine()` - Self-diagnostic testing
+  - Debug mode for development
+
+#### SISTC Knowledge Base
+- **100+ Comprehensive Documents**: Covering all aspects of SISTC
+  - Courses: Bachelor of IT, Diploma of IT, Graduate Diploma
+  - Majors: Business Information Systems, Digital Enterprise
+  - Campus Locations: Sydney CBD, Parramatta, Melbourne
+  - Fees: Domestic and international student pricing
+  - Application Process: Entry requirements, enrollment steps
+  - International Students: Visa requirements, support services
+  - Academic Calendar: Trimester dates, orientation schedules
+  - Accreditations: TEQSA, CRICOS, ACS
+  - Student Statistics: Enrollment numbers, demographics
+  - FAQs: Common questions and answers
+  - **200+ Education Agents**: Complete agent directory organized by region
+    - Australia: Sydney, Parramatta, Melbourne, QLD, SA, TAS, WA, ACT
+    - Nepal: Kathmandu and other cities
+    - Pakistan: Major cities
+    - India: Multiple states
+    - Other countries: UAE, UK, Canada
+
+### 🔧 CI/CD & Infrastructure
+
+#### GitHub Actions Workflows
+- **RAG Data Upload Workflow** (`.github/workflows/rag-upload.yml`):
+  - Automatic trigger on `universityData.json` changes
+  - Manual dispatch support
+  - Secure secret management for API keys
+
+- **Firebase Hosting Workflow Updates**:
+  - Added VITE_PINECONE_API_KEY support
+  - Added VITE_PINECONE_INDEX_NAME support
+  - Added VITE_GROQ_API_KEY support
+
+#### Firebase Cloud Functions
+- **RAG Functions**: ragSearch and ragUpsert for server-side RAG
+- **Video SDK Functions**: Renamed to V1 versions for compatibility
+  - `generateZegoTokenV1` - ZegoCloud token generation
+  - `getVideoSDKTokenV1` - VideoSDK token generation
+
+### 📝 Environment Variables
+
+New environment variables required:
+```env
+# Pinecone Vector Database
+VITE_PINECONE_API_KEY=your-pinecone-api-key
+VITE_PINECONE_INDEX_NAME=campus-connect-index
+
+# LLM Providers (at least one required)
+VITE_GEMINI_API_KEY=your-gemini-api-key
+VITE_GROQ_API_KEY=your-groq-api-key  # Optional, faster inference
+```
+
+### 🔄 Integration Updates
+- **ragSystem.js**: Priority-based fallback chain
+  1. Direct Pinecone RAG (primary)
+  2. Firebase Cloud Functions RAG (fallback)
+  3. Local in-memory retrieval (last resort)
+
+### 📦 Dependencies Added
+- `@pinecone-database/pinecone: ^4.0.0` - Vector database SDK
+- `dotenv: ^16.4.7` - Environment variable management
+
+### 🐛 Bug Fixes
+- Fixed Gemini model not found error (changed to gemini-2.0-flash)
+- Fixed Pinecone index dimension mismatch handling
+- Fixed Firebase Functions v1/v2 compatibility issues
+- Removed problematic scheduled functions exports
+
+---
+
 ## [17.0.0] - 2025-01-XX - Major Update: Advanced Futuristic Features
 
 ### 🚀 New Major Features

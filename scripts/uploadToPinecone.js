@@ -183,32 +183,19 @@ async function processDocuments(genAI, documents, batchSize = 5) {
 }
 
 /**
- * Check if index exists and create/recreate if necessary
+ * Check if index exists and create if necessary
  */
 async function ensureIndexExists(pinecone) {
   try {
     const indexes = await pinecone.listIndexes();
-    const existingIndex = indexes.indexes?.find(idx => idx.name === PINECONE_INDEX_NAME);
+    const indexNames = indexes.indexes?.map(idx => idx.name) || [];
     
-    if (existingIndex) {
-      // Check if dimension matches
-      const indexDimension = existingIndex.dimension;
-      
-      if (indexDimension === EMBEDDING_DIMENSION) {
-        console.log(`✅ Index "${PINECONE_INDEX_NAME}" exists with correct dimension (${EMBEDDING_DIMENSION})`);
-        return;
-      }
-      
-      // Dimension mismatch - need to delete and recreate
-      console.log(`⚠️ Index "${PINECONE_INDEX_NAME}" has dimension ${indexDimension}, but we need ${EMBEDDING_DIMENSION}`);
-      console.log(`🗑️ Deleting existing index...`);
-      
-      await pinecone.deleteIndex(PINECONE_INDEX_NAME);
-      console.log(`   Index deleted. Waiting before recreation...`);
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    if (indexNames.includes(PINECONE_INDEX_NAME)) {
+      console.log(`✅ Index "${PINECONE_INDEX_NAME}" already exists`);
+      return;
     }
     
-    console.log(`📝 Creating index "${PINECONE_INDEX_NAME}" with dimension ${EMBEDDING_DIMENSION}...`);
+    console.log(`📝 Creating index "${PINECONE_INDEX_NAME}"...`);
     
     await pinecone.createIndex({
       name: PINECONE_INDEX_NAME,
@@ -224,30 +211,9 @@ async function ensureIndexExists(pinecone) {
     
     // Wait for index to be ready
     console.log('   Waiting for index to be ready...');
-    let ready = false;
-    let attempts = 0;
-    const maxAttempts = 30; // 30 attempts x 2 seconds = 60 seconds max
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait 60 seconds
     
-    while (!ready && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      attempts++;
-      
-      try {
-        const indexList = await pinecone.listIndexes();
-        const idx = indexList.indexes?.find(i => i.name === PINECONE_INDEX_NAME);
-        if (idx && idx.status?.ready) {
-          ready = true;
-        }
-      } catch (e) {
-        // Index might not be queryable yet
-      }
-      
-      if (attempts % 5 === 0) {
-        console.log(`   Still waiting... (${attempts * 2}s)`);
-      }
-    }
-    
-    console.log(`✅ Index "${PINECONE_INDEX_NAME}" created successfully with dimension ${EMBEDDING_DIMENSION}`);
+    console.log(`✅ Index "${PINECONE_INDEX_NAME}" created successfully`);
   } catch (error) {
     if (error.message?.includes('already exists')) {
       console.log(`✅ Index "${PINECONE_INDEX_NAME}" already exists`);
