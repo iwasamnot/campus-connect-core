@@ -169,6 +169,29 @@ jobs:
       - name: Install Functions Dependencies
         run: cd functions && npm ci
 
+      - name: Set Functions Config from GitHub Secrets (legacy, simple)
+        run: |
+          echo "Setting Firebase Functions config from GitHub Secrets (pinecone + groq)..."
+          
+          # Pinecone config (optional - only if secrets exist)
+          if [ -n "${{ secrets.PINECONE_API_KEY }}" ] && [ -n "${{ secrets.PINECONE_INDEX_NAME }}" ]; then
+            firebase functions:config:set \
+              pinecone.api_key="${{ secrets.PINECONE_API_KEY }}" \
+              pinecone.index="${{ secrets.PINECONE_INDEX_NAME }}" \
+              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set Pinecone config (may already be set)"
+          else
+            echo "⚠️ Warning: PINECONE_API_KEY or PINECONE_INDEX_NAME not set in GitHub Secrets - backend RAG will fall back to local mode"
+          fi
+          
+          # Groq config (optional - only if secret exists)
+          if [ -n "${{ secrets.VITE_GROQ_API_KEY }}" ]; then
+            firebase functions:config:set \
+              groq.api_key="${{ secrets.VITE_GROQ_API_KEY }}" \
+              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set Groq config (may already be set)"
+          else
+            echo "⚠️ Warning: VITE_GROQ_API_KEY not set in GitHub Secrets - Groq embeddings will be disabled on backend"
+          fi
+
       - name: Deploy Cloud Functions
         run: firebase deploy --only functions --project campus-connect-sistc --non-interactive --force
       
