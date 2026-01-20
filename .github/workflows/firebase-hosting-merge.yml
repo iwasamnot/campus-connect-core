@@ -163,6 +163,12 @@ jobs:
       - name: Deploy Storage Rules
         run: firebase deploy --only storage --project campus-connect-sistc --non-interactive || echo "Storage rules deployment failed - Storage may not be enabled. See ENABLE_STORAGE.md for setup instructions."
         continue-on-error: true
+
+      - name: Install Functions Dependencies
+        run: cd functions && npm ci
+
+      - name: Deploy Cloud Functions
+        run: firebase deploy --only functions --project campus-connect-sistc --non-interactive --force
       
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
