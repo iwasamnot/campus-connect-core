@@ -1,82 +1,86 @@
 /**
  * Multi-AI Provider System
  * Supports multiple AI providers with automatic fallback
- * Student-friendly options with generous limits
+ * 
+ * IMPORTANT: Gemini is PRIMARY for stability (1,000,000 TPM limit)
+ * Groq is fast but has strict rate limits (6,000 TPM) - use as fallback only
  */
 
 // Provider priorities (order matters - first available is used)
+// Gemini FIRST for stability during demos/presentations (huge rate limits)
 const PROVIDER_PRIORITY = [
-  'groq',        // Best for students - very generous free tier, fast
-  'huggingface', // Free inference API
+  'gemini',      // PRIMARY: 1,000,000 TPM - most reliable for demos
+  'groq',        // FALLBACK: Fast but 6,000 TPM limit - easy to hit
   'openai',      // Good free tier
+  'huggingface', // Free inference API
   'anthropic',   // Claude - good limits
-  'gemini'       // Fallback to existing Gemini
 ];
 
 /**
  * Get AI provider configuration
+ * Prioritizes Gemini for stability (1M tokens/min vs Groq's 6K)
  */
 export const getAIProvider = () => {
-  // Check for Groq (best for students - very generous limits)
+  // PRIMARY: Gemini (1,000,000 TPM - practically unlimited for demos)
+  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+  if (geminiApiKey && geminiApiKey !== '') {
+    return {
+      provider: 'gemini',
+      apiKey: geminiApiKey,
+      model: 'gemini-1.5-flash', // Fast and reliable with huge limits
+      baseUrl: null, // Uses GoogleGenerativeAI SDK
+      maxTokens: 2048,
+      temperature: 0.7
+    };
+  }
+
+  // FALLBACK 1: Groq (fast but 6,000 TPM - hits limit after ~3 RAG queries)
   const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
   if (groqApiKey && groqApiKey !== '') {
     return {
       provider: 'groq',
       apiKey: groqApiKey,
-      model: 'llama-3.1-8b-instant', // Updated: llama-3.1-70b-versatile was decommissioned
+      model: 'llama-3.1-8b-instant',
       baseUrl: 'https://api.groq.com/openai/v1',
       maxTokens: 2048,
       temperature: 0.7
     };
   }
 
-  // Check for Hugging Face (free tier)
-  const hfApiKey = import.meta.env.VITE_HUGGINGFACE_API_KEY?.trim();
-  if (hfApiKey && hfApiKey !== '') {
-    return {
-      provider: 'huggingface',
-      apiKey: hfApiKey,
-      model: 'meta-llama/Llama-3.1-8B-Instruct', // Free model
-      baseUrl: 'https://api-inference.huggingface.co',
-      maxTokens: 1024,
-      temperature: 0.7
-    };
-  }
-
-  // Check for OpenAI (good free tier)
+  // FALLBACK 2: OpenAI (good free tier)
   const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
   if (openaiApiKey && openaiApiKey !== '') {
     return {
       provider: 'openai',
       apiKey: openaiApiKey,
-      model: 'gpt-3.5-turbo', // Cost-effective
+      model: 'gpt-3.5-turbo',
       baseUrl: 'https://api.openai.com/v1',
       maxTokens: 2048,
       temperature: 0.7
     };
   }
 
-  // Check for Anthropic Claude
+  // FALLBACK 3: Hugging Face (free tier)
+  const hfApiKey = import.meta.env.VITE_HUGGINGFACE_API_KEY?.trim();
+  if (hfApiKey && hfApiKey !== '') {
+    return {
+      provider: 'huggingface',
+      apiKey: hfApiKey,
+      model: 'meta-llama/Llama-3.1-8B-Instruct',
+      baseUrl: 'https://api-inference.huggingface.co',
+      maxTokens: 1024,
+      temperature: 0.7
+    };
+  }
+
+  // FALLBACK 4: Anthropic Claude
   const anthropicApiKey = import.meta.env.VITE_ANTHROPIC_API_KEY?.trim();
   if (anthropicApiKey && anthropicApiKey !== '') {
     return {
       provider: 'anthropic',
       apiKey: anthropicApiKey,
-      model: 'claude-3-haiku-20240307', // Fast and affordable
+      model: 'claude-3-haiku-20240307',
       baseUrl: 'https://api.anthropic.com/v1',
-      maxTokens: 2048,
-      temperature: 0.7
-    };
-  }
-
-  // Fallback to Gemini (existing)
-  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-  if (geminiApiKey && geminiApiKey !== '') {
-    return {
-      provider: 'gemini',
-      apiKey: geminiApiKey,
-      model: 'gemini-2.5-flash',
-      baseUrl: null, // Uses GoogleGenerativeAI SDK
       maxTokens: 2048,
       temperature: 0.7
     };
@@ -293,14 +297,40 @@ const tryFallbackProviders = async (prompt, failedProvider, options) => {
  */
 const getProviderConfig = (providerName) => {
   switch (providerName) {
+    case 'gemini':
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+      if (geminiKey && geminiKey !== '') {
+        return {
+          provider: 'gemini',
+          apiKey: geminiKey,
+          model: 'gemini-1.5-flash', // Reliable with 1M TPM limit
+          baseUrl: null,
+          maxTokens: 2048,
+          temperature: 0.7
+        };
+      }
+      break;
     case 'groq':
       const groqKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
       if (groqKey && groqKey !== '') {
         return {
           provider: 'groq',
           apiKey: groqKey,
-          model: 'llama-3.1-8b-instant', // Updated: llama-3.1-70b-versatile was decommissioned
+          model: 'llama-3.1-8b-instant',
           baseUrl: 'https://api.groq.com/openai/v1',
+          maxTokens: 2048,
+          temperature: 0.7
+        };
+      }
+      break;
+    case 'openai':
+      const openaiKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
+      if (openaiKey && openaiKey !== '') {
+        return {
+          provider: 'openai',
+          apiKey: openaiKey,
+          model: 'gpt-3.5-turbo',
+          baseUrl: 'https://api.openai.com/v1',
           maxTokens: 2048,
           temperature: 0.7
         };
@@ -319,19 +349,6 @@ const getProviderConfig = (providerName) => {
         };
       }
       break;
-    case 'openai':
-      const openaiKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
-      if (openaiKey && openaiKey !== '') {
-        return {
-          provider: 'openai',
-          apiKey: openaiKey,
-          model: 'gpt-3.5-turbo',
-          baseUrl: 'https://api.openai.com/v1',
-          maxTokens: 2048,
-          temperature: 0.7
-        };
-      }
-      break;
     case 'anthropic':
       const anthropicKey = import.meta.env.VITE_ANTHROPIC_API_KEY?.trim();
       if (anthropicKey && anthropicKey !== '') {
@@ -340,19 +357,6 @@ const getProviderConfig = (providerName) => {
           apiKey: anthropicKey,
           model: 'claude-3-haiku-20240307',
           baseUrl: 'https://api.anthropic.com/v1',
-          maxTokens: 2048,
-          temperature: 0.7
-        };
-      }
-      break;
-    case 'gemini':
-      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-      if (geminiKey && geminiKey !== '') {
-        return {
-          provider: 'gemini',
-          apiKey: geminiKey,
-          model: 'gemini-2.5-flash',
-          baseUrl: null,
           maxTokens: 2048,
           temperature: 0.7
         };
@@ -377,19 +381,19 @@ export const getProviderInfo = () => {
   }
 
   const providerInfo = {
-    groq: {
-      name: 'Groq (Recommended for Students)',
+    gemini: {
+      name: 'Google Gemini (Primary - Most Reliable)',
       status: 'active',
-      limits: 'Very generous free tier - 14,400 requests/day',
+      limits: '1,000,000 tokens/min - Ideal for demos',
+      website: 'https://aistudio.google.com',
+      signup: 'https://aistudio.google.com'
+    },
+    groq: {
+      name: 'Groq (Fast but Limited)',
+      status: 'active',
+      limits: '6,000 tokens/min - May hit limits with RAG',
       website: 'https://console.groq.com',
       signup: 'https://console.groq.com/signup'
-    },
-    huggingface: {
-      name: 'Hugging Face',
-      status: 'active',
-      limits: 'Free tier available',
-      website: 'https://huggingface.co',
-      signup: 'https://huggingface.co/join'
     },
     openai: {
       name: 'OpenAI GPT',
@@ -398,19 +402,19 @@ export const getProviderInfo = () => {
       website: 'https://platform.openai.com',
       signup: 'https://platform.openai.com/signup'
     },
+    huggingface: {
+      name: 'Hugging Face',
+      status: 'active',
+      limits: 'Free tier available',
+      website: 'https://huggingface.co',
+      signup: 'https://huggingface.co/join'
+    },
     anthropic: {
       name: 'Anthropic Claude',
       status: 'active',
       limits: 'Pay-as-you-go',
       website: 'https://console.anthropic.com',
       signup: 'https://console.anthropic.com/signup'
-    },
-    gemini: {
-      name: 'Google Gemini',
-      status: 'active',
-      limits: 'Free tier (may have limits)',
-      website: 'https://aistudio.google.com',
-      signup: 'https://aistudio.google.com'
     }
   };
 
