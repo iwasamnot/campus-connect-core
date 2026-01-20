@@ -257,12 +257,19 @@ const callAnthropic = async (prompt, config, options) => {
 };
 
 /**
- * Call Gemini API with automatic retry on 503 errors
+ * Call Gemini API with automatic retry on 503 errors and fallback to 2.0-flash if 2.5 is overloaded
  */
 const callGemini = async (prompt, config, options) => {
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(config.apiKey);
-  const model = genAI.getGenerativeModel({ model: config.model });
+  
+  // Determine primary and fallback models
+  const primaryModel = config.model || 'gemini-2.5-flash';
+  const fallbackModel = 'gemini-2.0-flash';
+  const useFallback = primaryModel === 'gemini-2.5-flash';
+  
+  // Try primary model first
+  let model = genAI.getGenerativeModel({ model: primaryModel });
   
   // Retry logic for 503 (overloaded) and other transient errors
   const maxRetries = 3;
@@ -276,6 +283,15 @@ const callGemini = async (prompt, config, options) => {
     } catch (error) {
       lastError = error;
       const errorMessage = error.message || error.toString();
+      
+      // If 2.5-flash is overloaded and we haven't tried fallback yet, switch to 2.0-flash
+      if (useFallback && 
+          attempt === 1 && 
+          (errorMessage.includes('503') || errorMessage.includes('overloaded'))) {
+        console.warn(`Gemini 2.5-flash is overloaded, falling back to 2.0-flash...`);
+        model = genAI.getGenerativeModel({ model: fallbackModel });
+        continue; // Retry immediately with fallback model
+      }
       
       // Retry on 503 (overloaded) or network errors
       if (errorMessage.includes('503') || 
