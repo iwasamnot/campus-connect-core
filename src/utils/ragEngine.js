@@ -46,7 +46,47 @@
 
 import { Pinecone } from '@pinecone-database/pinecone';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getUserProfile, updateUserProfile } from './profileLearner';
+
+// ============================================================================
+// PROFILE LEARNING (Optional Feature - Fails Gracefully)
+// ============================================================================
+let profileLearnerModule = null;
+
+async function loadProfileLearner() {
+  if (profileLearnerModule === null) {
+    try {
+      profileLearnerModule = await import('./profileLearner');
+    } catch (e) {
+      console.warn('Profile learning not available:', e.message);
+      profileLearnerModule = false; // Mark as failed, don't retry
+    }
+  }
+  return profileLearnerModule || null;
+}
+
+async function safeGetUserProfile(userId, embedding, topK) {
+  const module = await loadProfileLearner();
+  if (module && module.getUserProfile) {
+    try {
+      return await module.getUserProfile(userId, embedding, topK);
+    } catch (e) {
+      console.warn('getUserProfile failed:', e.message);
+    }
+  }
+  return [];
+}
+
+async function safeUpdateUserProfile(userId, message) {
+  const module = await loadProfileLearner();
+  if (module && module.updateUserProfile) {
+    try {
+      return await module.updateUserProfile(userId, message);
+    } catch (e) {
+      console.warn('updateUserProfile failed:', e.message);
+    }
+  }
+  return { learned: false, facts: [] };
+}
 
 // Configuration
 const getEnvVar = (viteName, regularName, defaultValue = '') => {
@@ -605,7 +645,7 @@ export async function askVirtualSenior(userQuestion, options = {}) {
     
     // Memory B: User Profile (if userId provided)
     const profilePromise = userId 
-      ? getUserProfile(userId, questionEmbedding, 3)
+      ? safeGetUserProfile(userId, questionEmbedding, 3)
       : Promise.resolve([]);
     
     // Execute both searches in parallel
@@ -637,7 +677,7 @@ export async function askVirtualSenior(userQuestion, options = {}) {
       
       // Still trigger profile learning even on low confidence
       if (userId && !skipProfileLearning) {
-        updateUserProfile(userId, trimmedQuestion).catch(e => 
+        safeUpdateUserProfile(userId, trimmedQuestion).catch(e => 
           console.warn('Background profile learning failed:', e.message)
         );
       }
@@ -682,9 +722,9 @@ Is there something else I can help with?`,
     // ========================================================================
     if (userId && !skipProfileLearning) {
       // Don't await - let it run in background
-      updateUserProfile(userId, trimmedQuestion)
+      safeUpdateUserProfile(userId, trimmedQuestion)
         .then(result => {
-          if (result.learned) {
+          if (result && result.learned) {
             console.log(`🧠 Learned ${result.totalStored} new facts about user`);
           }
         })
