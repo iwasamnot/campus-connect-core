@@ -126,7 +126,12 @@ A secure, student-only messaging platform for universities with AI-powered conte
     - **Study Tips**: Provides study strategies, time management, and productivity advice
     - **Homework Help**: Tutors you through concepts and problem-solving
   - Multiple Gemini model support (gemini-2.5-flash, gemini-1.5-pro, etc.)
-  - Local SISTC knowledge base integration with RAG (Retrieval-Augmented Generation)
+  - **Serverless Vector RAG Engine**: Advanced retrieval-augmented generation
+    - Pinecone vector database for semantic search
+    - 80+ comprehensive SISTC knowledge documents
+    - Google Gemini embeddings (text-embedding-004)
+    - Groq LLM support for faster responses (llama-3.3-70b-versatile)
+    - Automatic fallback chain (Pinecone → Firebase → Local)
   - Conversation history support (maintains context from last 10 messages)
   - Virtual Senior AI mode in Campus Chat
   - Toggle AI Help mode on/off
@@ -580,8 +585,11 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Storage (Files, Images, Profile Pictures)
     - Secure file uploads with size limits (10MB for messages, 5MB for profile pictures)
     - Firebase Storage security rules for authenticated access
-- **AI**: 
-  - Google Gemini 2.5 Flash (for toxicity detection, AI Help Assistant, and Virtual Senior responses)
+- **AI & RAG**: 
+  - Google Gemini 2.5 Flash (toxicity detection, AI Help Assistant, Virtual Senior)
+  - Google Gemini text-embedding-004 (768-dimensional embeddings)
+  - Groq LLM (llama-3.3-70b-versatile for fast inference)
+  - Pinecone Vector Database (serverless, AWS us-east-1)
 - **Icons**: Lucide React
 - **Deployment**: Firebase Hosting with automatic CI/CD
 
@@ -623,15 +631,23 @@ A secure, student-only messaging platform for universities with AI-powered conte
      VITE_FIREBASE_APP_ID=your-app-id
      VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
      ```
-   - Add your AI API key:
+   - Add your AI API keys:
      ```
      VITE_GEMINI_API_KEY=your-gemini-api-key-here
+     VITE_GROQ_API_KEY=your-groq-api-key-here  # Optional, faster inference
+     ```
+   - Add Pinecone for RAG (optional, for advanced AI features):
+     ```
+     VITE_PINECONE_API_KEY=your-pinecone-api-key
+     VITE_PINECONE_INDEX_NAME=campus-connect-index
      ```
    - Add your ZEGOCLOUD App ID (optional, for voice/video calling):
      ```
      VITE_ZEGOCLOUD_APP_ID=your-zegocloud-app-id
      ```
    - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for AI Help Assistant, Virtual Senior, and toxicity detection)
+   - **Groq API Key**: Get from https://console.groq.com (optional, for faster AI responses)
+   - **Pinecone API Key**: Get from https://app.pinecone.io (for RAG vector search)
    - **ZEGOCLOUD Setup**: Get from https://console.zegocloud.com (for voice and video calling features)
      - App ID: Found in Project Configuration → Basic Information (add to `.env` as `VITE_ZEGOCLOUD_APP_ID`)
      - Server Secret: Found in Project Configuration → Basic Configurations → ServerSecret
@@ -764,6 +780,58 @@ service cloud.firestore {
   }
 }
 ```
+
+## Serverless Vector RAG Engine
+
+The platform includes an advanced **Retrieval-Augmented Generation (RAG)** system for intelligent responses:
+
+### Architecture
+- **Vector Database**: Pinecone (serverless, AWS us-east-1)
+- **Embeddings**: Google Gemini text-embedding-004 (768 dimensions)
+- **LLM Providers**: Groq (primary, faster) → Gemini (fallback)
+- **Knowledge Base**: 80+ comprehensive SISTC documents
+
+### Features
+- Semantic search across the entire knowledge base
+- Context-aware responses from Virtual Senior AI
+- Automatic fallback chain for reliability
+- Real-time data updates via GitHub Actions
+
+### Setup
+
+1. **Configure Environment Variables**:
+   ```env
+   VITE_PINECONE_API_KEY=your-pinecone-api-key
+   VITE_PINECONE_INDEX_NAME=campus-connect-index
+   VITE_GEMINI_API_KEY=your-gemini-api-key
+   VITE_GROQ_API_KEY=your-groq-api-key  # Optional
+   ```
+
+2. **Upload Knowledge Base** (first time or after data changes):
+   ```bash
+   npm run rag:upload
+   ```
+   Or trigger the GitHub Action manually: `.github/workflows/rag-upload.yml`
+
+3. **Verify Upload**:
+   The upload script automatically verifies data and shows test queries.
+
+### Knowledge Base Structure
+The knowledge base (`src/data/universityData.json`) contains:
+- **About**: Institution overview, accreditation, mission
+- **Courses**: Bachelor of IT, Diploma, Graduate Diploma
+- **Fees**: Domestic and international pricing
+- **Campuses**: Sydney CBD, Parramatta locations
+- **Admissions**: Entry requirements, application process
+- **International**: Visa requirements, support services
+- **FAQs**: Common questions and answers
+
+### Updating Knowledge Base
+1. Edit `src/data/universityData.json`
+2. Commit and push to trigger automatic upload
+3. Or run `npm run rag:upload` manually
+
+---
 
 ## AI Moderation
 
@@ -898,16 +966,33 @@ For automatic deployment to work, you need to set up GitHub Secrets:
        - **Storage Admin** (required for Storage rules)
      - See `docs/GITHUB_ACTIONS_SETUP.md` for detailed setup instructions
    
-   #### AI API Key (Required for AI features)
+   #### AI API Keys (Required for AI features)
    
    - **`VITE_GEMINI_API_KEY`** (Required for AI features):
      - Your Google Gemini API key for:
        - AI-powered toxicity detection (primary moderation system)
        - AI Help Assistant responses
        - Virtual Senior AI responses in Campus Chat
+       - Text embeddings for RAG (text-embedding-004)
      - Format: `AIzaSy...`
      - Get from: https://makersuite.google.com/app/apikey
-     - **Note**: Without this key, toxicity detection falls back to word filter only, and AI features will use local knowledge base
+     - **Note**: Without this key, toxicity detection falls back to word filter only
+   
+   - **`VITE_GROQ_API_KEY`** (Optional, for faster AI responses):
+     - Groq LLM API key for faster inference (llama-3.3-70b-versatile)
+     - When set, Groq is used as primary LLM with Gemini as fallback
+     - Format: `gsk_...`
+     - Get from: https://console.groq.com
+   
+   - **`VITE_PINECONE_API_KEY`** (Required for RAG features):
+     - Pinecone vector database API key
+     - Enables semantic search in the knowledge base
+     - Format: `pcsk_...` or similar
+     - Get from: https://app.pinecone.io
+   
+   - **`VITE_PINECONE_INDEX_NAME`** (Optional):
+     - Pinecone index name (defaults to `campus-connect-index`)
+     - Format: `campus-connect-index`
 
 ### Using Automatic Deployment
 
