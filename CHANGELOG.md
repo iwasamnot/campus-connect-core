@@ -39,10 +39,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Debug mode for development
 
 #### SISTC Knowledge Base
-- **80+ Comprehensive Documents**: Covering all aspects of SISTC
+- **100+ Comprehensive Documents**: Covering all aspects of SISTC
   - Courses: Bachelor of IT, Diploma of IT, Graduate Diploma
   - Majors: Business Information Systems, Digital Enterprise
-  - Campus Locations: Sydney CBD, Parramatta (coming soon)
+  - Campus Locations: Sydney CBD, Parramatta, Melbourne
   - Fees: Domestic and international student pricing
   - Application Process: Entry requirements, enrollment steps
   - International Students: Visa requirements, support services
@@ -50,6 +50,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Accreditations: TEQSA, CRICOS, ACS
   - Student Statistics: Enrollment numbers, demographics
   - FAQs: Common questions and answers
+  - **200+ Education Agents**: Complete agent directory organized by region
+    - Australia: Sydney, Parramatta, Melbourne, QLD, SA, TAS, WA, ACT
+    - Nepal: Kathmandu and other cities
+    - Pakistan: Major cities
+    - India: Multiple states
+    - Other countries: UAE, UK, Canada
 
 ### 🔧 CI/CD & Infrastructure
 
