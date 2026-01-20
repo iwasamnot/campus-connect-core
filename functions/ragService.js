@@ -1,15 +1,23 @@
-const functions = require('firebase-functions');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { Pinecone } = require('@pinecone-database/pinecone');
 const { v4: uuidv4 } = require('uuid');
 const OpenAI = require('openai');
 
-// Read secrets from runtime config or environment variables
-const PINECONE_API_KEY =
-  process.env.PINECONE_API_KEY || functions.config().pinecone?.api_key;
-const PINECONE_INDEX_NAME =
-  process.env.PINECONE_INDEX_NAME || functions.config().pinecone?.index;
-const OPENAI_API_KEY =
-  process.env.OPENAI_API_KEY || functions.config().openai?.api_key;
+// CORS configuration - allow all production and development origins
+const CORS_OPTIONS = [
+  'http://localhost:5173', // Vite dev server
+  'http://localhost:5174', // Alternative Vite port
+  'http://localhost:3000', // Alternative dev server port
+  'https://sistc.app', // Production domain (main)
+  'https://www.sistc.app', // Production domain with www
+  'https://campus-connect-sistc.web.app', // Firebase hosting URL
+  'https://campus-connect-sistc.firebaseapp.com', // Alternative Firebase URL
+];
+
+// Read secrets from environment variables (v2 style)
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
+const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Validate configuration early
 if (!PINECONE_API_KEY) {
@@ -31,7 +39,7 @@ const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
 const getIndex = () => {
   if (!pineconeClient || !PINECONE_INDEX_NAME) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'failed-precondition',
       'Pinecone is not configured'
     );
@@ -41,7 +49,7 @@ const getIndex = () => {
 
 const embedText = async (text) => {
   if (!openai) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'failed-precondition',
       'OpenAI is not configured'
     );
@@ -55,20 +63,23 @@ const embedText = async (text) => {
 };
 
 // Upsert a batch of documents into Pinecone
-exports.ragUpsert = functions
-  .region('us-central1')
-  .https.onCall(async (data, context) => {
-    const { documents } = data || {};
+exports.ragUpsert = onCall(
+  {
+    region: 'us-central1',
+    cors: CORS_OPTIONS,
+  },
+  async (request) => {
+    const { documents } = request.data || {};
 
     if (!Array.isArray(documents) || documents.length === 0) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'invalid-argument',
         'documents array is required'
       );
     }
 
     if (!openai || !pineconeClient) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'failed-precondition',
         'Vector service is not configured'
       );
@@ -98,23 +109,27 @@ exports.ragUpsert = functions
     await index.upsert(vectors);
 
     return { upserted: vectors.length };
-  });
+  }
+);
 
 // Search Pinecone and return top matches with metadata
-exports.ragSearch = functions
-  .region('us-central1')
-  .https.onCall(async (data, context) => {
-    const { query, topK = 8, filter } = data || {};
+exports.ragSearch = onCall(
+  {
+    region: 'us-central1',
+    cors: CORS_OPTIONS,
+  },
+  async (request) => {
+    const { query, topK = 8, filter } = request.data || {};
 
     if (!query || typeof query !== 'string') {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'invalid-argument',
         'query is required'
       );
     }
 
     if (!openai || !pineconeClient) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'failed-precondition',
         'Vector service is not configured'
       );
@@ -140,5 +155,6 @@ exports.ragSearch = functions
       })) || [];
 
     return { matches };
-  });
+  }
+);
 
