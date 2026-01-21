@@ -538,6 +538,104 @@ function App() {
                     </ErrorBoundary>
                   </motion.div>
                 )}
+                {activeView === 'visual-board' && (
+                  <motion.div key="visual-board" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="scale">
+                          <VisualBoard onClose={() => handleSetActiveView('chat')} />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'ai-help' && (
+                  <motion.div key="ai-help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideLeft">
+                          <AIHelp />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'groups' && (
+                  <motion.div key="groups" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideUp">
+                          <Groups 
+                            setActiveView={handleSetActiveView} 
+                            setSelectedGroup={handleSetSelectedGroup}
+                          />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'group-chat' && (
+                  <motion.div key="group-chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideRight">
+                          <GroupChat 
+                            group={selectedGroup}
+                            setActiveView={handleSetActiveView}
+                            onBack={() => {
+                              handleSetActiveView('groups');
+                              handleSetSelectedGroup(null);
+                            }}
+                          />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'activity' && (
+                  <motion.div key="activity" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideDown">
+                          <ActivityDashboard />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'scheduler' && (
+                  <motion.div key="scheduler" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideUp">
+                          <MessageScheduler />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'saved' && (
+                  <motion.div key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideLeft">
+                          <SavedMessages />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'gallery' && (
+                  <motion.div key="gallery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="scale">
+                          <ImageGallery />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
                 <KeyboardShortcuts />
                 <PWAInstallPrompt />
               </>
