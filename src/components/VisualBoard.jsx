@@ -42,6 +42,18 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
 const VisualBoard = ({ onClose, boardId = null }) => {
   const { user } = useAuth();
   const { success, error: showError } = useToast();
+  
+  // Debug: Log mount state for troubleshooting
+  useEffect(() => {
+    console.log('[VisualBoard] Mounted', { 
+      user: user?.uid, 
+      db: !!db, 
+      boardId,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight
+    });
+    return () => console.log('[VisualBoard] Unmounted');
+  }, []);
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [currentBoardId, setCurrentBoardId] = useState(boardId || `board_${Date.now()}_${user?.uid}`);
@@ -88,6 +100,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   const isLocalUpdate = useRef(false); // Prevent update loops
   const debounceTimer = useRef(null);
   const imagesLoadedRef = useRef({}); // Track loaded images for canvas
+  const [canvasReady, setCanvasReady] = useState(false); // Track when canvas has valid dimensions
 
   const colors = [
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
@@ -1098,22 +1111,53 @@ const VisualBoard = ({ onClose, boardId = null }) => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes, boardBackground, imageCache, snapToGrid]);
+  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes, boardBackground, imageCache, snapToGrid, canvasReady]);
 
-  // Update canvas size
+  // Update canvas size - use ResizeObserver for reliable sizing
   useEffect(() => {
     const updateCanvasSize = () => {
       if (canvasRef.current && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        canvasRef.current.width = rect.width;
-        canvasRef.current.height = rect.height;
+        // Only update if dimensions are valid (not 0)
+        if (rect.width > 0 && rect.height > 0) {
+          canvasRef.current.width = rect.width;
+          canvasRef.current.height = rect.height;
+          // Mark canvas as ready to trigger re-render
+          if (!canvasReady) {
+            setCanvasReady(true);
+          }
+        }
       }
     };
     
+    // Use ResizeObserver for reliable initial sizing and container changes
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+            updateCanvasSize();
+          }
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    // Also update on window resize as fallback
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
-  }, []);
+    
+    // Delayed update to catch animation completion
+    const delayedUpdate = setTimeout(updateCanvasSize, 500);
+    
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+      clearTimeout(delayedUpdate);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, [canvasReady]);
 
   // Load images for image shapes
   useEffect(() => {
