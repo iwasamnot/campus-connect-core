@@ -197,35 +197,34 @@ jobs:
             echo "⚠️ Warning: VITE_GROQ_API_KEY not set in GitHub Secrets - Groq embeddings will be disabled on backend"
           fi
 
-      - name: Set GCP Service Account Secret in Firebase Secret Manager
+      - name: Set GCP Service Account Secret in Firebase Secret Manager (Optional)
         continue-on-error: true
         run: |
-          echo "Setting GCP_SERVICE_ACCOUNT_KEY in Firebase Secret Manager..."
+          echo "Attempting to set GCP_SERVICE_ACCOUNT_KEY from GitHub Secrets..."
           # Check if secret exists in GitHub Secrets
           if [ -z "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]; then
-            echo "⚠️ WARNING: GCP_SERVICE_ACCOUNT_KEY not set in GitHub Secrets"
-            echo "Vertex AI function will not work until this secret is set."
-            echo "You can set it manually: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc"
-            exit 0  # Don't fail, just warn
+            echo "ℹ️  INFO: GCP_SERVICE_ACCOUNT_KEY not set in GitHub Secrets (or empty)"
+            echo "The deployment will continue. To enable Vertex AI, set the secret manually:"
+            echo "  1. Get your service account JSON from Google Cloud Console"
+            echo "  2. Run: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc"
+            echo "  3. Or use Firebase Console → Functions → Secrets"
+            echo "See docs/MANUAL_SECRET_SETUP.md for detailed instructions"
+            exit 0  # Don't fail, just inform
           fi
           
-          echo "✅ GCP_SERVICE_ACCOUNT_KEY found in GitHub Secrets"
+          echo "✅ GCP_SERVICE_ACCOUNT_KEY found in GitHub Secrets, attempting to set..."
           
           # Try to set/update the secret value using printf to safely handle JSON
           # Use --data-file=- to read from stdin, which safely handles all JSON characters
-          echo "Setting secret value in Firebase Secret Manager..."
           printf '%s' "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" | firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY \
-            --project campus-connect-sistc --data-file=- --non-interactive 2>&1 || {
-            echo "⚠️ WARNING: Could not set GCP_SERVICE_ACCOUNT_KEY automatically"
-            echo "This might be due to insufficient permissions or the secret already exists."
-            echo "The deployment will continue. To set it manually:"
-            echo "1. Go to Firebase Console → Functions → Secrets"
-            echo "2. Create/update secret named: GCP_SERVICE_ACCOUNT_KEY"
-            echo "3. Paste your service account JSON from GitHub Secrets"
-            echo "Or run: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc"
+            --project campus-connect-sistc --data-file=- --non-interactive 2>&1 && {
+            echo "✅ GCP_SERVICE_ACCOUNT_KEY secret set successfully in Firebase Secret Manager"
+          } || {
+            echo "⚠️  WARNING: Could not set GCP_SERVICE_ACCOUNT_KEY automatically"
+            echo "This might be due to insufficient permissions. The deployment will continue."
+            echo "To set it manually, see docs/MANUAL_SECRET_SETUP.md"
             exit 0  # Don't fail the workflow, just warn
           }
-          echo "✅ GCP_SERVICE_ACCOUNT_KEY secret set successfully in Firebase Secret Manager"
 
       - name: Deploy Cloud Functions
         run: firebase deploy --only functions --project campus-connect-sistc --non-interactive --force
