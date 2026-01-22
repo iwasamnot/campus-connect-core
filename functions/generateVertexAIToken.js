@@ -8,16 +8,17 @@ const { VertexAI } = require('@google-cloud/vertexai');
 const { onCall } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 
-// Define secrets - use string array format (like getVideoSDKToken) to avoid permission issues during deployment
+// Define secrets - use string array format to avoid permission issues during deployment
 // The secret can be set later via: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY
-const gcpServiceAccountKey = defineSecret('GCP_SERVICE_ACCOUNT_KEY');
+// Using string format instead of defineSecret() to avoid deployment-time validation
+// This allows deployment even if secret doesn't exist or permissions aren't set yet
 
 /**
  * Generate Vertex AI response using enterprise SDK
  */
 exports.generateVertexAIResponse = onCall(
   {
-    secrets: [gcpServiceAccountKey],
+    secrets: ['GCP_SERVICE_ACCOUNT_KEY'], // Use string array format (like getVideoSDKToken)
     region: 'us-central1',
     cors: true,
   },
@@ -35,21 +36,11 @@ exports.generateVertexAIResponse = onCall(
       // Parse service account from secret
       let serviceAccount;
       try {
-        // Check if secret is defined
-        if (!gcpServiceAccountKey) {
-          return {
-            success: false,
-            error: 'GCP_SERVICE_ACCOUNT_KEY secret is not configured. Please set it using: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc'
-          };
-        }
-
-        // Try to get the secret value (may not exist yet)
-        let serviceAccountJson;
-        try {
-          serviceAccountJson = gcpServiceAccountKey.value();
-        } catch (secretError) {
-          // Secret doesn't exist or can't be accessed
-          console.error('GCP_SERVICE_ACCOUNT_KEY secret not set:', secretError.message);
+        // Get the secret value using process.env (Firebase Functions v2 injects secrets as env vars)
+        const serviceAccountJson = process.env.GCP_SERVICE_ACCOUNT_KEY;
+        
+        if (!serviceAccountJson || serviceAccountJson.trim() === '') {
+          console.error('GCP_SERVICE_ACCOUNT_KEY secret is not set or empty');
           return {
             success: false,
             error: 'GCP_SERVICE_ACCOUNT_KEY secret is not configured. Please set it using: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc'
