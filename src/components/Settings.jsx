@@ -518,9 +518,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="Virtual Senior (AI Help Mode)"
-                      desc="AI responds to messages in Campus Chat"
+                      desc="AI responds to messages in Campus Chat (disabled by default)"
                       icon={HelpCircle}
-                      value={localStorage.getItem('virtualSeniorEnabled') !== 'false'}
+                      value={localStorage.getItem('virtualSeniorEnabled') === 'true'}
                       onChange={(val) => {
                         localStorage.setItem('virtualSeniorEnabled', val.toString());
                         success(val ? 'Virtual Senior enabled' : 'Virtual Senior disabled');
@@ -529,9 +529,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="RAG Engine"
-                      desc="Enhanced AI responses with knowledge base context"
+                      desc="Enhanced AI responses with knowledge base context (disabled by default)"
                       icon={Database}
-                      value={localStorage.getItem('ragEngineEnabled') !== 'false'}
+                      value={localStorage.getItem('ragEngineEnabled') === 'true'}
                       onChange={(val) => {
                         localStorage.setItem('ragEngineEnabled', val.toString());
                         success(val ? 'RAG Engine enabled' : 'RAG Engine disabled');

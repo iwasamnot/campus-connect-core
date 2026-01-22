@@ -841,7 +841,7 @@ const ChatArea = ({ setActiveView }) => {
       success('Message sent!');
 
       // If message is NOT toxic AND AI Help mode is enabled AND Virtual Senior is enabled, get Gemini response
-      const virtualSeniorEnabled = localStorage.getItem('virtualSeniorEnabled') !== 'false'; // Default to enabled
+      const virtualSeniorEnabled = localStorage.getItem('virtualSeniorEnabled') === 'true'; // Disabled by default
       if (!isToxic && aiHelpMode && virtualSeniorEnabled) {
         setWaitingForAI(true);
         try {
