@@ -94,7 +94,8 @@ exports.generateVertexAIResponse = onCall(
         const finalProjectId = projectId || serviceAccount.project_id;
         const finalLocation = location || 'us-central1';
         
-        vertexAI = new VertexAI({
+        const VertexAIClass = loadVertexAI();
+        vertexAI = new VertexAIClass({
           project: finalProjectId,
           location: finalLocation,
         });
