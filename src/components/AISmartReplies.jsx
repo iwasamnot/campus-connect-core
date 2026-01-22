@@ -13,8 +13,16 @@ const AISmartReplies = ({ conversationHistory, selectedMessage, onSelect, userCo
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // Economy mode: disable cloud AI smart replies to save quota.
+  // We only use local fallback suggestions which are free.
   useEffect(() => {
-    generateSmartReplies();
+    // Directly generate lightweight local replies without calling AI
+    if (conversationHistory && conversationHistory.length > 0) {
+      setSmartReplies(generateFallbackReplies(conversationHistory));
+    } else {
+      setSmartReplies([]);
+    }
+    setLoading(false);
   }, [conversationHistory, selectedMessage]);
 
   const generateSmartReplies = async () => {
@@ -86,31 +94,9 @@ Generate smart replies as a JSON array of strings. Each reply should be:
 Return ONLY a JSON array, no other text. Example: ["Thanks for the update!", "That sounds great!", "I'll check it out."]`;
       }
 
-      const text = await callAI(prompt, {
-        systemPrompt: 'You are a helpful assistant that generates natural, contextually appropriate reply suggestions.',
-        maxTokens: 200,
-        temperature: 0.8
-      });
-      
-      // Parse JSON response
-      let replies = [];
-      try {
-        // Extract JSON from response (handle markdown code blocks)
-        const jsonMatch = text.match(/\[.*\]/s);
-        if (jsonMatch) {
-          replies = JSON.parse(jsonMatch[0]);
-        } else {
-          replies = JSON.parse(text);
-        }
-      } catch (e) {
-        // Fallback parsing
-        replies = text.split('\n')
-          .filter(line => line.trim() && !line.startsWith('```'))
-          .map(line => line.replace(/^[-*]\s*/, '').replace(/["']/g, '').trim())
-          .slice(0, 5);
-      }
-
-      setSmartReplies(replies.filter(r => r && r.length > 0).slice(0, 5));
+      // ECONOMY MODE: Skip callAI completely to avoid using Gemini/Groq quota.
+      // We rely solely on generateFallbackReplies which uses simple heuristics.
+      setSmartReplies(generateFallbackReplies(conversationHistory));
     } catch (error) {
       console.error('Error generating smart replies:', error);
       setSmartReplies(generateFallbackReplies(conversationHistory));

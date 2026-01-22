@@ -126,7 +126,12 @@ A secure, student-only messaging platform for universities with AI-powered conte
     - **Study Tips**: Provides study strategies, time management, and productivity advice
     - **Homework Help**: Tutors you through concepts and problem-solving
   - Multiple Gemini model support (gemini-2.5-flash, gemini-1.5-pro, etc.)
-  - Local SISTC knowledge base integration with RAG (Retrieval-Augmented Generation)
+  - **Serverless Vector RAG Engine**: Advanced retrieval-augmented generation
+    - Pinecone vector database for semantic search
+    - 80+ comprehensive SISTC knowledge documents
+    - Google Gemini embeddings (text-embedding-004)
+    - Groq LLM support for faster responses (llama-3.3-70b-versatile)
+    - Automatic fallback chain (Pinecone → Firebase → Local)
   - Conversation history support (maintains context from last 10 messages)
   - Virtual Senior AI mode in Campus Chat
   - Toggle AI Help mode on/off
@@ -580,8 +585,11 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Storage (Files, Images, Profile Pictures)
     - Secure file uploads with size limits (10MB for messages, 5MB for profile pictures)
     - Firebase Storage security rules for authenticated access
-- **AI**: 
-  - Google Gemini 2.5 Flash (for toxicity detection, AI Help Assistant, and Virtual Senior responses)
+- **AI & RAG**: 
+  - Google Gemini 2.5 Flash (toxicity detection, AI Help Assistant, Virtual Senior)
+  - Google Gemini text-embedding-004 (768-dimensional embeddings)
+  - Groq LLM (llama-3.3-70b-versatile for fast inference)
+  - Pinecone Vector Database (serverless, AWS us-east-1)
 - **Icons**: Lucide React
 - **Deployment**: Firebase Hosting with automatic CI/CD
 
@@ -611,36 +619,35 @@ A secure, student-only messaging platform for universities with AI-powered conte
    - **Update Firestore security rules** from `firestore.rules`
    - **Get your Firebase configuration values** from Firebase Console → Project Settings → General → Your apps
 
-3. **Configure Environment Variables**
-   - Create a `.env` file in the root directory (copy from `.env.example`)
-   - Add your Firebase configuration:
-     ```
-     VITE_FIREBASE_API_KEY=your-firebase-api-key
-     VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-     VITE_FIREBASE_PROJECT_ID=your-project-id
-     VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-     VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-     VITE_FIREBASE_APP_ID=your-app-id
-     VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
-     ```
-   - Add your AI API key:
-     ```
-     VITE_GEMINI_API_KEY=your-gemini-api-key-here
-     ```
-   - Add your ZEGOCLOUD App ID (optional, for voice/video calling):
-     ```
-     VITE_ZEGOCLOUD_APP_ID=your-zegocloud-app-id
-     ```
-   - **Gemini API Key**: Get from https://makersuite.google.com/app/apikey (for AI Help Assistant, Virtual Senior, and toxicity detection)
-   - **ZEGOCLOUD Setup**: Get from https://console.zegocloud.com (for voice and video calling features)
-     - App ID: Found in Project Configuration → Basic Information (add to `.env` as `VITE_ZEGOCLOUD_APP_ID`)
-     - Server Secret: Found in Project Configuration → Basic Configurations → ServerSecret
-     - **Important**: Server Secret is stored securely in Firebase Secret Manager (NOT in `.env` file)
-     - See `docs/ZEGOCLOUD_TOKEN_SETUP.md` for complete setup instructions
-     - Setup command: `firebase functions:secrets:set ZEGO_SERVER_SECRET`
-   - **Important**: Restart the dev server after adding environment variables
-   - If no API key is provided, the AI will use the local knowledge base
-   - **Note**: The app will use fallback values if environment variables are not set (for backward compatibility)
+<<<<<<< HEAD
+3. **Configure AI Features (Full Setup)**
+   
+   📚 **See `docs/AI_SETUP_GUIDE.md` for complete step-by-step instructions!**
+   
+   **Quick Start:**
+   
+   - **Local Development:**
+     1. Copy `.env.example` to `.env`:
+        ```bash
+        cp .env.example .env
+        ```
+     2. Add your Gemini API key (minimum required):
+        ```env
+        VITE_GEMINI_API_KEY=your-gemini-api-key-here
+        ```
+        Get from: https://makersuite.google.com/app/apikey
+     3. Restart dev server: `npm run dev`
+   
+   - **Production (GitHub Actions):**
+     1. Go to **GitHub → Settings → Secrets and variables → Actions**
+     2. Add these secrets:
+        - `VITE_GEMINI_API_KEY` - **Required** for full AI features
+        - `PINECONE_API_KEY` - For RAG vector service (optional)
+        - `PINECONE_INDEX_NAME` - For RAG vector service (optional)
+        - `OPENAI_API_KEY` - For RAG embeddings (optional)
+     3. Push to `master` → Auto-deploys with full AI!
+   
+   **Firebase Config:** Already hardcoded in `src/firebaseConfig.js` - no `.env` needed for Firebase!
 
 4. **Run Development Server**
    ```bash
@@ -654,26 +661,65 @@ A secure, student-only messaging platform for universities with AI-powered conte
    npm run build
    ```
 
-## Firebase Configuration
+## Cloud Architecture & Firebase Configuration
 
-The Firebase configuration is now managed through environment variables for better security and flexibility.
+### Firebase Project
 
-### Local Development
-Create a `.env` file in the root directory with your Firebase configuration (see `.env.example` for template):
+This project is configured for the Firebase project:
 
-```env
-VITE_FIREBASE_API_KEY=your-firebase-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-VITE_FIREBASE_APP_ID=your-app-id
-VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
-```
+- **Project ID**: `campus-connect-sistc`
+- **Hosting site**: `campus-connect-sistc`
+- **App ID**: `1:680423970030:web:f0b732dd11717d17a80fff`
 
-Get these values from Firebase Console → Project Settings → General → Your apps → Web app config.
+The client-side Firebase config lives in `src/firebaseConfig.js` and uses the official snippet from Firebase Console:
 
-**Note**: The app includes fallback values for backward compatibility, but it's recommended to use environment variables.
+- Initializes **Auth**, **Firestore**, **Storage**, and **Cloud Functions** (region `us-central1`).
+- For this deployment, the config is **hardcoded** for simplicity (no `.env` required for Firebase).
+- If you want to use **GitHub Secrets + env-based config**, you can revert to `import.meta.env.VITE_*` in `firebaseConfig.js` and set those vars in your CI workflow.
+
+### Cloud Services
+
+- **Firebase Hosting**: Serves the production PWA from `dist` at:
+  - Primary domain: `https://campus-connect-sistc.web.app`
+  - Custom domain: `https://sistc.app` (configured in Firebase Hosting)
+- **Cloud Firestore**: Primary database for messages, users, groups, visual boards (`visualBoards`), analytics, and more (see `firestore.rules`).
+- **Cloud Functions (Node.js 20)**:
+  - `ragSearch` and `ragUpsert` power the serverless vector RAG engine.
+  - Functions are called via HTTPS callable from `src/utils/ragClient.js`.
+- **Firebase Storage**: Stores images, voice messages, and VisualBoard images with strict rules.
+
+### RAG & AI Cloud Stack
+
+- **Google Gemini** (via `@google/generative-ai`):
+  - Used by `AIHelp` and moderation for toxicity detection and intelligent responses.
+  - Default model: `gemini-2.5-flash` (2026-era model).
+- **Serverless Vector RAG Engine**:
+  - `src/utils/ragSystem.js` orchestrates:
+    - `ensureKnowledgeBaseIndexed()` → triggers `ragUpsert` to upsert a static knowledge base (SISTC docs) into a vector store (e.g. Pinecone) via Cloud Functions.
+    - `searchRag()` → calls `ragSearch` to retrieve top-K matches.
+  - If the **vector service is not configured** or returns an error (e.g. 400 “Vector service is not configured”), the client:
+    - Logs a warning and falls back to local in-memory retrieval (`ragRetrieval`) + Gemini.
+    - Never crashes the UI (RAG is “best effort”).
+
+### Deployment
+
+- **Manual deploy (current)**:
+  1. Build:
+     ```bash
+     npm run build
+     ```
+  2. Deploy:
+     ```bash
+     firebase deploy --only "hosting"
+     # or, if you also changed rules/indexes:
+     firebase deploy --only "firestore,hosting"
+     ```
+
+- **GitHub Actions (optional)**:
+  - Recommended secrets:
+    - `FIREBASE_TOKEN` for `firebase deploy`.
+    - `VITE_GEMINI_API_KEY` and any vector/RAG secrets if you choose an env-driven setup.
+  - In your workflow, map secrets to `VITE_*` env vars before `npm run build` so Vite can bake them into the bundle.
 
 ## Firestore Rules
 
@@ -764,6 +810,58 @@ service cloud.firestore {
   }
 }
 ```
+
+## Serverless Vector RAG Engine
+
+The platform includes an advanced **Retrieval-Augmented Generation (RAG)** system for intelligent responses:
+
+### Architecture
+- **Vector Database**: Pinecone (serverless, AWS us-east-1)
+- **Embeddings**: Google Gemini text-embedding-004 (768 dimensions)
+- **LLM Providers**: Groq (primary, faster) → Gemini (fallback)
+- **Knowledge Base**: 80+ comprehensive SISTC documents
+
+### Features
+- Semantic search across the entire knowledge base
+- Context-aware responses from Virtual Senior AI
+- Automatic fallback chain for reliability
+- Real-time data updates via GitHub Actions
+
+### Setup
+
+1. **Configure Environment Variables**:
+   ```env
+   VITE_PINECONE_API_KEY=your-pinecone-api-key
+   VITE_PINECONE_INDEX_NAME=campus-connect-index
+   VITE_GEMINI_API_KEY=your-gemini-api-key
+   VITE_GROQ_API_KEY=your-groq-api-key  # Optional
+   ```
+
+2. **Upload Knowledge Base** (first time or after data changes):
+   ```bash
+   npm run rag:upload
+   ```
+   Or trigger the GitHub Action manually: `.github/workflows/rag-upload.yml`
+
+3. **Verify Upload**:
+   The upload script automatically verifies data and shows test queries.
+
+### Knowledge Base Structure
+The knowledge base (`src/data/universityData.json`) contains:
+- **About**: Institution overview, accreditation, mission
+- **Courses**: Bachelor of IT, Diploma, Graduate Diploma
+- **Fees**: Domestic and international pricing
+- **Campuses**: Sydney CBD, Parramatta locations
+- **Admissions**: Entry requirements, application process
+- **International**: Visa requirements, support services
+- **FAQs**: Common questions and answers
+
+### Updating Knowledge Base
+1. Edit `src/data/universityData.json`
+2. Commit and push to trigger automatic upload
+3. Or run `npm run rag:upload` manually
+
+---
 
 ## AI Moderation
 
@@ -898,16 +996,33 @@ For automatic deployment to work, you need to set up GitHub Secrets:
        - **Storage Admin** (required for Storage rules)
      - See `docs/GITHUB_ACTIONS_SETUP.md` for detailed setup instructions
    
-   #### AI API Key (Required for AI features)
+   #### AI API Keys (Required for AI features)
    
    - **`VITE_GEMINI_API_KEY`** (Required for AI features):
      - Your Google Gemini API key for:
        - AI-powered toxicity detection (primary moderation system)
        - AI Help Assistant responses
        - Virtual Senior AI responses in Campus Chat
+       - Text embeddings for RAG (text-embedding-004)
      - Format: `AIzaSy...`
      - Get from: https://makersuite.google.com/app/apikey
-     - **Note**: Without this key, toxicity detection falls back to word filter only, and AI features will use local knowledge base
+     - **Note**: Without this key, toxicity detection falls back to word filter only
+   
+   - **`VITE_GROQ_API_KEY`** (Optional, for faster AI responses):
+     - Groq LLM API key for faster inference (llama-3.3-70b-versatile)
+     - When set, Groq is used as primary LLM with Gemini as fallback
+     - Format: `gsk_...`
+     - Get from: https://console.groq.com
+   
+   - **`VITE_PINECONE_API_KEY`** (Required for RAG features):
+     - Pinecone vector database API key
+     - Enables semantic search in the knowledge base
+     - Format: `pcsk_...` or similar
+     - Get from: https://app.pinecone.io
+   
+   - **`VITE_PINECONE_INDEX_NAME`** (Optional):
+     - Pinecone index name (defaults to `campus-connect-index`)
+     - Format: `campus-connect-index`
 
 ### Using Automatic Deployment
 

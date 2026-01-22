@@ -933,6 +933,14 @@ const GroupChat = ({ group, onBack, setActiveView }) => {
                                 src={message.attachment.url}
                                 alt={message.attachment.name}
                                 className="max-w-full max-h-64 object-contain"
+                                onError={(e) => {
+                                  // Handle Firebase Storage 402 errors gracefully
+                                  if (e.target.src.includes('firebasestorage.googleapis.com')) {
+                                    console.warn('Firebase Storage image unavailable (402 error):', e.target.src);
+                                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzM3NDE1MSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5Q0EzQUYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBVbmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4=';
+                                    e.target.alt = 'Image unavailable - Firebase Storage requires Blaze plan';
+                                  }
+                                }}
                               />
                             </div>
                           ) : (

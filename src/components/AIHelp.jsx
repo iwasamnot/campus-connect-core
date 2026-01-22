@@ -326,6 +326,14 @@ const AIHelp = () => {
   const [assistantNameInput, setAssistantNameInput] = useState('AI Assistant');
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
+
+  // Debug: Log component mount
+  useEffect(() => {
+    console.log('AIHelp component mounted');
+    return () => {
+      console.log('AIHelp component unmounted');
+    };
+  }, []);
   
   // Load user profile on mount and when user changes
   useEffect(() => {
@@ -361,8 +369,8 @@ const AIHelp = () => {
   // Available Gemini models
   const geminiModels = [
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Latest 2026 Model - Fast & Efficient (Recommended)', free: true },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', description: 'Free - Fast & Efficient', free: true },
-    { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', description: 'Free - Lightweight & Fast', free: true },
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', description: 'Free - Fast & Efficient', free: true },
+    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite', description: 'Free - Lightweight & Fast', free: true },
     { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
     { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 2.5 Flash instead', free: false },
   ];
@@ -425,16 +433,16 @@ const AIHelp = () => {
       return model;
     } catch (error) {
       console.error('Error initializing Gemini model:', error);
-      // Fallback to gemini-2.5-flash, then gemini-1.5-flash if the selected model fails
+      // Fallback to gemini-2.5-flash, then gemini-2.0-flash if the selected model fails
       if (modelName !== 'gemini-2.5-flash') {
         try {
           const genAI = new GoogleGenerativeAI(apiKey);
           return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         } catch (fallbackError) {
-          console.warn('gemini-2.5-flash not available, trying gemini-1.5-flash:', fallbackError);
+          console.warn('gemini-2.5-flash not available, trying gemini-2.0-flash:', fallbackError);
           try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
           } catch (secondFallbackError) {
             console.error('Fallback models also failed:', secondFallbackError);
             return null;
@@ -448,7 +456,8 @@ const AIHelp = () => {
   // Call AI with conversation history (multi-provider support)
   const callAIWithHistory = async (question, localContext, conversationHistory = []) => {
     try {
-      const { callAI } = await import('../utils/aiProvider');
+      // Use the already imported callAI instead of dynamic import
+      // callAI is already imported at the top of the file
       
       // Build conversation history for context
       const historyContext = conversationHistory.length > 0 
@@ -535,9 +544,25 @@ ${question}
       try {
         // Import RAG system dynamically
         const { generateRAGResponse } = await import('../utils/ragSystem');
-        const ragAnswer = await generateRAGResponse(question, conversationHistory, selectedGeminiModel, userContext);
-        if (ragAnswer && ragAnswer.trim() !== '') {
-          return ragAnswer;
+        const userId = user?.uid || null; // Pass user ID for personalization
+        const ragResult = await generateRAGResponse(
+          question,
+          conversationHistory,
+          selectedGeminiModel,
+          userContext,
+          userId
+        );
+        
+        // Handle new response format (object with answer and metadata)
+        if (ragResult) {
+          const answer = typeof ragResult === 'string' ? ragResult : ragResult.answer;
+          if (answer && answer.trim() !== '') {
+            // Log metadata for debugging (sentiment, queryType, etc.)
+            if (ragResult.metadata) {
+              console.log('RAG Metadata:', ragResult.metadata);
+            }
+            return answer;
+          }
         }
       } catch (ragError) {
         console.warn('RAG system error, falling back to standard Gemini:', ragError);
