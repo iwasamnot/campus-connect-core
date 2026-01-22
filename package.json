@@ -18,7 +18,7 @@
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.1",
     "@react-spring/web": "^10.0.3",
     "@videosdk.live/react-sdk": "^0.6.7",
     "firebase": "^12.7.0",
