@@ -98,13 +98,16 @@ const AdminDashboard = () => {
 
   // Update AI toxicity check setting
   const handleToggleToxicityCheck = async () => {
-    if (!db) return;
+    if (!db || !user) return;
     
     setUpdatingToxicity(true);
+    const configRef = doc(db, 'appConfig', 'aiSettings');
+    const newValue = !aiToxicityEnabled;
+    
     try {
-      const configRef = doc(db, 'appConfig', 'aiSettings');
+      // Try to update existing document
       await updateDoc(configRef, {
-        toxicityCheckEnabled: !aiToxicityEnabled,
+        toxicityCheckEnabled: newValue,
         updatedBy: user.uid,
         updatedByEmail: user.email,
         updatedAt: serverTimestamp()
@@ -112,24 +115,28 @@ const AdminDashboard = () => {
       
       await logAuditAction('update_ai_settings', {
         setting: 'toxicityCheckEnabled',
-        value: !aiToxicityEnabled
+        value: newValue
       });
       
-      setAiToxicityEnabled(!aiToxicityEnabled);
-      success(`AI toxicity check ${!aiToxicityEnabled ? 'enabled' : 'disabled'} for all users.`);
+      setAiToxicityEnabled(newValue);
+      success(`AI toxicity check ${newValue ? 'enabled' : 'disabled'} for all users.`);
     } catch (error) {
       console.error('Error updating AI settings:', error);
       // If document doesn't exist, create it
-      if (error.code === 'not-found') {
+      if (error.code === 'not-found' || error.message?.includes('No document to update')) {
         try {
           await setDoc(configRef, {
-            toxicityCheckEnabled: !aiToxicityEnabled,
+            toxicityCheckEnabled: newValue,
             updatedBy: user.uid,
             updatedByEmail: user.email,
             updatedAt: serverTimestamp()
           });
-          setAiToxicityEnabled(!aiToxicityEnabled);
-          success(`AI toxicity check ${!aiToxicityEnabled ? 'enabled' : 'disabled'} for all users.`);
+          await logAuditAction('create_ai_settings', {
+            setting: 'toxicityCheckEnabled',
+            value: newValue
+          });
+          setAiToxicityEnabled(newValue);
+          success(`AI toxicity check ${newValue ? 'enabled' : 'disabled'} for all users.`);
         } catch (createError) {
           console.error('Error creating AI settings:', createError);
           showError('Failed to update AI settings. Please try again.');

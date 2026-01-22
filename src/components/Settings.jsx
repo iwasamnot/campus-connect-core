@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -26,6 +26,48 @@ const Settings = ({ setActiveView }) => {
   const { success, error: showError } = useToast();
   const [activeTab, setActiveTab] = useState('appearance');
   const [exporting, setExporting] = useState(false);
+  const [aiFeatureStates, setAiFeatureStates] = useState({});
+  
+  // Load AI feature states from localStorage on mount and when tab changes
+  useEffect(() => {
+    const loadAiStates = () => {
+      setAiFeatureStates({
+        virtualSeniorEnabled: localStorage.getItem('virtualSeniorEnabled') === 'true',
+        ragEngineEnabled: localStorage.getItem('ragEngineEnabled') === 'true',
+        aiTranslationEnabled: localStorage.getItem('aiTranslationEnabled') === 'true',
+        aiSummarizationEnabled: localStorage.getItem('aiSummarizationEnabled') === 'true',
+        aiInsightsEnabled: localStorage.getItem('aiInsightsEnabled') === 'true',
+        aiPredictiveTypingEnabled: localStorage.getItem('aiPredictiveTypingEnabled') === 'true',
+        aiSmartRepliesEnabled: localStorage.getItem('aiSmartRepliesEnabled') === 'true',
+        aiCategorizationEnabled: localStorage.getItem('aiCategorizationEnabled') === 'true',
+        aiContextualActionsEnabled: localStorage.getItem('aiContextualActionsEnabled') === 'true',
+        aiStudyGroupsEnabled: localStorage.getItem('aiStudyGroupsEnabled') === 'true',
+        aiEmotionPredictionEnabled: localStorage.getItem('aiEmotionPredictionEnabled') === 'true',
+        aiSmartNotificationsEnabled: localStorage.getItem('aiSmartNotificationsEnabled') === 'true',
+        aiTaskExtractorEnabled: localStorage.getItem('aiTaskExtractorEnabled') === 'true',
+        aiPredictiveSchedulerEnabled: localStorage.getItem('aiPredictiveSchedulerEnabled') === 'true',
+      });
+    };
+    
+    loadAiStates();
+    
+    // Listen for storage changes (in case changed in another tab)
+    const handleStorageChange = (e) => {
+      if (e.key && (e.key.startsWith('ai') || e.key === 'virtualSeniorEnabled' || e.key === 'ragEngineEnabled')) {
+        loadAiStates();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    // Also listen for custom storage events (for same-tab updates)
+    const handleCustomStorage = () => loadAiStates();
+    window.addEventListener('localStorageUpdate', handleCustomStorage);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageUpdate', handleCustomStorage);
+    };
+  }, [activeTab]);
 
   const handleSignOut = async () => {
     try {
@@ -526,10 +568,11 @@ const Settings = ({ setActiveView }) => {
                       label="Virtual Senior (AI Help Mode)"
                       desc="AI responds to messages in Campus Chat (disabled by default)"
                       icon={HelpCircle}
-                      value={localStorage.getItem('virtualSeniorEnabled') === 'true'}
+                      value={aiFeatureStates.virtualSeniorEnabled || false}
                       onChange={(val) => {
                         try {
                           localStorage.setItem('virtualSeniorEnabled', val.toString());
+                          setAiFeatureStates(prev => ({ ...prev, virtualSeniorEnabled: val }));
                           success(val ? 'Virtual Senior enabled' : 'Virtual Senior disabled');
                         } catch (error) {
                           console.error('Error saving setting:', error);
@@ -542,9 +585,10 @@ const Settings = ({ setActiveView }) => {
                       label="RAG Engine"
                       desc="Enhanced AI responses with knowledge base context (disabled by default)"
                       icon={Database}
-                      value={localStorage.getItem('ragEngineEnabled') === 'true'}
+                      value={aiFeatureStates.ragEngineEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('ragEngineEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, ragEngineEnabled: val }));
                         success(val ? 'RAG Engine enabled' : 'RAG Engine disabled');
                       }}
                     />
@@ -553,9 +597,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Message Translation"
                       desc="Translate messages using AI (disabled by default)"
                       icon={Globe}
-                      value={localStorage.getItem('aiTranslationEnabled') === 'true'}
+                      value={aiFeatureStates.aiTranslationEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiTranslationEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiTranslationEnabled: val }));
                         success(val ? 'AI translation enabled' : 'AI translation disabled');
                       }}
                     />
@@ -564,9 +609,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Conversation Summarization"
                       desc="Generate AI summaries of conversations (disabled by default)"
                       icon={FileText}
-                      value={localStorage.getItem('aiSummarizationEnabled') === 'true'}
+                      value={aiFeatureStates.aiSummarizationEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiSummarizationEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiSummarizationEnabled: val }));
                         success(val ? 'AI summarization enabled' : 'AI summarization disabled');
                       }}
                     />
@@ -575,9 +621,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Conversation Insights"
                       desc="AI-powered conversation analytics (disabled by default)"
                       icon={BarChart}
-                      value={localStorage.getItem('aiInsightsEnabled') === 'true'}
+                      value={aiFeatureStates.aiInsightsEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiInsightsEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiInsightsEnabled: val }));
                         success(val ? 'AI insights enabled' : 'AI insights disabled');
                       }}
                     />
@@ -586,9 +633,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Predictive Typing"
                       desc="AI autocomplete suggestions (disabled by default)"
                       icon={Keyboard}
-                      value={localStorage.getItem('aiPredictiveTypingEnabled') === 'true'}
+                      value={aiFeatureStates.aiPredictiveTypingEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiPredictiveTypingEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiPredictiveTypingEnabled: val }));
                         success(val ? 'AI predictive typing enabled' : 'AI predictive typing disabled');
                       }}
                     />
@@ -597,9 +645,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Smart Replies"
                       desc="AI-generated quick reply suggestions (disabled by default)"
                       icon={MessageSquare}
-                      value={localStorage.getItem('aiSmartRepliesEnabled') === 'true'}
+                      value={aiFeatureStates.aiSmartRepliesEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiSmartRepliesEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiSmartRepliesEnabled: val }));
                         success(val ? 'AI smart replies enabled' : 'AI smart replies disabled');
                       }}
                     />
@@ -608,9 +657,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Smart Categorization"
                       desc="Automatically categorize messages with AI (disabled by default)"
                       icon={Target}
-                      value={localStorage.getItem('aiCategorizationEnabled') === 'true'}
+                      value={aiFeatureStates.aiCategorizationEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiCategorizationEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiCategorizationEnabled: val }));
                         success(val ? 'AI categorization enabled' : 'AI categorization disabled');
                       }}
                     />
@@ -619,9 +669,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Contextual Actions"
                       desc="AI suggests actions based on message content (disabled by default)"
                       icon={Zap}
-                      value={localStorage.getItem('aiContextualActionsEnabled') === 'true'}
+                      value={aiFeatureStates.aiContextualActionsEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiContextualActionsEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiContextualActionsEnabled: val }));
                         success(val ? 'AI contextual actions enabled' : 'AI contextual actions disabled');
                       }}
                     />
@@ -630,9 +681,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Study Groups"
                       desc="AI-powered study group recommendations (disabled by default)"
                       icon={Users}
-                      value={localStorage.getItem('aiStudyGroupsEnabled') === 'true'}
+                      value={aiFeatureStates.aiStudyGroupsEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiStudyGroupsEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiStudyGroupsEnabled: val }));
                         success(val ? 'AI study groups enabled' : 'AI study groups disabled');
                       }}
                     />
@@ -641,9 +693,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Emotion Prediction"
                       desc="Predict message reception with AI (disabled by default)"
                       icon={Activity}
-                      value={localStorage.getItem('aiEmotionPredictionEnabled') === 'true'}
+                      value={aiFeatureStates.aiEmotionPredictionEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiEmotionPredictionEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiEmotionPredictionEnabled: val }));
                         success(val ? 'AI emotion prediction enabled' : 'AI emotion prediction disabled');
                       }}
                     />
@@ -652,9 +705,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Smart Notifications"
                       desc="AI-prioritized notifications (disabled by default)"
                       icon={Bell}
-                      value={localStorage.getItem('aiSmartNotificationsEnabled') === 'true'}
+                      value={aiFeatureStates.aiSmartNotificationsEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiSmartNotificationsEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiSmartNotificationsEnabled: val }));
                         success(val ? 'AI smart notifications enabled' : 'AI smart notifications disabled');
                       }}
                     />
@@ -663,9 +717,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Task Extractor"
                       desc="Automatically extract tasks from conversations (disabled by default)"
                       icon={CheckCircle2}
-                      value={localStorage.getItem('aiTaskExtractorEnabled') === 'true'}
+                      value={aiFeatureStates.aiTaskExtractorEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiTaskExtractorEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiTaskExtractorEnabled: val }));
                         success(val ? 'AI task extractor enabled' : 'AI task extractor disabled');
                       }}
                     />
@@ -674,9 +729,10 @@ const Settings = ({ setActiveView }) => {
                       label="AI Predictive Scheduler"
                       desc="AI-optimized message send times (disabled by default)"
                       icon={Clock}
-                      value={localStorage.getItem('aiPredictiveSchedulerEnabled') === 'true'}
+                      value={aiFeatureStates.aiPredictiveSchedulerEnabled || false}
                       onChange={(val) => {
                         localStorage.setItem('aiPredictiveSchedulerEnabled', val.toString());
+                        setAiFeatureStates(prev => ({ ...prev, aiPredictiveSchedulerEnabled: val }));
                         success(val ? 'AI predictive scheduler enabled' : 'AI predictive scheduler disabled');
                       }}
                     />
