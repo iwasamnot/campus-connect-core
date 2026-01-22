@@ -92,7 +92,11 @@ export const callAI = async (prompt, options = {}) => {
  */
 const callOllama = async (prompt, config, options = {}) => {
   const baseUrl = config.baseUrl || import.meta.env.VITE_OLLAMA_URL?.trim() || 'http://localhost:11434';
-  const model = config.model || import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'deepseek-r1:32b';
+  
+  // FORCE 8B MODEL: 32B model is too heavy and times out
+  // Override any .env variable to use the faster 8B model
+  const model = 'deepseek-r1:8b';
+  console.log(`⚡ [OLLAMA] Switching to fast model: deepseek-r1:8b (32B model disabled to prevent timeouts)`);
   
   // Build messages array with proper role structure
   // System role: Virtual Senior persona
@@ -100,10 +104,18 @@ const callOllama = async (prompt, config, options = {}) => {
   const messages = [];
   
   // System prompt: Virtual Senior persona (if provided)
+  // Enhanced system prompt for better context handling
   if (options.systemPrompt) {
+    const enhancedSystemPrompt = `${options.systemPrompt}
+
+**Important Instructions:**
+- If the provided context has low relevance, prioritize answering the user's question directly
+- Use your general knowledge when context is insufficient
+- Be helpful, accurate, and professional`;
+    
     messages.push({ 
       role: 'system', 
-      content: options.systemPrompt 
+      content: enhancedSystemPrompt 
     });
   }
   
@@ -129,8 +141,9 @@ const callOllama = async (prompt, config, options = {}) => {
   console.log(`📏 [OLLAMA] Prompt length: ${prompt.length} characters`);
 
   // Create AbortController for timeout
+  // Increased to 120 seconds (2 minutes) to handle reasoning model "thinking" phase
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
 
   try {
     const response = await fetch(targetUrl, {
@@ -248,7 +261,7 @@ export const getProviderByPriority = (providerName) => {
         return {
           provider: 'ollama',
           baseUrl: ollamaUrl,
-          model: import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'deepseek-r1:32b',
+          model: 'deepseek-r1:8b', // FORCED: 8B model (32B disabled to prevent timeouts)
           maxTokens: 4096,
           temperature: 0.7
         };

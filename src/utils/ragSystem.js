@@ -64,8 +64,10 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
 
   try {
     // STEP 1: Retrieve relevant documents from Pinecone
-    // INCREASED from 3 to 10 for better context density
-    const retrievedDocs = await ragRetrieval.retrieve(query, 10, 0.2);
+    // CRITICAL: Lowered threshold from 0.2 to 0.01 to accept matches from different embedding models
+    // We're mixing Google embeddings (in Pinecone) with hash-based query embeddings, which results in low scores
+    // Accept ANY match (0.01) rather than sending zero context
+    const retrievedDocs = await ragRetrieval.retrieve(query, 10, 0.01);
     console.log(`📚 [OLLAMA RAG] Retrieved ${retrievedDocs.length} documents from Pinecone`);
     
     // STEP 2: Format context from retrieved documents - all 10 results joined cleanly
@@ -110,7 +112,7 @@ ${query}
     // Adapt prompt based on whether we have RAG context or not
     const hasContext = context && context.length > 0;
     const systemPrompt = hasContext
-      ? 'You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC). You provide accurate, helpful information based on the retrieved knowledge base context. Be empathetic, professional, and guide students effectively.'
+      ? 'You are a helpful senior student at Sydney International School of Technology and Commerce (SISTC). Use the provided context to answer questions accurately. If the context relevance is low, prioritize answering the user\'s question directly using your knowledge. Be empathetic, professional, and guide students effectively.'
       : 'You are a helpful senior student at Sydney International School of Technology and Commerce (SISTC). Answer questions based on your general knowledge of IT education, university life, student services, and common university procedures. Be empathetic, professional, and guide students effectively. If you don\'t know specific SISTC details, provide general guidance and suggest they contact the administration.';
 
     // STEP 6: Call AI with proper structure
