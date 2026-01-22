@@ -568,6 +568,7 @@ ${question}
       setMessages(prev => [...prev, botMessage]);
       
       // Update user profile from conversation (debounced)
+      // SILENT FAIL: Wrapped in try-catch to prevent errors from disrupting user experience
       if (user?.uid && messages.length > 0) {
         setTimeout(() => {
           updateProfileFromConversation(user.uid, [
@@ -579,6 +580,9 @@ ${question}
             getUserProfile(user.uid).then(profile => {
               if (profile) setUserProfile(profile);
             });
+          }).catch((error) => {
+            // SILENT FAIL: Profile update is background task, don't disrupt user
+            console.warn('Profile update skipped:', error.message || error);
           });
         }, 2000); // Wait 2 seconds after response
       }

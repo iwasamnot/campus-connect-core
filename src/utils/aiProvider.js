@@ -158,7 +158,8 @@ const callOllama = async (prompt, config, options = {}) => {
         stream: false, // Non-streaming for simplicity
         options: {
           temperature: options.temperature || config.temperature || 0.7,
-          num_predict: options.maxTokens || config.maxTokens || 4096,
+          num_ctx: 4096,      // Larger context window for reasoning models
+          num_predict: 2048,  // Allow 2048 tokens to generate (prevents cutoff during thinking)
         }
       }),
       signal: controller.signal, // Timeout support
@@ -183,6 +184,10 @@ const callOllama = async (prompt, config, options = {}) => {
     let responseText = null;
     if (data.message?.content) {
       responseText = data.message.content.trim();
+    } else if (data.message?.thinking) {
+      // Fallback: Some API versions return thinking separately
+      console.warn('⚠️ [OLLAMA] Response has thinking field but no content, using thinking as fallback');
+      responseText = data.message.thinking.trim();
     } else if (data.response && typeof data.response === 'string') {
       // Fallback: try response field (legacy format)
       console.log(`⚠️ [OLLAMA] Using legacy response format`);
@@ -193,13 +198,45 @@ const callOllama = async (prompt, config, options = {}) => {
       throw new Error('Ollama API returned unexpected response format. Expected data.message.content');
     }
     
+    // Handle empty content (model ran out of tokens during thinking)
+    if (!responseText || responseText.length === 0) {
+      console.warn('⚠️ [OLLAMA] Empty response content - model may have run out of tokens during thinking phase');
+      if (data.message?.thinking) {
+        // If thinking exists, try to extract any useful info from it
+        const thinkingText = data.message.thinking.trim();
+        if (thinkingText.length > 0) {
+          console.warn('⚠️ [OLLAMA] Using thinking content as fallback (may be incomplete)');
+          responseText = thinkingText;
+        } else {
+          throw new Error('Ollama returned empty response. The model may have run out of tokens. Try reducing prompt length or increasing num_predict.');
+        }
+      } else {
+        throw new Error('Ollama returned empty response. The model may have run out of tokens during the thinking phase.');
+      }
+    }
+    
     // DEEPSEEK-R1 CLEANUP: Remove reasoning tags (<think>...</think>)
     // DeepSeek R1 is a reasoning model that includes internal "thinking" in the output
     // We remove these tags so users only see the final clean answer
-    const cleanedResponse = responseText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    // Use global regex with multiline support to catch all thinking blocks
+    let cleanedResponse = responseText;
+    
+    // Remove all <think>...</think> blocks (including nested or multiple blocks)
+    const thinkTagRegex = /<think>[\s\S]*?<\/think>/gi;
+    if (thinkTagRegex.test(cleanedResponse)) {
+      const beforeLength = cleanedResponse.length;
+      cleanedResponse = cleanedResponse.replace(thinkTagRegex, '').trim();
+      console.log(`🧠 [OLLAMA] Removed thinking tags: ${beforeLength} chars → ${cleanedResponse.length} chars`);
+    }
     
     // Also remove any remaining XML-like tags that might be artifacts
     const finalResponse = cleanedResponse.replace(/<[^>]+>/g, '').trim();
+    
+    // Final validation: Ensure we have actual content after cleaning
+    if (!finalResponse || finalResponse.length === 0) {
+      console.error('❌ [OLLAMA] Response is empty after cleaning thinking tags');
+      throw new Error('Ollama response was empty after removing thinking tags. The model may have only generated reasoning without a final answer.');
+    }
     
     console.log(`✅ [OLLAMA] Response received: ${responseText.length} chars → ${finalResponse.length} chars (cleaned)`);
     return finalResponse;

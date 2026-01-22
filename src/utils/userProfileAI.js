@@ -58,6 +58,7 @@ export const getUserProfile = async (userId) => {
 export const updateProfileFromConversation = async (userId, conversationMessages) => {
   if (!db || !userId || !conversationMessages || conversationMessages.length === 0) return;
   
+  // SILENT FAIL: This is a background task and shouldn't disrupt the user
   try {
     const profileRef = doc(db, 'userProfiles', userId);
     const currentProfile = await getUserProfile(userId);
