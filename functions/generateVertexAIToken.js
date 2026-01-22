@@ -9,7 +9,11 @@ const { onCall } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 
 // Define secrets - use the same secret name as GitHub Secret
-const gcpServiceAccountKey = defineSecret('GCP_SERVICE_ACCOUNT_KEY');
+// Note: The secret must be created in Firebase Secret Manager before deployment
+// Run: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY
+const gcpServiceAccountKey = defineSecret('GCP_SERVICE_ACCOUNT_KEY', {
+  description: 'GCP Service Account JSON key for Vertex AI authentication'
+});
 
 /**
  * Generate Vertex AI response using enterprise SDK

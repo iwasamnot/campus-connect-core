@@ -201,10 +201,28 @@ jobs:
         run: |
           echo "Setting GCP_SERVICE_ACCOUNT_KEY in Firebase Secret Manager..."
           if [ -n "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]; then
-            # Use printf to handle the JSON properly (avoids echo issues with special characters)
+            # First, try to create the secret if it doesn't exist (non-blocking)
+            echo "Checking if secret exists..."
+            firebase functions:secrets:access GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc --non-interactive > /dev/null 2>&1 || {
+              echo "Secret does not exist, creating it..."
+              # Create the secret first (this might require additional permissions)
+              # If creation fails, we'll try to set it anyway
+              echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" | firebase functions:secrets:create GCP_SERVICE_ACCOUNT_KEY \
+                --project campus-connect-sistc --non-interactive 2>&1 || echo "⚠️ Could not create secret (may already exist or need manual setup)"
+            }
+            
+            # Now set/update the secret value
+            echo "Setting secret value..."
             printf '%s' "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" | firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY \
-              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set GCP_SERVICE_ACCOUNT_KEY (may already be set)"
-            echo "✅ GCP_SERVICE_ACCOUNT_KEY secret set in Firebase Secret Manager"
+              --project campus-connect-sistc --non-interactive || {
+              echo "⚠️ WARNING: Could not set GCP_SERVICE_ACCOUNT_KEY automatically"
+              echo "This might require manual setup in Firebase Console:"
+              echo "1. Go to Firebase Console → Functions → Secrets"
+              echo "2. Create secret named: GCP_SERVICE_ACCOUNT_KEY"
+              echo "3. Paste your service account JSON"
+              echo "The deployment will continue, but Vertex AI may not work until the secret is set."
+            }
+            echo "✅ GCP_SERVICE_ACCOUNT_KEY secret configuration attempted"
           else
             echo "❌ ERROR: GCP_SERVICE_ACCOUNT_KEY not set in GitHub Secrets"
             echo "Please add GCP_SERVICE_ACCOUNT_KEY to GitHub Secrets for Vertex AI to work"
