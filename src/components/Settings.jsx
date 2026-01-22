@@ -505,16 +505,15 @@ const Settings = ({ setActiveView }) => {
                       </p>
                     </div>
                     
-                    <SettingToggle
-                      label="AI Toxicity Detection"
-                      desc="Use AI to detect toxic content (enabled by default)"
-                      icon={Shield}
-                      value={localStorage.getItem('aiToxicityEnabled') !== 'false'}
-                      onChange={(val) => {
-                        localStorage.setItem('aiToxicityEnabled', val.toString());
-                        success(val ? 'AI toxicity detection enabled' : 'AI toxicity detection disabled');
-                      }}
-                    />
+                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl mb-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Shield className="text-green-300" size={20} />
+                        <p className="font-medium text-green-200">AI Toxicity Detection</p>
+                      </div>
+                      <p className="text-sm text-green-200/80">
+                        Always enabled for safety. This feature is controlled by administrators only.
+                      </p>
+                    </div>
                     
                     <SettingToggle
                       label="Virtual Senior (AI Help Mode)"

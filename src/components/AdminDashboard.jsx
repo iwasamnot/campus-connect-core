@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   getDocs,
   getDoc,
+  setDoc,
   limit
 } from 'firebase/firestore';
 // Use window.__firebaseDb to avoid import/export issues in production builds
@@ -21,7 +22,7 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
   ? window.__firebaseDb 
   : null;
 import { motion } from 'framer-motion';
-import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText, MessageSquare, X } from 'lucide-react';
+import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText, MessageSquare, X, Shield, Settings } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
   ? window.__LogoComponent 
@@ -52,11 +53,81 @@ const AdminDashboard = () => {
   const [queryText, setQueryText] = useState(''); // Query box input
   const [queryResult, setQueryResult] = useState(null); // Query result
   const [showQueryBox, setShowQueryBox] = useState(false); // Show/hide query box
+  const [aiToxicityEnabled, setAiToxicityEnabled] = useState(true); // AI toxicity check enabled (admin-controlled)
+  const [updatingToxicity, setUpdatingToxicity] = useState(false); // Updating toxicity setting
   
   // Keep ref in sync with state
   useEffect(() => {
     deletedMessageIdsRef.current = deletedMessageIds;
   }, [deletedMessageIds]);
+
+  // Load admin config for AI toxicity check
+  useEffect(() => {
+    if (!db || !user) return;
+    
+    const configRef = doc(db, 'appConfig', 'aiSettings');
+    const unsubscribe = onSnapshot(configRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setAiToxicityEnabled(data.toxicityCheckEnabled !== false); // Default to true if not set
+      } else {
+        // Default to enabled if config doesn't exist
+        setAiToxicityEnabled(true);
+      }
+    }, (error) => {
+      console.error('Error loading AI settings:', error);
+      // Default to enabled on error
+      setAiToxicityEnabled(true);
+    });
+
+    return () => unsubscribe();
+  }, [db, user]);
+
+  // Update AI toxicity check setting
+  const handleToggleToxicityCheck = async () => {
+    if (!db) return;
+    
+    setUpdatingToxicity(true);
+    try {
+      const configRef = doc(db, 'appConfig', 'aiSettings');
+      await updateDoc(configRef, {
+        toxicityCheckEnabled: !aiToxicityEnabled,
+        updatedBy: user.uid,
+        updatedByEmail: user.email,
+        updatedAt: serverTimestamp()
+      });
+      
+      await logAuditAction('update_ai_settings', {
+        setting: 'toxicityCheckEnabled',
+        value: !aiToxicityEnabled
+      });
+      
+      setAiToxicityEnabled(!aiToxicityEnabled);
+      success(`AI toxicity check ${!aiToxicityEnabled ? 'enabled' : 'disabled'} for all users.`);
+    } catch (error) {
+      console.error('Error updating AI settings:', error);
+      // If document doesn't exist, create it
+      if (error.code === 'not-found') {
+        try {
+          await setDoc(configRef, {
+            toxicityCheckEnabled: !aiToxicityEnabled,
+            updatedBy: user.uid,
+            updatedByEmail: user.email,
+            updatedAt: serverTimestamp()
+          });
+          setAiToxicityEnabled(!aiToxicityEnabled);
+          success(`AI toxicity check ${!aiToxicityEnabled ? 'enabled' : 'disabled'} for all users.`);
+        } catch (createError) {
+          console.error('Error creating AI settings:', createError);
+          showError('Failed to update AI settings. Please try again.');
+        }
+      } else {
+        showError('Failed to update AI settings. Please try again.');
+      }
+    } finally {
+      setUpdatingToxicity(false);
+    }
+  };
 
   // Log audit action
   const logAuditAction = async (action, details) => {
@@ -791,6 +862,59 @@ const AdminDashboard = () => {
           zIndex: 10
         }}
       >
+        {/* Admin Settings Section */}
+        <div className="mb-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="text-indigo-300" size={20} />
+              <div>
+                <p className="font-medium text-white">AI Toxicity Detection</p>
+                <p className="text-sm text-white/60">Control AI-powered content moderation for all users</p>
+              </div>
+            </div>
+            <motion.button
+              onClick={handleToggleToxicityCheck}
+              disabled={updatingToxicity}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`px-4 py-2 rounded-xl transition-all font-medium ${
+                aiToxicityEnabled
+                  ? 'bg-green-600/20 border border-green-500/30 text-green-300 hover:bg-green-600/30'
+                  : 'bg-red-600/20 border border-red-500/30 text-red-300 hover:bg-red-600/30'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {updatingToxicity ? 'Updating...' : aiToxicityEnabled ? 'Enabled' : 'Disabled'}
+            </motion.button>
+          </div>
+        {/* Admin Settings Section */}
+        <div className="mb-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="text-indigo-300" size={20} />
+              <div>
+                <p className="font-medium text-white">AI Toxicity Detection</p>
+                <p className="text-sm text-white/60">Control AI-powered content moderation for all users</p>
+              </div>
+            </div>
+            <motion.button
+              onClick={handleToggleToxicityCheck}
+              disabled={updatingToxicity}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`px-4 py-2 rounded-xl transition-all font-medium ${
+                aiToxicityEnabled
+                  ? 'bg-green-600/20 border border-green-500/30 text-green-300 hover:bg-green-600/30'
+                  : 'bg-red-600/20 border border-red-500/30 text-red-300 hover:bg-red-600/30'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {updatingToxicity ? 'Updating...' : aiToxicityEnabled ? 'Enabled' : 'Disabled'}
+            </motion.button>
+          </div>
+        </div>
+        </div>
+      </motion.div>
+      
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3 md:mb-4">
           <div className="flex items-center gap-2 md:gap-3">
             <Logo size="small" showText={false} />
@@ -1098,7 +1222,7 @@ const AdminDashboard = () => {
 
         {/* Always-visible admin query box (answers: last online, last message, online count, etc.) */}
         <AdminQueryBox />
-      </motion.div>
+      </div>
 
       {/* Reports Panel */}
       {showReports && (

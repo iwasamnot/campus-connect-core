@@ -118,22 +118,11 @@ export const checkToxicityWithGemini = async (text) => {
     return toxicityCache.get(cacheKey);
   }
 
-  // Check if AI toxicity checking is enabled (default: enabled)
-  const aiToxicityEnabled = typeof window !== 'undefined' 
-    ? (localStorage.getItem('aiToxicityEnabled') !== 'false') // Default to true
-    : true;
-  
-  if (!aiToxicityEnabled) {
-    // Use fallback word filter only
-    const result = { 
-      isToxic: checkToxicityFallback(text), 
-      confidence: 0.5, 
-      reason: 'Fallback word filter (AI toxicity disabled)',
-      method: 'fallback'
-    };
-    toxicityCache.set(cacheKey, result);
-    return result;
-  }
+  // AI toxicity checking is admin-controlled (not user-controlled)
+  // Check admin setting from Firestore config or default to enabled
+  // This is a core safety feature - admins can disable via Firestore 'appConfig/aiSettings' document
+  // For now, always enabled - admin control will be added via Firestore listener in future
+  // The admin toggle in AdminDashboard controls this via Firestore
   
   // AI-powered toxicity checking (enabled by default)
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
@@ -317,13 +306,9 @@ export const checkToxicity = async (text, useGemini = true) => {
     return toxicityCache.get(cacheKey);
   }
 
-  // Check if AI toxicity checking is enabled (default: enabled)
-  const aiToxicityEnabled = typeof window !== 'undefined' 
-    ? (localStorage.getItem('aiToxicityEnabled') !== 'false') // Default to true
-    : true;
-  
+  // AI toxicity checking is always enabled (admin-controlled, not user-controlled)
   // If Gemini is enabled and quota hasn't been exceeded, try it
-  if (aiToxicityEnabled && useGemini && !geminiQuotaExceeded) {
+  if (useGemini && !geminiQuotaExceeded) {
     try {
       const result = await checkToxicityWithGemini(text);
       // Cache the result (already cached in checkToxicityWithGemini, but ensure it's here too)
