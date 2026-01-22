@@ -87,6 +87,8 @@ export const callAI = async (prompt, options = {}) => {
  * - System role: Contains the "Virtual Senior" persona
  * - User role: Contains the User Question + RAG Context
  * - Standard chat format (no complex JSON schemas)
+ * 
+ * MIXED CONTENT FIX: If page is HTTPS and Ollama is HTTP, use Cloud Function proxy
  */
 const callOllama = async (prompt, config, options = {}) => {
   const baseUrl = config.baseUrl || import.meta.env.VITE_OLLAMA_URL?.trim() || 'http://localhost:11434';
@@ -111,7 +113,17 @@ const callOllama = async (prompt, config, options = {}) => {
     content: prompt 
   });
 
-  console.log(`🚀 [OLLAMA] Sending request to ${baseUrl}/api/chat`);
+  // MIXED CONTENT FIX: Detect if we're on HTTPS and Ollama is HTTP
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const isHttpOllama = baseUrl.startsWith('http://');
+  const useProxy = isHttps && isHttpOllama;
+
+  // Use Cloud Function proxy if mixed content detected
+  const targetUrl = useProxy 
+    ? `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy`
+    : `${baseUrl}/api/chat`;
+
+  console.log(`🚀 [OLLAMA] Sending request to ${targetUrl}${useProxy ? ' (via HTTPS proxy)' : ''}`);
   console.log(`📦 [OLLAMA] Model: ${model}`);
   console.log(`💬 [OLLAMA] Messages: ${messages.length} (System: ${options.systemPrompt ? 'Yes' : 'No'}, User: Yes)`);
   console.log(`📏 [OLLAMA] Prompt length: ${prompt.length} characters`);
@@ -121,7 +133,7 @@ const callOllama = async (prompt, config, options = {}) => {
   const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
   try {
-    const response = await fetch(`${baseUrl}/api/chat`, {
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -171,6 +183,12 @@ const callOllama = async (prompt, config, options = {}) => {
     throw new Error('Ollama API returned unexpected response format. Expected data.message.content');
   } catch (error) {
     clearTimeout(timeoutId);
+    
+    // Detect mixed content errors and provide helpful message
+    if (error.message && error.message.includes('Mixed Content')) {
+      console.error('❌ [OLLAMA] Mixed content error detected. Using proxy should fix this.');
+      throw new Error('Mixed content error: HTTPS page cannot call HTTP API. The proxy should handle this automatically.');
+    }
     
     if (error.name === 'AbortError') {
       throw new Error('Ollama request timed out after 60 seconds. The model may be loading or processing a large request.');
