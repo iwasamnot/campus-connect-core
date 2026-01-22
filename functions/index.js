@@ -14,6 +14,7 @@ exports.getVideoSDKTokenV1 = getVideoSDKToken.getVideoSDKTokenV1;
 exports.ragSearch = ragService.ragSearch;
 exports.ragUpsert = ragService.ragUpsert;
 
-// Vertex AI function
+// Vertex AI functions
 exports.generateVertexAIResponse = generateVertexAIToken.generateVertexAIResponse;
+exports.generateVertexAIEmbedding = generateVertexAIToken.generateVertexAIEmbedding;
 

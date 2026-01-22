@@ -19,9 +19,14 @@ export const generateEmbedding = async (text) => {
   const vertexFunctionUrl = import.meta.env.VITE_VERTEX_AI_FUNCTION_URL?.trim();
 
   // Try Vertex AI text-embedding-004 model via Cloud Function
+  // Use the embedding endpoint (generateVertexAIEmbedding)
   if (vertexFunctionUrl && projectId) {
     try {
-      const response = await fetch(`${vertexFunctionUrl}/embed`, {
+      // Extract base URL and use the embedding function endpoint
+      const baseUrl = vertexFunctionUrl.replace('/generateVertexAIResponse', '');
+      const embedUrl = `${baseUrl}/generateVertexAIEmbedding`;
+      
+      const response = await fetch(embedUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

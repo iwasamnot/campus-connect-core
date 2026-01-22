@@ -5,7 +5,7 @@
  */
 
 const { VertexAI } = require('@google-cloud/vertexai');
-const { onCall } = require('firebase-functions/v2/https');
+const { onCall, onRequest } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 
 // Define secrets - use string array format to avoid permission issues during deployment
@@ -155,6 +155,121 @@ exports.generateVertexAIResponse = onCall(
         success: false,
         error: error.message || 'Unknown error',
       };
+    }
+  }
+);
+
+/**
+ * Generate embeddings using Vertex AI text-embedding-004 model
+ * HTTP endpoint for RAG embeddings
+ */
+exports.generateVertexAIEmbedding = onRequest(
+  {
+    secrets: ['GCP_SERVICE_ACCOUNT_KEY'],
+    region: 'us-central1',
+    cors: true,
+  },
+  async (req, res) => {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.status(204).send('');
+      return;
+    }
+
+    // Only allow POST
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed. Use POST.' });
+      return;
+    }
+
+    try {
+      const { text, model = 'text-embedding-004', projectId, location } = req.body;
+
+      if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        res.status(400).json({ error: 'Text is required for embedding generation' });
+        return;
+      }
+
+      // Get service account from secret
+      const serviceAccountJson = process.env.GCP_SERVICE_ACCOUNT_KEY;
+      
+      if (!serviceAccountJson || serviceAccountJson.trim() === '') {
+        res.status(500).json({ 
+          error: 'GCP_SERVICE_ACCOUNT_KEY secret is not configured',
+          fallback: true 
+        });
+        return;
+      }
+
+      // Parse service account
+      let serviceAccount;
+      try {
+        let sanitized = serviceAccountJson.trim();
+        if ((sanitized.startsWith('"') && sanitized.endsWith('"')) || 
+            (sanitized.startsWith("'") && sanitized.endsWith("'"))) {
+          sanitized = sanitized.slice(1, -1);
+        }
+        serviceAccount = JSON.parse(sanitized);
+      } catch (error) {
+        res.status(500).json({ 
+          error: `Invalid service account JSON: ${error.message}`,
+          fallback: true 
+        });
+        return;
+      }
+
+      // Validate service account
+      if (!serviceAccount.project_id || !serviceAccount.private_key || 
+          serviceAccount.private_key === 'dummy') {
+        res.status(500).json({ 
+          error: 'Service account has invalid credentials. Please update GCP_SERVICE_ACCOUNT_KEY secret.',
+          fallback: true 
+        });
+        return;
+      }
+
+      // Initialize Vertex AI
+      const finalProjectId = projectId || serviceAccount.project_id;
+      const finalLocation = location || 'us-central1';
+      
+      const vertexAI = new VertexAI({
+        project: finalProjectId,
+        location: finalLocation,
+      });
+
+      // Get embedding model
+      const embeddingModel = vertexAI.getGenerativeModel({
+        model: `projects/${finalProjectId}/locations/${finalLocation}/publishers/google/models/${model}`,
+      });
+
+      // Generate embedding
+      const result = await embeddingModel.embedContent({
+        content: { parts: [{ text }] },
+      });
+
+      const embedding = result.embeddings?.[0]?.values || [];
+
+      if (embedding.length === 0) {
+        res.status(500).json({ 
+          error: 'Failed to generate embedding',
+          fallback: true 
+        });
+        return;
+      }
+
+      // Set CORS headers
+      res.set('Access-Control-Allow-Origin', '*');
+      res.status(200).json({ embedding });
+    } catch (error) {
+      console.error('Error generating embedding:', error);
+      res.set('Access-Control-Allow-Origin', '*');
+      res.status(500).json({ 
+        error: error.message || 'Unknown error',
+        fallback: true 
+      });
     }
   }
 );
