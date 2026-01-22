@@ -47,7 +47,7 @@ exports.ollamaProxy = functions
 
     try {
       // Get Ollama URL from environment or use default
-      const ollamaUrl = process.env.OLLAMA_URL || 'http://138.197.142.141:11434';
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://167.99.179.29:11434';
       const ollamaModel = process.env.OLLAMA_MODEL || 'deepseek-r1:32b';
       
       const { messages, model, options } = req.body;
