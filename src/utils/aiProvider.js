@@ -612,6 +612,18 @@ const tryFallbackProviders = async (prompt, failedProvider, options) => {
  */
 const getProviderConfig = (providerName) => {
   switch (providerName) {
+    case 'ollama':
+      const ollamaUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
+      if (ollamaUrl && ollamaUrl !== '') {
+        return {
+          provider: 'ollama',
+          baseUrl: ollamaUrl,
+          model: import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'deepseek-r1:32b',
+          maxTokens: 4096,
+          temperature: 0.7
+        };
+      }
+      break;
     case 'gemini':
       const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
       if (geminiKey && geminiKey !== '') {
