@@ -30,24 +30,36 @@ const getServiceAccountCredentials = () => {
   }
   
   if (serviceAccountJson && serviceAccountJson !== '') {
-    // Skip if it's just whitespace or empty string
-    if (serviceAccountJson.trim().length === 0) {
+    // Sanitize the input: trim and remove wrapping quotes
+    let sanitized = serviceAccountJson.trim();
+    
+    // Remove wrapping quotes if present (common when env vars are stringified)
+    if ((sanitized.startsWith('"') && sanitized.endsWith('"')) || 
+        (sanitized.startsWith("'") && sanitized.endsWith("'"))) {
+      sanitized = sanitized.slice(1, -1);
+    }
+    
+    // Skip if it's just whitespace or empty string after sanitization
+    if (sanitized.length === 0) {
       return null;
     }
     
     // Check if it looks like JSON (starts with {)
-    if (!serviceAccountJson.trim().startsWith('{')) {
+    if (!sanitized.startsWith('{')) {
       console.warn('Service account JSON does not appear to be valid JSON (should start with {). Skipping.');
       return null;
     }
     
     try {
-      const parsed = JSON.parse(serviceAccountJson);
+      const parsed = JSON.parse(sanitized);
       // Validate it has required fields
       if (!parsed.project_id && !parsed.private_key) {
         console.warn('Service account JSON missing required fields (project_id or private_key). Skipping.');
         return null;
       }
+      
+      // Successfully parsed and validated
+      console.log('Successfully authenticated with Vertex AI Service Account');
       return parsed;
     } catch (error) {
       console.error('Error parsing service account JSON:', error);
@@ -107,8 +119,23 @@ export const getAIProvider = () => {
   // This requires service account key from the SAME GCP project
   const projectId = import.meta.env.VITE_GCP_PROJECT_ID?.trim();
   const location = import.meta.env.VITE_GCP_LOCATION?.trim() || 'us-central1';
+  const vertexFunctionUrl = import.meta.env.VITE_VERTEX_AI_FUNCTION_URL?.trim();
   const serviceAccount = getServiceAccountCredentials();
   
+  // Prioritize Vertex AI if Cloud Function URL is configured (uses @google-cloud/vertexai SDK server-side)
+  if (projectId && vertexFunctionUrl) {
+    return {
+      provider: 'vertex-ai',
+      projectId,
+      location,
+      serviceAccount,
+      model: 'gemini-1.5-flash',
+      maxTokens: 2048,
+      temperature: 0.7
+    };
+  }
+  
+  // Fallback: Check if service account is available (for future direct REST API use)
   if (projectId && serviceAccount) {
     return {
       provider: 'vertex-ai',
@@ -281,11 +308,18 @@ const callGemini = async (prompt, config, options) => {
 
 /**
  * Call Vertex AI (Enterprise tier)
- * Uses gemini-1.5-flash model via Vertex AI REST API
+ * Uses Vertex AI REST API with proper model format
  * Requires service account key from the SAME GCP project
+ * Model format: projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/gemini-1.5-flash
  */
 const callVertexAI = async (prompt, config, options) => {
-  const { projectId, location, model } = config;
+  const { projectId, location, serviceAccount } = config;
+  const modelName = config.model || 'gemini-1.5-flash';
+  
+  // Use Vertex AI REST API directly (not generativelanguage.googleapis.com)
+  // Format: projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL}
+  const vertexModelPath = `projects/${projectId}/locations/${location}/publishers/google/models/${modelName}`;
+  const vertexApiUrl = `https://${location}-aiplatform.googleapis.com/v1/${vertexModelPath}:predict`;
   
   // For browser environment, we need to use Cloud Functions to generate access token
   // Or use the REST API with proper authentication
@@ -293,7 +327,7 @@ const callVertexAI = async (prompt, config, options) => {
   const vertexFunctionUrl = import.meta.env.VITE_VERTEX_AI_FUNCTION_URL?.trim();
   
   if (vertexFunctionUrl) {
-    // Call Cloud Function that handles Vertex AI authentication
+    // Call Cloud Function that handles Vertex AI authentication using @google-cloud/vertexai SDK
     const response = await fetch(vertexFunctionUrl, {
       method: 'POST',
       headers: {
@@ -302,19 +336,27 @@ const callVertexAI = async (prompt, config, options) => {
       body: JSON.stringify({
         prompt,
         systemPrompt: options.systemPrompt || 'You are a helpful assistant.',
-        model: model || 'gemini-1.5-flash-latest',
+        model: modelName, // Use simple model name, Cloud Function will format it correctly
+        modelPath: vertexModelPath, // Pass the full model path
+        projectId,
+        location,
         maxTokens: options.maxTokens || config.maxTokens,
         temperature: options.temperature || config.temperature,
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `Vertex AI API error: ${response.statusText}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.text) {
+        console.log(`✅ Vertex AI response generated successfully using model: ${data.model}`);
+        return data.text;
+      } else if (data.error) {
+        throw new Error(`Vertex AI error: ${data.error}`);
+      }
     }
-
-    const data = await response.json();
-    return data.text || data.response || '';
+    
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Vertex AI API error: ${response.statusText}`);
   }
 
   // Fallback: Use Gemini API directly if Vertex AI function not available
