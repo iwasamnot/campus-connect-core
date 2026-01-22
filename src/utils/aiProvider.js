@@ -6,6 +6,7 @@
 
 // Provider priorities (order matters - first available is used)
 const PROVIDER_PRIORITY = [
+  'ollama',      // Self-hosted Ollama (RTX 6000 GPU droplet) - highest priority for performance
   'gemini',      // Gemini API key (simplest - recommended for most users)
   'vertex-ai',   // Enterprise Vertex AI (requires service account from same project)
   'groq',        // Best for students - very generous free tier, fast
@@ -102,7 +103,20 @@ const getAccessToken = async (serviceAccount) => {
  * Get AI provider configuration
  */
 export const getAIProvider = () => {
-  // Check for Gemini API key first (simplest option - no service account needed)
+  // Check for Ollama first (self-hosted GPU droplet - best performance)
+  // Priority: Ollama > Gemini > Vertex AI > Others
+  const ollamaUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
+  if (ollamaUrl && ollamaUrl !== '') {
+    return {
+      provider: 'ollama',
+      baseUrl: ollamaUrl,
+      model: import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'deepseek-r1:32b',
+      maxTokens: 4096,
+      temperature: 0.7
+    };
+  }
+
+  // Check for Gemini API key (simplest option - no service account needed)
   // This works with your existing account and is easier to set up
   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
   if (geminiApiKey && geminiApiKey !== '') {
@@ -214,19 +228,21 @@ export const callAI = async (prompt, options = {}) => {
   }
 
   try {
-    switch (config.provider) {
-      case 'gemini':
-        return await callGemini(prompt, config, options);
-      case 'vertex-ai':
-        return await callVertexAI(prompt, config, options);
-      case 'groq':
-        return await callGroq(prompt, config, options);
-      case 'huggingface':
-        return await callHuggingFace(prompt, config, options);
-      case 'openai':
-        return await callOpenAI(prompt, config, options);
-      case 'anthropic':
-        return await callAnthropic(prompt, config, options);
+  switch (config.provider) {
+    case 'ollama':
+      return await callOllama(prompt, config, options);
+    case 'gemini':
+      return await callGemini(prompt, config, options);
+    case 'vertex-ai':
+      return await callVertexAI(prompt, config, options);
+    case 'groq':
+      return await callGroq(prompt, config, options);
+    case 'huggingface':
+      return await callHuggingFace(prompt, config, options);
+    case 'openai':
+      return await callOpenAI(prompt, config, options);
+    case 'anthropic':
+      return await callAnthropic(prompt, config, options);
       default:
         throw new Error(`Unknown provider: ${config.provider}`);
     }
@@ -377,6 +393,58 @@ const callVertexAI = async (prompt, config, options) => {
   }
 
   throw new Error('Vertex AI requires VITE_VERTEX_AI_FUNCTION_URL or VITE_GEMINI_API_KEY to be configured.');
+};
+
+/**
+ * Call Ollama API (Self-hosted GPU droplet - best performance)
+ * Uses your RTX 6000 GPU droplet for high-performance inference
+ */
+const callOllama = async (prompt, config, options) => {
+  const baseUrl = config.baseUrl || import.meta.env.VITE_OLLAMA_URL?.trim() || 'http://localhost:11434';
+  const model = config.model || import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'deepseek-r1:32b';
+  
+  // Build messages array with system prompt if provided
+  const messages = [];
+  if (options.systemPrompt) {
+    messages.push({ role: 'system', content: options.systemPrompt });
+  }
+  messages.push({ role: 'user', content: prompt });
+
+  const response = await fetch(`${baseUrl}/api/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: messages,
+      stream: false,
+      options: {
+        temperature: options.temperature || config.temperature || 0.7,
+        num_predict: options.maxTokens || config.maxTokens || 4096,
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Ollama API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  
+  // Ollama returns response in message.content
+  if (data.message?.content) {
+    console.log(`✅ Ollama response generated successfully using model: ${model}`);
+    return data.message.content;
+  }
+  
+  // Fallback: try response field
+  if (data.response) {
+    return data.response;
+  }
+  
+  throw new Error('Ollama API returned unexpected response format');
 };
 
 /**
