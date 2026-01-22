@@ -150,7 +150,7 @@ const Settings = ({ setActiveView }) => {
         disabled={disabled}
         whileHover={disabled ? {} : { scale: 1.05 }}
         whileTap={disabled ? {} : { scale: 0.95 }}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
           value ? 'bg-indigo-600' : 'bg-white/20'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
         type="button"
@@ -162,10 +162,9 @@ const Settings = ({ setActiveView }) => {
             x: value ? 22 : 4
           }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="inline-block h-4 w-4 rounded-full bg-white shadow-lg absolute"
+          className="absolute left-1 top-1 inline-block h-4 w-4 rounded-full bg-white shadow-lg"
           style={{
-            left: value ? 'auto' : '4px',
-            right: value ? '4px' : 'auto'
+            transform: value ? 'translateX(18px)' : 'translateX(0px)'
           }}
         />
       </motion.button>
