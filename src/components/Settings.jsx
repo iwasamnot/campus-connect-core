@@ -163,9 +163,6 @@ const Settings = ({ setActiveView }) => {
           }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
           className="absolute left-1 top-1 inline-block h-4 w-4 rounded-full bg-white shadow-lg"
-          style={{
-            transform: value ? 'translateX(18px)' : 'translateX(0px)'
-          }}
         />
       </motion.button>
     </motion.div>
