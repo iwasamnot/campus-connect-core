@@ -53,6 +53,13 @@ const AIPredictiveTyping = ({
     if (!showSuggestions || suggestions.length === 0) return;
 
     const handleKeyDown = (e) => {
+      // Don't interfere with Enter key - let the form handle message sending
+      if (e.key === 'Enter') {
+        // Hide suggestions when Enter is pressed, but don't apply them
+        setShowSuggestions(false);
+        return;
+      }
+      
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex((prev) => (prev + 1) % suggestions.length);
@@ -63,6 +70,7 @@ const AIPredictiveTyping = ({
         e.preventDefault();
         applySuggestion(suggestions[selectedIndex]);
       } else if (e.key === 'Escape') {
+        e.preventDefault();
         setShowSuggestions(false);
       }
     };

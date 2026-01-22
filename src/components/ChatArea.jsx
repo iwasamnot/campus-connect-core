@@ -2381,7 +2381,15 @@ const ChatArea = ({ setActiveView }) => {
               </div>
             )}
 
-            <form onSubmit={sendMessage} className="flex gap-2 md:gap-3 relative">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (newMessage.trim() || attachedFile) {
+                  sendMessage(e);
+                }
+              }} 
+              className="flex gap-2 md:gap-3 relative"
+            >
               <div className="flex-1 relative">
                 <label htmlFor="chat-message-input" className="sr-only">Type a message</label>
                 <input
@@ -2425,6 +2433,14 @@ const ChatArea = ({ setActiveView }) => {
                   onKeyDown={(e) => {
                     if (messageInputRef.current) {
                       setCursorPosition(messageInputRef.current.selectionStart || 0);
+                    }
+                    
+                    // Handle Enter key - send message, don't apply suggestions
+                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                      e.preventDefault();
+                      if (newMessage.trim() || attachedFile) {
+                        sendMessage(e);
+                      }
                     }
                   }}
                   onSelect={(e) => {
