@@ -1,11 +1,13 @@
 /**
  * RAG Retrieval System
  * Retrieves relevant documents from knowledge base using vector similarity search
+ * NOW USES PINECONE for actual vector search
  */
 
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { generateEmbedding, cosineSimilarity } from './ragEmbeddings';
+import { Pinecone } from '@pinecone-database/pinecone';
 
 /**
  * Document structure for knowledge base
@@ -25,7 +27,39 @@ export class KnowledgeDocument {
 export class RAGRetrieval {
   constructor() {
     this.cache = new Map(); // Cache for embeddings
-    this.documents = []; // In-memory document store
+    this.documents = []; // In-memory document store (fallback)
+    this.pineconeClient = null;
+    this.pineconeIndex = null;
+    this.pineconeConfigured = false;
+    
+    // Initialize Pinecone if API key is available
+    this.initPinecone();
+  }
+  
+  /**
+   * Initialize Pinecone client if API key is configured
+   */
+  initPinecone() {
+    const apiKey = import.meta.env.VITE_PINECONE_API_KEY?.trim();
+    const indexName = import.meta.env.VITE_PINECONE_INDEX_NAME?.trim() || 'campus-connect-index';
+    
+    if (apiKey && apiKey !== '') {
+      try {
+        this.pineconeClient = new Pinecone({ apiKey });
+        this.pineconeIndex = this.pineconeClient.index(indexName);
+        this.pineconeConfigured = true;
+        console.log(`✅ [Pinecone] Initialized with index: ${indexName}`);
+        console.log(`📊 [Pinecone] API Key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`);
+      } catch (error) {
+        console.error('❌ [Pinecone] Failed to initialize:', error);
+        this.pineconeConfigured = false;
+      }
+    } else {
+      console.warn('⚠️ [Pinecone] VITE_PINECONE_API_KEY not configured in environment variables');
+      console.warn('⚠️ [Pinecone] Using local document fallback (Firestore/in-memory)');
+      console.warn('💡 [Pinecone] To enable Pinecone: Add VITE_PINECONE_API_KEY to your .env file');
+      this.pineconeConfigured = false;
+    }
   }
 
   /**
@@ -71,13 +105,92 @@ export class RAGRetrieval {
 
   /**
    * Retrieve relevant documents for a query
-   * Updated for Vertex AI enterprise tier - increased default topK to 10
+   * NOW QUERIES PINECONE if configured, otherwise falls back to local documents
    */
   async retrieve(queryText, topK = 10, minSimilarity = 0.3) {
     if (!queryText || queryText.trim().length === 0) {
       return [];
     }
 
+    // PRIORITY 1: Query Pinecone if configured
+    if (this.pineconeConfigured && this.pineconeIndex) {
+      try {
+        console.log(`🔍 [Pinecone] Querying for: "${queryText.substring(0, 50)}..."`);
+        
+        // Generate embedding for query
+        const queryEmbedding = await generateEmbedding(queryText.trim());
+        if (!queryEmbedding || !Array.isArray(queryEmbedding)) {
+          console.warn('⚠️ [Pinecone] Could not generate query embedding, falling back to local');
+          return this.retrieveLocal(queryText, topK, minSimilarity);
+        }
+
+        // Query Pinecone
+        const results = await this.pineconeIndex.query({
+          vector: queryEmbedding,
+          topK: topK,
+          includeMetadata: true,
+        });
+
+        if (results.matches && results.matches.length > 0) {
+          console.log(`✅ [Pinecone] Retrieved ${results.matches.length} matches from Pinecone`);
+          
+          // Convert Pinecone matches to KnowledgeDocument format
+          const documents = results.matches
+            .filter(match => {
+              const score = match.score || 0;
+              if (score < minSimilarity) {
+                console.log(`   ⚠️ Filtered out match (score: ${score.toFixed(3)} < ${minSimilarity})`);
+                return false;
+              }
+              return true;
+            })
+            .map(match => {
+              const doc = new KnowledgeDocument({
+                id: match.id,
+                text: match.metadata?.text || match.metadata?.content || '',
+                metadata: {
+                  title: match.metadata?.title || 'Document',
+                  category: match.metadata?.category || 'general',
+                  source: match.metadata?.source || 'Pinecone',
+                  score: match.score
+                },
+                embedding: null // Don't store embedding in document object
+              });
+              console.log(`   📄 Match: "${doc.metadata.title}" (score: ${match.score?.toFixed(3)})`);
+              return doc;
+            });
+          
+          if (documents.length > 0) {
+            console.log(`✅ [Pinecone] Returning ${documents.length} documents after filtering`);
+            return documents;
+          } else {
+            console.warn(`⚠️ [Pinecone] All ${results.matches.length} matches filtered out (threshold too high: ${minSimilarity})`);
+            console.warn(`💡 [Pinecone] Try lowering minSimilarity threshold or check if embeddings match`);
+            return this.retrieveLocal(queryText, topK, minSimilarity);
+          }
+        } else {
+          console.warn(`⚠️ [Pinecone] No matches found in index`);
+          console.warn(`💡 [Pinecone] Possible issues:`);
+          console.warn(`   - Index is empty (no documents indexed)`);
+          console.warn(`   - Embeddings don't match (different embedding model used)`);
+          console.warn(`   - Query embedding generation failed`);
+          return this.retrieveLocal(queryText, topK, minSimilarity);
+        }
+      } catch (error) {
+        console.error('❌ [Pinecone] Query error:', error);
+        console.log('🔄 [Pinecone] Falling back to local retrieval');
+        return this.retrieveLocal(queryText, topK, minSimilarity);
+      }
+    }
+
+    // PRIORITY 2: Fallback to local document search
+    return this.retrieveLocal(queryText, topK, minSimilarity);
+  }
+  
+  /**
+   * Retrieve from local documents (fallback when Pinecone not available)
+   */
+  async retrieveLocal(queryText, topK = 10, minSimilarity = 0.3) {
     try {
       // Generate embedding for query
       const queryEmbedding = await generateEmbedding(queryText.trim());
@@ -109,7 +222,7 @@ export class RAGRetrieval {
 
       return similarities.map(item => item.document);
     } catch (error) {
-      console.error('RAG: Error during retrieval:', error);
+      console.error('RAG: Error during local retrieval:', error);
       // Fallback to keyword search
       return this.retrieveByKeywords(queryText, topK);
     }
