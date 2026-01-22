@@ -8,12 +8,9 @@ const { VertexAI } = require('@google-cloud/vertexai');
 const { onCall } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 
-// Define secrets - use the same secret name as GitHub Secret
-// Note: The secret can be set later via: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY
-// Or via GitHub Actions workflow
-const gcpServiceAccountKey = defineSecret('GCP_SERVICE_ACCOUNT_KEY', {
-  description: 'GCP Service Account JSON key for Vertex AI authentication'
-});
+// Define secrets - use string array format (like getVideoSDKToken) to avoid permission issues during deployment
+// The secret can be set later via: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY
+const gcpServiceAccountKey = defineSecret('GCP_SERVICE_ACCOUNT_KEY');
 
 /**
  * Generate Vertex AI response using enterprise SDK
@@ -38,6 +35,14 @@ exports.generateVertexAIResponse = onCall(
       // Parse service account from secret
       let serviceAccount;
       try {
+        // Check if secret is defined
+        if (!gcpServiceAccountKey) {
+          return {
+            success: false,
+            error: 'GCP_SERVICE_ACCOUNT_KEY secret is not configured. Please set it using: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc'
+          };
+        }
+
         // Try to get the secret value (may not exist yet)
         let serviceAccountJson;
         try {
