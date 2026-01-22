@@ -2,6 +2,8 @@
  * RAG System - Main Integration
  * Combines retrieval and generation for RAG-powered responses
  * Uses Ollama (primary) or Groq (fallback) for AI generation
+ * 
+ * CRITICAL: Ensures RAG context from Pinecone is properly merged into the prompt
  */
 
 import { ragRetrieval } from './ragRetrieval';
@@ -38,7 +40,11 @@ export const initializeRAG = async () => {
 
 /**
  * Generate RAG-powered response
- * Updated for Vertex AI with increased topK (3 -> 10) for better context
+ * CRITICAL: This function ensures RAG context is properly merged into the prompt
+ * 
+ * Prompt Structure:
+ * System: You are a helpful senior student...
+ * User: Context: {PINECONE_DATA} ... Question: {USER_QUESTION}
  */
 export const generateRAGResponse = async (query, conversationHistory = [], modelName = null, userContext = '') => {
   // Check if RAG Engine is enabled (default: enabled)
@@ -54,17 +60,23 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
   const provider = getProviderName();
   const providerDisplay = provider === 'ollama' ? 'Ollama' : provider === 'groq' ? 'Groq' : provider === 'unknown' ? 'Offline Fallback' : provider;
   
-  console.log(`🔍 RAG: Using provider: ${providerDisplay} for query: "${query.substring(0, 50)}..."`);
-  console.log(`✅ RAG: Connected to ${providerDisplay === 'Ollama' ? 'Ollama (Self-hosted GPU)' : providerDisplay} - All AI features enabled`);
+  console.log(`🔍 [OLLAMA RAG] Using provider: ${providerDisplay} for query: "${query.substring(0, 50)}..."`);
 
   try {
-    // Retrieve relevant documents - INCREASED from 3 to 10 for better context density
+    // STEP 1: Retrieve relevant documents from Pinecone
+    // INCREASED from 3 to 10 for better context density
     const retrievedDocs = await ragRetrieval.retrieve(query, 10, 0.2);
+    console.log(`📚 [OLLAMA RAG] Retrieved ${retrievedDocs.length} documents from Pinecone`);
     
-    // Format context from retrieved documents - all 10 results joined cleanly
+    // STEP 2: Format context from retrieved documents - all 10 results joined cleanly
+    // CRITICAL: This is where Pinecone data is merged into the context string
     const context = ragRetrieval.formatContext(retrievedDocs, 3000); // Increased max length for more context
     
-    // Build conversation history
+    // DEBUG: Log context size to verify RAG data is present
+    console.log(`📏 [OLLAMA RAG] Sending context size: ${context.length} characters`);
+    console.log(`📦 [OLLAMA RAG] Context preview: ${context.substring(0, 200)}...`);
+    
+    // STEP 3: Build conversation history
     const historyContext = conversationHistory.length > 0
       ? `\n\n**Recent Conversation:**\n${conversationHistory.slice(-4).map(msg => 
           `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content.substring(0, 150)}`
@@ -73,9 +85,11 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
     
     const userContextSection = userContext ? `\n\n**User Context:**\n${userContext}\n` : '';
     
-    const prompt = `You are an intelligent AI assistant for Sydney International School of Technology and Commerce (SISTC).
-
-**Retrieved Knowledge Base Context:**
+    // STEP 4: Construct the user prompt with RAG context merged
+    // CRITICAL: This prompt structure ensures:
+    // - System role gets the Virtual Senior persona
+    // - User role gets the RAG context + question
+    const userPrompt = `**Retrieved Knowledge Base Context:**
 ${context || 'No specific context retrieved. Use your general knowledge about universities and student services.'}
 
 ${historyContext}${userContextSection}
@@ -92,17 +106,34 @@ ${query}
 - Be helpful, empathetic, and professional
 - If you don't know something, be honest and suggest where they might find more information`;
 
-    // Use the unified AI provider system (Ollama primary, Groq fallback)
-    const response = await callAI(prompt, {
-      systemPrompt: 'You are an intelligent AI assistant for SISTC. Provide accurate, helpful information based on the retrieved context.',
+    // STEP 5: System prompt (Virtual Senior persona)
+    const systemPrompt = 'You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC). You provide accurate, helpful information based on the retrieved knowledge base context. Be empathetic, professional, and guide students effectively.';
+
+    // STEP 6: Call AI with proper structure
+    // System role: Virtual Senior persona
+    // User role: RAG context + question
+    console.log(`🚀 [OLLAMA RAG] Calling AI provider with context (${context.length} chars) and question (${query.length} chars)`);
+    
+    const response = await callAI(userPrompt, {
+      systemPrompt: systemPrompt,
       maxTokens: 2048,
       temperature: 0.7
     });
 
-    console.log(`✅ RAG: Response generated successfully using ${providerDisplay}`);
+    if (!response || response.trim().length === 0) {
+      console.error('❌ [OLLAMA RAG] Empty response received from AI provider');
+      return null;
+    }
+
+    console.log(`✅ [OLLAMA RAG] Response generated successfully using ${providerDisplay} (${response.length} characters)`);
     return response;
   } catch (error) {
-    console.error(`❌ RAG: Error generating response with ${providerDisplay}:`, error);
+    console.error(`❌ [OLLAMA RAG] Error generating response with ${providerDisplay}:`, error);
+    console.error(`❌ [OLLAMA RAG] Error details:`, {
+      message: error.message,
+      stack: error.stack,
+      query: query.substring(0, 100)
+    });
     return null;
   }
 };
@@ -124,4 +155,3 @@ export const queryRAG = async (query, conversationHistory = [], useRAG = true) =
   
   return context || 'I apologize, but I could not retrieve relevant information for your query.';
 };
-
