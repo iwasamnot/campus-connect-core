@@ -176,14 +176,23 @@ exports.generateVertexAIEmbedding = onRequest(
   {
     secrets: ['GCP_SERVICE_ACCOUNT_KEY'],
     region: 'us-central1',
-    cors: true,
+    cors: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3000',
+      'https://sistc.app',
+      'https://campus-connect-sistc.web.app',
+      'https://campus-connect-sistc.firebaseapp.com',
+      '*'
+    ],
   },
   async (req, res) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       res.set('Access-Control-Allow-Origin', '*');
-      res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.set('Access-Control-Allow-Methods', 'POST, OPTIONS, GET');
+      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.set('Access-Control-Max-Age', '3600');
       res.status(204).send('');
       return;
     }
@@ -197,6 +206,8 @@ exports.generateVertexAIEmbedding = onRequest(
 
     // Set CORS headers for all responses
     res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS, GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     try {
       const { text, model = 'text-embedding-004', projectId, location } = req.body;
