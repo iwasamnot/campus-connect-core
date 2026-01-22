@@ -1,7 +1,7 @@
 /**
  * RAG System - Main Integration
  * Combines retrieval and generation for RAG-powered responses
- * Updated for Vertex AI enterprise tier with increased context density
+ * Uses Ollama (primary) or Groq (fallback) for AI generation
  */
 
 import { ragRetrieval } from './ragRetrieval';
@@ -40,7 +40,7 @@ export const initializeRAG = async () => {
  * Generate RAG-powered response
  * Updated for Vertex AI with increased topK (3 -> 10) for better context
  */
-export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-1.5-flash', userContext = '') => {
+export const generateRAGResponse = async (query, conversationHistory = [], modelName = null, userContext = '') => {
   // Check if RAG Engine is enabled (default: disabled)
   const ragEngineEnabled = typeof window !== 'undefined' 
     ? (localStorage.getItem('ragEngineEnabled') === 'true') // Disabled by default
@@ -52,7 +52,7 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
   }
   
   const provider = getProviderName();
-  const providerDisplay = provider === 'vertex-ai' ? 'Vertex AI' : provider === 'unknown' ? 'Offline Fallback' : 'Gemini API';
+  const providerDisplay = provider === 'ollama' ? 'Ollama' : provider === 'groq' ? 'Groq' : provider === 'unknown' ? 'Offline Fallback' : provider;
   
   console.log(`🔍 RAG: Using provider: ${providerDisplay} for query: "${query.substring(0, 50)}..."`);
 
@@ -91,7 +91,7 @@ ${query}
 - Be helpful, empathetic, and professional
 - If you don't know something, be honest and suggest where they might find more information`;
 
-    // Use the unified AI provider system (supports Vertex AI, Gemini, and fallbacks)
+    // Use the unified AI provider system (Ollama primary, Groq fallback)
     const response = await callAI(prompt, {
       systemPrompt: 'You are an intelligent AI assistant for SISTC. Provide accurate, helpful information based on the retrieved context.',
       maxTokens: 2048,

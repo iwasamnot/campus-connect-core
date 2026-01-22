@@ -1,7 +1,7 @@
 /**
  * RAG Embeddings Utility
- * Creates vector embeddings using Vertex AI text-embedding-004 model
- * Updated for Vertex AI enterprise tier
+ * Creates vector embeddings using hash-based fallback
+ * (Vertex AI embeddings removed - using hash-based semantic representation)
  */
 
 /**
@@ -13,46 +13,8 @@ export const generateEmbedding = async (text) => {
     throw new Error('Text is required for embedding generation');
   }
 
-  // Check for Vertex AI configuration
-  const projectId = import.meta.env.VITE_GCP_PROJECT_ID?.trim();
-  const location = import.meta.env.VITE_GCP_LOCATION?.trim() || 'us-central1';
-  const vertexFunctionUrl = import.meta.env.VITE_VERTEX_AI_FUNCTION_URL?.trim();
-
-  // Try Vertex AI text-embedding-004 model via Cloud Function
-  // Use the embedding endpoint (generateVertexAIEmbedding)
-  if (vertexFunctionUrl && projectId) {
-    try {
-      // Extract base URL and use the embedding function endpoint
-      const baseUrl = vertexFunctionUrl.replace('/generateVertexAIResponse', '');
-      const embedUrl = `${baseUrl}/generateVertexAIEmbedding`;
-      
-      const response = await fetch(embedUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text,
-          model: 'text-embedding-004',
-          projectId,
-          location,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.embedding && Array.isArray(data.embedding)) {
-          console.log('✅ Using Vertex AI text-embedding-004 for embeddings');
-          return data.embedding;
-        }
-      }
-    } catch (error) {
-      console.warn('Vertex AI embedding failed, using fallback:', error);
-    }
-  }
-
-  // Fallback: Use hash-based semantic representation
-  console.log('⚠️ Using hash-based embedding fallback (Vertex AI not configured)');
+  // Use hash-based semantic representation (Vertex AI embeddings removed)
+  // This provides good semantic similarity for RAG without external API dependencies
   return createHashBasedEmbedding(text);
 };
 
