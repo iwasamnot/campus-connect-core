@@ -97,7 +97,7 @@ export const getAIProvider = () => {
     return {
       provider: 'gemini',
       apiKey: geminiApiKey,
-      model: 'gemini-1.5-flash-latest', // Use latest version to avoid 404 errors
+      model: 'gemini-1.5-flash', // Standard model name
       maxTokens: 2048,
       temperature: 0.7
     };
@@ -217,14 +217,39 @@ export const callAI = async (prompt, options = {}) => {
 const callGemini = async (prompt, config, options) => {
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(config.apiKey);
-  const model = genAI.getGenerativeModel({ 
-    model: config.model || 'gemini-1.5-flash-latest',
-    systemInstruction: options.systemPrompt || 'You are a helpful assistant.'
-  });
   
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text();
+  // Try multiple model names with fallback
+  const modelsToTry = [
+    config.model || 'gemini-1.5-flash',
+    'gemini-1.5-pro',
+    'gemini-2.0-flash-exp'
+  ];
+  
+  let lastError = null;
+  for (const modelName of modelsToTry) {
+    try {
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        systemInstruction: options.systemPrompt || 'You are a helpful assistant.'
+      });
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      lastError = error;
+      // If it's a 404, try next model
+      if (error.message?.includes('404') || error.message?.includes('not found')) {
+        console.warn(`Model ${modelName} not available, trying next...`);
+        continue;
+      }
+      // For other errors, throw immediately
+      throw error;
+    }
+  }
+  
+  // If all models failed, throw the last error
+  throw lastError || new Error('All Gemini models failed');
 };
 
 /**
@@ -273,7 +298,7 @@ const callVertexAI = async (prompt, config, options) => {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(geminiApiKey);
     const geminiModel = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-1.5-flash',
       systemInstruction: options.systemPrompt || 'You are a helpful assistant.'
     });
     
@@ -456,7 +481,7 @@ const getProviderConfig = (providerName) => {
         return {
           provider: 'gemini',
           apiKey: geminiKey,
-          model: 'gemini-1.5-flash-latest',
+          model: 'gemini-1.5-flash',
           maxTokens: 2048,
           temperature: 0.7
         };
@@ -472,7 +497,7 @@ const getProviderConfig = (providerName) => {
           projectId,
           location,
           serviceAccount,
-          model: 'gemini-1.5-flash-latest',
+          model: 'gemini-1.5-flash',
           maxTokens: 2048,
           temperature: 0.7
         };
