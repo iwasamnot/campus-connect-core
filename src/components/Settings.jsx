@@ -496,6 +496,181 @@ const Settings = ({ setActiveView }) => {
                     />
                   </div>
                 </SettingSection>
+                
+                <SettingSection title="AI Features" icon={Zap}>
+                  <div className="space-y-4">
+                    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg mb-4">
+                      <p className="text-sm text-blue-200">
+                        💡 AI features are disabled by default to save API usage. Enable only the features you need.
+                      </p>
+                    </div>
+                    
+                    <SettingToggle
+                      label="AI Toxicity Detection"
+                      desc="Use AI to detect toxic content (enabled by default)"
+                      icon={Shield}
+                      value={localStorage.getItem('aiToxicityEnabled') !== 'false'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiToxicityEnabled', val.toString());
+                        success(val ? 'AI toxicity detection enabled' : 'AI toxicity detection disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="Virtual Senior (AI Help Mode)"
+                      desc="AI responds to messages in Campus Chat"
+                      icon={HelpCircle}
+                      value={localStorage.getItem('virtualSeniorEnabled') !== 'false'}
+                      onChange={(val) => {
+                        localStorage.setItem('virtualSeniorEnabled', val.toString());
+                        success(val ? 'Virtual Senior enabled' : 'Virtual Senior disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="RAG Engine"
+                      desc="Enhanced AI responses with knowledge base context"
+                      icon={Database}
+                      value={localStorage.getItem('ragEngineEnabled') !== 'false'}
+                      onChange={(val) => {
+                        localStorage.setItem('ragEngineEnabled', val.toString());
+                        success(val ? 'RAG Engine enabled' : 'RAG Engine disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Message Translation"
+                      desc="Translate messages using AI (disabled by default)"
+                      icon={Globe}
+                      value={localStorage.getItem('aiTranslationEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiTranslationEnabled', val.toString());
+                        success(val ? 'AI translation enabled' : 'AI translation disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Conversation Summarization"
+                      desc="Generate AI summaries of conversations (disabled by default)"
+                      icon={FileText}
+                      value={localStorage.getItem('aiSummarizationEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiSummarizationEnabled', val.toString());
+                        success(val ? 'AI summarization enabled' : 'AI summarization disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Conversation Insights"
+                      desc="AI-powered conversation analytics (disabled by default)"
+                      icon={BarChart}
+                      value={localStorage.getItem('aiInsightsEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiInsightsEnabled', val.toString());
+                        success(val ? 'AI insights enabled' : 'AI insights disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Predictive Typing"
+                      desc="AI autocomplete suggestions (disabled by default)"
+                      icon={Keyboard}
+                      value={localStorage.getItem('aiPredictiveTypingEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiPredictiveTypingEnabled', val.toString());
+                        success(val ? 'AI predictive typing enabled' : 'AI predictive typing disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Smart Replies"
+                      desc="AI-generated quick reply suggestions (disabled by default)"
+                      icon={MessageSquare}
+                      value={localStorage.getItem('aiSmartRepliesEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiSmartRepliesEnabled', val.toString());
+                        success(val ? 'AI smart replies enabled' : 'AI smart replies disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Smart Categorization"
+                      desc="Automatically categorize messages with AI (disabled by default)"
+                      icon={Target}
+                      value={localStorage.getItem('aiCategorizationEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiCategorizationEnabled', val.toString());
+                        success(val ? 'AI categorization enabled' : 'AI categorization disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Contextual Actions"
+                      desc="AI suggests actions based on message content (disabled by default)"
+                      icon={Zap}
+                      value={localStorage.getItem('aiContextualActionsEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiContextualActionsEnabled', val.toString());
+                        success(val ? 'AI contextual actions enabled' : 'AI contextual actions disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Study Groups"
+                      desc="AI-powered study group recommendations (disabled by default)"
+                      icon={Users}
+                      value={localStorage.getItem('aiStudyGroupsEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiStudyGroupsEnabled', val.toString());
+                        success(val ? 'AI study groups enabled' : 'AI study groups disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Emotion Prediction"
+                      desc="Predict message reception with AI (disabled by default)"
+                      icon={Activity}
+                      value={localStorage.getItem('aiEmotionPredictionEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiEmotionPredictionEnabled', val.toString());
+                        success(val ? 'AI emotion prediction enabled' : 'AI emotion prediction disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Smart Notifications"
+                      desc="AI-prioritized notifications (disabled by default)"
+                      icon={Bell}
+                      value={localStorage.getItem('aiSmartNotificationsEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiSmartNotificationsEnabled', val.toString());
+                        success(val ? 'AI smart notifications enabled' : 'AI smart notifications disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Task Extractor"
+                      desc="Automatically extract tasks from conversations (disabled by default)"
+                      icon={CheckCircle2}
+                      value={localStorage.getItem('aiTaskExtractorEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiTaskExtractorEnabled', val.toString());
+                        success(val ? 'AI task extractor enabled' : 'AI task extractor disabled');
+                      }}
+                    />
+                    
+                    <SettingToggle
+                      label="AI Predictive Scheduler"
+                      desc="AI-optimized message send times (disabled by default)"
+                      icon={Clock}
+                      value={localStorage.getItem('aiPredictiveSchedulerEnabled') === 'true'}
+                      onChange={(val) => {
+                        localStorage.setItem('aiPredictiveSchedulerEnabled', val.toString());
+                        success(val ? 'AI predictive scheduler enabled' : 'AI predictive scheduler disabled');
+                      }}
+                    />
+                  </div>
+                </SettingSection>
               </motion.div>
             )}
 

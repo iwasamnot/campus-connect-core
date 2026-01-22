@@ -41,6 +41,16 @@ export const initializeRAG = async () => {
  * Updated for Vertex AI with increased topK (3 -> 10) for better context
  */
 export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-1.5-flash', userContext = '') => {
+  // Check if RAG Engine is enabled (default: enabled)
+  const ragEngineEnabled = typeof window !== 'undefined' 
+    ? (localStorage.getItem('ragEngineEnabled') !== 'false') // Default to enabled
+    : true;
+  
+  if (!ragEngineEnabled) {
+    console.log('⚠️ RAG Engine is disabled');
+    return null;
+  }
+  
   const provider = getProviderName();
   const providerDisplay = provider === 'vertex-ai' ? 'Vertex AI' : provider === 'unknown' ? 'Offline Fallback' : 'Gemini API';
   

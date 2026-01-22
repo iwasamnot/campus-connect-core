@@ -64,8 +64,7 @@ import SmartCategorization from './SmartCategorization';
 import CollaborativeEditor from './CollaborativeEditor';
 import PredictiveScheduler from './PredictiveScheduler';
 import VoiceEmotionDetector from './VoiceEmotionDetector';
-// AI Features Disabled - Only Virtual Senior and RAG Engine are enabled
-// import AIConversationInsights from './AIConversationInsights';
+// AI Features - lazy loaded based on toggle (no top-level await)
 import SmartTaskExtractor from './SmartTaskExtractor';
 import RelationshipGraph from './RelationshipGraph';
 import FuturisticFeaturesMenu from './FuturisticFeaturesMenu';
@@ -152,6 +151,18 @@ const ChatArea = ({ setActiveView }) => {
   const [showPredictiveScheduler, setShowPredictiveScheduler] = useState(false); // Predictive Scheduler
   const [showVoiceEmotion, setShowVoiceEmotion] = useState(false); // Voice Emotion Detection
   const [showConversationInsights, setShowConversationInsights] = useState(false); // Conversation Insights
+  const [AIConversationInsightsComponent, setAIConversationInsightsComponent] = useState(null);
+  
+  // Lazy load AIConversationInsights component when needed
+  useEffect(() => {
+    if (showConversationInsights && localStorage.getItem('aiInsightsEnabled') === 'true' && !AIConversationInsightsComponent) {
+      import('./AIConversationInsights').then(module => {
+        setAIConversationInsightsComponent(() => module.default);
+      }).catch(error => {
+        console.error('Error loading AIConversationInsights:', error);
+      });
+    }
+  }, [showConversationInsights, AIConversationInsightsComponent]);
   const [showTaskExtractor, setShowTaskExtractor] = useState(false); // Task Extractor
   const [showRelationshipGraph, setShowRelationshipGraph] = useState(false); // Relationship Graph
   const [scheduledMessage, setScheduledMessage] = useState(null); // Scheduled message time
@@ -829,8 +840,9 @@ const ChatArea = ({ setActiveView }) => {
       setLastMessageTime(now);
       success('Message sent!');
 
-      // If message is NOT toxic AND AI Help mode is enabled, get Gemini response
-      if (!isToxic && aiHelpMode) {
+      // If message is NOT toxic AND AI Help mode is enabled AND Virtual Senior is enabled, get Gemini response
+      const virtualSeniorEnabled = localStorage.getItem('virtualSeniorEnabled') !== 'false'; // Default to enabled
+      if (!isToxic && aiHelpMode && virtualSeniorEnabled) {
         setWaitingForAI(true);
         try {
           const aiResponse = await callGemini(originalText);
@@ -1120,8 +1132,19 @@ const ChatArea = ({ setActiveView }) => {
     setTranslating(prev => new Set(prev).add(messageId));
     
     try {
-      // AI Translation disabled - only Virtual Senior and RAG Engine are enabled
-      const translatedText = messageText; // Return original text (translation disabled)
+      // Check if AI translation is enabled
+      const aiTranslationEnabled = localStorage.getItem('aiTranslationEnabled') === 'true';
+      let translatedText = messageText; // Default to original text
+      
+      if (aiTranslationEnabled) {
+        try {
+          const { translateText } = await import('../utils/aiTranslation');
+          translatedText = await translateText(messageText, targetLang);
+        } catch (error) {
+          console.error('Translation error:', error);
+          translatedText = messageText; // Fallback to original
+        }
+      }
       setTranslations(prev => ({
         ...prev,
         [messageId]: translatedText
@@ -1149,8 +1172,25 @@ const ChatArea = ({ setActiveView }) => {
     try {
       setShowSummarization(true);
       setConversationSummary(null); // Reset previous summary
-      // AI Summarization disabled - only Virtual Senior and RAG Engine are enabled
-      const summary = 'AI summarization is currently disabled. Only Virtual Senior and RAG Engine features are enabled.';
+      // Check if AI summarization is enabled
+      const aiSummarizationEnabled = localStorage.getItem('aiSummarizationEnabled') === 'true';
+      let summary = null;
+      
+      if (aiSummarizationEnabled) {
+        try {
+          const { summarizeConversation } = await import('../utils/aiSummarization');
+          summary = await summarizeConversation(messages, 150);
+        } catch (error) {
+          console.error('Summarization error:', error);
+          showError('Failed to summarize conversation. Please try again.');
+          setShowSummarization(false);
+          return;
+        }
+      } else {
+        showError('AI summarization is disabled. Enable it in Settings → Chat & Messaging → AI Features.');
+        setShowSummarization(false);
+        return;
+      }
       
       // If we get here, summary was successful
       if (summary && summary.trim() !== '') {
@@ -2991,8 +3031,12 @@ const ChatArea = ({ setActiveView }) => {
               setShowVoiceEmotion(!showVoiceEmotion);
               break;
             case 'insights':
-              // AI Features Disabled - Only Virtual Senior and RAG Engine are enabled
-              // setShowConversationInsights(!showConversationInsights);
+              const aiInsightsEnabled = localStorage.getItem('aiInsightsEnabled') === 'true';
+              if (aiInsightsEnabled) {
+                setShowConversationInsights(!showConversationInsights);
+              } else {
+                showError('AI Conversation Insights is disabled. Enable it in Settings → Chat & Messaging → AI Features.');
+              }
               break;
             case 'tasks':
               setShowTaskExtractor(!showTaskExtractor);
