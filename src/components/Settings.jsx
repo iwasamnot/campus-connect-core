@@ -143,7 +143,8 @@ const Settings = ({ setActiveView }) => {
           e.preventDefault();
           e.stopPropagation();
           if (!disabled && onChange) {
-            onChange(!value);
+            const newValue = !value;
+            onChange(newValue);
           }
         }}
         disabled={disabled}
@@ -153,13 +154,19 @@ const Settings = ({ setActiveView }) => {
           value ? 'bg-indigo-600' : 'bg-white/20'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
         type="button"
+        aria-checked={value}
+        role="switch"
       >
         <motion.span
-          layout
+          animate={{
+            x: value ? 22 : 4
+          }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 ${
-            value ? 'translate-x-6' : 'translate-x-1'
-          }`}
+          className="inline-block h-4 w-4 rounded-full bg-white shadow-lg absolute"
+          style={{
+            left: value ? 'auto' : '4px',
+            right: value ? '4px' : 'auto'
+          }}
         />
       </motion.button>
     </motion.div>

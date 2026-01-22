@@ -30,8 +30,25 @@ const getServiceAccountCredentials = () => {
   }
   
   if (serviceAccountJson && serviceAccountJson !== '') {
+    // Skip if it's just whitespace or empty string
+    if (serviceAccountJson.trim().length === 0) {
+      return null;
+    }
+    
+    // Check if it looks like JSON (starts with {)
+    if (!serviceAccountJson.trim().startsWith('{')) {
+      console.warn('Service account JSON does not appear to be valid JSON (should start with {). Skipping.');
+      return null;
+    }
+    
     try {
-      return JSON.parse(serviceAccountJson);
+      const parsed = JSON.parse(serviceAccountJson);
+      // Validate it has required fields
+      if (!parsed.project_id && !parsed.private_key) {
+        console.warn('Service account JSON missing required fields (project_id or private_key). Skipping.');
+        return null;
+      }
+      return parsed;
     } catch (error) {
       console.error('Error parsing service account JSON:', error);
       console.error('Make sure VITE_GCP_SERVICE_ACCOUNT_KEY (from GitHub Secret: GCP_SERVICE_ACCOUNT_KEY) or VITE_GCP_SERVICE_ACCOUNT_JSON contains valid JSON');
@@ -80,7 +97,7 @@ export const getAIProvider = () => {
     return {
       provider: 'gemini',
       apiKey: geminiApiKey,
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest', // Use latest version to avoid 404 errors
       maxTokens: 2048,
       temperature: 0.7
     };
@@ -201,7 +218,7 @@ const callGemini = async (prompt, config, options) => {
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(config.apiKey);
   const model = genAI.getGenerativeModel({ 
-    model: config.model || 'gemini-1.5-flash',
+    model: config.model || 'gemini-1.5-flash-latest',
     systemInstruction: options.systemPrompt || 'You are a helpful assistant.'
   });
   
@@ -233,7 +250,7 @@ const callVertexAI = async (prompt, config, options) => {
       body: JSON.stringify({
         prompt,
         systemPrompt: options.systemPrompt || 'You are a helpful assistant.',
-        model: model || 'gemini-1.5-flash',
+        model: model || 'gemini-1.5-flash-latest',
         maxTokens: options.maxTokens || config.maxTokens,
         temperature: options.temperature || config.temperature,
       }),
@@ -256,7 +273,7 @@ const callVertexAI = async (prompt, config, options) => {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(geminiApiKey);
     const geminiModel = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       systemInstruction: options.systemPrompt || 'You are a helpful assistant.'
     });
     
@@ -439,7 +456,7 @@ const getProviderConfig = (providerName) => {
         return {
           provider: 'gemini',
           apiKey: geminiKey,
-          model: 'gemini-1.5-flash',
+          model: 'gemini-1.5-flash-latest',
           maxTokens: 2048,
           temperature: 0.7
         };
@@ -455,7 +472,7 @@ const getProviderConfig = (providerName) => {
           projectId,
           location,
           serviceAccount,
-          model: 'gemini-1.5-flash',
+          model: 'gemini-1.5-flash-latest',
           maxTokens: 2048,
           temperature: 0.7
         };

@@ -121,9 +121,8 @@ const AdminDashboard = () => {
       setAiToxicityEnabled(newValue);
       success(`AI toxicity check ${newValue ? 'enabled' : 'disabled'} for all users.`);
     } catch (error) {
-      console.error('Error updating AI settings:', error);
       // If document doesn't exist, create it
-      if (error.code === 'not-found' || error.message?.includes('No document to update')) {
+      if (error.code === 'not-found' || error.code === 5 || error.message?.includes('No document to update')) {
         try {
           await setDoc(configRef, {
             toxicityCheckEnabled: newValue,
@@ -142,6 +141,7 @@ const AdminDashboard = () => {
           showError('Failed to update AI settings. Please try again.');
         }
       } else {
+        console.error('Error updating AI settings:', error);
         showError('Failed to update AI settings. Please try again.');
       }
     } finally {

@@ -40,7 +40,7 @@ export const initializeRAG = async () => {
  * Generate RAG-powered response
  * Updated for Vertex AI with increased topK (3 -> 10) for better context
  */
-export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-1.5-flash', userContext = '') => {
+export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-1.5-flash-latest', userContext = '') => {
   // Check if RAG Engine is enabled (default: disabled)
   const ragEngineEnabled = typeof window !== 'undefined' 
     ? (localStorage.getItem('ragEngineEnabled') === 'true') // Disabled by default
