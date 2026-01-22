@@ -63,25 +63,34 @@ const AdminDashboard = () => {
 
   // Load admin config for AI toxicity check
   useEffect(() => {
-    if (!db || !user) return;
+    if (!db || !user || !isAdminRole(userRole)) return;
     
     const configRef = doc(db, 'appConfig', 'aiSettings');
-    const unsubscribe = onSnapshot(configRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        setAiToxicityEnabled(data.toxicityCheckEnabled !== false); // Default to true if not set
-      } else {
-        // Default to enabled if config doesn't exist
+    const unsubscribe = onSnapshot(
+      configRef, 
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          setAiToxicityEnabled(data.toxicityCheckEnabled !== false); // Default to true if not set
+        } else {
+          // Default to enabled if config doesn't exist
+          setAiToxicityEnabled(true);
+        }
+      }, 
+      (error) => {
+        // Only log permission errors, not other errors (like network issues)
+        if (error.code === 'permission-denied') {
+          console.warn('Admin permissions required to load AI settings. Defaulting to enabled.');
+        } else {
+          console.error('Error loading AI settings:', error);
+        }
+        // Default to enabled on error
         setAiToxicityEnabled(true);
       }
-    }, (error) => {
-      console.error('Error loading AI settings:', error);
-      // Default to enabled on error
-      setAiToxicityEnabled(true);
-    });
+    );
 
     return () => unsubscribe();
-  }, [db, user]);
+  }, [db, user, userRole]);
 
   // Update AI toxicity check setting
   const handleToggleToxicityCheck = async () => {

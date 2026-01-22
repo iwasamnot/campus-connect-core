@@ -667,5 +667,17 @@ service cloud.firestore {
       // Users can only read/write their own profile
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
+    
+    // App configuration collection (admin-only settings)
+    match /appConfig/{configId} {
+      // Only admins can read app configuration
+      allow read: if isAdmin();
+      
+      // Only admins can create/update app configuration
+      allow create, update: if isAdmin();
+      
+      // Only admins can delete app configuration
+      allow delete: if isAdmin();
+    }
   }
 }
