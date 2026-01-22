@@ -190,51 +190,9 @@ jobs:
             echo "⚠️ Warning: VITE_GROQ_API_KEY not set in GitHub Secrets - Groq embeddings will be disabled on backend"
           fi
 
-      - name: Set GCP Service Account Secret in Firebase Secret Manager (Optional)
-        continue-on-error: true
-        run: |
-          echo "Attempting to set GCP_SERVICE_ACCOUNT_KEY from GitHub Secrets..."
-          # Check if secret exists in GitHub Secrets
-          if [ -z "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]; then
-            echo "ℹ️  INFO: GCP_SERVICE_ACCOUNT_KEY not set in GitHub Secrets (or empty)"
-            echo "The deployment will continue. To enable Vertex AI, set the secret manually:"
-            echo "  1. Get your service account JSON from Google Cloud Console"
-            echo "  2. Run: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc"
-            echo "  3. Or use Firebase Console → Functions → Secrets"
-            echo "See docs/MANUAL_SECRET_SETUP.md for detailed instructions"
-            exit 0  # Don't fail, just inform
-          fi
-          
-          echo "✅ GCP_SERVICE_ACCOUNT_KEY found in GitHub Secrets, attempting to set..."
-          
-          # Try to set/update the secret value using printf to safely handle JSON
-          # Use --data-file=- to read from stdin, which safely handles all JSON characters
-          printf '%s' "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" | firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY \
-            --project campus-connect-sistc --data-file=- --non-interactive 2>&1 && {
-            echo "✅ GCP_SERVICE_ACCOUNT_KEY secret set successfully in Firebase Secret Manager"
-          } || {
-            echo "⚠️  WARNING: Could not set GCP_SERVICE_ACCOUNT_KEY automatically"
-            echo "This might be due to insufficient permissions. The deployment will continue."
-            echo "To set it manually, see docs/MANUAL_SECRET_SETUP.md"
-            exit 0  # Don't fail the workflow, just warn
-          }
 
       - name: Deploy Cloud Functions
         run: firebase deploy --only functions --project campus-connect-sistc --non-interactive --force
-      
-      - name: Get Vertex AI Function URL and Update .env
-        run: |
-          echo "Getting Vertex AI Cloud Function URL..."
-          # Extract function URL from Firebase deployment output or construct it
-          # Format: https://{region}-{project-id}.cloudfunctions.net/generateVertexAIResponse
-          # For onCall functions, the URL format is different - we'll construct it
-          PROJECT_ID="campus-connect-sistc"
-          REGION="us-central1"  # Default region for Firebase Functions
-          FUNCTION_URL="https://${REGION}-${PROJECT_ID}.cloudfunctions.net/generateVertexAIResponse"
-          
-          echo "Vertex AI Function URL: ${FUNCTION_URL}"
-          echo "VITE_VERTEX_AI_FUNCTION_URL=${FUNCTION_URL}" >> .env
-          echo "✅ Added VITE_VERTEX_AI_FUNCTION_URL to .env"
       
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
