@@ -219,13 +219,16 @@ const callGemini = async (prompt, config, options) => {
   const genAI = new GoogleGenerativeAI(config.apiKey);
   
   // Try multiple model names with fallback
+  // Note: Some models may require API enablement in Google Cloud Console
   const modelsToTry = [
-    config.model || 'gemini-1.5-flash',
-    'gemini-1.5-pro',
-    'gemini-2.0-flash-exp'
+    'gemini-2.0-flash-exp',  // Try this first as it seems to work (when quota available)
+    'gemini-1.5-flash',
+    'gemini-1.5-pro'
   ];
   
   let lastError = null;
+  let quotaExceeded = false;
+  
   for (const modelName of modelsToTry) {
     try {
       const model = genAI.getGenerativeModel({ 
@@ -238,18 +241,42 @@ const callGemini = async (prompt, config, options) => {
       return response.text();
     } catch (error) {
       lastError = error;
+      const errorMsg = error.message || '';
+      
+      // Check for quota exceeded (429) - don't try other models, use offline fallback
+      if (errorMsg.includes('429') || errorMsg.includes('quota') || errorMsg.includes('Quota exceeded')) {
+        console.warn(`Gemini API quota exceeded for ${modelName}. Using offline fallback.`);
+        quotaExceeded = true;
+        break; // Don't try other models if quota is exceeded
+      }
+      
       // If it's a 404, try next model
-      if (error.message?.includes('404') || error.message?.includes('not found')) {
-        console.warn(`Model ${modelName} not available, trying next...`);
+      if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+        console.warn(`Model ${modelName} not available (404), trying next...`);
         continue;
       }
-      // For other errors, throw immediately
-      throw error;
+      
+      // For other errors (like 403 permission denied), try next model
+      if (errorMsg.includes('403') || errorMsg.includes('permission')) {
+        console.warn(`Model ${modelName} permission denied, trying next...`);
+        continue;
+      }
+      
+      // For unknown errors, try next model
+      console.warn(`Error with ${modelName}: ${errorMsg}, trying next...`);
+      continue;
     }
   }
   
-  // If all models failed, throw the last error
-  throw lastError || new Error('All Gemini models failed');
+  // If quota exceeded or all models failed, return a helpful message
+  if (quotaExceeded) {
+    console.warn('Gemini API quota exceeded. Please check your API quota or upgrade your plan.');
+    return 'I apologize, but the AI service quota has been exceeded. Please try again later or contact support.';
+  }
+  
+  // If all models failed, return a helpful message
+  console.warn('All Gemini models failed. The models may not be enabled in your Google Cloud Console.');
+  return 'I apologize, but the AI service is currently unavailable. Please ensure the Gemini API is enabled in your Google Cloud Console and that your API key has the necessary permissions.';
 };
 
 /**
