@@ -9,8 +9,8 @@ const { onCall } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 
 // Define secrets - use the same secret name as GitHub Secret
-// Note: The secret must be created in Firebase Secret Manager before deployment
-// Run: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY
+// Note: The secret can be set later via: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY
+// Or via GitHub Actions workflow
 const gcpServiceAccountKey = defineSecret('GCP_SERVICE_ACCOUNT_KEY', {
   description: 'GCP Service Account JSON key for Vertex AI authentication'
 });
@@ -21,6 +21,7 @@ const gcpServiceAccountKey = defineSecret('GCP_SERVICE_ACCOUNT_KEY', {
 exports.generateVertexAIResponse = onCall(
   {
     secrets: [gcpServiceAccountKey],
+    region: 'us-central1',
     cors: true,
   },
   async (request) => {
@@ -28,13 +29,35 @@ exports.generateVertexAIResponse = onCall(
       const { prompt, systemPrompt, model, modelPath, projectId, location, maxTokens, temperature } = request.data;
 
       if (!prompt) {
-        throw new Error('Prompt is required');
+        return {
+          success: false,
+          error: 'Prompt is required'
+        };
       }
 
       // Parse service account from secret
       let serviceAccount;
       try {
-        const serviceAccountJson = gcpServiceAccountKey.value();
+        // Try to get the secret value (may not exist yet)
+        let serviceAccountJson;
+        try {
+          serviceAccountJson = gcpServiceAccountKey.value();
+        } catch (secretError) {
+          // Secret doesn't exist or can't be accessed
+          console.error('GCP_SERVICE_ACCOUNT_KEY secret not set:', secretError.message);
+          return {
+            success: false,
+            error: 'GCP_SERVICE_ACCOUNT_KEY secret is not configured. Please set it using: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc'
+          };
+        }
+
+        if (!serviceAccountJson || serviceAccountJson.trim() === '') {
+          return {
+            success: false,
+            error: 'GCP_SERVICE_ACCOUNT_KEY secret is empty. Please set it using: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc'
+          };
+        }
+
         // Sanitize: trim and remove wrapping quotes
         let sanitized = serviceAccountJson.trim();
         if ((sanitized.startsWith('"') && sanitized.endsWith('"')) || 
@@ -45,14 +68,34 @@ exports.generateVertexAIResponse = onCall(
         console.log('Successfully authenticated with Vertex AI Service Account');
       } catch (error) {
         console.error('Error parsing service account JSON:', error);
-        throw new Error('Invalid service account JSON in GCP_SERVICE_ACCOUNT_KEY secret');
+        return {
+          success: false,
+          error: `Invalid service account JSON in GCP_SERVICE_ACCOUNT_KEY secret: ${error.message}`
+        };
       }
 
-      // Initialize Vertex AI
-      const vertexAI = new VertexAI({
-        project: projectId || serviceAccount.project_id,
-        location: location || 'us-central1',
-      });
+      // Validate service account has required fields
+      if (!serviceAccount.project_id && !serviceAccount.private_key) {
+        return {
+          success: false,
+          error: 'Service account JSON missing required fields (project_id or private_key). Please update GCP_SERVICE_ACCOUNT_KEY secret with valid credentials.'
+        };
+      }
+
+      // Initialize Vertex AI (with error handling)
+      let vertexAI;
+      try {
+        vertexAI = new VertexAI({
+          project: projectId || serviceAccount.project_id,
+          location: location || 'us-central1',
+        });
+      } catch (initError) {
+        console.error('Error initializing Vertex AI:', initError);
+        return {
+          success: false,
+          error: `Failed to initialize Vertex AI: ${initError.message}. Please check your service account credentials.`
+        };
+      }
 
       // Use the proper Vertex AI model format
       // Format: projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL}
