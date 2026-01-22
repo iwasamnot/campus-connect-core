@@ -430,6 +430,19 @@ export const checkToxicityWithGemini = async (text) => {
     return toxicityCache.get(cacheKey);
   }
 
+  // AI-powered toxicity checking disabled - only Virtual Senior and RAG Engine are enabled
+  // Use fallback word filter only
+  console.log('AI toxicity checking disabled - using fallback word filter only');
+  const result = { 
+    isToxic: checkToxicityFallback(text), 
+    confidence: 0.5, 
+    reason: 'Fallback word filter (AI toxicity disabled)',
+    method: 'fallback'
+  };
+  toxicityCache.set(cacheKey, result);
+  return result;
+  
+  /* DISABLED: AI-powered toxicity checking
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
   if (!apiKey || apiKey === '') {
     console.warn('Gemini API key not configured, using fallback toxicity check');
@@ -476,6 +489,7 @@ export const checkToxicityWithGemini = async (text) => {
     lastGeminiCall.count = 0;
   }
 
+  /* DISABLED: AI-powered toxicity checking - code below is disabled
   try {
     lastGeminiCall.count++;
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -611,8 +625,9 @@ export const checkToxicity = async (text, useGemini = true) => {
     return toxicityCache.get(cacheKey);
   }
 
-  // If Gemini is enabled and quota hasn't been exceeded, try it
-  if (useGemini && !geminiQuotaExceeded) {
+  // AI-powered toxicity checking disabled - only Virtual Senior and RAG Engine are enabled
+  // Always use fallback word filter
+  if (false && useGemini && !geminiQuotaExceeded) { // Disabled: AI toxicity checking
     try {
       const result = await checkToxicityWithGemini(text);
       // Cache the result (already cached in checkToxicityWithGemini, but ensure it's here too)

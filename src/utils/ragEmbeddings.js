@@ -1,35 +1,54 @@
 /**
  * RAG Embeddings Utility
- * Creates vector embeddings using Gemini API for RAG (Retrieval-Augmented Generation)
+ * Creates vector embeddings using Vertex AI text-embedding-004 model
+ * Updated for Vertex AI enterprise tier
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim() || '';
-
 /**
- * Generate embedding for text using Gemini
- * Note: Gemini models can be used for embeddings by leveraging their representation capabilities
+ * Generate embedding for text using Vertex AI text-embedding-004 model
+ * Falls back to hash-based embedding if Vertex AI is not available
  */
 export const generateEmbedding = async (text) => {
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     throw new Error('Text is required for embedding generation');
   }
 
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
-    console.warn('Gemini API key not available for embeddings');
-    return null;
+  // Check for Vertex AI configuration
+  const projectId = import.meta.env.VITE_GCP_PROJECT_ID?.trim();
+  const location = import.meta.env.VITE_GCP_LOCATION?.trim() || 'us-central1';
+  const vertexFunctionUrl = import.meta.env.VITE_VERTEX_AI_FUNCTION_URL?.trim();
+
+  // Try Vertex AI text-embedding-004 model via Cloud Function
+  if (vertexFunctionUrl && projectId) {
+    try {
+      const response = await fetch(`${vertexFunctionUrl}/embed`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          model: 'text-embedding-004',
+          projectId,
+          location,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.embedding && Array.isArray(data.embedding)) {
+          console.log('✅ Using Vertex AI text-embedding-004 for embeddings');
+          return data.embedding;
+        }
+      }
+    } catch (error) {
+      console.warn('Vertex AI embedding failed, using fallback:', error);
+    }
   }
 
-  try {
-    // Note: Gemini API doesn't have a direct embeddings endpoint
-    // For production, use Vertex AI's text-embedding-004 model
-    // For now, we use a hash-based semantic representation that works well for similarity
-    return createHashBasedEmbedding(text);
-  } catch (error) {
-    console.error('Error generating embedding:', error);
-    return createHashBasedEmbedding(text);
-  }
+  // Fallback: Use hash-based semantic representation
+  console.log('⚠️ Using hash-based embedding fallback (Vertex AI not configured)');
+  return createHashBasedEmbedding(text);
 };
 
 /**

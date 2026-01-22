@@ -110,6 +110,10 @@ jobs:
           VITE_GROQ_API_KEY=${{ secrets.VITE_GROQ_API_KEY }}
           VITE_HUGGINGFACE_API_KEY=${{ secrets.VITE_HUGGINGFACE_API_KEY }}
           VITE_ANTHROPIC_API_KEY=${{ secrets.VITE_ANTHROPIC_API_KEY }}
+          VITE_GCP_PROJECT_ID=campus-connect-sistc
+          VITE_GCP_LOCATION=us-central1
+          VITE_GCP_SERVICE_ACCOUNT_KEY=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          VITE_GCP_SERVICE_ACCOUNT_JSON=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           EOF
           echo "✅ .env file created (values hidden for security)"
           # Verify .env file was created (without exposing values)

@@ -71,8 +71,9 @@ export class RAGRetrieval {
 
   /**
    * Retrieve relevant documents for a query
+   * Updated for Vertex AI enterprise tier - increased default topK to 10
    */
-  async retrieve(queryText, topK = 5, minSimilarity = 0.3) {
+  async retrieve(queryText, topK = 10, minSimilarity = 0.3) {
     if (!queryText || queryText.trim().length === 0) {
       return [];
     }
@@ -168,26 +169,30 @@ export class RAGRetrieval {
 
   /**
    * Format retrieved documents into context string
+   * Updated to format all 10 results as a clean, numbered string for better AI processing
    */
-  formatContext(documents, maxLength = 2000) {
+  formatContext(documents, maxLength = 3000) {
     if (!documents || documents.length === 0) {
       return '';
     }
 
     let context = '';
-    for (const doc of documents) {
+    documents.forEach((doc, index) => {
       const docText = doc.metadata?.title 
         ? `[${doc.metadata.title}]\n${doc.text}`
         : doc.text;
       
-      if (context.length + docText.length > maxLength) {
+      // Number each result for better AI processing
+      const numberedDoc = `${index + 1}. ${docText}`;
+      
+      if (context.length + numberedDoc.length > maxLength) {
         const remaining = maxLength - context.length - 100;
-        context += docText.substring(0, remaining) + '...\n\n';
-        break;
+        context += numberedDoc.substring(0, remaining) + '...\n\n';
+        return; // Break out of forEach
       }
       
-      context += docText + '\n\n';
-    }
+      context += numberedDoc + '\n\n';
+    });
 
     return context.trim();
   }

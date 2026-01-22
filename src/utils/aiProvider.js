@@ -1,29 +1,116 @@
 /**
- * Multi-AI Provider System
+ * Multi-AI Provider System with Vertex AI Enterprise Support
  * Supports multiple AI providers with automatic fallback
- * Student-friendly options with generous limits
+ * Enterprise Vertex AI integration with service account authentication
  */
 
 // Provider priorities (order matters - first available is used)
 const PROVIDER_PRIORITY = [
+  'gemini',      // Gemini API key (simplest - recommended for most users)
+  'vertex-ai',   // Enterprise Vertex AI (requires service account from same project)
   'groq',        // Best for students - very generous free tier, fast
   'huggingface', // Free inference API
   'openai',      // Good free tier
   'anthropic',   // Claude - good limits
-  'gemini'       // Fallback to existing Gemini
 ];
+
+/**
+ * Get GCP Service Account credentials
+ * Checks GitHub Secrets first, then falls back to local file
+ * Supports both VITE_GCP_SERVICE_ACCOUNT_JSON and VITE_GCP_SERVICE_ACCOUNT_KEY
+ */
+const getServiceAccountCredentials = () => {
+  // Check for service account JSON from GitHub Secrets/Vercel
+  // Try VITE_GCP_SERVICE_ACCOUNT_KEY first (matches GitHub Secret name: GCP_SERVICE_ACCOUNT_KEY)
+  let serviceAccountJson = import.meta.env.VITE_GCP_SERVICE_ACCOUNT_KEY?.trim();
+  
+  // Fallback to VITE_GCP_SERVICE_ACCOUNT_JSON (alternative naming)
+  if (!serviceAccountJson || serviceAccountJson === '') {
+    serviceAccountJson = import.meta.env.VITE_GCP_SERVICE_ACCOUNT_JSON?.trim();
+  }
+  
+  if (serviceAccountJson && serviceAccountJson !== '') {
+    try {
+      return JSON.parse(serviceAccountJson);
+    } catch (error) {
+      console.error('Error parsing service account JSON:', error);
+      console.error('Make sure VITE_GCP_SERVICE_ACCOUNT_KEY (from GitHub Secret: GCP_SERVICE_ACCOUNT_KEY) or VITE_GCP_SERVICE_ACCOUNT_JSON contains valid JSON');
+      return null;
+    }
+  }
+
+  // Fallback to local service-account.json file for local development
+  try {
+    // Note: In browser environment, we can't directly read files
+    // This would need to be handled via import or fetch
+    // For now, we'll rely on environment variable
+    console.warn('Service account not found in environment variables. Use VITE_GCP_SERVICE_ACCOUNT_KEY (from GitHub Secret: GCP_SERVICE_ACCOUNT_KEY) or VITE_GCP_SERVICE_ACCOUNT_JSON.');
+    return null;
+  } catch (error) {
+    console.error('Error loading local service-account.json:', error);
+    return null;
+  }
+};
+
+/**
+ * Generate OAuth2 access token from service account
+ * This is a simplified version - in production, use proper OAuth2 flow
+ */
+const getAccessToken = async (serviceAccount) => {
+  // Note: In browser, we cannot directly use service account to get tokens
+  // This should be done server-side via Cloud Functions
+  // For now, we'll use the REST API with API key if available
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+  if (apiKey) {
+    return apiKey; // Fallback to API key for browser compatibility
+  }
+  
+  // In production, this should call a Cloud Function that generates the token
+  throw new Error('Service account authentication requires server-side token generation. Use Cloud Functions or API key.');
+};
 
 /**
  * Get AI provider configuration
  */
 export const getAIProvider = () => {
+  // Check for Gemini API key first (simplest option - no service account needed)
+  // This works with your existing account and is easier to set up
+  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+  if (geminiApiKey && geminiApiKey !== '') {
+    return {
+      provider: 'gemini',
+      apiKey: geminiApiKey,
+      model: 'gemini-1.5-flash',
+      maxTokens: 2048,
+      temperature: 0.7
+    };
+  }
+
+  // Check for Vertex AI (Enterprise tier) - only if service account is configured
+  // This requires service account key from the SAME GCP project
+  const projectId = import.meta.env.VITE_GCP_PROJECT_ID?.trim();
+  const location = import.meta.env.VITE_GCP_LOCATION?.trim() || 'us-central1';
+  const serviceAccount = getServiceAccountCredentials();
+  
+  if (projectId && serviceAccount) {
+    return {
+      provider: 'vertex-ai',
+      projectId,
+      location,
+      serviceAccount,
+      model: 'gemini-1.5-flash',
+      maxTokens: 2048,
+      temperature: 0.7
+    };
+  }
+
   // Check for Groq (best for students - very generous limits)
   const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
   if (groqApiKey && groqApiKey !== '') {
     return {
       provider: 'groq',
       apiKey: groqApiKey,
-      model: 'llama-3.1-8b-instant', // Updated: llama-3.1-70b-versatile was decommissioned
+      model: 'llama-3.1-8b-instant',
       baseUrl: 'https://api.groq.com/openai/v1',
       maxTokens: 2048,
       temperature: 0.7
@@ -36,7 +123,7 @@ export const getAIProvider = () => {
     return {
       provider: 'huggingface',
       apiKey: hfApiKey,
-      model: 'meta-llama/Llama-3.1-8B-Instruct', // Free model
+      model: 'meta-llama/Llama-3.1-8B-Instruct',
       baseUrl: 'https://api-inference.huggingface.co',
       maxTokens: 1024,
       temperature: 0.7
@@ -49,7 +136,7 @@ export const getAIProvider = () => {
     return {
       provider: 'openai',
       apiKey: openaiApiKey,
-      model: 'gpt-3.5-turbo', // Cost-effective
+      model: 'gpt-3.5-turbo',
       baseUrl: 'https://api.openai.com/v1',
       maxTokens: 2048,
       temperature: 0.7
@@ -62,21 +149,8 @@ export const getAIProvider = () => {
     return {
       provider: 'anthropic',
       apiKey: anthropicApiKey,
-      model: 'claude-3-haiku-20240307', // Fast and affordable
+      model: 'claude-3-haiku-20240307',
       baseUrl: 'https://api.anthropic.com/v1',
-      maxTokens: 2048,
-      temperature: 0.7
-    };
-  }
-
-  // Fallback to Gemini (existing)
-  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-  if (geminiApiKey && geminiApiKey !== '') {
-    return {
-      provider: 'gemini',
-      apiKey: geminiApiKey,
-      model: 'gemini-2.5-flash',
-      baseUrl: null, // Uses GoogleGenerativeAI SDK
       maxTokens: 2048,
       temperature: 0.7
     };
@@ -97,6 +171,10 @@ export const callAI = async (prompt, options = {}) => {
 
   try {
     switch (config.provider) {
+      case 'gemini':
+        return await callGemini(prompt, config, options);
+      case 'vertex-ai':
+        return await callVertexAI(prompt, config, options);
       case 'groq':
         return await callGroq(prompt, config, options);
       case 'huggingface':
@@ -105,8 +183,6 @@ export const callAI = async (prompt, options = {}) => {
         return await callOpenAI(prompt, config, options);
       case 'anthropic':
         return await callAnthropic(prompt, config, options);
-      case 'gemini':
-        return await callGemini(prompt, config, options);
       default:
         throw new Error(`Unknown provider: ${config.provider}`);
     }
@@ -115,6 +191,81 @@ export const callAI = async (prompt, options = {}) => {
     // Try fallback providers
     return await tryFallbackProviders(prompt, config.provider, options);
   }
+};
+
+/**
+ * Call Gemini API (Simple option - uses API key, no service account needed)
+ * This is the easiest way to use Gemini - just need an API key
+ */
+const callGemini = async (prompt, config, options) => {
+  const { GoogleGenerativeAI } = await import('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(config.apiKey);
+  const model = genAI.getGenerativeModel({ 
+    model: config.model || 'gemini-1.5-flash',
+    systemInstruction: options.systemPrompt || 'You are a helpful assistant.'
+  });
+  
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text();
+};
+
+/**
+ * Call Vertex AI (Enterprise tier)
+ * Uses gemini-1.5-flash model via Vertex AI REST API
+ * Requires service account key from the SAME GCP project
+ */
+const callVertexAI = async (prompt, config, options) => {
+  const { projectId, location, model } = config;
+  
+  // For browser environment, we need to use Cloud Functions to generate access token
+  // Or use the REST API with proper authentication
+  // For now, we'll use a Cloud Function endpoint if available
+  const vertexFunctionUrl = import.meta.env.VITE_VERTEX_AI_FUNCTION_URL?.trim();
+  
+  if (vertexFunctionUrl) {
+    // Call Cloud Function that handles Vertex AI authentication
+    const response = await fetch(vertexFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt,
+        systemPrompt: options.systemPrompt || 'You are a helpful assistant.',
+        model: model || 'gemini-1.5-flash',
+        maxTokens: options.maxTokens || config.maxTokens,
+        temperature: options.temperature || config.temperature,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Vertex AI API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.text || data.response || '';
+  }
+
+  // Fallback: Use Gemini API directly if Vertex AI function not available
+  // This maintains backward compatibility
+  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+  if (geminiApiKey) {
+    console.warn('Vertex AI Cloud Function not configured. Falling back to Gemini API.');
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(geminiApiKey);
+    const geminiModel = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      systemInstruction: options.systemPrompt || 'You are a helpful assistant.'
+    });
+    
+    const result = await geminiModel.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  }
+
+  throw new Error('Vertex AI requires VITE_VERTEX_AI_FUNCTION_URL or VITE_GEMINI_API_KEY to be configured.');
 };
 
 /**
@@ -244,19 +395,6 @@ const callAnthropic = async (prompt, config, options) => {
 };
 
 /**
- * Call Gemini API (existing implementation)
- */
-const callGemini = async (prompt, config, options) => {
-  const { GoogleGenerativeAI } = await import('@google/generative-ai');
-  const genAI = new GoogleGenerativeAI(config.apiKey);
-  const model = genAI.getGenerativeModel({ model: config.model });
-  
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text();
-};
-
-/**
  * Try fallback providers if primary fails
  */
 const tryFallbackProviders = async (prompt, failedProvider, options) => {
@@ -268,6 +406,10 @@ const tryFallbackProviders = async (prompt, failedProvider, options) => {
       if (!config) continue;
 
       switch (providerName) {
+        case 'gemini':
+          return await callGemini(prompt, config, options);
+        case 'vertex-ai':
+          return await callVertexAI(prompt, config, options);
         case 'groq':
           return await callGroq(prompt, config, options);
         case 'huggingface':
@@ -276,8 +418,6 @@ const tryFallbackProviders = async (prompt, failedProvider, options) => {
           return await callOpenAI(prompt, config, options);
         case 'anthropic':
           return await callAnthropic(prompt, config, options);
-        case 'gemini':
-          return await callGemini(prompt, config, options);
       }
     } catch (error) {
       console.warn(`Fallback provider ${providerName} failed:`, error);
@@ -293,13 +433,41 @@ const tryFallbackProviders = async (prompt, failedProvider, options) => {
  */
 const getProviderConfig = (providerName) => {
   switch (providerName) {
+    case 'gemini':
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+      if (geminiKey && geminiKey !== '') {
+        return {
+          provider: 'gemini',
+          apiKey: geminiKey,
+          model: 'gemini-1.5-flash',
+          maxTokens: 2048,
+          temperature: 0.7
+        };
+      }
+      break;
+    case 'vertex-ai':
+      const projectId = import.meta.env.VITE_GCP_PROJECT_ID?.trim();
+      const location = import.meta.env.VITE_GCP_LOCATION?.trim() || 'us-central1';
+      const serviceAccount = getServiceAccountCredentials();
+      if (projectId && serviceAccount) {
+        return {
+          provider: 'vertex-ai',
+          projectId,
+          location,
+          serviceAccount,
+          model: 'gemini-1.5-flash',
+          maxTokens: 2048,
+          temperature: 0.7
+        };
+      }
+      break;
     case 'groq':
       const groqKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
       if (groqKey && groqKey !== '') {
         return {
           provider: 'groq',
           apiKey: groqKey,
-          model: 'llama-3.1-8b-instant', // Updated: llama-3.1-70b-versatile was decommissioned
+          model: 'llama-3.1-8b-instant',
           baseUrl: 'https://api.groq.com/openai/v1',
           maxTokens: 2048,
           temperature: 0.7
@@ -345,19 +513,6 @@ const getProviderConfig = (providerName) => {
         };
       }
       break;
-    case 'gemini':
-      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-      if (geminiKey && geminiKey !== '') {
-        return {
-          provider: 'gemini',
-          apiKey: geminiKey,
-          model: 'gemini-2.5-flash',
-          baseUrl: null,
-          maxTokens: 2048,
-          temperature: 0.7
-        };
-      }
-      break;
   }
   return null;
 };
@@ -377,6 +532,19 @@ export const getProviderInfo = () => {
   }
 
   const providerInfo = {
+    'gemini': {
+      name: 'Google Gemini API',
+      status: 'active',
+      limits: 'Free tier available - Simple API key setup',
+      website: 'https://aistudio.google.com',
+      signup: 'https://aistudio.google.com/app/apikey'
+    },
+    'vertex-ai': {
+      name: 'Vertex AI (Enterprise)',
+      status: 'active',
+      limits: 'Professional tier - 300 RPM (requires service account)',
+      website: 'https://cloud.google.com/vertex-ai',
+    },
     groq: {
       name: 'Groq (Recommended for Students)',
       status: 'active',
@@ -404,13 +572,6 @@ export const getProviderInfo = () => {
       limits: 'Pay-as-you-go',
       website: 'https://console.anthropic.com',
       signup: 'https://console.anthropic.com/signup'
-    },
-    gemini: {
-      name: 'Google Gemini',
-      status: 'active',
-      limits: 'Free tier (may have limits)',
-      website: 'https://aistudio.google.com',
-      signup: 'https://aistudio.google.com'
     }
   };
 

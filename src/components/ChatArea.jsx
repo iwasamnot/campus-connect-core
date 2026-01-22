@@ -64,12 +64,14 @@ import SmartCategorization from './SmartCategorization';
 import CollaborativeEditor from './CollaborativeEditor';
 import PredictiveScheduler from './PredictiveScheduler';
 import VoiceEmotionDetector from './VoiceEmotionDetector';
-import AIConversationInsights from './AIConversationInsights';
+// AI Features Disabled - Only Virtual Senior and RAG Engine are enabled
+// import AIConversationInsights from './AIConversationInsights';
 import SmartTaskExtractor from './SmartTaskExtractor';
 import RelationshipGraph from './RelationshipGraph';
 import FuturisticFeaturesMenu from './FuturisticFeaturesMenu';
-import { translateText } from '../utils/aiTranslation';
-import { summarizeConversation } from '../utils/aiSummarization';
+// AI Features Disabled - Only Virtual Senior and RAG Engine are enabled
+// import { translateText } from '../utils/aiTranslation';
+// import { summarizeConversation } from '../utils/aiSummarization';
 import { checkReminders, formatReminderTime } from '../utils/messageReminders';
 import { transcribeAudio, isSpeechRecognitionAvailable } from '../utils/voiceTranscription';
 // Use window globals to avoid import/export issues
@@ -634,15 +636,13 @@ const ChatArea = ({ setActiveView }) => {
   // Toxicity checking is now handled by the toxicityChecker utility
 
   // Call Gemini AI with RAG enhancement
+  // PRESERVED: Virtual Senior system prompt - "You are an empathetic, knowledgeable Senior Student at the university. Keep answers under 3 sentences."
   const callGemini = async (userMessage) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-    if (!apiKey || apiKey === '') {
-      console.warn('Gemini API key not configured');
-      return null;
-    }
+    // Virtual Senior system prompt - PRESERVED as per requirements
+    const virtualSeniorSystemPrompt = 'You are an empathetic, knowledgeable Senior Student at the university. Keep answers under 3 sentences.';
 
     try {
-      // Try RAG-enhanced response first
+      // Try RAG-enhanced response first (now uses Vertex AI if configured)
       try {
         const { generateRAGResponse } = await import('../utils/ragSystem');
         const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel);
@@ -650,21 +650,34 @@ const ChatArea = ({ setActiveView }) => {
           return ragResponse.trim();
         }
       } catch (ragError) {
-        console.warn('RAG system error, falling back to standard Gemini:', ragError);
+        console.warn('RAG system error, falling back to standard AI provider:', ragError);
       }
 
-      // Fallback to standard Gemini
-      const model = getGeminiModel(selectedGeminiModel);
-      if (!model) {
-        return null;
-      }
+      // Fallback to unified AI provider system (supports Vertex AI, Gemini, and other providers)
+      try {
+        const { callAI } = await import('../utils/aiProvider');
+        const response = await callAI(userMessage, {
+          systemPrompt: virtualSeniorSystemPrompt, // PRESERVED Virtual Senior prompt
+          maxTokens: 2048,
+          temperature: 0.7
+        });
+        return response ? response.trim() : null;
+      } catch (aiError) {
+        console.warn('AI provider error, trying legacy Gemini:', aiError);
+        
+        // Final fallback to legacy Gemini (if still using @google/generative-ai)
+        const model = getGeminiModel(selectedGeminiModel);
+        if (!model) {
+          return null;
+        }
 
-      const result = await model.generateContent(userMessage);
-      const response = await result.response;
-      const text = response.text();
-      return text.trim();
+        const result = await model.generateContent(userMessage);
+        const response = await result.response;
+        const text = response.text();
+        return text.trim();
+      }
     } catch (error) {
-      console.error('Error calling Gemini:', error);
+      console.error('Error calling AI:', error);
       
       // Check if it's an API blocked error (403 with API_KEY_SERVICE_BLOCKED)
       if (error.message && (
@@ -673,7 +686,7 @@ const ChatArea = ({ setActiveView }) => {
         error.message.includes('SERVICE_DISABLED') ||
         error.message.includes('blocked')
       )) {
-        console.warn('⚠️ Gemini API is blocked or disabled. AI Help feature will be unavailable.');
+        console.warn('⚠️ AI API is blocked or disabled. AI Help feature will be unavailable.');
         console.warn('💡 To fix: Check API key restrictions in Google Cloud Console');
       }
       
@@ -1107,7 +1120,8 @@ const ChatArea = ({ setActiveView }) => {
     setTranslating(prev => new Set(prev).add(messageId));
     
     try {
-      const translatedText = await translateText(messageText, targetLang);
+      // AI Translation disabled - only Virtual Senior and RAG Engine are enabled
+      const translatedText = messageText; // Return original text (translation disabled)
       setTranslations(prev => ({
         ...prev,
         [messageId]: translatedText
@@ -1135,7 +1149,8 @@ const ChatArea = ({ setActiveView }) => {
     try {
       setShowSummarization(true);
       setConversationSummary(null); // Reset previous summary
-      const summary = await summarizeConversation(messages, 150);
+      // AI Summarization disabled - only Virtual Senior and RAG Engine are enabled
+      const summary = 'AI summarization is currently disabled. Only Virtual Senior and RAG Engine features are enabled.';
       
       // If we get here, summary was successful
       if (summary && summary.trim() !== '') {
@@ -2976,7 +2991,8 @@ const ChatArea = ({ setActiveView }) => {
               setShowVoiceEmotion(!showVoiceEmotion);
               break;
             case 'insights':
-              setShowConversationInsights(!showConversationInsights);
+              // AI Features Disabled - Only Virtual Senior and RAG Engine are enabled
+              // setShowConversationInsights(!showConversationInsights);
               break;
             case 'tasks':
               setShowTaskExtractor(!showTaskExtractor);

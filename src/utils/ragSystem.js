@@ -1,13 +1,18 @@
 /**
  * RAG System - Main Integration
  * Combines retrieval and generation for RAG-powered responses
+ * Updated for Vertex AI enterprise tier with increased context density
  */
 
 import { ragRetrieval } from './ragRetrieval';
 import { processKnowledgeBase } from './knowledgeBaseProcessor';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { callAI, getAIProvider } from './aiProvider';
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim() || '';
+// Determine which provider is being used
+const getProviderName = () => {
+  const config = getAIProvider();
+  return config?.provider || 'unknown';
+};
 
 /**
  * Initialize RAG system with knowledge base
@@ -33,23 +38,20 @@ export const initializeRAG = async () => {
 
 /**
  * Generate RAG-powered response
+ * Updated for Vertex AI with increased topK (3 -> 10) for better context
  */
-export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-2.5-flash', userContext = '') => {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
-    console.warn('RAG: Gemini API key not available');
-    return null;
-  }
+export const generateRAGResponse = async (query, conversationHistory = [], modelName = 'gemini-1.5-flash', userContext = '') => {
+  const provider = getProviderName();
+  const providerDisplay = provider === 'vertex-ai' ? 'Vertex AI' : provider === 'unknown' ? 'Offline Fallback' : 'Gemini API';
+  
+  console.log(`🔍 RAG: Using provider: ${providerDisplay} for query: "${query.substring(0, 50)}..."`);
 
   try {
-    // Retrieve relevant documents
-    const retrievedDocs = await ragRetrieval.retrieve(query, 5, 0.2);
+    // Retrieve relevant documents - INCREASED from 3 to 10 for better context density
+    const retrievedDocs = await ragRetrieval.retrieve(query, 10, 0.2);
     
-    // Format context from retrieved documents
-    const context = ragRetrieval.formatContext(retrievedDocs, 2000);
-    
-    // Generate response using Gemini with retrieved context
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: modelName });
+    // Format context from retrieved documents - all 10 results joined cleanly
+    const context = ragRetrieval.formatContext(retrievedDocs, 3000); // Increased max length for more context
     
     // Build conversation history
     const historyContext = conversationHistory.length > 0
@@ -79,11 +81,17 @@ ${query}
 - Be helpful, empathetic, and professional
 - If you don't know something, be honest and suggest where they might find more information`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    // Use the unified AI provider system (supports Vertex AI, Gemini, and fallbacks)
+    const response = await callAI(prompt, {
+      systemPrompt: 'You are an intelligent AI assistant for SISTC. Provide accurate, helpful information based on the retrieved context.',
+      maxTokens: 2048,
+      temperature: 0.7
+    });
+
+    console.log(`✅ RAG: Response generated successfully using ${providerDisplay}`);
+    return response;
   } catch (error) {
-    console.error('RAG: Error generating response:', error);
+    console.error(`❌ RAG: Error generating response with ${providerDisplay}:`, error);
     return null;
   }
 };

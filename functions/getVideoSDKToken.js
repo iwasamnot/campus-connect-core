@@ -21,13 +21,15 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 
-// VideoSDK API Key (hardcoded)
-const API_KEY = '0cd81014-abab-4f45-968d-b3ddae835a82';
+// VideoSDK API Key from environment variable (SECURITY: Never hardcode API keys!)
+// Set via: firebase functions:config:set videosdk.apikey="your-api-key"
+// Or use Secret Manager: firebase functions:secrets:set VIDEOSDK_API_KEY
+const API_KEY = process.env.VIDEOSDK_API_KEY || process.env.FIREBASE_CONFIG?.videosdk?.apikey;
 
 // Firebase Functions v2 with Secret Manager, CORS, and Region
 exports.getVideoSDKToken = onCall(
   {
-    secrets: ['VIDEOSDK_SECRET'],
+    secrets: ['VIDEOSDK_SECRET', 'VIDEOSDK_API_KEY'], // Added API key to secrets
     region: 'us-central1', // Match the region specified in firebaseConfig.js
     cors: [
       'http://localhost:5173', // Vite dev server
@@ -46,8 +48,26 @@ exports.getVideoSDKToken = onCall(
       );
     }
 
-    // Get Server Secret from Secret Manager (v2)
+    // Get Server Secret and API Key from Secret Manager (v2)
     const SECRET = process.env.VIDEOSDK_SECRET;
+    const API_KEY_FROM_SECRET = process.env.VIDEOSDK_API_KEY || API_KEY;
+    
+    // Validate API Key is configured
+    if (!API_KEY_FROM_SECRET) {
+      console.error('=== VIDEOSDK_API_KEY Configuration Error ===');
+      console.error('VIDEOSDK_API_KEY is not set in Secret Manager');
+      console.error('===================================================');
+      console.error('');
+      console.error('📝 To fix this, run:');
+      console.error('   firebase functions:secrets:set VIDEOSDK_API_KEY');
+      console.error('   (Enter your VideoSDK API Key when prompted)');
+      console.error('   firebase deploy --only functions:getVideoSDKToken');
+      console.error('');
+      throw new HttpsError(
+        'failed-precondition',
+        'VideoSDK API Key is not configured. Check function logs for setup instructions.'
+      );
+    }
     
     // Debug logging for secret verification
     if (SECRET) {
@@ -95,7 +115,7 @@ exports.getVideoSDKToken = onCall(
       // Step 1: Generate JWT token first (needed to create room)
       const now = Math.floor(Date.now() / 1000);
       const payload = {
-        apikey: API_KEY,
+        apikey: API_KEY_FROM_SECRET, // Use API key from Secret Manager
         permissions: ['allow_join', 'allow_mod'], // Required permissions
         version: 2, // CRITICAL: Required for modern VideoSDK clusters
         iat: now, // Issued at time (seconds since epoch)
