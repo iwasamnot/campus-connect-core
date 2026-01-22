@@ -107,7 +107,11 @@ ${query}
 - If you don't know something, be honest and suggest where they might find more information`;
 
     // STEP 5: System prompt (Virtual Senior persona)
-    const systemPrompt = 'You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC). You provide accurate, helpful information based on the retrieved knowledge base context. Be empathetic, professional, and guide students effectively.';
+    // Adapt prompt based on whether we have RAG context or not
+    const hasContext = context && context.length > 0;
+    const systemPrompt = hasContext
+      ? 'You are a helpful Virtual Senior at Sydney International School of Technology and Commerce (SISTC). You provide accurate, helpful information based on the retrieved knowledge base context. Be empathetic, professional, and guide students effectively.'
+      : 'You are a helpful senior student at Sydney International School of Technology and Commerce (SISTC). Answer questions based on your general knowledge of IT education, university life, student services, and common university procedures. Be empathetic, professional, and guide students effectively. If you don\'t know specific SISTC details, provide general guidance and suggest they contact the administration.';
 
     // STEP 6: Call AI with proper structure
     // System role: Virtual Senior persona

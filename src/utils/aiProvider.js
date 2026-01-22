@@ -166,21 +166,29 @@ const callOllama = async (prompt, config, options = {}) => {
     const data = await response.json();
     
     // CRITICAL: Parse response correctly from data.message.content
+    let responseText = null;
     if (data.message?.content) {
-      const responseText = data.message.content.trim();
-      console.log(`✅ [OLLAMA] Response received: ${responseText.length} characters`);
-      return responseText;
+      responseText = data.message.content.trim();
+    } else if (data.response && typeof data.response === 'string') {
+      // Fallback: try response field (legacy format)
+      console.log(`⚠️ [OLLAMA] Using legacy response format`);
+      responseText = data.response.trim();
+    } else {
+      // Debug: log full response if parsing fails
+      console.error('❌ [OLLAMA] Unexpected response format:', JSON.stringify(data, null, 2));
+      throw new Error('Ollama API returned unexpected response format. Expected data.message.content');
     }
     
-    // Fallback: try response field (legacy format)
-    if (data.response && typeof data.response === 'string') {
-      console.log(`⚠️ [OLLAMA] Using legacy response format: ${data.response.length} characters`);
-      return data.response.trim();
-    }
+    // DEEPSEEK-R1 CLEANUP: Remove reasoning tags (<think>...</think>)
+    // DeepSeek R1 is a reasoning model that includes internal "thinking" in the output
+    // We remove these tags so users only see the final clean answer
+    const cleanedResponse = responseText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     
-    // Debug: log full response if parsing fails
-    console.error('❌ [OLLAMA] Unexpected response format:', JSON.stringify(data, null, 2));
-    throw new Error('Ollama API returned unexpected response format. Expected data.message.content');
+    // Also remove any remaining XML-like tags that might be artifacts
+    const finalResponse = cleanedResponse.replace(/<[^>]+>/g, '').trim();
+    
+    console.log(`✅ [OLLAMA] Response received: ${responseText.length} chars → ${finalResponse.length} chars (cleaned)`);
+    return finalResponse;
   } catch (error) {
     clearTimeout(timeoutId);
     
