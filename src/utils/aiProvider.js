@@ -723,6 +723,13 @@ export const getProviderInfo = () => {
   }
 
   const providerInfo = {
+    'ollama': {
+      name: 'Ollama (Self-Hosted GPU)',
+      status: 'active',
+      limits: 'Unlimited - RTX 6000 48GB VRAM',
+      website: 'https://ollama.com',
+      signup: 'Self-hosted on GPU droplet'
+    },
     'gemini': {
       name: 'Google Gemini API',
       status: 'active',
