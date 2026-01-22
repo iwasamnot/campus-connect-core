@@ -181,15 +181,19 @@ exports.generateVertexAIEmbedding = onRequest(
 
     // Only allow POST
     if (req.method !== 'POST') {
+      res.set('Access-Control-Allow-Origin', '*');
       res.status(405).json({ error: 'Method not allowed. Use POST.' });
       return;
     }
+
+    // Set CORS headers for all responses
+    res.set('Access-Control-Allow-Origin', '*');
 
     try {
       const { text, model = 'text-embedding-004', projectId, location } = req.body;
 
       if (!text || typeof text !== 'string' || text.trim().length === 0) {
-        res.status(400).json({ error: 'Text is required for embedding generation' });
+        res.status(400).json({ error: 'Text is required for embedding generation', fallback: true });
         return;
       }
 
@@ -223,26 +227,36 @@ exports.generateVertexAIEmbedding = onRequest(
 
       // Validate service account
       if (!serviceAccount.project_id || !serviceAccount.private_key || 
-          serviceAccount.private_key === 'dummy') {
+          serviceAccount.private_key === 'dummy' || serviceAccount.private_key.length < 50) {
         res.status(500).json({ 
-          error: 'Service account has invalid credentials. Please update GCP_SERVICE_ACCOUNT_KEY secret.',
+          error: 'Service account has invalid credentials. Please update GCP_SERVICE_ACCOUNT_KEY secret with valid credentials from Google Cloud Console.',
           fallback: true 
         });
         return;
       }
 
-      // Initialize Vertex AI
+      // Initialize Vertex AI (lazy initialization - only when called)
       const finalProjectId = projectId || serviceAccount.project_id;
       const finalLocation = location || 'us-central1';
       
-      const vertexAI = new VertexAI({
-        project: finalProjectId,
-        location: finalLocation,
-      });
+      let vertexAI;
+      try {
+        vertexAI = new VertexAI({
+          project: finalProjectId,
+          location: finalLocation,
+        });
+      } catch (initError) {
+        res.status(500).json({ 
+          error: `Failed to initialize Vertex AI: ${initError.message}`,
+          fallback: true 
+        });
+        return;
+      }
 
       // Get embedding model
+      const modelPath = `projects/${finalProjectId}/locations/${finalLocation}/publishers/google/models/${model}`;
       const embeddingModel = vertexAI.getGenerativeModel({
-        model: `projects/${finalProjectId}/locations/${finalLocation}/publishers/google/models/${model}`,
+        model: modelPath,
       });
 
       // Generate embedding
@@ -254,18 +268,15 @@ exports.generateVertexAIEmbedding = onRequest(
 
       if (embedding.length === 0) {
         res.status(500).json({ 
-          error: 'Failed to generate embedding',
+          error: 'Failed to generate embedding - empty result',
           fallback: true 
         });
         return;
       }
 
-      // Set CORS headers
-      res.set('Access-Control-Allow-Origin', '*');
       res.status(200).json({ embedding });
     } catch (error) {
       console.error('Error generating embedding:', error);
-      res.set('Access-Control-Allow-Origin', '*');
       res.status(500).json({ 
         error: error.message || 'Unknown error',
         fallback: true 
