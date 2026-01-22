@@ -4,8 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { FadeIn, StaggerContainer, StaggerItem } from './AnimatedComponents';
 import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calendar, Sparkles, Brain, Lightbulb, HelpCircle, Clock, TrendingUp, Book, User, Edit2, X, Check } from 'lucide-react';
-import { callAI } from '../utils/aiProvider';
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { callAI, getAIProvider } from '../utils/aiProvider';
 import { getUserProfile, updateProfileFromConversation, getPersonalizedSystemPrompt, updateAssistantName } from '../utils/userProfileAI';
 import { useAuth } from '../context/AuthContext';
 
@@ -367,90 +366,17 @@ const AIHelp = () => {
   }, [user]);
 
   // Available Gemini models
-  const geminiModels = [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Latest 2026 Model - Fast & Efficient (Recommended)', free: true },
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', description: 'Free - Fast & Efficient', free: true },
-    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite', description: 'Free - Lightweight & Fast', free: true },
-    { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro', description: 'Paid - Most Capable', free: false },
-    { value: 'gemini-pro', label: 'Gemini Pro', description: 'Deprecated - Use 2.5 Flash instead', free: false },
-  ];
-
-  // Initialize Gemini AI with selected model
-  const getGeminiModel = (modelName = selectedGeminiModel) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-    if (!apiKey || apiKey === '') {
-      return null;
+  // Get AI provider info (Ollama or Groq)
+  const getProviderInfo = () => {
+    const config = getAIProvider();
+    if (!config) {
+      return { name: 'No AI Provider', status: 'not_configured' };
     }
-    
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      // Use the selected model, fallback to gemini-2.5-flash if model not found
-      const modelToUse = modelName || 'gemini-2.5-flash';
-      const model = genAI.getGenerativeModel({ 
-        model: modelToUse,
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-        ],
-        systemInstruction: `You are an intelligent, knowledgeable, and empathetic AI assistant for Sydney International School of Technology and Commerce (SISTC). Your role is to provide comprehensive, accurate, and helpful information to students, prospective students, and visitors.
-
-**Your Capabilities:**
-- Provide detailed information about SISTC courses, programs, campuses, and student services
-- Answer questions about applications, admissions, fees, and requirements
-- Offer guidance on student life, support services, and resources
-- Help with general academic and university-related questions
-- Maintain context from conversation history to provide coherent, relevant responses
-
-**Your Approach:**
-- Be thorough but concise - provide complete information without unnecessary verbosity
-- Use a friendly, professional, and approachable tone
-- Structure your responses clearly with headings, lists, and formatting when helpful
-- If asked about SISTC-specific information, prioritize accuracy and reference the knowledge base provided
-- For general questions, use your knowledge while maintaining relevance to the educational context
-- Show empathy and understanding when addressing student concerns or questions
-- If you don't know something, be honest and suggest where they might find the information
-
-**Response Format:**
-- Use markdown formatting (headings, lists, bold, italic) for better readability
-- Break down complex topics into clear sections
-- Use bullet points or numbered lists for step-by-step information
-- Include relevant details, examples, or practical advice when appropriate`,
-      });
-      return model;
-    } catch (error) {
-      console.error('Error initializing Gemini model:', error);
-      // Fallback to gemini-2.5-flash, then gemini-2.0-flash if the selected model fails
-      if (modelName !== 'gemini-2.5-flash') {
-        try {
-          const genAI = new GoogleGenerativeAI(apiKey);
-          return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        } catch (fallbackError) {
-          console.warn('gemini-2.5-flash not available, trying gemini-2.0-flash:', fallbackError);
-          try {
-            const genAI = new GoogleGenerativeAI(apiKey);
-            return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-          } catch (secondFallbackError) {
-            console.error('Fallback models also failed:', secondFallbackError);
-            return null;
-          }
-        }
-      }
-      return null;
-    }
+    return {
+      name: config.provider === 'ollama' ? 'Ollama (Self-hosted GPU)' : 'Groq',
+      status: 'active',
+      provider: config.provider
+    };
   };
 
   // Call AI with conversation history (multi-provider support)
@@ -537,10 +463,10 @@ ${question}
     // Add user profile context to prompt
     const userContext = userProfile ? getPersonalizedSystemPrompt(userProfile, 'sistc') : '';
     
-    // Try RAG-enhanced Gemini if API key is available
-    const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    // Try RAG-enhanced AI (Ollama/Groq) if provider is available
+    const config = getAIProvider();
     
-    if (geminiApiKey && geminiApiKey !== '') {
+    if (config) {
       try {
         // Import RAG system dynamically
         const { generateRAGResponse } = await import('../utils/ragSystem');
@@ -548,9 +474,8 @@ ${question}
         const ragResult = await generateRAGResponse(
           question,
           conversationHistory,
-          selectedGeminiModel,
-          userContext,
-          userId
+          null, // modelName not needed - uses Ollama/Groq from aiProvider
+          userContext
         );
         
         // Handle new response format (object with answer and metadata)

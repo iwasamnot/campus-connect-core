@@ -155,7 +155,7 @@ const ChatArea = ({ setActiveView }) => {
   
   // Lazy load AIConversationInsights component when needed
   useEffect(() => {
-    if (showConversationInsights && localStorage.getItem('aiInsightsEnabled') === 'true' && !AIConversationInsightsComponent) {
+    if (showConversationInsights && localStorage.getItem('aiInsightsEnabled') !== 'false' && !AIConversationInsightsComponent) {
       import('./AIConversationInsights').then(module => {
         setAIConversationInsightsComponent(() => module.default);
       }).catch(error => {
@@ -841,7 +841,7 @@ const ChatArea = ({ setActiveView }) => {
       success('Message sent!');
 
       // If message is NOT toxic AND AI Help mode is enabled AND Virtual Senior is enabled, get Gemini response
-      const virtualSeniorEnabled = localStorage.getItem('virtualSeniorEnabled') === 'true'; // Disabled by default
+      const virtualSeniorEnabled = localStorage.getItem('virtualSeniorEnabled') !== 'false'; // Enabled by default
       if (!isToxic && aiHelpMode && virtualSeniorEnabled) {
         setWaitingForAI(true);
         try {
@@ -1133,7 +1133,7 @@ const ChatArea = ({ setActiveView }) => {
     
     try {
       // Check if AI translation is enabled
-      const aiTranslationEnabled = localStorage.getItem('aiTranslationEnabled') === 'true';
+      const aiTranslationEnabled = localStorage.getItem('aiTranslationEnabled') !== 'false';
       let translatedText = messageText; // Default to original text
       
       if (aiTranslationEnabled) {
@@ -1173,7 +1173,7 @@ const ChatArea = ({ setActiveView }) => {
       setShowSummarization(true);
       setConversationSummary(null); // Reset previous summary
       // Check if AI summarization is enabled
-      const aiSummarizationEnabled = localStorage.getItem('aiSummarizationEnabled') === 'true';
+      const aiSummarizationEnabled = localStorage.getItem('aiSummarizationEnabled') !== 'false';
       let summary = null;
       
       if (aiSummarizationEnabled) {
@@ -3031,7 +3031,7 @@ const ChatArea = ({ setActiveView }) => {
               setShowVoiceEmotion(!showVoiceEmotion);
               break;
             case 'insights':
-              const aiInsightsEnabled = localStorage.getItem('aiInsightsEnabled') === 'true';
+              const aiInsightsEnabled = localStorage.getItem('aiInsightsEnabled') !== 'false';
               if (aiInsightsEnabled) {
                 setShowConversationInsights(!showConversationInsights);
               } else {

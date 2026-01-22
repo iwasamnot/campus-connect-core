@@ -29,23 +29,27 @@ const Settings = ({ setActiveView }) => {
   const [aiFeatureStates, setAiFeatureStates] = useState({});
   
   // Load AI feature states from localStorage on mount and when tab changes
+  // All AI features are ENABLED by default (only disabled if explicitly set to 'false')
   useEffect(() => {
     const loadAiStates = () => {
+      // Helper: returns true if not explicitly set to 'false'
+      const isEnabled = (key) => localStorage.getItem(key) !== 'false';
+      
       setAiFeatureStates({
-        virtualSeniorEnabled: localStorage.getItem('virtualSeniorEnabled') === 'true',
-        ragEngineEnabled: localStorage.getItem('ragEngineEnabled') === 'true',
-        aiTranslationEnabled: localStorage.getItem('aiTranslationEnabled') === 'true',
-        aiSummarizationEnabled: localStorage.getItem('aiSummarizationEnabled') === 'true',
-        aiInsightsEnabled: localStorage.getItem('aiInsightsEnabled') === 'true',
-        aiPredictiveTypingEnabled: localStorage.getItem('aiPredictiveTypingEnabled') === 'true',
-        aiSmartRepliesEnabled: localStorage.getItem('aiSmartRepliesEnabled') === 'true',
-        aiCategorizationEnabled: localStorage.getItem('aiCategorizationEnabled') === 'true',
-        aiContextualActionsEnabled: localStorage.getItem('aiContextualActionsEnabled') === 'true',
-        aiStudyGroupsEnabled: localStorage.getItem('aiStudyGroupsEnabled') === 'true',
-        aiEmotionPredictionEnabled: localStorage.getItem('aiEmotionPredictionEnabled') === 'true',
-        aiSmartNotificationsEnabled: localStorage.getItem('aiSmartNotificationsEnabled') === 'true',
-        aiTaskExtractorEnabled: localStorage.getItem('aiTaskExtractorEnabled') === 'true',
-        aiPredictiveSchedulerEnabled: localStorage.getItem('aiPredictiveSchedulerEnabled') === 'true',
+        virtualSeniorEnabled: isEnabled('virtualSeniorEnabled'),
+        ragEngineEnabled: isEnabled('ragEngineEnabled'),
+        aiTranslationEnabled: isEnabled('aiTranslationEnabled'),
+        aiSummarizationEnabled: isEnabled('aiSummarizationEnabled'),
+        aiInsightsEnabled: isEnabled('aiInsightsEnabled'),
+        aiPredictiveTypingEnabled: isEnabled('aiPredictiveTypingEnabled'),
+        aiSmartRepliesEnabled: isEnabled('aiSmartRepliesEnabled'),
+        aiCategorizationEnabled: isEnabled('aiCategorizationEnabled'),
+        aiContextualActionsEnabled: isEnabled('aiContextualActionsEnabled'),
+        aiStudyGroupsEnabled: isEnabled('aiStudyGroupsEnabled'),
+        aiEmotionPredictionEnabled: isEnabled('aiEmotionPredictionEnabled'),
+        aiSmartNotificationsEnabled: isEnabled('aiSmartNotificationsEnabled'),
+        aiTaskExtractorEnabled: isEnabled('aiTaskExtractorEnabled'),
+        aiPredictiveSchedulerEnabled: isEnabled('aiPredictiveSchedulerEnabled'),
       });
     };
     
@@ -586,9 +590,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="RAG Engine"
-                      desc="Enhanced AI responses with knowledge base context (disabled by default)"
+                      desc="Enhanced AI responses with knowledge base context using Ollama (enabled by default)"
                       icon={Database}
-                      value={aiFeatureStates.ragEngineEnabled || false}
+                      value={aiFeatureStates.ragEngineEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('ragEngineEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, ragEngineEnabled: val }));
@@ -598,9 +602,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Message Translation"
-                      desc="Translate messages using AI (disabled by default)"
+                      desc="Translate messages using AI (enabled by default)"
                       icon={Globe}
-                      value={aiFeatureStates.aiTranslationEnabled || false}
+                      value={aiFeatureStates.aiTranslationEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiTranslationEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiTranslationEnabled: val }));
@@ -610,9 +614,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Conversation Summarization"
-                      desc="Generate AI summaries of conversations (disabled by default)"
+                      desc="Generate AI summaries of conversations (enabled by default)"
                       icon={FileText}
-                      value={aiFeatureStates.aiSummarizationEnabled || false}
+                      value={aiFeatureStates.aiSummarizationEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiSummarizationEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiSummarizationEnabled: val }));
@@ -622,9 +626,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Conversation Insights"
-                      desc="AI-powered conversation analytics (disabled by default)"
+                      desc="AI-powered conversation analytics (enabled by default)"
                       icon={BarChart}
-                      value={aiFeatureStates.aiInsightsEnabled || false}
+                      value={aiFeatureStates.aiInsightsEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiInsightsEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiInsightsEnabled: val }));
@@ -634,9 +638,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Predictive Typing"
-                      desc="AI autocomplete suggestions (disabled by default)"
+                      desc="AI autocomplete suggestions (enabled by default)"
                       icon={Keyboard}
-                      value={aiFeatureStates.aiPredictiveTypingEnabled || false}
+                      value={aiFeatureStates.aiPredictiveTypingEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiPredictiveTypingEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiPredictiveTypingEnabled: val }));
@@ -646,9 +650,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Smart Replies"
-                      desc="AI-generated quick reply suggestions (disabled by default)"
+                      desc="AI-generated quick reply suggestions (enabled by default)"
                       icon={MessageSquare}
-                      value={aiFeatureStates.aiSmartRepliesEnabled || false}
+                      value={aiFeatureStates.aiSmartRepliesEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiSmartRepliesEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiSmartRepliesEnabled: val }));
@@ -658,9 +662,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Smart Categorization"
-                      desc="Automatically categorize messages with AI (disabled by default)"
+                      desc="Automatically categorize messages with AI (enabled by default)"
                       icon={Target}
-                      value={aiFeatureStates.aiCategorizationEnabled || false}
+                      value={aiFeatureStates.aiCategorizationEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiCategorizationEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiCategorizationEnabled: val }));
@@ -670,9 +674,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Contextual Actions"
-                      desc="AI suggests actions based on message content (disabled by default)"
+                      desc="AI suggests actions based on message content (enabled by default)"
                       icon={Zap}
-                      value={aiFeatureStates.aiContextualActionsEnabled || false}
+                      value={aiFeatureStates.aiContextualActionsEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiContextualActionsEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiContextualActionsEnabled: val }));
@@ -682,9 +686,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Study Groups"
-                      desc="AI-powered study group recommendations (disabled by default)"
+                      desc="AI-powered study group recommendations (enabled by default)"
                       icon={Users}
-                      value={aiFeatureStates.aiStudyGroupsEnabled || false}
+                      value={aiFeatureStates.aiStudyGroupsEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiStudyGroupsEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiStudyGroupsEnabled: val }));
@@ -694,9 +698,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Emotion Prediction"
-                      desc="Predict message reception with AI (disabled by default)"
+                      desc="Predict message reception with AI (enabled by default)"
                       icon={Activity}
-                      value={aiFeatureStates.aiEmotionPredictionEnabled || false}
+                      value={aiFeatureStates.aiEmotionPredictionEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiEmotionPredictionEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiEmotionPredictionEnabled: val }));
@@ -706,9 +710,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Smart Notifications"
-                      desc="AI-prioritized notifications (disabled by default)"
+                      desc="AI-prioritized notifications (enabled by default)"
                       icon={Bell}
-                      value={aiFeatureStates.aiSmartNotificationsEnabled || false}
+                      value={aiFeatureStates.aiSmartNotificationsEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiSmartNotificationsEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiSmartNotificationsEnabled: val }));
@@ -718,9 +722,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Task Extractor"
-                      desc="Automatically extract tasks from conversations (disabled by default)"
+                      desc="Automatically extract tasks from conversations (enabled by default)"
                       icon={CheckCircle2}
-                      value={aiFeatureStates.aiTaskExtractorEnabled || false}
+                      value={aiFeatureStates.aiTaskExtractorEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiTaskExtractorEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiTaskExtractorEnabled: val }));
@@ -730,9 +734,9 @@ const Settings = ({ setActiveView }) => {
                     
                     <SettingToggle
                       label="AI Predictive Scheduler"
-                      desc="AI-optimized message send times (disabled by default)"
+                      desc="AI-optimized message send times (enabled by default)"
                       icon={Clock}
-                      value={aiFeatureStates.aiPredictiveSchedulerEnabled || false}
+                      value={aiFeatureStates.aiPredictiveSchedulerEnabled !== false}
                       onChange={(val) => {
                         localStorage.setItem('aiPredictiveSchedulerEnabled', val.toString());
                         setAiFeatureStates(prev => ({ ...prev, aiPredictiveSchedulerEnabled: val }));

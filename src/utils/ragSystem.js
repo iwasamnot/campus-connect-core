@@ -41,10 +41,10 @@ export const initializeRAG = async () => {
  * Updated for Vertex AI with increased topK (3 -> 10) for better context
  */
 export const generateRAGResponse = async (query, conversationHistory = [], modelName = null, userContext = '') => {
-  // Check if RAG Engine is enabled (default: disabled)
+  // Check if RAG Engine is enabled (default: enabled)
   const ragEngineEnabled = typeof window !== 'undefined' 
-    ? (localStorage.getItem('ragEngineEnabled') === 'true') // Disabled by default
-    : false;
+    ? (localStorage.getItem('ragEngineEnabled') !== 'false') // Enabled by default
+    : true;
   
   if (!ragEngineEnabled) {
     console.log('⚠️ RAG Engine is disabled');
@@ -55,6 +55,7 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
   const providerDisplay = provider === 'ollama' ? 'Ollama' : provider === 'groq' ? 'Groq' : provider === 'unknown' ? 'Offline Fallback' : provider;
   
   console.log(`🔍 RAG: Using provider: ${providerDisplay} for query: "${query.substring(0, 50)}..."`);
+  console.log(`✅ RAG: Connected to ${providerDisplay === 'Ollama' ? 'Ollama (Self-hosted GPU)' : providerDisplay} - All AI features enabled`);
 
   try {
     // Retrieve relevant documents - INCREASED from 3 to 10 for better context density
