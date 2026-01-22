@@ -71,25 +71,38 @@ exports.generateVertexAIResponse = onCall(
       }
 
       // Validate service account has required fields
-      if (!serviceAccount.project_id && !serviceAccount.private_key) {
+      if (!serviceAccount.project_id) {
         return {
           success: false,
-          error: 'Service account JSON missing required fields (project_id or private_key). Please update GCP_SERVICE_ACCOUNT_KEY secret with valid credentials.'
+          error: 'Service account JSON missing project_id. Please update GCP_SERVICE_ACCOUNT_KEY secret with valid credentials.'
+        };
+      }
+
+      if (!serviceAccount.private_key || serviceAccount.private_key === 'dummy') {
+        return {
+          success: false,
+          error: 'Service account JSON has invalid or dummy private_key. Please update GCP_SERVICE_ACCOUNT_KEY secret with valid credentials from Google Cloud Console.'
         };
       }
 
       // Initialize Vertex AI (with error handling)
       let vertexAI;
       try {
+        // Use explicit project and location
+        const finalProjectId = projectId || serviceAccount.project_id;
+        const finalLocation = location || 'us-central1';
+        
         vertexAI = new VertexAI({
-          project: projectId || serviceAccount.project_id,
-          location: location || 'us-central1',
+          project: finalProjectId,
+          location: finalLocation,
         });
+        
+        console.log(`Vertex AI initialized for project: ${finalProjectId}, location: ${finalLocation}`);
       } catch (initError) {
         console.error('Error initializing Vertex AI:', initError);
         return {
           success: false,
-          error: `Failed to initialize Vertex AI: ${initError.message}. Please check your service account credentials.`
+          error: `Failed to initialize Vertex AI: ${initError.message}. Please check your service account credentials and ensure it has Vertex AI User role.`
         };
       }
 
