@@ -21,10 +21,11 @@ export const getAIProvider = () => {
   const ollamaUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
   if (ollamaUrl && ollamaUrl !== '') {
     console.log('✅ [OLLAMA] Ollama URL detected, using self-hosted GPU instance');
+    console.log('⚡ [OLLAMA] Forcing 8B model (32B disabled to prevent timeouts)');
     return {
       provider: 'ollama',
       baseUrl: ollamaUrl,
-      model: import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'deepseek-r1:32b',
+      model: 'deepseek-r1:8b', // FORCED: 8B model (32B disabled to prevent timeouts)
       maxTokens: 4096,
       temperature: 0.7
     };
