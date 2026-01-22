@@ -228,8 +228,11 @@ ${newContext.substring(0, 8000)}`;
     ];
     
     await updateDoc(profileRef, updates);
+    console.log('User profile updated from conversation');
   } catch (error) {
-    console.error('Error updating profile from conversation:', error);
+    // SILENT FAIL: Profile update is a background task, don't throw errors
+    console.warn('Profile update skipped:', error.message || error);
+    // Don't rethrow - this is non-critical background processing
   }
 };
 
