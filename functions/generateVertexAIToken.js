@@ -4,9 +4,17 @@
  * This allows client-side code to use Vertex AI without exposing service account
  */
 
-const { VertexAI } = require('@google-cloud/vertexai');
+// Lazy load VertexAI to avoid initialization errors during container startup
+// Only load when function is actually called
+let VertexAI;
+const loadVertexAI = () => {
+  if (!VertexAI) {
+    VertexAI = require('@google-cloud/vertexai').VertexAI;
+  }
+  return VertexAI;
+};
+
 const { onCall, onRequest } = require('firebase-functions/v2/https');
-const { defineSecret } = require('firebase-functions/params');
 
 // Define secrets - use string array format to avoid permission issues during deployment
 // The secret can be set later via: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY
@@ -241,7 +249,8 @@ exports.generateVertexAIEmbedding = onRequest(
       
       let vertexAI;
       try {
-        vertexAI = new VertexAI({
+        const VertexAIClass = loadVertexAI();
+        vertexAI = new VertexAIClass({
           project: finalProjectId,
           location: finalLocation,
         });
