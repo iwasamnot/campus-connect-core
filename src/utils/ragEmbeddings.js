@@ -20,24 +20,52 @@ export const generateEmbedding = async (text) => {
 
 /**
  * Create a hash-based embedding as fallback
- * This is a simple approach that creates vectors based on text characteristics
+ * CRITICAL: Must match Pinecone index dimensions (768 for campus-connect-index)
+ * This creates vectors based on text characteristics that work with cosine similarity
  */
 const createHashBasedEmbedding = (text) => {
-  const vectorSize = 384; // Standard embedding size
+  const vectorSize = 768; // MATCHES Pinecone index dimensions (campus-connect-index)
   const vector = new Array(vectorSize).fill(0);
   const words = text.toLowerCase().split(/\s+/);
   
+  // Use multiple hash functions to distribute words across the 768 dimensions
   words.forEach((word, idx) => {
-    let hash = 0;
+    // Hash function 1: Simple character hash
+    let hash1 = 0;
     for (let i = 0; i < word.length; i++) {
-      hash = ((hash << 5) - hash) + word.charCodeAt(i);
-      hash = hash & hash; // Convert to 32-bit integer
+      hash1 = ((hash1 << 5) - hash1) + word.charCodeAt(i);
+      hash1 = hash1 & hash1; // Convert to 32-bit integer
     }
-    const index = Math.abs(hash) % vectorSize;
-    vector[index] += 1 / (idx + 1); // Weighted by position
+    const index1 = Math.abs(hash1) % vectorSize;
+    vector[index1] += 1 / (idx + 1); // Weighted by position
+    
+    // Hash function 2: Reverse word hash (for better distribution)
+    let hash2 = 0;
+    for (let i = word.length - 1; i >= 0; i--) {
+      hash2 = ((hash2 << 5) - hash2) + word.charCodeAt(i);
+      hash2 = hash2 & hash2;
+    }
+    const index2 = Math.abs(hash2) % vectorSize;
+    if (index2 !== index1) {
+      vector[index2] += 0.5 / (idx + 1);
+    }
+    
+    // Hash function 3: Character pair hash (bigrams)
+    for (let i = 0; i < word.length - 1; i++) {
+      const bigram = word.substring(i, i + 2);
+      let hash3 = 0;
+      for (let j = 0; j < bigram.length; j++) {
+        hash3 = ((hash3 << 5) - hash3) + bigram.charCodeAt(j);
+        hash3 = hash3 & hash3;
+      }
+      const index3 = Math.abs(hash3) % vectorSize;
+      if (index3 !== index1 && index3 !== index2) {
+        vector[index3] += 0.3 / (idx + 1);
+      }
+    }
   });
   
-  // Normalize the vector
+  // Normalize the vector (required for cosine similarity)
   const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
   if (magnitude > 0) {
     return vector.map(val => val / magnitude);

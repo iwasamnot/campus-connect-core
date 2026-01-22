@@ -124,7 +124,16 @@ export class RAGRetrieval {
           return this.retrieveLocal(queryText, topK, minSimilarity);
         }
 
+        // Validate embedding dimensions match Pinecone index (768)
+        if (queryEmbedding.length !== 768) {
+          console.error(`❌ [Pinecone] Embedding dimension mismatch! Expected 768, got ${queryEmbedding.length}`);
+          console.error(`💡 [Pinecone] Your Pinecone index requires 768-dimensional vectors`);
+          console.error(`💡 [Pinecone] Current embedding generator creates ${queryEmbedding.length}-dimensional vectors`);
+          return this.retrieveLocal(queryText, topK, minSimilarity);
+        }
+
         // Query Pinecone
+        console.log(`🔍 [Pinecone] Querying with ${queryEmbedding.length}-dimensional vector (topK: ${topK}, minSimilarity: ${minSimilarity})`);
         const results = await this.pineconeIndex.query({
           vector: queryEmbedding,
           topK: topK,
