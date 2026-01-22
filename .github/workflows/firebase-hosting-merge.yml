@@ -116,6 +116,7 @@ jobs:
           VITE_GCP_LOCATION=us-central1
           VITE_GCP_SERVICE_ACCOUNT_KEY=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           VITE_GCP_SERVICE_ACCOUNT_JSON=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          VITE_VERTEX_AI_FUNCTION_URL=https://us-central1-campus-connect-sistc.cloudfunctions.net/generateVertexAIResponse
           EOF
           echo "✅ .env file created (values hidden for security)"
           # Verify .env file was created (without exposing values)
@@ -196,8 +197,36 @@ jobs:
             echo "⚠️ Warning: VITE_GROQ_API_KEY not set in GitHub Secrets - Groq embeddings will be disabled on backend"
           fi
 
+      - name: Set GCP Service Account Secret in Firebase Secret Manager
+        run: |
+          echo "Setting GCP_SERVICE_ACCOUNT_KEY in Firebase Secret Manager..."
+          if [ -n "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]; then
+            # Use printf to handle the JSON properly (avoids echo issues with special characters)
+            printf '%s' "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" | firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY \
+              --project campus-connect-sistc --non-interactive || echo "⚠️ Warning: Could not set GCP_SERVICE_ACCOUNT_KEY (may already be set)"
+            echo "✅ GCP_SERVICE_ACCOUNT_KEY secret set in Firebase Secret Manager"
+          else
+            echo "❌ ERROR: GCP_SERVICE_ACCOUNT_KEY not set in GitHub Secrets"
+            echo "Please add GCP_SERVICE_ACCOUNT_KEY to GitHub Secrets for Vertex AI to work"
+            exit 1
+          fi
+
       - name: Deploy Cloud Functions
         run: firebase deploy --only functions --project campus-connect-sistc --non-interactive --force
+      
+      - name: Get Vertex AI Function URL and Update .env
+        run: |
+          echo "Getting Vertex AI Cloud Function URL..."
+          # Extract function URL from Firebase deployment output or construct it
+          # Format: https://{region}-{project-id}.cloudfunctions.net/generateVertexAIResponse
+          # For onCall functions, the URL format is different - we'll construct it
+          PROJECT_ID="campus-connect-sistc"
+          REGION="us-central1"  # Default region for Firebase Functions
+          FUNCTION_URL="https://${REGION}-${PROJECT_ID}.cloudfunctions.net/generateVertexAIResponse"
+          
+          echo "Vertex AI Function URL: ${FUNCTION_URL}"
+          echo "VITE_VERTEX_AI_FUNCTION_URL=${FUNCTION_URL}" >> .env
+          echo "✅ Added VITE_VERTEX_AI_FUNCTION_URL to .env"
       
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
