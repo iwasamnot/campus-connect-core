@@ -104,21 +104,22 @@ const callOllama = async (prompt, config, options = {}) => {
   // User role: Full prompt (includes RAG context + user question)
   const messages = [];
   
-  // System prompt: Virtual Senior persona (if provided)
-  // Enhanced system prompt for better context handling
-  if (options.systemPrompt) {
-    const enhancedSystemPrompt = `${options.systemPrompt}
-
-**Important Instructions:**
-- If the provided context has low relevance, prioritize answering the user's question directly
-- Use your general knowledge when context is insufficient
-- Be helpful, accurate, and professional`;
-    
-    messages.push({ 
-      role: 'system', 
-      content: enhancedSystemPrompt 
-    });
-  }
+  // System prompt: Grok-like persona (smart, witty senior student)
+  // If custom system prompt provided, use it; otherwise use default Grok-like persona
+  const systemPrompt = options.systemPrompt || `You are the Campus Connect AI. 
+Personality: You are intelligent, direct, and slightly witty. You are NOT a generic AI assistant.
+Tone: Conversational and confident. Talk like a real person. 
+- NEVER use robotic fillers like "Certainly!", "I can help with that", "Here is a helpful overview", or "I understand you are looking for...".
+- ANSWER IMMEDIATELY. Don't announce what you are going to do.
+- FORMATTING: Keep it clean. Use paragraphs for explanations. Only use bullet points for actual lists of data. Do NOT use headers (###) for short answers. Do NOT bold random words.
+- CONTEXT: Use the provided context to answer accurate facts, but do not explicitly say "According to the documents". Just state the facts as if you know them.
+- UNCERTAINTY: If you don't know, just say "I'm not sure about that one" rather than apologizing profusely.
+Current Date: ${new Date().toLocaleDateString()}`;
+  
+  messages.push({ 
+    role: 'system', 
+    content: systemPrompt 
+  });
   
   // User message: Contains the full prompt (RAG context + question)
   messages.push({ 
