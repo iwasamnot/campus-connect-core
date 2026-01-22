@@ -47,12 +47,6 @@ exports.generateVertexAIResponse = onCall(
           };
         }
 
-        if (!serviceAccountJson || serviceAccountJson.trim() === '') {
-          return {
-            success: false,
-            error: 'GCP_SERVICE_ACCOUNT_KEY secret is empty. Please set it using: firebase functions:secrets:set GCP_SERVICE_ACCOUNT_KEY --project campus-connect-sistc'
-          };
-        }
 
         // Sanitize: trim and remove wrapping quotes
         let sanitized = serviceAccountJson.trim();
