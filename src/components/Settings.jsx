@@ -97,13 +97,20 @@ const Settings = ({ setActiveView }) => {
         </div>
       </div>
       <motion.button
-        onClick={() => !disabled && onChange(!value)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!disabled && onChange) {
+            onChange(!value);
+          }
+        }}
         disabled={disabled}
         whileHover={disabled ? {} : { scale: 1.05 }}
         whileTap={disabled ? {} : { scale: 0.95 }}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${
           value ? 'bg-indigo-600' : 'bg-white/20'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        type="button"
       >
         <motion.span
           layout
@@ -521,8 +528,13 @@ const Settings = ({ setActiveView }) => {
                       icon={HelpCircle}
                       value={localStorage.getItem('virtualSeniorEnabled') === 'true'}
                       onChange={(val) => {
-                        localStorage.setItem('virtualSeniorEnabled', val.toString());
-                        success(val ? 'Virtual Senior enabled' : 'Virtual Senior disabled');
+                        try {
+                          localStorage.setItem('virtualSeniorEnabled', val.toString());
+                          success(val ? 'Virtual Senior enabled' : 'Virtual Senior disabled');
+                        } catch (error) {
+                          console.error('Error saving setting:', error);
+                          showError('Failed to save setting. Please try again.');
+                        }
                       }}
                     />
                     

@@ -21,6 +21,10 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
+// Use window globals to avoid import/export issues
+const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole 
+  ? window.__isAdminRole 
+  : (role) => role === 'admin' || role === 'admin1';
 import { motion } from 'framer-motion';
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText, MessageSquare, X, Shield, Settings } from 'lucide-react';
 // Use window.__LogoComponent directly to avoid import/export issues
