@@ -13,12 +13,41 @@ const PROVIDER_PRIORITY = [
 ];
 
 /**
+ * Get Ollama URL with dynamic override support
+ * Priority: localStorage custom URL > .env variable > default localhost
+ * @returns {string} - The active Ollama URL
+ */
+export const getOllamaURL = () => {
+  // Check localStorage first (for dynamic URL changes)
+  const customUrl = typeof window !== 'undefined' 
+    ? localStorage.getItem('custom_ollama_url')?.trim() 
+    : null;
+  
+  if (customUrl && customUrl !== '') {
+    console.log('🔧 [OLLAMA] Using custom URL from localStorage:', customUrl);
+    return customUrl;
+  }
+  
+  // Fallback to .env variable
+  const envUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
+  if (envUrl && envUrl !== '') {
+    console.log('📦 [OLLAMA] Using URL from environment variable:', envUrl);
+    return envUrl;
+  }
+  
+  // Default fallback
+  const defaultUrl = 'http://localhost:11434';
+  console.log('🏠 [OLLAMA] Using default localhost URL:', defaultUrl);
+  return defaultUrl;
+};
+
+/**
  * Get AI provider configuration
  * PRIORITY: Ollama is checked FIRST - if VITE_OLLAMA_URL exists, use it immediately
  */
 export const getAIProvider = () => {
   // CRITICAL: Check Ollama FIRST - bypass all other logic if configured
-  const ollamaUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
+  const ollamaUrl = getOllamaURL();
   if (ollamaUrl && ollamaUrl !== '') {
     console.log('Γ£à [OLLAMA] Ollama URL detected, using self-hosted GPU instance');
     console.log('ΓÜí [OLLAMA] Forcing 8B model (32B disabled to prevent timeouts)');
@@ -536,4 +565,4 @@ Text to translate:
   }
 };
 
-export default { callAI, getAIProvider, getProviderInfo, translateMessage };
+export default { callAI, getAIProvider, getProviderInfo, translateMessage, getOllamaURL };
