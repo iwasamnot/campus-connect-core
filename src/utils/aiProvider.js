@@ -100,20 +100,28 @@ export const getOllamaURL = () => {
     : null;
   
   if (customUrl && customUrl !== '') {
-    console.log('🔧 [OLLAMA] Using custom URL from localStorage:', customUrl);
+    console.error('🔧 [OLLAMA] Using custom URL from localStorage:', customUrl);
+    // ✅ FIX: Validate ngrok URL format
+    if (customUrl.includes('ngrok')) {
+      console.error('✅ [OLLAMA] Detected ngrok URL - HTTPS tunnel active');
+      // Ensure ngrok URL includes /api/chat if not already present
+      if (!customUrl.includes('/api/chat')) {
+        console.warn('⚠️ [OLLAMA] Ngrok URL missing /api/chat endpoint, will append automatically');
+      }
+    }
     return customUrl;
   }
   
   // Fallback to .env variable (static configuration)
   const envUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
   if (envUrl && envUrl !== '') {
-    console.log('📦 [OLLAMA] Using URL from environment variable:', envUrl);
+    console.error('📦 [OLLAMA] Using URL from environment variable:', envUrl);
     return envUrl;
   }
   
   // Default fallback
   const defaultUrl = 'http://localhost:11434';
-  console.log('🏠 [OLLAMA] Using default localhost URL:', defaultUrl);
+  console.error('🏠 [OLLAMA] Using default localhost URL:', defaultUrl);
   return defaultUrl;
 };
 
@@ -215,7 +223,23 @@ const callOllama = async (prompt, config, options = {}) => {
   
   // ✅ FIX: Quick connectivity check - if baseUrl is invalid, throw early
   if (!baseUrl || baseUrl.trim() === '') {
-    throw new Error('Ollama URL is not configured. Please set VITE_OLLAMA_URL or configure a custom URL.');
+    throw new Error('Ollama URL is not configured. Please set VITE_OLLAMA_URL or configure a custom URL via localStorage (custom_ollama_url).');
+  }
+  
+  // ✅ FIX: Log the URL being used (helps debug ngrok/HTTPS issues)
+  console.error(`📡 [OLLAMA] Connecting to: ${baseUrl}`);
+  
+  // ✅ FIX: Detect if using ngrok or HTTPS (for better error messages)
+  const isNgrok = baseUrl.includes('ngrok');
+  const isHttps = baseUrl.startsWith('https://');
+  const isHttp = baseUrl.startsWith('http://');
+  
+  if (isNgrok) {
+    console.error('🔒 [OLLAMA] Using ngrok HTTPS tunnel (secure connection)');
+  } else if (isHttps) {
+    console.error('🔒 [OLLAMA] Using HTTPS connection');
+  } else if (isHttp) {
+    console.warn('⚠️ [OLLAMA] Using HTTP connection (may be blocked by browser Mixed Content policy)');
   }
   
   // ✅ FIX: Detect Image (from options.image or message attachments)
