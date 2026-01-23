@@ -151,11 +151,16 @@ Current Date: ${new Date().toLocaleDateString()}`;
     content: systemPrompt 
   });
   
-  // User message: Contains the full prompt (RAG context + question)
-  messages.push({ 
-    role: 'user', 
-    content: prompt 
-  });
+      // User message: Contains the full prompt (RAG context + question)
+      messages.push({ 
+        role: 'user', 
+        content: prompt 
+      });
+      
+      // Log memory context if injected
+      if (coreMemoryContext) {
+        console.log('💾 [Memory] Core memory context injected into system prompt');
+      }
 
   // MIXED CONTENT FIX: Detect if we're on HTTPS and Ollama is HTTP
   const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';

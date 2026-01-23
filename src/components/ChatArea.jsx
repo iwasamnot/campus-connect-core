@@ -66,6 +66,7 @@ import PredictiveScheduler from './PredictiveScheduler';
 import VoiceEmotionDetector from './VoiceEmotionDetector';
 import { generateFilledForm, downloadPDF } from '../utils/formFiller';
 import { runAgent, approveAndExecuteTool, continueAgentAfterApproval } from '../utils/agentEngine';
+import { manageMemory, summarizeForArchival } from '../utils/memoryManager';
 // AI Features - lazy loaded based on toggle (no top-level await)
 import SmartTaskExtractor from './SmartTaskExtractor';
 import RelationshipGraph from './RelationshipGraph';
@@ -674,7 +675,8 @@ const ChatArea = ({ setActiveView }) => {
         const response = await callAI(userMessage, {
           systemPrompt: virtualSeniorSystemPrompt, // PRESERVED Virtual Senior prompt
           maxTokens: 2048,
-          temperature: 0.7
+          temperature: 0.7,
+          userId: user?.uid || null // Pass userId for memory context injection
         });
         return response ? response.trim() : null;
       } catch (aiError) {
@@ -913,6 +915,31 @@ const ChatArea = ({ setActiveView }) => {
               },
               agentThinking: reactAgentEnabled ? agentThinking : null // Store thinking log if agent was used
             });
+            
+            // Memory Management: Update core memory based on interaction
+            try {
+              await manageMemory(originalText, aiResponse, user.uid);
+            } catch (memoryError) {
+              console.warn('💾 [Memory] Memory update failed (non-critical):', memoryError);
+            }
+            
+            // Periodically summarize conversations for archival memory (every 5 messages)
+            const recentMessages = messages.filter(m => !m.isAI).slice(-5);
+            if (recentMessages.length >= 5) {
+              try {
+                const conversationHistory = recentMessages.map(m => ({
+                  role: 'user',
+                  content: m.text || m.displayText
+                })).concat([{
+                  role: 'assistant',
+                  content: aiResponse
+                }]);
+                
+                await summarizeForArchival(conversationHistory, user.uid);
+              } catch (summaryError) {
+                console.warn('💾 [Memory] Summary failed (non-critical):', summaryError);
+              }
+            }
           }
         } catch (aiError) {
           console.error('Error getting AI response:', aiError);

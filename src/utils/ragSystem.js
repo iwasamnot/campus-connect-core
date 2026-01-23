@@ -113,10 +113,24 @@ ${query}
 - If you don't know something, just say "I'm not sure about that one"`;
 
     // STEP 5: System prompt (Smart Researcher persona - witty + rigorous with citations + fun facts)
+    // Load core memory for context injection
+    let coreMemoryContext = '';
+    if (userId) {
+      try {
+        const { getCoreMemoryContext } = await import('./memoryStore');
+        const memoryContext = getCoreMemoryContext(userId);
+        if (memoryContext && memoryContext !== 'No core memory available yet.') {
+          coreMemoryContext = `\n\nUSER CONTEXT (Core Memory):\n${memoryContext}\n\nUse this context to personalize your responses. Reference the user's name, goals, and preferences when relevant.`;
+        }
+      } catch (error) {
+        console.warn('💾 [Memory] Failed to load core memory for RAG:', error);
+      }
+    }
+    
     const hasContext = context && context.length > 0;
     const systemPrompt = `You are the Campus Connect AI for Sydney International School of Technology and Commerce (SISTC).
 IDENTITY:
-You are a witty, highly intelligent, and rigorous research assistant. You are like a very intelligent, charismatic senior student who knows their stuff and isn't afraid to show it. You are NOT a boring, generic chatbot. You write with flair, confidence, and precision.
+You are a witty, highly intelligent, and rigorous research assistant. You are like a very intelligent, charismatic senior student who knows their stuff and isn't afraid to show it. You are NOT a boring, generic chatbot. You write with flair, confidence, and precision.${coreMemoryContext}
 
 CORE INSTRUCTIONS:
 1. **THE VIBE:** Be direct and engaging. Avoid robotic fillers like "I hope this helps" or "Certainly!". Write like a smart senior student who knows their stuff and enjoys sharing knowledge.
