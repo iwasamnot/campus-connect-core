@@ -713,5 +713,25 @@ service cloud.firestore {
         isAdmin()
       );
     }
+    
+    // Global Commons Messages (Universal Group Chat)
+    match /globalCommonsMessages/{messageId} {
+      // All authenticated users can read all messages
+      allow read: if isAuthenticated();
+      
+      // All authenticated users can create messages
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own messages (for translation updates)
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own messages, admins can delete any
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
   }
 }
