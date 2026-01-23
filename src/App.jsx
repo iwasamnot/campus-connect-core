@@ -206,6 +206,7 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [loginMode, setLoginMode] = useState('login'); // 'login' or 'register'
   const [showOnboarding, setShowOnboarding] = useState(false); // Onboarding flow state
+  const [showInterviewMode, setShowInterviewMode] = useState(false); // Interview mode state
   
   // Memoize callbacks to prevent unnecessary re-renders
   const handleSetActiveView = useCallback((view) => {
@@ -224,6 +225,18 @@ function App() {
   
   const handleSetSidebarOpen = useCallback((open) => {
     setSidebarOpen(open);
+  }, []);
+
+  // Expose interview mode setter globally for sidebar
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__setShowInterviewMode = setShowInterviewMode;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__setShowInterviewMode;
+      }
+    };
   }, []);
 
   // Handle Web Share Target API (when app is launched via share)

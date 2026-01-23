@@ -5,7 +5,7 @@ import {
   MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, 
   Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail, Radio,
   Search, Bell, Command, Star, Clock, TrendingUp, Home, Grid3x3, Menu, BookOpen, Brain,
-  Workflow, Languages
+  Workflow, Languages, Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CommandPalette from './CommandPalette';
@@ -104,6 +104,18 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
   }, [pinnedItems]);
 
   const handleNavClick = useCallback((view) => {
+    // Special handling for interview mode (opens as modal, not view)
+    if (view === 'interview') {
+      // Trigger interview mode via App.jsx state
+      if (typeof window !== 'undefined' && window.__setShowInterviewMode) {
+        window.__setShowInterviewMode(true);
+      }
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        onClose();
+      }
+      return;
+    }
+    
     setActiveView(view);
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       onClose();
@@ -128,6 +140,7 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
       { id: 'nearby', label: 'Nearby Chat', icon: Radio, shortcut: 'N', category: 'main' },
       { id: 'global-commons', label: 'Global Commons', icon: Languages, shortcut: 'GC', category: 'main', badge: 'NEW' },
       { id: 'visual-board', label: 'Visual Board', icon: Grid3x3, shortcut: 'VB', category: 'tools', badge: 'NEW' },
+      { id: 'interview', label: 'Mock Interview', icon: Briefcase, shortcut: 'MI', category: 'tools', badge: 'NEW' },
       { id: 'activity', label: 'Activity', icon: Activity, shortcut: 'D', category: 'tools' },
       { id: 'scheduler', label: 'Scheduler', icon: Calendar, shortcut: 'M', category: 'tools' },
       { id: 'saved', label: 'Saved', icon: Bookmark, shortcut: 'S', category: 'tools' },

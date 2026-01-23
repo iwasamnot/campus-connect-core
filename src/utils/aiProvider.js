@@ -82,6 +82,24 @@ export const getAIProvider = () => {
  * Call AI with automatic provider fallback
  */
 export const callAI = async (prompt, options = {}) => {
+  // SAFETY OVERRIDE: Check for crisis/distress signals BEFORE processing
+  if (typeof window !== 'undefined') {
+    try {
+      const { checkSafety, getCrisisResponse } = await import('./safetyCheck');
+      const safetyCheck = checkSafety(prompt);
+      
+      if (safetyCheck.requiresIntervention) {
+        console.warn('🚨 [Safety] Crisis intervention triggered in AI call:', safetyCheck.matchedKeyword);
+        const crisisResponse = getCrisisResponse();
+        // Return crisis message instead of processing with AI
+        return crisisResponse.message;
+      }
+    } catch (safetyError) {
+      console.warn('⚠️ [Safety] Safety check failed, continuing with AI call:', safetyError);
+      // Continue with normal AI processing if safety check fails
+    }
+  }
+
   const config = getAIProvider();
   
   if (!config) {

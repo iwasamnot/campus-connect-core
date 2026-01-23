@@ -30,7 +30,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings, CheckCircle2, XCircle, Phone, Camera } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings, CheckCircle2, XCircle, Phone, Camera, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
@@ -69,6 +69,7 @@ import { generateFilledForm, downloadPDF } from '../utils/formFiller';
 import { runAgent, approveAndExecuteTool, continueAgentAfterApproval, processQuery } from '../utils/agentEngine';
 import { manageMemory, summarizeForArchival } from '../utils/memoryManager';
 import { convertImageToBase64, createImagePreview, revokeImagePreview } from '../utils/imageUtils';
+import { checkSafety, getCrisisResponse } from '../utils/safetyCheck';
 // AI Features - lazy loaded based on toggle (no top-level await)
 import SmartTaskExtractor from './SmartTaskExtractor';
 import RelationshipGraph from './RelationshipGraph';
@@ -732,6 +733,35 @@ const ChatArea = ({ setActiveView }) => {
 
     setSending(true);
     const originalText = newMessage.trim();
+    
+    // SAFETY OVERRIDE: Check for crisis/distress signals FIRST (before toxicity check)
+    const safetyCheck = checkSafety(originalText);
+    if (safetyCheck.requiresIntervention) {
+      console.warn('🚨 [Safety] Crisis intervention triggered:', safetyCheck.matchedKeyword);
+      const crisisResponse = getCrisisResponse();
+      
+      // Save crisis intervention message to chat
+      await addDoc(collection(db, 'messages'), {
+        text: crisisResponse.message,
+        displayText: crisisResponse.message,
+        toxic: false,
+        isAI: true,
+        isCrisisIntervention: true, // Flag for special handling
+        crisisResources: crisisResponse.resources,
+        userId: 'safety-system',
+        userName: 'Safety System',
+        timestamp: serverTimestamp(),
+        reactions: {},
+        readBy: {
+          [user.uid]: serverTimestamp()
+        }
+      });
+      
+      setNewMessage('');
+      setSending(false);
+      success('Support resources have been shared. Please reach out if you need help.');
+      return; // STOP - do not process the user's message further
+    }
     
     // Check toxicity using Gemini AI (with fallback)
     const toxicityResult = await checkToxicity(originalText, true);
@@ -2031,7 +2061,7 @@ const ChatArea = ({ setActiveView }) => {
                 {filteredMessages.map((message) => {
             const isAuthor = message.userId === user?.uid;
             const isAdmin = isAdminRole(userRole);
-            const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior';
+            const isAIMessage = message.isAI || message.sender === 'Virtual Senior' || message.userId === 'virtual-senior' || message.userId === 'safety-system';
             const canEdit = isAuthor && !message.edited;
             // Allow admins to delete AI messages, or users to delete their own messages
             const canDelete = isAIMessage ? isAdmin : (isAuthor || isAdmin);
@@ -2156,6 +2186,10 @@ const ChatArea = ({ setActiveView }) => {
                         })()}`}
                       >
                         {(() => {
+                          // Check if this is a crisis intervention message
+                          if (message.isCrisisIntervention || message.userId === 'safety-system') {
+                            return 'Safety System';
+                          }
                           // Check if this is an AI message
                           if (message.isAI || message.sender === 'Virtual Senior') {
                             return 'Virtual Senior';
@@ -2395,8 +2429,55 @@ const ChatArea = ({ setActiveView }) => {
                     return null;
                   })()}
 
+                  {/* Crisis Intervention Message */}
+                  {message.isCrisisIntervention && message.crisisResources && (
+                    <div className="mb-4 p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 backdrop-blur-sm rounded-xl border-2 border-red-500/50">
+                      <div className="flex items-start gap-3 mb-3">
+                        <AlertCircle className="text-red-400 flex-shrink-0 mt-1" size={24} />
+                        <div className="flex-1">
+                          <h4 className="text-lg font-bold text-white mb-2">Support Resources</h4>
+                          <p className="text-white/90 mb-4">{message.displayText || message.text}</p>
+                          
+                          <div className="space-y-2">
+                            {message.crisisResources.map((resource, index) => (
+                              <div key={index} className="p-3 bg-white/10 rounded-lg border border-white/20">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-semibold text-white">{resource.name}</span>
+                                  {resource.available && (
+                                    <span className="text-xs text-green-300 bg-green-500/20 px-2 py-0.5 rounded">
+                                      {resource.available}
+                                    </span>
+                                  )}
+                                </div>
+                                {resource.phone && (
+                                  <a 
+                                    href={`tel:${resource.phone}`}
+                                    className="text-indigo-300 hover:text-indigo-200 text-sm font-medium"
+                                  >
+                                    📞 {resource.phone}
+                                  </a>
+                                )}
+                                {resource.email && (
+                                  <a 
+                                    href={`mailto:${resource.email}`}
+                                    className="text-indigo-300 hover:text-indigo-200 text-sm font-medium block"
+                                  >
+                                    ✉️ {resource.email}
+                                  </a>
+                                )}
+                                {resource.description && (
+                                  <p className="text-xs text-white/70 mt-1">{resource.description}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Message Text with Markdown */}
-                  {message.displayText && message.displayText.trim() && !message.isVoice && (() => {
+                  {message.displayText && message.displayText.trim() && !message.isVoice && !message.isCrisisIntervention && (() => {
                     const messageText = message.displayText || message.text || '';
                     // Skip rendering if it's a form fill message
                     if (messageText.includes('"type": "FILL_FORM"') || messageText.includes('FILL_FORM')) {
