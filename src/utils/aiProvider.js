@@ -320,6 +320,48 @@ Current Date: ${new Date().toLocaleDateString()}`;
     }
     
     console.log(`Γ£à [OLLAMA] Response received: ${responseText.length} chars ΓåÆ ${finalResponse.length} chars (cleaned)`);
+    // SELF-LEARNING AGENT: Check if response indicates "unknown" or low confidence
+    const selfLearningEnabled = options.selfLearning !== false;
+    const isInSelfLearningLoop = options._selfLearningActive === true;
+    
+    if (selfLearningEnabled && !isInSelfLearningLoop) {
+      const unknownIndicators = ["i don't know", "i'm not sure", "i don't have", "i cannot", "i'm unable", "no information", "not available", "unclear", "uncertain"];
+      const responseLower = finalResponse.toLowerCase();
+      const isUnknown = unknownIndicators.some(indicator => responseLower.includes(indicator));
+      const isShortResponse = finalResponse.length < 100;
+      
+      if (isUnknown || isShortResponse) {
+        console.log('🧠 [Self-Learning] Detected uncertain response, triggering web search...');
+        try {
+          const userQuery = prompt.split('Question:')[1]?.split('\n')[0]?.trim() || prompt.split('question:')[1]?.split('\n')[0]?.trim() || prompt.split('User Query:')[1]?.split('\n')[0]?.trim() || prompt.substring(0, 200);
+          const { searchWeb, formatWebResults } = await import('./webSearch');
+          const webResults = await searchWeb(userQuery, 3);
+          
+          if (webResults && webResults.length > 0) {
+            console.log(`🧠 [Self-Learning] Found ${webResults.length} web results, generating enhanced answer...`);
+            const webContext = formatWebResults(webResults);
+            const enhancedPrompt = `Based on the following web search results, provide a comprehensive answer to the user's question.\n\nWeb Search Results:\n${webContext}\n\nOriginal Question: ${userQuery}\n\nProvide a clear, accurate answer based on the web search results.`;
+            const enhancedResponse = await callOllama(enhancedPrompt, config, { ...options, systemPrompt: 'You are a helpful assistant. Answer questions accurately based on web search results.', _selfLearningActive: true, selfLearning: false });
+            
+            if (enhancedResponse && enhancedResponse.trim().length > 50) {
+              Promise.resolve().then(async () => {
+                try {
+                  const { learnFromWeb } = await import('./knowledgeBase');
+                  await learnFromWeb(userQuery, webResults);
+                  console.log('💾 Saved to Knowledge Base');
+                } catch (learnError) {
+                  console.warn('🧠 [Self-Learning] Error saving to knowledge base (non-critical):', learnError);
+                }
+              }).catch(() => {});
+              return enhancedResponse;
+            }
+          }
+        } catch (webSearchError) {
+          console.warn('🧠 [Self-Learning] Web search failed (non-critical):', webSearchError);
+        }
+      }
+    }
+    
     return finalResponse;
   } catch (error) {
     clearTimeout(timeoutId);
