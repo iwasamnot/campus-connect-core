@@ -31,17 +31,30 @@ class ErrorBoundary extends React.Component {
         // ✅ FIX: Add Firebase-specific error detection
         isFirebaseError: error?.code?.startsWith('firebase/') || error?.code?.startsWith('permission-denied'),
         errorCode: error?.code,
-        errorName: error?.name
+        errorName: error?.name,
+        // ✅ FIX: Add more context for debugging
+        errorString: String(error),
+        errorKeys: error ? Object.keys(error) : []
       };
       
       // Log to console in structured format
       console.error('❌ Error Report:', errorReport);
+      console.error('❌ Full Error Object:', error);
+      console.error('❌ Component Stack:', errorInfo?.componentStack);
       
-      // ✅ FIX: Check for Firebase permission errors
+      // ✅ FIX: Check for common error types
       if (error?.code === 'permission-denied' || error?.message?.includes('permission')) {
         console.error('🔒 Firebase Permission Error Detected!');
         console.error('This might be a Firestore security rules issue.');
         console.error('Check firestore.rules for the collection being accessed.');
+      }
+      
+      if (error?.message?.includes('Cannot read') || error?.message?.includes('undefined')) {
+        console.error('⚠️ Undefined Property Error - Check for missing context providers or undefined values');
+      }
+      
+      if (error?.message?.includes('blob:')) {
+        console.error('🔇 Blob URL Error - This should be suppressed but caught by boundary');
       }
       
       // Send to error tracking service if available
