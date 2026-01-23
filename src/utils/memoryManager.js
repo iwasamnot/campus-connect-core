@@ -89,10 +89,19 @@ export const manageMemory = async (userMessage, aiResponse, userId = 'default') 
     const updates = await analyzeMemoryUpdate(userMessage, aiResponse, userId);
     
     if (updates) {
-      // Step 2: Update core memory
+      // Step 2: Handle goals array - merge with existing goals
+      if (updates.goals && Array.isArray(updates.goals)) {
+        const currentMemory = loadMemory(userId);
+        const existingGoals = currentMemory.core_memory.goals || [];
+        // Merge: keep existing goals, add new ones (avoid duplicates)
+        const allGoals = [...new Set([...existingGoals, ...updates.goals])];
+        updates.goals = allGoals;
+      }
+      
+      // Step 3: Update core memory
       const updatedMemory = updateCoreMemory(updates, userId);
       
-      // Step 3: Handle facts array separately (addFact ensures no duplicates)
+      // Step 4: Handle facts array separately (addFact ensures no duplicates)
       if (updates.facts && Array.isArray(updates.facts)) {
         updates.facts.forEach(fact => {
           if (fact && typeof fact === 'string') {

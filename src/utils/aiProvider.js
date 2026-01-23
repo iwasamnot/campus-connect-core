@@ -92,7 +92,8 @@ export const callAI = async (prompt, options = {}) => {
  * MIXED CONTENT FIX: If page is HTTPS and Ollama is HTTP, use Cloud Function proxy
  */
 const callOllama = async (prompt, config, options = {}) => {
-  const baseUrl = config.baseUrl || import.meta.env.VITE_OLLAMA_URL?.trim() || 'http://localhost:11434';
+  // Use dynamic URL getter (checks localStorage first, then .env, then default)
+  const baseUrl = config.baseUrl || getOllamaURL();
   
   // FORCE 8B MODEL: 32B model is too heavy and times out
   // Override any .env variable to use the faster 8B model
@@ -104,11 +105,25 @@ const callOllama = async (prompt, config, options = {}) => {
   // User role: Full prompt (includes RAG context + user question)
   const messages = [];
   
+  // Load core memory for context injection
+  let coreMemoryContext = '';
+  if (options.userId) {
+    try {
+      const { getCoreMemoryContext } = await import('./memoryStore');
+      const memoryContext = getCoreMemoryContext(options.userId);
+      if (memoryContext && memoryContext !== 'No core memory available yet.') {
+        coreMemoryContext = `\n\nUSER CONTEXT (Core Memory):\n${memoryContext}\n\nUse this context to personalize your responses. Reference the user's name, goals, and preferences when relevant.`;
+      }
+    } catch (error) {
+      console.warn('💾 [Memory] Failed to load core memory:', error);
+    }
+  }
+  
   // System prompt: Smart Researcher persona (witty + rigorous with citations + fun facts)
   // Blended persona: Engaging like Grok but academically rigorous with citations
   const SYSTEM_PROMPT = `You are the Campus Connect AI.
 IDENTITY:
-You are a witty, highly intelligent, and rigorous research assistant. You are like a very intelligent, charismatic senior student who knows their stuff and isn't afraid to show it. You are NOT a boring, generic chatbot. You write with flair, confidence, and precision.
+You are a witty, highly intelligent, and rigorous research assistant. You are like a very intelligent, charismatic senior student who knows their stuff and isn't afraid to show it. You are NOT a boring, generic chatbot. You write with flair, confidence, and precision.${coreMemoryContext}
 
 CORE INSTRUCTIONS:
 1. **THE VIBE:** Be direct and engaging. Avoid robotic fillers like "I hope this helps" or "Certainly!". Write like a smart senior student who knows their stuff and enjoys sharing knowledge.
@@ -330,7 +345,7 @@ const callGroq = async (prompt, config, options) => {
 export const getProviderByPriority = (providerName) => {
   switch (providerName) {
     case 'ollama':
-      const ollamaUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
+      const ollamaUrl = getOllamaURL();
       if (ollamaUrl && ollamaUrl !== '') {
         return {
           provider: 'ollama',
@@ -435,7 +450,7 @@ Text to translate:
     let translatedText = null;
     
     if (config.provider === 'ollama') {
-      const baseUrl = config.baseUrl || import.meta.env.VITE_OLLAMA_URL?.trim() || 'http://localhost:11434';
+      const baseUrl = config.baseUrl || getOllamaURL();
       const model = 'deepseek-r1:8b';
       
       // Check if we need proxy (HTTPS page calling HTTP API)

@@ -27,6 +27,8 @@ const Settings = ({ setActiveView }) => {
   const [activeTab, setActiveTab] = useState('appearance');
   const [exporting, setExporting] = useState(false);
   const [aiFeatureStates, setAiFeatureStates] = useState({});
+  const [customOllamaUrl, setCustomOllamaUrl] = useState('');
+  const [activeOllamaUrl, setActiveOllamaUrl] = useState('');
   
   // Load AI feature states from localStorage on mount and when tab changes
   // All AI features are ENABLED by default (only disabled if explicitly set to 'false')
@@ -72,6 +74,36 @@ const Settings = ({ setActiveView }) => {
       window.removeEventListener('localStorageUpdate', handleCustomStorage);
     };
   }, [activeTab]);
+
+  // Load custom Ollama URL and active URL on mount
+  useEffect(() => {
+    const loadOllamaUrl = async () => {
+      const custom = localStorage.getItem('custom_ollama_url') || '';
+      setCustomOllamaUrl(custom);
+      
+      // Get active URL (custom or from .env)
+      try {
+        const { getOllamaURL } = await import('../utils/aiProvider');
+        const active = getOllamaURL();
+        setActiveOllamaUrl(active);
+      } catch (error) {
+        console.error('Error loading Ollama URL:', error);
+        setActiveOllamaUrl(import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434');
+      }
+    };
+    
+    loadOllamaUrl();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e) => {
+      if (e.key === 'custom_ollama_url') {
+        loadOllamaUrl();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -126,6 +158,7 @@ const Settings = ({ setActiveView }) => {
     { id: 'chat', label: 'Chat & Messaging', icon: MessageSquare },
     { id: 'accessibility', label: 'Accessibility', icon: Eye },
     { id: 'data', label: 'Data & Storage', icon: Database },
+    { id: 'ai-connection', label: 'AI Connection', icon: Zap },
     { id: 'account', label: 'Account', icon: User }
   ];
 
@@ -842,6 +875,89 @@ const Settings = ({ setActiveView }) => {
                       </div>
                       <p className="text-sm text-white/60">
                         Cache and local storage: ~{Math.round((localStorage.length || 0) / 1024)}KB
+                      </p>
+                    </div>
+                  </div>
+                </SettingSection>
+              </motion.div>
+            )}
+
+            {activeTab === 'ai-connection' && (
+              <motion.div
+                key="ai-connection"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <SettingSection title="AI Connection Manager" icon={Zap}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">
+                        Custom Ollama URL
+                      </label>
+                      <input
+                        type="text"
+                        value={customOllamaUrl}
+                        onChange={(e) => setCustomOllamaUrl(e.target.value)}
+                        placeholder="e.g., https://your-ngrok-url.ngrok-free.app"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-white/50 mt-2">
+                        Override the default Ollama URL. Leave empty to use the environment variable.
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <motion.button
+                        onClick={async () => {
+                          if (customOllamaUrl.trim()) {
+                            localStorage.setItem('custom_ollama_url', customOllamaUrl.trim());
+                            // Update active URL immediately
+                            const { getOllamaURL } = await import('../utils/aiProvider');
+                            setActiveOllamaUrl(getOllamaURL());
+                            success('URL Updated! Changes will take effect immediately.');
+                          } else {
+                            localStorage.removeItem('custom_ollama_url');
+                            const { getOllamaURL } = await import('../utils/aiProvider');
+                            setActiveOllamaUrl(getOllamaURL());
+                            success('URL Reset! Using default from environment.');
+                          }
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Save size={18} />
+                        Save & Apply
+                      </motion.button>
+                      <motion.button
+                        onClick={async () => {
+                          localStorage.removeItem('custom_ollama_url');
+                          setCustomOllamaUrl('');
+                          const { getOllamaURL } = await import('../utils/aiProvider');
+                          setActiveOllamaUrl(getOllamaURL());
+                          success('Reset to default URL.');
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 border border-white/20"
+                      >
+                        <RotateCcw size={18} />
+                        Reset to Default
+                      </motion.button>
+                    </div>
+
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Globe className="text-indigo-300" size={18} />
+                        <p className="text-sm font-medium text-white">Currently Active URL</p>
+                      </div>
+                      <code className="block text-xs text-white/70 bg-black/30 px-3 py-2 rounded-lg border border-white/10 font-mono break-all">
+                        {activeOllamaUrl || 'Not configured'}
+                      </code>
+                      <p className="text-xs text-white/50 mt-2">
+                        This URL will be used for the next AI request. No page refresh needed.
                       </p>
                     </div>
                   </div>
