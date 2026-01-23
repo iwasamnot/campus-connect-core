@@ -143,10 +143,14 @@ const callOllama = async (prompt, config, options = {}) => {
   // Use dynamic URL getter (checks localStorage first, then .env, then default)
   const baseUrl = config.baseUrl || getOllamaURL();
   
-  // FORCE 8B MODEL: 32B model is too heavy and times out
-  // Override any .env variable to use the faster 8B model
-  const model = 'deepseek-r1:8b';
-  console.log(`ΓÜí [OLLAMA] Switching to fast model: deepseek-r1:8b (32B model disabled to prevent timeouts)`);
+  // ✅ FIX: Detect Image (from options.image or message attachments)
+  const hasImage = options.image || 
+                   (options.messages && options.messages.length > 0 && 
+                    options.messages[options.messages.length - 1]?.attachments?.some(a => a.type === 'image'));
+  
+  // ✅ FIX: Select Model - Use llava for vision, deepseek-r1:8b for text
+  const model = hasImage ? 'llava:v1.6' : 'deepseek-r1:8b';
+  console.log(`🖼️ [OLLAMA] ${hasImage ? 'Vision mode' : 'Text mode'}: Using model ${model}`);
   
   // Build messages array with proper role structure
   // System role: Virtual Senior persona
@@ -214,33 +218,69 @@ Current Date: ${new Date().toLocaleDateString()}`;
     content: systemPrompt 
   });
   
-      // User message: Contains the full prompt (RAG context + question)
-      messages.push({ 
-        role: 'user', 
-        content: prompt 
-      });
-      
-      // Log memory context if injected
-      if (coreMemoryContext) {
-        console.log('💾 [Memory] Core memory context injected into system prompt');
+  // ✅ FIX: Format messages correctly for Ollama
+  // Ollama expects: { role: "user", content: "...", images: ["base64..."] }
+  const formattedMessages = [];
+  
+  // Add system message
+  formattedMessages.push({ 
+    role: 'system', 
+    content: systemPrompt 
+  });
+  
+  // ✅ FIX: Format user message with image if present
+  const userMessage = { 
+    role: 'user', 
+    content: prompt 
+  };
+  
+  // If image is provided in options, add it to the user message
+  if (options.image) {
+    // Strip the "data:image/png;base64," prefix if present
+    const base64 = options.image.includes(',') 
+      ? options.image.split(',')[1] 
+      : options.image;
+    userMessage.images = [base64];
+    console.log(`🖼️ [OLLAMA] Image attached to user message (${base64.length} chars base64)`);
+  }
+  // If messages array is provided with attachments, extract image from last message
+  else if (options.messages && options.messages.length > 0) {
+    const lastMessage = options.messages[options.messages.length - 1];
+    if (lastMessage.attachments && lastMessage.attachments.length > 0) {
+      const imgAttachment = lastMessage.attachments.find(a => a.type === 'image');
+      if (imgAttachment && imgAttachment.url) {
+        // Strip the "data:image/png;base64," prefix if present
+        const base64 = imgAttachment.url.includes(',')
+          ? imgAttachment.url.split(',')[1]
+          : imgAttachment.url;
+        userMessage.images = [base64];
+        console.log(`🖼️ [OLLAMA] Image extracted from message attachments (${base64.length} chars base64)`);
       }
+    }
+  }
+  
+  formattedMessages.push(userMessage);
+  
+  // Log memory context if injected
+  if (coreMemoryContext) {
+    console.log('💾 [Memory] Core memory context injected into system prompt');
+  }
 
   // MIXED CONTENT FIX: Detect if we're on HTTPS and Ollama is HTTP
   const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
   const isHttpOllama = baseUrl.startsWith('http://');
   const useProxy = isHttps && isHttpOllama;
 
-  // Use Cloud Function proxy if mixed content detected
-  // For llava (multimodal), use /api/generate endpoint instead of /api/chat
-  const endpoint = hasImage ? '/api/generate' : '/api/chat';
+  // ✅ FIX: Always use /api/chat endpoint (Ollama supports images in messages)
+  const endpoint = '/api/chat';
   const targetUrl = useProxy 
-    ? `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy`
+    ? `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy${endpoint}`
     : `${baseUrl}${endpoint}`;
 
-  console.log(`≡ƒÜÇ [OLLAMA] Sending request to ${targetUrl}${useProxy ? ' (via HTTPS proxy)' : ''}`);
-  console.log(`≡ƒôª [OLLAMA] Model: ${model}`);
-  console.log(`≡ƒÆ¼ [OLLAMA] Messages: ${messages.length} (System: ${options.systemPrompt ? 'Yes' : 'No'}, User: Yes)`);
-  console.log(`≡ƒôÅ [OLLAMA] Prompt length: ${prompt.length} characters`);
+  console.log(`🚀 [OLLAMA] Sending request to ${targetUrl}${useProxy ? ' (via HTTPS proxy)' : ''}`);
+  console.log(`🤖 [OLLAMA] Model: ${model}`);
+  console.log(`📝 [OLLAMA] Messages: ${formattedMessages.length} (System: Yes, User: Yes${hasImage ? ', Image: Yes' : ''})`);
+  console.log(`📏 [OLLAMA] Prompt length: ${prompt.length} characters`);
 
   // Create AbortController for timeout
   // Increased to 120 seconds (2 minutes) to handle reasoning model "thinking" phase
@@ -248,31 +288,18 @@ Current Date: ${new Date().toLocaleDateString()}`;
   const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
 
   try {
-    // Build request body - different structure for multimodal (llava) vs text-only
-    let requestBody;
-    
-    if (hasImage) {
-      // Multimodal request: llava uses prompt + images format
-      requestBody = {
-        model: model,
-        prompt: prompt, // User query
-        images: [options.image], // Base64 image string (without data URI prefix)
-        stream: false
-      };
-      console.log(`🖼️ [OLLAMA] Sending multimodal request with image (${options.image.length} chars base64)`);
-    } else {
-      // Text-only request: Standard chat format
-      requestBody = {
-        model: model,
-        messages: messages, // Standard chat format - no complex schemas
-        stream: false, // Non-streaming for simplicity
-        options: {
-          temperature: options.temperature || config.temperature || 0.7,
-          num_ctx: 4096,      // Larger context window for reasoning models
-          num_predict: 2048,  // Allow 2048 tokens to generate (prevents cutoff during thinking)
-        }
-      };
-    }
+    // ✅ FIX: Use standard chat format for both text and multimodal
+    // Ollama's /api/chat endpoint supports images in message objects
+    const requestBody = {
+      model: model,
+      messages: formattedMessages, // Use formatted messages with images array
+      stream: false, // Non-streaming for simplicity
+      options: {
+        temperature: options.temperature || config.temperature || 0.7,
+        num_ctx: 4096,      // Larger context window for reasoning models
+        num_predict: 2048,  // Allow 2048 tokens to generate (prevents cutoff during thinking)
+      }
+    };
 
     const response = await fetch(targetUrl, {
       method: 'POST',

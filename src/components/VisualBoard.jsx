@@ -126,47 +126,63 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   ];
 
   // Save to history - use refs to get current shapes
+  // ✅ FIX: Avoid nested setState calls (React error #426)
+  // Use refs to access current state, then update states sequentially
+  const historyRef = useRef([]);
+  const historyIndexRef = useRef(-1);
+  
+  // Sync refs with state
+  useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
+  
+  useEffect(() => {
+    historyIndexRef.current = historyIndex;
+  }, [historyIndex]);
+  
   const saveToHistory = useCallback(() => {
     const currentShapesStr = JSON.stringify(shapesRef.current);
-    setHistory(prevHistory => {
-      setHistoryIndex(prevIndex => {
-        const newHistory = prevHistory.slice(0, prevIndex + 1);
-        newHistory.push(currentShapesStr);
-        setHistory(newHistory);
-        return newHistory.length - 1;
-      });
-      return prevHistory;
-    });
+    const prevHistory = historyRef.current;
+    const prevIndex = historyIndexRef.current;
+    const newHistory = prevHistory.slice(0, prevIndex + 1);
+    newHistory.push(currentShapesStr);
+    const newIndex = newHistory.length - 1;
+    
+    // Update states sequentially, not nested
+    setHistory(newHistory);
+    setHistoryIndex(newIndex);
   }, []); // No dependencies - uses refs
 
   // Undo/Redo - use functional updates
+  // ✅ FIX: Avoid nested setState calls (React error #426)
+  // Update states sequentially, not nested
   const handleUndo = useCallback(() => {
-    setHistory(prevHistory => {
-      setHistoryIndex(prevIndex => {
-        if (prevIndex > 0) {
-          const prevShapes = JSON.parse(prevHistory[prevIndex - 1]);
-          setShapes(prevShapes);
-          return prevIndex - 1;
-        }
-        return prevIndex;
-      });
-      return prevHistory;
-    });
+    const prevHistory = historyRef.current;
+    const prevIndex = historyIndexRef.current;
+    
+    if (prevIndex > 0) {
+      const newIndex = prevIndex - 1;
+      const prevShapes = JSON.parse(prevHistory[newIndex]);
+      
+      // Update states sequentially, not nested
+      setShapes(prevShapes);
+      setHistoryIndex(newIndex);
+    }
   }, []);
 
   const handleRedo = useCallback(() => {
-    setHistory(prevHistory => {
-      setHistoryIndex(prevIndex => {
-        if (prevIndex < prevHistory.length - 1) {
-          const nextShapes = JSON.parse(prevHistory[prevIndex + 1]);
-          setShapes(nextShapes);
-          return prevIndex + 1;
-        }
-        return prevIndex;
-      });
-      return prevHistory;
-    });
-  }, []); // No dependencies - uses functional updates
+    const prevHistory = historyRef.current;
+    const prevIndex = historyIndexRef.current;
+    
+    if (prevIndex < prevHistory.length - 1) {
+      const newIndex = prevIndex + 1;
+      const nextShapes = JSON.parse(prevHistory[newIndex]);
+      
+      // Update states sequentially, not nested
+      setShapes(nextShapes);
+      setHistoryIndex(newIndex);
+    }
+  }, []);
 
   // Get mouse position relative to canvas (works with event or {clientX, clientY} object)
   const getMousePos = (e) => {

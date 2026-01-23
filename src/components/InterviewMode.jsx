@@ -3,7 +3,7 @@
  * Mock interview mode with real-time feedback
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Play, Square, TrendingUp, AlertCircle, CheckCircle2, XCircle, MessageSquare, Brain } from 'lucide-react';
 import { useVoiceMode } from '../hooks/useVoiceMode';
@@ -24,6 +24,12 @@ const InterviewMode = ({ onClose }) => {
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
   const [interviewHistory, setInterviewHistory] = useState([]);
   const [overallScore, setOverallScore] = useState(null);
+  const feedbackRef = useRef([]); // ✅ FIX: Ref to track feedback for score calculation
+
+  // Sync ref with state
+  useEffect(() => {
+    feedbackRef.current = feedback;
+  }, [feedback]);
 
   // Handle user transcript from voice mode
   const handleUserTranscript = useCallback(async (transcript) => {
@@ -45,18 +51,24 @@ const InterviewMode = ({ onClose }) => {
       const analysisResult = await analyzeResponse(transcript, currentQuestion, currentRole);
       
       if (analysisResult.success) {
-        setFeedback(prev => [...prev, {
+        // ✅ FIX: Calculate new feedback and score first, then update states sequentially
+        // This avoids nested setState calls (React error #426)
+        const newFeedbackItem = {
           question: currentQuestion,
           answer: transcript,
           analysis: analysisResult.analysis,
           timestamp: new Date().toISOString()
-        }]);
-
-        // Update overall score
-        const scores = [...feedback, analysisResult].map(f => f.analysis?.score || 0);
+        };
+        
+        // Calculate new feedback array and score using ref to get current state
+        const newFeedback = [...feedbackRef.current, newFeedbackItem];
+        const scores = newFeedback.map(f => f.analysis?.score || 0);
         const avgScore = scores.length > 0 
           ? scores.reduce((a, b) => a + b, 0) / scores.length 
           : analysisResult.analysis.score;
+        
+        // Update states sequentially, not nested
+        setFeedback(newFeedback);
         setOverallScore(avgScore);
 
         // Generate next question
@@ -76,7 +88,7 @@ const InterviewMode = ({ onClose }) => {
       setIsAnalyzing(false);
       setIsGeneratingQuestion(false);
     }
-  }, [currentQuestion, currentRole, questionsAsked, feedback, success, showError]);
+  }, [currentQuestion, currentRole, questionsAsked, success, showError]); // ✅ FIX: Removed feedback from deps to prevent callback recreation
 
   const {
     isListening,

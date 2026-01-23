@@ -55,6 +55,12 @@ export const useVoiceMode = (onUserTranscript) => {
     try {
       setError(null);
 
+      // ✅ FIX: Resume audio context to allow TTS autoplay
+      // Browsers block autoplay audio - must interact with page first
+      if (window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
       // Initialize Deepgram if not already done
       if (!deepgramClientRef.current) {
         if (!initializeDeepgram()) {
@@ -69,6 +75,11 @@ export const useVoiceMode = (onUserTranscript) => {
       // Create audio context for processing
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       audioContextRef.current = audioContext;
+      
+      // Resume audio context if suspended (required for autoplay)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
 
       // Create media source from stream
       const source = audioContext.createMediaStreamSource(stream);
@@ -120,14 +131,25 @@ export const useVoiceMode = (onUserTranscript) => {
           const isFinal = data.is_final;
 
           if (transcript && transcript.trim()) {
-            if (isFinal) {
+            // ✅ FIX: Only interrupt if transcript is meaningful (more than 1 character) and final
+            // This prevents background noise from killing AI speech before it can start
+            if (transcript.trim().length > 1 && isFinal) {
+              // DEBUG: Log what triggered the interruption
+              console.log('🎤 [Barge-In] Interruption triggered by:', transcript);
+              
+              // Stop AI speech only if it's a real sentence
+              if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+              }
+              
               // Final transcript - call callback
               setInterimTranscript('');
               if (onUserTranscript) {
                 onUserTranscript(transcript.trim());
               }
-            } else {
-              // Interim result - update UI
+            } else if (!isFinal) {
+              // Interim result - update UI (but don't interrupt)
               setInterimTranscript(transcript.trim());
             }
           }
@@ -136,15 +158,8 @@ export const useVoiceMode = (onUserTranscript) => {
         }
       });
 
-      // Handle SpeechStarted event - interrupt AI speech
-      connection.on('speech_started', () => {
-        console.log('🎤 [Deepgram] Speech started - interrupting AI');
-        // Cancel any ongoing speech synthesis
-        if (window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-          setIsSpeaking(false);
-        }
-      });
+      // Note: speech_started event is too sensitive (fires on any sound)
+      // Interruption logic moved to 'results' handler above for better control
 
       // Handle connection errors
       connection.on('error', (error) => {
