@@ -13,12 +13,26 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
 const InterviewMode = ({ onClose }) => {
+  console.log('🚀 [InterviewMode] Component rendering started');
+  
   // ✅ FIX: Use hooks normally - ErrorBoundary will catch any errors
   // Hooks must be called unconditionally (React rules)
+  console.log('🔍 [InterviewMode] Calling useAuth hook...');
   const authContext = useAuth();
+  console.log('✅ [InterviewMode] useAuth returned:', { 
+    hasUser: !!authContext?.user,
+    loading: authContext?.loading 
+  });
+  
   const user = authContext?.user;
   const loading = authContext?.loading ?? false;
+  
+  console.log('🔍 [InterviewMode] Calling useToast hook...');
   const { success, error: showError } = useToast();
+  console.log('✅ [InterviewMode] useToast returned:', { 
+    hasSuccess: typeof success === 'function',
+    hasShowError: typeof showError === 'function'
+  });
   const [isInterviewActive, setIsInterviewActive] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentRole, setCurrentRole] = useState('Cyber Security Analyst');
@@ -31,30 +45,55 @@ const InterviewMode = ({ onClose }) => {
   const [initError, setInitError] = useState(null);
   const feedbackRef = useRef([]); // ✅ FIX: Ref to track feedback for score calculation
 
-  // ✅ FIX: Suppress blob URL errors (separate effect to avoid cleanup issues)
+  // ✅ FIX: Log all errors (don't suppress - just log them)
   useEffect(() => {
+    console.log('🔍 [InterviewMode] Component mounted - setting up error listeners');
+    
     const handleError = (event) => {
       const errorMessage = event.message || event.error?.message || '';
+      console.log('🚨 [InterviewMode] Global error caught:', {
+        message: errorMessage,
+        error: event.error,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+      });
+      
+      // Only suppress blob URL errors (they're harmless)
       if (errorMessage.includes('blob:') && errorMessage.includes('ERR_FILE_NOT_FOUND')) {
         console.debug('🔇 [InterviewMode] Suppressed harmless blob URL error');
         event.preventDefault();
         event.stopPropagation();
         return false;
       }
+      
+      // Log all other errors
+      console.error('❌ [InterviewMode] Unhandled error:', event.error);
     };
 
     const handleRejection = (event) => {
       const reason = event.reason?.message || String(event.reason || '');
+      console.log('🚨 [InterviewMode] Unhandled promise rejection:', {
+        reason: event.reason,
+        reasonString: reason
+      });
+      
+      // Only suppress blob URL rejections
       if (reason.includes('blob:') && reason.includes('ERR_FILE_NOT_FOUND')) {
         console.debug('🔇 [InterviewMode] Suppressed harmless blob URL rejection');
         event.preventDefault();
+        return;
       }
+      
+      // Log all other rejections
+      console.error('❌ [InterviewMode] Unhandled promise rejection:', event.reason);
     };
 
     window.addEventListener('error', handleError, true);
     window.addEventListener('unhandledrejection', handleRejection);
 
     return () => {
+      console.log('🔍 [InterviewMode] Component unmounting - removing error listeners');
       window.removeEventListener('error', handleError, true);
       window.removeEventListener('unhandledrejection', handleRejection);
     };
@@ -65,32 +104,49 @@ const InterviewMode = ({ onClose }) => {
     console.log('🔍 [InterviewMode] Initializing...', {
       user: user ? { uid: user.uid, email: user.email } : null,
       loading,
-      hasAuthContext: !!authContext
+      hasAuthContext: !!authContext,
+      authContextKeys: authContext ? Object.keys(authContext) : [],
+      showErrorType: typeof showError,
+      successType: typeof success
     });
 
-    if (!authContext) {
-      const error = new Error('AuthContext is not available. Make sure InterviewMode is wrapped in AuthProvider.');
-      console.error('❌ [InterviewMode] AuthContext error:', error);
-      setInitError(error.message);
-      showError('Authentication error. Please refresh the page.');
-      return;
-    }
+    try {
+      if (!authContext) {
+        const error = new Error('AuthContext is not available. Make sure InterviewMode is wrapped in AuthProvider.');
+        console.error('❌ [InterviewMode] AuthContext error:', error);
+        setInitError(error.message);
+        if (showError) {
+          showError('Authentication error. Please refresh the page.');
+        } else {
+          console.error('❌ [InterviewMode] showError is not available!');
+        }
+        return;
+      }
 
-    if (loading) {
-      console.log('⏳ [InterviewMode] Auth is loading...');
-      return;
-    }
+      if (loading) {
+        console.log('⏳ [InterviewMode] Auth is loading...');
+        return;
+      }
 
-    if (!user) {
-      console.warn('⚠️ [InterviewMode] No user authenticated');
-      setInitError('Please log in to use Mock Interview.');
-      showError('Please log in to use Mock Interview.');
-      return;
-    }
+      if (!user) {
+        console.warn('⚠️ [InterviewMode] No user authenticated');
+        setInitError('Please log in to use Mock Interview.');
+        if (showError) {
+          showError('Please log in to use Mock Interview.');
+        } else {
+          console.error('❌ [InterviewMode] showError is not available!');
+        }
+        return;
+      }
 
-    console.log('✅ [InterviewMode] Initialized successfully');
-    setInitError(null);
-  }, [user, loading, authContext, showError]);
+      console.log('✅ [InterviewMode] Initialized successfully');
+      setInitError(null);
+    } catch (error) {
+      console.error('❌ [InterviewMode] Error in initialization effect:', error);
+      console.error('Error stack:', error?.stack);
+      setInitError(`Initialization error: ${error?.message || 'Unknown error'}`);
+    }
+  }, [user, loading, authContext, showError, success]);
 
   // Sync ref with state
   useEffect(() => {
@@ -168,6 +224,8 @@ const InterviewMode = ({ onClose }) => {
     }
   }, [currentQuestion, currentRole, questionsAsked, success, showError]); // ✅ FIX: Removed feedback from deps to prevent callback recreation
 
+  // ✅ FIX: Log useVoiceMode initialization
+  console.log('🎤 [InterviewMode] About to call useVoiceMode hook...');
   const {
     isListening,
     isSpeaking,
@@ -180,6 +238,15 @@ const InterviewMode = ({ onClose }) => {
     speak: speakText,
     stopSpeaking
   } = useVoiceMode(handleUserTranscript);
+  
+  console.log('✅ [InterviewMode] useVoiceMode hook called successfully:', {
+    isListening,
+    isSpeaking,
+    isMuted,
+    hasStartVoiceMode: typeof startVoiceMode === 'function',
+    hasSpeak: typeof speakText === 'function',
+    voiceError
+  });
 
   // Start interview
   const startInterview = useCallback(async () => {
