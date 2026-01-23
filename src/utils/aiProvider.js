@@ -383,9 +383,10 @@ Current Date: ${new Date().toLocaleDateString()}`;
     const endpoint = '/api/chat';
     
     // MIXED CONTENT FIX: Use proxy if HTTPS page trying to connect to HTTP Ollama
-    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    // ✅ FIX: Renamed to avoid conflict with isHttps declared earlier (checks if page is HTTPS, not URL)
+    const isPageHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
     const isHttpOllama = baseUrl.startsWith('http://');
-    const useProxy = isHttps && isHttpOllama;
+    const useProxy = isPageHttps && isHttpOllama;
     
     if (useProxy) {
       // Use Cloud Function proxy for Mixed Content
@@ -752,9 +753,10 @@ Text to translate:
       const model = 'deepseek-r1:8b';
       
       // Check if we need proxy (HTTPS page calling HTTP API)
-      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      // ✅ FIX: Renamed to avoid conflict with isHttps declared earlier
+      const isPageHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
       const isHttpUrl = baseUrl.startsWith('http://');
-      const useProxy = isHttps && isHttpUrl;
+      const useProxy = isPageHttps && isHttpUrl;
       
       const url = useProxy
         ? `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy/api/chat`
