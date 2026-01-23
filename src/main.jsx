@@ -1,3 +1,6 @@
+// ✅ SANITY CHECK: If you can see this, the console is working
+console.error('🔥 SYSTEM START: Console is active. If you see this, logging is working.');
+
 // CRITICAL: Import React first and ensure it's available globally
 import React from 'react'
 import ReactDOM from 'react-dom/client'

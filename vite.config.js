@@ -455,10 +455,11 @@ export default defineConfig({
     minify: 'terser', // Use terser for better minification
     terserOptions: {
       compress: {
-        // ✅ FIX: Keep console.error and console.warn for debugging (remove only log/info/debug)
-        drop_console: false, // Keep console methods for debugging
+        // ✅ FIX: Keep ALL console methods for debugging (including console.log)
+        // Changed: Keep console.log too for better debugging visibility
+        drop_console: false, // Keep ALL console methods for debugging
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'] // Only remove non-critical console methods
+        pure_funcs: [] // ✅ FIX: Don't remove any console methods - keep everything for debugging
       }
     },
     // Optimize chunk size
@@ -545,7 +546,7 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    sourcemap: false, // Disable sourcemaps for production to reduce build size
+    sourcemap: true, // ✅ FIX: Enable sourcemaps for better debugging in production
     // Optimize assets
     assetsInlineLimit: 4096 // Inline assets smaller than 4kb
   },
