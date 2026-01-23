@@ -13,13 +13,14 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
 const InterviewMode = ({ onClose }) => {
-  console.log('🚀 [InterviewMode] Component rendering started');
+  // ✅ FIX: Use console.error instead of console.log (not stripped in production)
+  console.error('🚀 [InterviewMode] Component rendering started');
   
   // ✅ FIX: Use hooks normally - ErrorBoundary will catch any errors
   // Hooks must be called unconditionally (React rules)
-  console.log('🔍 [InterviewMode] Calling useAuth hook...');
+  console.error('🔍 [InterviewMode] Calling useAuth hook...');
   const authContext = useAuth();
-  console.log('✅ [InterviewMode] useAuth returned:', { 
+  console.error('✅ [InterviewMode] useAuth returned:', { 
     hasUser: !!authContext?.user,
     loading: authContext?.loading 
   });
@@ -27,9 +28,9 @@ const InterviewMode = ({ onClose }) => {
   const user = authContext?.user;
   const loading = authContext?.loading ?? false;
   
-  console.log('🔍 [InterviewMode] Calling useToast hook...');
+  console.error('🔍 [InterviewMode] Calling useToast hook...');
   const { success, error: showError } = useToast();
-  console.log('✅ [InterviewMode] useToast returned:', { 
+  console.error('✅ [InterviewMode] useToast returned:', { 
     hasSuccess: typeof success === 'function',
     hasShowError: typeof showError === 'function'
   });
@@ -47,11 +48,11 @@ const InterviewMode = ({ onClose }) => {
 
   // ✅ FIX: Log all errors (don't suppress - just log them)
   useEffect(() => {
-    console.log('🔍 [InterviewMode] Component mounted - setting up error listeners');
+    console.error('🔍 [InterviewMode] Component mounted - setting up error listeners');
     
     const handleError = (event) => {
       const errorMessage = event.message || event.error?.message || '';
-      console.log('🚨 [InterviewMode] Global error caught:', {
+      console.error('🚨 [InterviewMode] Global error caught:', {
         message: errorMessage,
         error: event.error,
         filename: event.filename,
@@ -73,7 +74,7 @@ const InterviewMode = ({ onClose }) => {
 
     const handleRejection = (event) => {
       const reason = event.reason?.message || String(event.reason || '');
-      console.log('🚨 [InterviewMode] Unhandled promise rejection:', {
+      console.error('🚨 [InterviewMode] Unhandled promise rejection:', {
         reason: event.reason,
         reasonString: reason
       });
@@ -93,7 +94,7 @@ const InterviewMode = ({ onClose }) => {
     window.addEventListener('unhandledrejection', handleRejection);
 
     return () => {
-      console.log('🔍 [InterviewMode] Component unmounting - removing error listeners');
+      console.error('🔍 [InterviewMode] Component unmounting - removing error listeners');
       window.removeEventListener('error', handleError, true);
       window.removeEventListener('unhandledrejection', handleRejection);
     };
@@ -101,7 +102,7 @@ const InterviewMode = ({ onClose }) => {
 
   // ✅ FIX: Check authentication and log errors
   useEffect(() => {
-    console.log('🔍 [InterviewMode] Initializing...', {
+    console.error('🔍 [InterviewMode] Initializing...', {
       user: user ? { uid: user.uid, email: user.email } : null,
       loading,
       hasAuthContext: !!authContext,
@@ -124,12 +125,12 @@ const InterviewMode = ({ onClose }) => {
       }
 
       if (loading) {
-        console.log('⏳ [InterviewMode] Auth is loading...');
+        console.error('⏳ [InterviewMode] Auth is loading...');
         return;
       }
 
       if (!user) {
-        console.warn('⚠️ [InterviewMode] No user authenticated');
+        console.error('⚠️ [InterviewMode] No user authenticated');
         setInitError('Please log in to use Mock Interview.');
         if (showError) {
           showError('Please log in to use Mock Interview.');
@@ -139,7 +140,7 @@ const InterviewMode = ({ onClose }) => {
         return;
       }
 
-      console.log('✅ [InterviewMode] Initialized successfully');
+      console.error('✅ [InterviewMode] Initialized successfully');
       setInitError(null);
     } catch (error) {
       console.error('❌ [InterviewMode] Error in initialization effect:', error);
@@ -225,7 +226,7 @@ const InterviewMode = ({ onClose }) => {
   }, [currentQuestion, currentRole, questionsAsked, success, showError]); // ✅ FIX: Removed feedback from deps to prevent callback recreation
 
   // ✅ FIX: Log useVoiceMode initialization
-  console.log('🎤 [InterviewMode] About to call useVoiceMode hook...');
+  console.error('🎤 [InterviewMode] About to call useVoiceMode hook...');
   const {
     isListening,
     isSpeaking,
@@ -239,7 +240,7 @@ const InterviewMode = ({ onClose }) => {
     stopSpeaking
   } = useVoiceMode(handleUserTranscript);
   
-  console.log('✅ [InterviewMode] useVoiceMode hook called successfully:', {
+  console.error('✅ [InterviewMode] useVoiceMode hook called successfully:', {
     isListening,
     isSpeaking,
     isMuted,
