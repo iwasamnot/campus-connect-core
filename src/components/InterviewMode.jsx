@@ -30,6 +30,35 @@ const InterviewMode = ({ onClose }) => {
   const [initError, setInitError] = useState(null);
   const feedbackRef = useRef([]); // ✅ FIX: Ref to track feedback for score calculation
 
+  // ✅ FIX: Suppress blob URL errors (separate effect to avoid cleanup issues)
+  useEffect(() => {
+    const handleError = (event) => {
+      const errorMessage = event.message || event.error?.message || '';
+      if (errorMessage.includes('blob:') && errorMessage.includes('ERR_FILE_NOT_FOUND')) {
+        console.debug('🔇 [InterviewMode] Suppressed harmless blob URL error');
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
+    };
+
+    const handleRejection = (event) => {
+      const reason = event.reason?.message || String(event.reason || '');
+      if (reason.includes('blob:') && reason.includes('ERR_FILE_NOT_FOUND')) {
+        console.debug('🔇 [InterviewMode] Suppressed harmless blob URL rejection');
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('error', handleError, true);
+    window.addEventListener('unhandledrejection', handleRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
   // ✅ FIX: Check authentication and log errors
   useEffect(() => {
     console.log('🔍 [InterviewMode] Initializing...', {

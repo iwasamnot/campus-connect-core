@@ -196,12 +196,23 @@ export default defineConfig({
         clientsClaim: true, // Take control of all clients immediately
         // Optimize for mobile networks
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/, /^\/firebase/],
+        navigateFallbackDenylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/, /^\/firebase/, /^blob:/],
         // Better offline support for mobile
         offlineGoogleAnalytics: false,
         // Optimize cache for mobile devices with versioning
         cacheId: 'campusconnect-v8.3.0',
         runtimeCaching: [
+          {
+            // ✅ FIX: Exclude blob URLs from caching (they're temporary and can't be cached)
+            urlPattern: /^blob:/,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'blob-urls-skip',
+              cacheableResponse: {
+                statuses: []
+              }
+            }
+          },
           {
             // CRITICAL: Handle JS module requests BEFORE navigateFallback
             // This prevents "Expected a JavaScript module but got text/html" errors
