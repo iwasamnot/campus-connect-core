@@ -13,7 +13,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
 const InterviewMode = ({ onClose }) => {
-  const { user } = useAuth();
+  // ✅ FIX: Use hooks normally - ErrorBoundary will catch any errors
+  const authContext = useAuth();
+  const user = authContext?.user;
+  const loading = authContext?.loading ?? false;
   const { success, error: showError } = useToast();
   const [isInterviewActive, setIsInterviewActive] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -24,7 +27,40 @@ const InterviewMode = ({ onClose }) => {
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
   const [interviewHistory, setInterviewHistory] = useState([]);
   const [overallScore, setOverallScore] = useState(null);
+  const [initError, setInitError] = useState(null);
   const feedbackRef = useRef([]); // ✅ FIX: Ref to track feedback for score calculation
+
+  // ✅ FIX: Check authentication and log errors
+  useEffect(() => {
+    console.log('🔍 [InterviewMode] Initializing...', {
+      user: user ? { uid: user.uid, email: user.email } : null,
+      loading,
+      hasAuthContext: !!authContext
+    });
+
+    if (!authContext) {
+      const error = new Error('AuthContext is not available. Make sure InterviewMode is wrapped in AuthProvider.');
+      console.error('❌ [InterviewMode] AuthContext error:', error);
+      setInitError(error.message);
+      showError('Authentication error. Please refresh the page.');
+      return;
+    }
+
+    if (loading) {
+      console.log('⏳ [InterviewMode] Auth is loading...');
+      return;
+    }
+
+    if (!user) {
+      console.warn('⚠️ [InterviewMode] No user authenticated');
+      setInitError('Please log in to use Mock Interview.');
+      showError('Please log in to use Mock Interview.');
+      return;
+    }
+
+    console.log('✅ [InterviewMode] Initialized successfully');
+    setInitError(null);
+  }, [user, loading, authContext, showError]);
 
   // Sync ref with state
   useEffect(() => {
@@ -48,7 +84,19 @@ const InterviewMode = ({ onClose }) => {
     // Analyze the response
     setIsAnalyzing(true);
     try {
+      console.log('🔍 [InterviewMode] Analyzing response...', {
+        transcriptLength: transcript.length,
+        question: currentQuestion,
+        role: currentRole
+      });
+      
       const analysisResult = await analyzeResponse(transcript, currentQuestion, currentRole);
+      
+      console.log('✅ [InterviewMode] Analysis result:', {
+        success: analysisResult.success,
+        hasAnalysis: !!analysisResult.analysis,
+        score: analysisResult.analysis?.score
+      });
       
       if (analysisResult.success) {
         // ✅ FIX: Calculate new feedback and score first, then update states sequentially
@@ -105,20 +153,41 @@ const InterviewMode = ({ onClose }) => {
 
   // Start interview
   const startInterview = useCallback(async () => {
+    console.log('🚀 [InterviewMode] Starting interview...', {
+      role: currentRole,
+      user: user ? { uid: user.uid } : null
+    });
+
+    // ✅ FIX: Check authentication before starting
+    if (!user) {
+      const error = 'User not authenticated. Please log in.';
+      console.error('❌ [InterviewMode]', error);
+      showError(error);
+      setInitError(error);
+      return;
+    }
+
     setIsInterviewActive(true);
     setIsGeneratingQuestion(true);
     
     try {
       // Start voice mode
+      console.log('🎤 [InterviewMode] Starting voice mode...');
       const voiceStarted = await startVoiceMode();
       if (!voiceStarted) {
-        showError('Failed to start voice mode. Please check microphone permissions.');
+        const error = 'Failed to start voice mode. Please check microphone permissions.';
+        console.error('❌ [InterviewMode]', error);
+        showError(error);
         setIsInterviewActive(false);
         return;
       }
+      console.log('✅ [InterviewMode] Voice mode started');
 
       // Generate first question
+      console.log('🤖 [InterviewMode] Generating first question...');
       const firstQuestion = await generateNextQuestion(currentRole, []);
+      console.log('✅ [InterviewMode] First question generated:', firstQuestion);
+      
       setCurrentQuestion(firstQuestion);
       setQuestionsAsked([]);
       setFeedback([]);
@@ -126,17 +195,25 @@ const InterviewMode = ({ onClose }) => {
       setOverallScore(null);
 
       // Speak the question
+      console.log('🔊 [InterviewMode] Speaking question...');
       speakText(`Let's begin. ${firstQuestion}`);
       
       success('Interview started! Listen for the first question.');
+      console.log('✅ [InterviewMode] Interview started successfully');
     } catch (error) {
-      console.error('Error starting interview:', error);
-      showError('Failed to start interview. Please try again.');
+      console.error('❌ [InterviewMode] Error starting interview:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name,
+        code: error?.code
+      });
+      showError(`Failed to start interview: ${error?.message || 'Unknown error'}. Please try again.`);
       setIsInterviewActive(false);
     } finally {
       setIsGeneratingQuestion(false);
     }
-  }, [currentRole, startVoiceMode, speakText, success, showError]);
+  }, [currentRole, startVoiceMode, speakText, success, showError, user]);
 
   // Stop interview
   const stopInterview = useCallback(() => {
@@ -157,6 +234,63 @@ const InterviewMode = ({ onClose }) => {
     'Full Stack Developer',
     'Cloud Architect'
   ];
+
+  // ✅ FIX: Show error state if initialization failed
+  if (initError) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full glass-panel border border-red-500/30 rounded-2xl p-8 backdrop-blur-xl"
+        >
+          <div className="flex items-center justify-center mb-6">
+            <AlertCircle className="text-red-400" size={48} />
+          </div>
+          <h2 className="text-2xl font-bold text-white text-center mb-4">
+            Authentication Required
+          </h2>
+          <p className="text-white/70 text-center mb-6">
+            {initError}
+          </p>
+          <div className="flex gap-3">
+            <motion.button
+              onClick={onClose}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all"
+            >
+              Close
+            </motion.button>
+            <motion.button
+              onClick={() => window.location.reload()}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 px-6 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl transition-all"
+            >
+              Refresh Page
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ✅ FIX: Show loading state
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70">Loading...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 flex">

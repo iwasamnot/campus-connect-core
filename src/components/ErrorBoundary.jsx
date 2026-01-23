@@ -17,7 +17,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error('❌ Error caught by boundary:', error, errorInfo);
     
     // Enhanced error reporting (can be extended to send to analytics)
     if (typeof window !== 'undefined') {
@@ -27,11 +27,22 @@ class ErrorBoundary extends React.Component {
         componentStack: errorInfo?.componentStack,
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
-        url: window.location.href
+        url: window.location.href,
+        // ✅ FIX: Add Firebase-specific error detection
+        isFirebaseError: error?.code?.startsWith('firebase/') || error?.code?.startsWith('permission-denied'),
+        errorCode: error?.code,
+        errorName: error?.name
       };
       
       // Log to console in structured format
-      console.error('Error Report:', errorReport);
+      console.error('❌ Error Report:', errorReport);
+      
+      // ✅ FIX: Check for Firebase permission errors
+      if (error?.code === 'permission-denied' || error?.message?.includes('permission')) {
+        console.error('🔒 Firebase Permission Error Detected!');
+        console.error('This might be a Firestore security rules issue.');
+        console.error('Check firestore.rules for the collection being accessed.');
+      }
       
       // Send to error tracking service if available
       if (window.gtag) {

@@ -376,7 +376,9 @@ function App() {
       />
       {/* Interview Mode */}
       {showInterviewMode && (
-        <InterviewMode onClose={() => setShowInterviewMode(false)} />
+        <ErrorBoundary>
+          <InterviewMode onClose={() => setShowInterviewMode(false)} />
+        </ErrorBoundary>
       )}
       {/* IMPORTANT: Avoid forcing 100vh on mobile/PWA (causes "locked" viewport and jumpy layouts).
           Use h-screen as fallback, but prefer 100dvh where supported. */}
