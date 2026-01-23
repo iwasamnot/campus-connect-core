@@ -377,7 +377,9 @@ function App() {
       {/* Interview Mode */}
       {showInterviewMode && (
         <ErrorBoundary>
-          <InterviewMode onClose={() => setShowInterviewMode(false)} />
+          <Suspense fallback={<LoadingSpinner />}>
+            <InterviewMode onClose={() => setShowInterviewMode(false)} />
+          </Suspense>
         </ErrorBoundary>
       )}
       {/* IMPORTANT: Avoid forcing 100vh on mobile/PWA (causes "locked" viewport and jumpy layouts).

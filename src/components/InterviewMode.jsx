@@ -14,6 +14,7 @@ import { useToast } from '../context/ToastContext';
 
 const InterviewMode = ({ onClose }) => {
   // ✅ FIX: Use hooks normally - ErrorBoundary will catch any errors
+  // Hooks must be called unconditionally (React rules)
   const authContext = useAuth();
   const user = authContext?.user;
   const loading = authContext?.loading ?? false;
