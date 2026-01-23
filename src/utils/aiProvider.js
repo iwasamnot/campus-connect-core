@@ -199,9 +199,47 @@ export const callAI = async (prompt, options = {}) => {
         throw new Error(`Unknown provider: ${config.provider}`);
     }
   } catch (error) {
-    // ✅ FIX: No fallback for general AI calls - always use Ollama as primary
-    // Fallback to Vertex/Groq is ONLY for RAG engine and toxicity checks
-    console.error('❌ [OLLAMA] Request failed (no fallback for general AI calls):', error.message);
+    // ✅ FIX: Fallback to Vertex/Groq when Ollama fails or is unavailable
+    if (config.provider === 'ollama') {
+      console.warn('⚠️ [OLLAMA] Failed, trying Vertex/Groq fallback:', error.message);
+      
+      // Try Groq fallback
+      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
+      if (groqApiKey && groqApiKey !== '') {
+        try {
+          const groqConfig = {
+            provider: 'groq',
+            apiKey: groqApiKey,
+            model: 'llama-3.1-8b-instant',
+            baseUrl: 'https://api.groq.com/openai/v1',
+            maxTokens: options.maxTokens || 2048,
+            temperature: options.temperature || 0.7
+          };
+          console.error('🔄 [FALLBACK] Switching to Groq API for general AI call...');
+          return await callGroq(prompt, groqConfig, options);
+        } catch (groqError) {
+          console.error('❌ [GROQ] Fallback also failed:', groqError);
+          // Try Vertex AI if available
+          const vertexApiKey = import.meta.env.VITE_VERTEX_API_KEY?.trim();
+          if (vertexApiKey && vertexApiKey !== '') {
+            try {
+              // Vertex AI fallback would go here if implemented
+              console.error('⚠️ [FALLBACK] Vertex AI fallback not yet implemented');
+              throw new Error('All AI providers failed');
+            } catch (vertexError) {
+              console.error('❌ [FALLBACK] All providers failed:', { ollama: error.message, groq: groqError.message });
+              throw new Error(`All AI providers failed. Ollama: ${error.message}, Groq: ${groqError.message}`);
+            }
+          } else {
+            throw new Error(`Both Ollama and Groq failed. Ollama: ${error.message}, Groq: ${groqError.message}`);
+          }
+        }
+      } else {
+        console.error('❌ [FALLBACK] Ollama failed and Groq is not configured');
+        throw new Error(`Ollama failed: ${error.message}. Groq fallback not available (VITE_GROQ_API_KEY not set).`);
+      }
+    }
+    // If Groq was primary and failed, no fallback available
     throw error;
   }
 };
