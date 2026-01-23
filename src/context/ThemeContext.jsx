@@ -20,7 +20,7 @@ const ThemeProvider = ({ children }) => {
     // Check localStorage first, then system preference
     if (typeof window === 'undefined') return false;
     
-    const saved = localStorage.getItem('darkMode');
+    const saved = safeLocalStorage.getItem('darkMode');
     if (saved !== null) {
       return saved === 'true';
     }
@@ -31,10 +31,10 @@ const ThemeProvider = ({ children }) => {
     // Check localStorage for theme style preference
     if (typeof window === 'undefined') return 'fluid';
     
-    const saved = localStorage.getItem('themeStyle');
+    const saved = safeLocalStorage.getItem('themeStyle');
     // Migrate old 'lucid' to 'fluid' if exists
     if (saved === 'lucid') {
-      localStorage.setItem('themeStyle', 'fluid');
+      safeLocalStorage.setItem('themeStyle', 'fluid');
       return 'fluid';
     }
     return saved || 'fluid';
@@ -60,8 +60,8 @@ const ThemeProvider = ({ children }) => {
     body.classList.add(`theme-${themeStyle}`);
     
     // Save to localStorage
-    localStorage.setItem('darkMode', darkMode.toString());
-    localStorage.setItem('themeStyle', themeStyle);
+    safeLocalStorage.setItem('darkMode', darkMode.toString());
+    safeLocalStorage.setItem('themeStyle', themeStyle);
   }, [darkMode, themeStyle]);
 
   const toggleDarkMode = () => {

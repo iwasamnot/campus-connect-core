@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { safeLocalStorage } from '../utils/safeStorage';
 
 const PreferencesContext = createContext();
 
@@ -48,7 +49,7 @@ const PreferencesProvider = ({ children }) => {
       };
     }
     
-    const saved = localStorage.getItem('userPreferences');
+    const saved = safeLocalStorage.getItem('userPreferences');
     if (saved) {
       try {
         return { ...JSON.parse(saved) };
@@ -86,7 +87,7 @@ const PreferencesProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem('userPreferences', JSON.stringify(preferences));
+    safeLocalStorage.setItem('userPreferences', JSON.stringify(preferences));
     
     // Apply accent color
     const root = document.documentElement;

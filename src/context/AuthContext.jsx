@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { safeLocalStorage } from '../utils/safeStorage';
 
 const AuthContext = createContext();
 
@@ -44,17 +45,17 @@ const AuthProvider = ({ children }) => {
             const userData = userDoc.data();
             if (userData.role) {
               setUserRole(userData.role);
-              localStorage.setItem('userRole', userData.role);
+              safeLocalStorage.setItem('userRole', userData.role);
             } else {
               // Fallback to localStorage
-              const savedRole = localStorage.getItem('userRole');
+              const savedRole = safeLocalStorage.getItem('userRole');
               if (savedRole) {
                 setUserRole(savedRole);
               }
             }
           } else {
             // Fallback to localStorage
-            const savedRole = localStorage.getItem('userRole');
+            const savedRole = safeLocalStorage.getItem('userRole');
             if (savedRole) {
               setUserRole(savedRole);
             }
@@ -62,7 +63,7 @@ const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error('Error fetching user role in auth state change:', error);
           // Fallback to localStorage
-          const savedRole = localStorage.getItem('userRole');
+          const savedRole = safeLocalStorage.getItem('userRole');
           if (savedRole) {
             setUserRole(savedRole);
           }
@@ -70,7 +71,7 @@ const AuthProvider = ({ children }) => {
       } else {
         // User logged out - clear role
         setUserRole(null);
-        localStorage.removeItem('userRole');
+        safeLocalStorage.removeItem('userRole');
       }
       
       setLoading(false);
@@ -85,7 +86,7 @@ const AuthProvider = ({ children }) => {
       setUser(userCredential.user);
       setUserRole('student');
       // Store role in localStorage for persistence
-      localStorage.setItem('userRole', 'student');
+      safeLocalStorage.setItem('userRole', 'student');
     } catch (error) {
       console.error('Error logging in as student:', error);
       throw error;
@@ -98,7 +99,7 @@ const AuthProvider = ({ children }) => {
       setUser(userCredential.user);
       setUserRole('admin');
       // Store role in localStorage for persistence
-      localStorage.setItem('userRole', 'admin');
+      safeLocalStorage.setItem('userRole', 'admin');
     } catch (error) {
       console.error('Error logging in as admin:', error);
       throw error;
@@ -110,7 +111,7 @@ const AuthProvider = ({ children }) => {
       await firebaseSignOut(auth);
       setUser(null);
       setUserRole(null);
-      localStorage.removeItem('userRole');
+      safeLocalStorage.removeItem('userRole');
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -306,7 +307,7 @@ const AuthProvider = ({ children }) => {
       // CRITICAL: Set role FIRST, then user state
       // This ensures role is set before onAuthStateChanged fires
       setUserRole(finalRole);
-      localStorage.setItem('userRole', finalRole);
+      safeLocalStorage.setItem('userRole', finalRole);
       
       // Set user state AFTER role is set
       // onAuthStateChanged will fire and update user, but role is already set
