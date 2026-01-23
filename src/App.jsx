@@ -313,6 +313,7 @@ function App() {
       'groups': 'Groups',
       'private-chat': 'Private Chat',
       'nearby': 'Nearby Chat',
+      'global-commons': 'Global Commons',
       'activity': 'Activity',
       'scheduler': 'Scheduler',
       'saved': 'Saved Messages',
@@ -779,6 +780,17 @@ function App() {
                       <Suspense fallback={<LoadingSpinner />}>
                         <AnimatedPage variant="scale">
                           <Settings setActiveView={handleSetActiveView} />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'global-commons' && (
+                  <motion.div key="global-commons" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideLeft">
+                          <GlobalCommons />
                         </AnimatedPage>
                       </Suspense>
                     </ErrorBoundary>

@@ -5,7 +5,7 @@ import {
   MessageSquare, Bot, FileText, Users, UserPlus, UserCircle, X, MessageCircle, 
   Settings, BarChart3, Activity, Calendar, Bookmark, Image as ImageIcon, Mail, Radio,
   Search, Bell, Command, Star, Clock, TrendingUp, Home, Grid3x3, Menu, BookOpen, Brain,
-  Workflow
+  Workflow, Languages
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CommandPalette from './CommandPalette';
@@ -126,6 +126,7 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
       { id: 'groups', label: 'Groups', icon: UserCircle, shortcut: 'G', category: 'main' },
       { id: 'private-chat', label: 'Private Chat', icon: MessageCircle, shortcut: 'P', category: 'main' },
       { id: 'nearby', label: 'Nearby Chat', icon: Radio, shortcut: 'N', category: 'main' },
+      { id: 'global-commons', label: 'Global Commons', icon: Languages, shortcut: 'GC', category: 'main', badge: 'NEW' },
       { id: 'visual-board', label: 'Visual Board', icon: Grid3x3, shortcut: 'VB', category: 'tools', badge: 'NEW' },
       { id: 'activity', label: 'Activity', icon: Activity, shortcut: 'D', category: 'tools' },
       { id: 'scheduler', label: 'Scheduler', icon: Calendar, shortcut: 'M', category: 'tools' },
