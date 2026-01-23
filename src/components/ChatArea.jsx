@@ -30,7 +30,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
@@ -65,6 +65,7 @@ import CollaborativeEditor from './CollaborativeEditor';
 import PredictiveScheduler from './PredictiveScheduler';
 import VoiceEmotionDetector from './VoiceEmotionDetector';
 import { generateFilledForm, downloadPDF } from '../utils/formFiller';
+import { runAgent, approveAndExecuteTool, continueAgentAfterApproval } from '../utils/agentEngine';
 // AI Features - lazy loaded based on toggle (no top-level await)
 import SmartTaskExtractor from './SmartTaskExtractor';
 import RelationshipGraph from './RelationshipGraph';
@@ -108,6 +109,8 @@ const ChatArea = ({ setActiveView }) => {
   const [lastMessageTime, setLastMessageTime] = useState(0);
   const [reporting, setReporting] = useState(null);
   const [reportReason, setReportReason] = useState('');
+  const [agentThinking, setAgentThinking] = useState([]); // ReAct agent thinking log
+  const [awaitingApproval, setAwaitingApproval] = useState(null); // Tool call awaiting approval
   const [onlineUsers, setOnlineUsers] = useState({});
   const [userNames, setUserNames] = useState({}); // Cache user names
   const [userProfiles, setUserProfiles] = useState({}); // Cache user profile data
@@ -841,12 +844,55 @@ const ChatArea = ({ setActiveView }) => {
       setLastMessageTime(now);
       success('Message sent!');
 
-      // If message is NOT toxic AND AI Help mode is enabled AND Virtual Senior is enabled, get Gemini response
+      // If message is NOT toxic AND AI Help mode is enabled AND Virtual Senior is enabled, get AI response
       const virtualSeniorEnabled = localStorage.getItem('virtualSeniorEnabled') !== 'false'; // Enabled by default
+      const reactAgentEnabled = localStorage.getItem('reactAgentEnabled') !== 'false'; // Enabled by default
+      
       if (!isToxic && aiHelpMode && virtualSeniorEnabled) {
         setWaitingForAI(true);
+        setAgentThinking([]); // Clear previous thinking log
+        
         try {
-          const aiResponse = await callGemini(originalText);
+          let aiResponse = null;
+          
+          // Use ReAct Agent if enabled, otherwise use standard AI
+          if (reactAgentEnabled) {
+            // ReAct Agent mode
+            const agentResult = await runAgent(originalText, (stepUpdate) => {
+              // Update thinking log for UI
+              setAgentThinking(prev => {
+                const newLog = [...prev];
+                const existingIndex = newLog.findIndex(log => log.step === stepUpdate.step);
+                
+                if (existingIndex >= 0) {
+                  newLog[existingIndex] = stepUpdate;
+                } else {
+                  newLog.push(stepUpdate);
+                }
+                
+                return newLog;
+              });
+            });
+            
+            if (agentResult.requiresApproval) {
+              // Tool requires human approval
+              setAwaitingApproval(agentResult.toolCall);
+              setWaitingForAI(false);
+              return; // Exit early - wait for user approval
+            }
+            
+            if (agentResult.success && agentResult.answer) {
+              aiResponse = agentResult.answer;
+            } else {
+              // Agent failed or hit max steps, fallback to standard AI
+              console.warn('ReAct Agent failed, using standard AI:', agentResult.error);
+              aiResponse = await callGemini(originalText);
+            }
+          } else {
+            // Standard AI mode
+            aiResponse = await callGemini(originalText);
+          }
+          
           if (aiResponse) {
             // Save AI response to Firestore
             await addDoc(collection(db, 'messages'), {
@@ -864,7 +910,8 @@ const ChatArea = ({ setActiveView }) => {
               editedAt: null,
               readBy: {
                 [user.uid]: serverTimestamp() // User has seen the AI response
-              }
+              },
+              agentThinking: reactAgentEnabled ? agentThinking : null // Store thinking log if agent was used
             });
           }
         } catch (aiError) {
@@ -872,6 +919,7 @@ const ChatArea = ({ setActiveView }) => {
           // Don't show error to user, just log it
         } finally {
           setWaitingForAI(false);
+          setAgentThinking([]); // Clear thinking log after response
         }
       }
     } catch (error) {
@@ -1319,6 +1367,79 @@ const ChatArea = ({ setActiveView }) => {
     };
   }, [userNames, userProfiles]);
 
+  // Handle tool approval for ReAct Agent
+  const handleApproveTool = async () => {
+    if (!awaitingApproval) return;
+    
+    const originalQuery = messages[messages.length - 1]?.text || newMessage || '';
+    if (!originalQuery) {
+      showError('Cannot find original query. Please try again.');
+      setAwaitingApproval(null);
+      return;
+    }
+    
+    try {
+      setWaitingForAI(true);
+      const toolResult = await approveAndExecuteTool(awaitingApproval);
+      
+      if (toolResult.success) {
+        // Continue agent execution with the approved tool result
+        const agentResult = await continueAgentAfterApproval(originalQuery, toolResult, (stepUpdate) => {
+          setAgentThinking(prev => {
+            const newLog = [...prev];
+            const existingIndex = newLog.findIndex(log => log.step === stepUpdate.step);
+            
+            if (existingIndex >= 0) {
+              newLog[existingIndex] = stepUpdate;
+            } else {
+              newLog.push(stepUpdate);
+            }
+            
+            return newLog;
+          });
+        });
+        
+        if (agentResult.success && agentResult.answer) {
+          // Save AI response
+          await addDoc(collection(db, 'messages'), {
+            text: agentResult.answer,
+            displayText: agentResult.answer,
+            toxic: false,
+            isAI: true,
+            userId: 'virtual-senior',
+            userName: 'Virtual Senior',
+            userEmail: null,
+            sender: 'Virtual Senior',
+            timestamp: serverTimestamp(),
+            reactions: {},
+            edited: false,
+            readBy: {
+              [user.uid]: serverTimestamp()
+            }
+          });
+          success('Action approved and completed!');
+        } else {
+          showError(agentResult.error || 'Failed to generate response after approval.');
+        }
+      } else {
+        showError(toolResult.error || 'Failed to execute approved action.');
+      }
+    } catch (error) {
+      console.error('Error approving tool:', error);
+      showError('Failed to execute approved action. Please try again.');
+    } finally {
+      setAwaitingApproval(null);
+      setWaitingForAI(false);
+      setAgentThinking([]);
+    }
+  };
+
+  const handleRejectTool = () => {
+    setAwaitingApproval(null);
+    setAgentThinking([]);
+    showError('Action cancelled by user.');
+  };
+
   // Form Filler Card Component
   const FormFillerCard = ({ formName, data, messageId }) => {
     const [generating, setGenerating] = useState(false);
@@ -1639,6 +1760,89 @@ const ChatArea = ({ setActiveView }) => {
                       </p>
                     </motion.div>
                   ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ReAct Agent Thinking Log */}
+          {agentThinking.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel border-b border-indigo-500/30 bg-indigo-600/10 px-4 md:px-6 py-3"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Bot size={16} className="text-indigo-300" />
+                <h3 className="text-sm font-semibold text-indigo-300">ReAct Agent Thinking...</h3>
+              </div>
+              <div className="space-y-1">
+                {agentThinking.map((step, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-xs text-white/70 flex items-center gap-2"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${
+                      step.status === 'thinking' ? 'bg-yellow-400 animate-pulse' :
+                      step.status === 'executing' ? 'bg-blue-400 animate-pulse' :
+                      step.status === 'completed' ? 'bg-green-400' :
+                      step.status === 'final_answer' ? 'bg-green-500' :
+                      'bg-gray-400'
+                    }`} />
+                    <span>{step.message}</span>
+                    {step.toolCall && (
+                      <span className="text-white/50 ml-2">
+                        ({step.toolCall.action})
+                      </span>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Tool Approval Prompt */}
+          {awaitingApproval && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel border-2 border-yellow-500/50 bg-yellow-500/10 px-4 md:px-6 py-4"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-yellow-500/30 border border-yellow-500/50 rounded-xl flex-shrink-0">
+                  <Flag className="text-yellow-300" size={20} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-yellow-300 mb-2">
+                    Action Requires Approval
+                  </h3>
+                  <p className="text-sm text-white/80 mb-3">
+                    The AI wants to execute: <strong>{awaitingApproval.action}</strong>
+                  </p>
+                  {awaitingApproval.params && (
+                    <div className="bg-white/5 rounded-xl p-3 mb-3 text-sm">
+                      <div className="text-white/60 mb-1">Parameters:</div>
+                      <pre className="text-white text-xs overflow-x-auto">
+                        {JSON.stringify(awaitingApproval.params, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleApproveTool}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-all font-semibold"
+                    >
+                      Approve & Continue
+                    </button>
+                    <button
+                      onClick={handleRejectTool}
+                      className="px-4 py-2 glass-panel border border-white/10 hover:bg-white/10 text-white rounded-xl transition-all"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
