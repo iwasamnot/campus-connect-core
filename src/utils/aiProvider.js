@@ -191,30 +191,9 @@ export const callAI = async (prompt, options = {}) => {
         throw new Error(`Unknown provider: ${config.provider}`);
     }
   } catch (error) {
-    // Try fallback provider if primary fails
-    if (config.provider === 'ollama') {
-      // ✅ FIX: Get Groq config directly (don't use getAIProvider as it will return Ollama again)
-      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
-      if (groqApiKey && groqApiKey !== '') {
-        const groqConfig = {
-          provider: 'groq',
-          apiKey: groqApiKey,
-          model: 'llama-3.1-8b-instant',
-          baseUrl: 'https://api.groq.com/openai/v1',
-          maxTokens: 2048,
-          temperature: 0.7
-        };
-        try {
-          console.error('🔄 [FALLBACK] Switching to Groq API...');
-          return await callGroq(prompt, groqConfig, options);
-        } catch (groqError) {
-          console.error('❌ [GROQ] Fallback also failed:', groqError);
-          throw new Error(`Both Ollama and Groq failed. Ollama: ${error.message}, Groq: ${groqError.message}`);
-        }
-      } else {
-        console.error('❌ [FALLBACK] Ollama failed and Groq is not configured');
-      }
-    }
+    // ✅ FIX: No fallback for general AI calls - always use Ollama as primary
+    // Fallback to Vertex/Groq is ONLY for RAG engine and toxicity checks
+    console.error('❌ [OLLAMA] Request failed (no fallback for general AI calls):', error.message);
     throw error;
   }
 };
