@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { safeLocalStorage } from '../utils/safeStorage';
 
 const ThemeContext = createContext();
 
