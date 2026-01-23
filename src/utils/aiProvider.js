@@ -4,7 +4,16 @@
  * Groq: Cloud API - Fallback
  * 
  * CRITICAL: Ollama is checked FIRST and bypasses all other logic
+ * 
+ * Connection Matcher: Intent clustering and user matching system
  */
+
+import { collection, addDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
+
+// Use window.__firebaseDb to avoid import/export issues
+const db = typeof window !== 'undefined' && window.__firebaseDb 
+  ? window.__firebaseDb 
+  : null;
 
 // Provider priorities (order matters - first available is used)
 const PROVIDER_PRIORITY = [
@@ -255,6 +264,18 @@ Current Date: ${new Date().toLocaleDateString()}`;
     }
     
     console.log(`✅ [OLLAMA] Response received: ${responseText.length} chars → ${finalResponse.length} chars (cleaned)`);
+    
+    // CONNECTION MATCHER: Run intent analysis asynchronously (don't block response)
+    // Extract user query from prompt (remove system context)
+    const userQuery = extractUserQuery(prompt);
+    if (userQuery && options.userId) {
+      // Run in background - don't await (fire and forget)
+      // This analyzes intent, stores interest, and checks for matches
+      analyzeUserIntentAndMatch(userQuery, options.userId).catch(err => {
+        console.warn('🔗 [Connection Matcher] Background analysis failed (non-critical):', err);
+      });
+    }
+    
     return finalResponse;
   } catch (error) {
     clearTimeout(timeoutId);
@@ -271,6 +292,288 @@ Current Date: ${new Date().toLocaleDateString()}`;
     
     console.error('❌ [OLLAMA] Request failed:', error);
     throw error;
+  }
+};
+
+/**
+ * Connection Matcher: Intent Clustering & User Matching
+ * Analyzes user queries to generate topic tags and match users with similar interests
+ */
+
+/**
+ * Extract user query from prompt (removes system context and RAG context)
+ * @param {string} prompt - Full prompt including system context
+ * @returns {string|null} - Extracted user query or null
+ */
+const extractUserQuery = (prompt) => {
+  if (!prompt || typeof prompt !== 'string') return null;
+  
+  // Try to find "User Question:" or "**User Question:**" markers
+  const userQuestionMatch = prompt.match(/(?:User Question|User Question:|\*\*User Question:\*\*)\s*(.+?)(?:\n\n|\*\*|$)/i);
+  if (userQuestionMatch && userQuestionMatch[1]) {
+    return userQuestionMatch[1].trim();
+  }
+  
+  // Fallback: If prompt is short and doesn't contain context markers, use it as-is
+  if (prompt.length < 500 && !prompt.includes('Retrieved Knowledge Base') && !prompt.includes('Context:')) {
+    return prompt.trim();
+  }
+  
+  // Last resort: Return last 200 chars (likely the actual question)
+  return prompt.slice(-200).trim();
+};
+
+/**
+ * Analyze user intent and generate topic tag using DeepSeek
+ * Uses direct API call to avoid circular dependency with callAI
+ * @param {string} userQuery - User's question/query
+ * @returns {Promise<string|null>} - 2-3 word topic tag or null
+ */
+const analyzeUserIntent = async (userQuery) => {
+  if (!userQuery || userQuery.trim().length === 0) {
+    return null;
+  }
+
+  try {
+    const intentPrompt = `Analyze this query and output a single 2-3 word 'Topic Tag' representing the core interest (e.g., 'Data Structures', 'Visa Help', 'Football', 'Part-time Jobs'). Return ONLY the tag. No explanations, no quotes, just the tag.
+
+Query: "${userQuery}"`;
+
+    // Direct API call to avoid circular dependency (bypass callAI)
+    const config = getAIProvider();
+    if (!config) {
+      return null;
+    }
+
+    let tag = null;
+    
+    if (config.provider === 'ollama') {
+      // Direct Ollama API call
+      const baseUrl = config.baseUrl || import.meta.env.VITE_OLLAMA_URL?.trim() || 'http://localhost:11434';
+      const model = 'deepseek-r1:8b';
+      
+      // Check if we need proxy (HTTPS page calling HTTP API)
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const isHttpUrl = baseUrl.startsWith('http://');
+      const useProxy = isHttps && isHttpUrl;
+      
+      const url = useProxy
+        ? `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy/api/chat`
+        : `${baseUrl}/api/chat`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'You are a topic classifier. Return only the 2-3 word topic tag, nothing else.' },
+            { role: 'user', content: intentPrompt }
+          ],
+          stream: false,
+          options: {
+            num_ctx: 512,  // Small context for fast response
+            num_predict: 20 // Very short response (just the tag)
+          }
+        }),
+        signal: AbortSignal.timeout(10000) // 10 second timeout for intent analysis
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      tag = data.message?.content?.trim() || data.response?.trim() || '';
+      
+      // Remove thinking tags if present
+      tag = tag.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    } else if (config.provider === 'groq') {
+      // Direct Groq API call
+      const response = await fetch(`${config.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages: [
+            { role: 'system', content: 'You are a topic classifier. Return only the 2-3 word topic tag, nothing else.' },
+            { role: 'user', content: intentPrompt }
+          ],
+          max_tokens: 15,
+          temperature: 0.2,
+        }),
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Groq API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      tag = data.choices[0]?.message?.content?.trim() || '';
+    }
+
+    if (!tag) {
+      return null;
+    }
+
+    // Clean and validate the tag (2-3 words)
+    const cleanedTag = tag.trim().replace(/['"]/g, ''); // Remove quotes
+    const words = cleanedTag.split(/\s+/).filter(w => w.length > 0);
+    
+    if (words.length >= 2 && words.length <= 3) {
+      return words.join(' ');
+    }
+    
+    // Fallback: Generate from keywords if AI fails
+    const queryWords = userQuery.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    if (queryWords.length >= 2) {
+      return queryWords.slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn('🔗 [Connection Matcher] Failed to analyze intent:', error);
+    return null;
+  }
+};
+
+/**
+ * Store active interest in Firestore
+ * @param {string} userId - User ID
+ * @param {string} topicTag - Topic tag
+ * @param {string} userQuery - Original query
+ * @returns {Promise<string|null>} - Document ID if successful
+ */
+const storeActiveInterest = async (userId, topicTag, userQuery) => {
+  if (!db || !userId || !topicTag) {
+    return null;
+  }
+
+  try {
+    const interestRef = await addDoc(collection(db, 'activeInterests'), {
+      userId,
+      topicTag,
+      query: userQuery.substring(0, 200), // Store first 200 chars
+      timestamp: serverTimestamp(),
+      createdAt: new Date().toISOString()
+    });
+
+    console.log(`🔗 [Connection Matcher] Stored interest: "${topicTag}" for user ${userId.substring(0, 8)}...`);
+    return interestRef.id;
+  } catch (error) {
+    console.error('🔗 [Connection Matcher] Error storing interest:', error);
+    return null;
+  }
+};
+
+/**
+ * Check for matching users with same topic tag within time window (The Polly Protocol)
+ * @param {string} currentTag - Current topic tag
+ * @param {string} currentUserId - Current user ID
+ * @param {number} timeWindowMinutes - Time window in minutes (default: 30)
+ * @returns {Promise<Array>} - Array of matching user objects
+ */
+const checkForMatches = async (currentTag, currentUserId, timeWindowMinutes = 30) => {
+  if (!db || !currentTag || !currentUserId) {
+    return [];
+  }
+
+  try {
+    // Calculate time threshold (30 minutes ago)
+    const timeThreshold = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
+    
+    // Query for same topic tag within time window, excluding current user
+    const q = query(
+      collection(db, 'activeInterests'),
+      where('topicTag', '==', currentTag),
+      where('timestamp', '>=', Timestamp.fromDate(timeThreshold))
+    );
+
+    const snapshot = await getDocs(q);
+    const matches = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      // Exclude current user
+      if (data.userId && data.userId !== currentUserId && data.userId.trim() !== '') {
+        matches.push({
+          userId: data.userId,
+          query: data.query || '',
+          timestamp: data.timestamp
+        });
+      }
+    });
+
+    // Remove duplicates (same user asking multiple times)
+    const uniqueMatches = matches.reduce((acc, match) => {
+      if (!acc.find(m => m.userId === match.userId)) {
+        acc.push(match);
+      }
+      return acc;
+    }, []);
+
+    console.log(`🔗 [Connection Matcher] Found ${uniqueMatches.length} matches for tag: "${currentTag}"`);
+    return uniqueMatches;
+  } catch (error) {
+    console.error('🔗 [Connection Matcher] Error checking matches:', error);
+    return [];
+  }
+};
+
+/**
+ * Main connection matcher function (runs asynchronously after AI response)
+ * Analyzes intent, stores interest, and checks for matches
+ * @param {string} userQuery - User's query
+ * @param {string} userId - User ID
+ * @returns {Promise<Object|null>} - Match info if found, null otherwise
+ */
+const analyzeUserIntentAndMatch = async (userQuery, userId) => {
+  if (!userQuery || !userId) {
+    return null;
+  }
+
+  try {
+    // Step 1: Analyze intent and generate topic tag
+    const topicTag = await analyzeUserIntent(userQuery);
+    if (!topicTag) {
+      console.log('🔗 [Connection Matcher] No topic tag generated, skipping match check');
+      return null;
+    }
+
+    // Step 2: Store active interest
+    await storeActiveInterest(userId, topicTag, userQuery);
+
+    // Step 3: Check for matches (30-minute window)
+    const matches = await checkForMatches(topicTag, userId, 30);
+    
+    // Step 4: If matches found (>= 2 other students), return match info
+    if (matches.length >= 2) {
+      const matchInfo = {
+        topicTag,
+        matchCount: matches.length,
+        message: `psst... ${matches.length} other students are asking about ${topicTag} right now. Would you like to join their anonymous study group?`
+      };
+      console.log(`🔗 [Connection Matcher] Match found! ${matches.length} students interested in: ${topicTag}`);
+      
+      // Store match info in a way that can be retrieved by the caller
+      // For now, we'll use a custom event or store in a global cache
+      if (typeof window !== 'undefined') {
+        window.__lastConnectionMatch = matchInfo;
+        // Dispatch custom event for components to listen
+        window.dispatchEvent(new CustomEvent('connectionMatch', { detail: matchInfo }));
+      }
+      
+      return matchInfo;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('🔗 [Connection Matcher] Error in background analysis:', error);
+    return null;
   }
 };
 

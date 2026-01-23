@@ -158,7 +158,8 @@ Current Date: ${new Date().toLocaleDateString()}`;
     const response = await callAI(userPrompt, {
       systemPrompt: systemPrompt,
       maxTokens: 2048,
-      temperature: 0.7
+      temperature: 0.7,
+      userId: userId || null // Pass userId for Connection Matcher
     });
 
     if (!response || response.trim().length === 0) {

@@ -481,12 +481,26 @@ ${question}
         
         // Handle new response format (object with answer and metadata)
         if (ragResult) {
-          const answer = typeof ragResult === 'string' ? ragResult : ragResult.answer;
+          let answer = typeof ragResult === 'string' ? ragResult : ragResult.answer;
           if (answer && answer.trim() !== '') {
             // Log metadata for debugging (sentiment, queryType, etc.)
             if (ragResult.metadata) {
               console.log('RAG Metadata:', ragResult.metadata);
             }
+            
+            // Check for connection match (Connection Matcher runs asynchronously)
+            // Wait a bit for the background analysis to complete, then append match message
+            await new Promise(resolve => setTimeout(resolve, 2500)); // Wait 2.5 seconds for background analysis
+            
+            if (typeof window !== 'undefined' && window.__lastConnectionMatch) {
+              const matchInfo = window.__lastConnectionMatch;
+              // Append match message to response
+              answer = answer + `\n\n${matchInfo.message}`;
+              console.log('🔗 [Connection Matcher] Match appended to response:', matchInfo);
+              // Clear the match after processing
+              delete window.__lastConnectionMatch;
+            }
+            
             return answer;
           }
         }
