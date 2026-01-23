@@ -371,18 +371,33 @@ Current Date: ${new Date().toLocaleDateString()}`;
     console.log('💾 [Memory] Core memory context injected into system prompt');
   }
 
-  // MIXED CONTENT FIX: Detect if we're on HTTPS and Ollama is HTTP
-  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-  const isHttpOllama = baseUrl.startsWith('http://');
-  const useProxy = isHttps && isHttpOllama;
-
-  // ✅ FIX: Always use /api/chat endpoint (Ollama supports images in messages)
-  const endpoint = '/api/chat';
-  const targetUrl = useProxy 
-    ? `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy${endpoint}`
-    : `${baseUrl}${endpoint}`;
-
-  console.log(`🚀 [OLLAMA] Sending request to ${targetUrl}${useProxy ? ' (via HTTPS proxy)' : ''}`);
+  // ✅ FIX: Construct target URL (handle ngrok URLs, HTTP/HTTPS, and proxy)
+  let targetUrl;
+  
+  // Check if baseUrl already includes /api/chat (e.g., ngrok URLs like https://xxx.ngrok-free.app/api/chat)
+  if (baseUrl.includes('/api/chat')) {
+    targetUrl = baseUrl;
+    console.error('✅ [OLLAMA] URL already includes /api/chat endpoint (ngrok format)');
+  } else {
+    // Append /api/chat to base URL
+    const endpoint = '/api/chat';
+    
+    // MIXED CONTENT FIX: Use proxy if HTTPS page trying to connect to HTTP Ollama
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const isHttpOllama = baseUrl.startsWith('http://');
+    const useProxy = isHttps && isHttpOllama;
+    
+    if (useProxy) {
+      // Use Cloud Function proxy for Mixed Content
+      targetUrl = `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy${endpoint}`;
+      console.warn('⚠️ [OLLAMA] Using HTTPS proxy (Mixed Content protection)');
+      console.warn('💡 [OLLAMA] Tip: Use ngrok for better performance: ngrok http 11434');
+    } else {
+      targetUrl = `${baseUrl}${endpoint}`;
+    }
+  }
+  
+  console.error(`🚀 [OLLAMA] Sending request to: ${targetUrl}`);
   console.log(`🤖 [OLLAMA] Model: ${model}`);
   console.log(`📝 [OLLAMA] Messages: ${formattedMessages.length} (System: Yes, User: Yes${hasImage ? ', Image: Yes' : ''})`);
   console.log(`📏 [OLLAMA] Prompt length: ${prompt.length} characters`);
