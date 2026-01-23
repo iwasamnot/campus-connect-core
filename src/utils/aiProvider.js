@@ -6,6 +6,81 @@
  * CRITICAL: Ollama is checked FIRST and bypasses all other logic
  */
 
+/**
+ * Helper: Convert any image URL (blob:, data:, or file) to Base64
+ * This handles the silent failure issue where blob URLs are sent to Ollama
+ * @param {string} url - Image URL (blob:, data:, or file URL)
+ * @returns {Promise<string>} - Base64 string without data URI prefix
+ */
+const urlToBase64 = async (url) => {
+  try {
+    // If it's already a data URI, just return the base64 part
+    if (url.startsWith('data:')) {
+      const base64 = url.includes(',') ? url.split(',')[1] : url;
+      console.log('✅ [Image] Already base64 data URI, extracted base64');
+      return base64;
+    }
+
+    // If it's a blob URL, fetch and convert
+    if (url.startsWith('blob:')) {
+      console.log('🔄 [Image] Converting blob URL to base64...');
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch blob: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result;
+          // Extract base64 part (remove data:image/...;base64, prefix)
+          const base64 = result.includes(',') ? result.split(',')[1] : result;
+          console.log(`✅ [Image] Blob converted to base64 (${base64.length} chars)`);
+          resolve(base64);
+        };
+        reader.onerror = (error) => {
+          console.error('❌ [Image] FileReader error:', error);
+          reject(new Error('Failed to convert blob to base64'));
+        };
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // If it's a regular HTTP/HTTPS URL, fetch and convert
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      console.log('🔄 [Image] Converting HTTP URL to base64...');
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result;
+          const base64 = result.includes(',') ? result.split(',')[1] : result;
+          console.log(`✅ [Image] HTTP URL converted to base64 (${base64.length} chars)`);
+          resolve(base64);
+        };
+        reader.onerror = (error) => {
+          console.error('❌ [Image] FileReader error:', error);
+          reject(new Error('Failed to convert image URL to base64'));
+        };
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // If it's already base64 (no prefix), return as-is
+    console.log('⚠️ [Image] Unknown URL format, assuming base64 string');
+    return url;
+  } catch (error) {
+    console.error('❌ [Image] Error converting URL to base64:', error);
+    throw new Error(`Failed to convert image to base64: ${error.message}`);
+  }
+};
+
 // Provider priorities (order matters - first available is used)
 const PROVIDER_PRIORITY = [
   'ollama',  // Self-hosted Ollama (RTX 6000 GPU droplet) - highest priority
@@ -228,20 +303,23 @@ Current Date: ${new Date().toLocaleDateString()}`;
     content: systemPrompt 
   });
   
-  // ✅ FIX: Format user message with image if present
+  // ✅ FIX: Format user message with image if present (async conversion for blob URLs)
   const userMessage = { 
     role: 'user', 
     content: prompt 
   };
   
-  // If image is provided in options, add it to the user message
+  // If image is provided in options, convert and add it to the user message
   if (options.image) {
-    // Strip the "data:image/png;base64," prefix if present
-    const base64 = options.image.includes(',') 
-      ? options.image.split(',')[1] 
-      : options.image;
-    userMessage.images = [base64];
-    console.log(`🖼️ [OLLAMA] Image attached to user message (${base64.length} chars base64)`);
+    try {
+      console.log('🖼️ [OLLAMA] Converting image from options.image to base64...');
+      const base64 = await urlToBase64(options.image);
+      userMessage.images = [base64];
+      console.log(`✅ [OLLAMA] Image attached to user message (${base64.length} chars base64)`);
+    } catch (error) {
+      console.error('❌ [OLLAMA] Failed to convert image from options.image:', error);
+      // Continue without image rather than failing completely
+    }
   }
   // If messages array is provided with attachments, extract image from last message
   else if (options.messages && options.messages.length > 0) {
@@ -249,12 +327,15 @@ Current Date: ${new Date().toLocaleDateString()}`;
     if (lastMessage.attachments && lastMessage.attachments.length > 0) {
       const imgAttachment = lastMessage.attachments.find(a => a.type === 'image');
       if (imgAttachment && imgAttachment.url) {
-        // Strip the "data:image/png;base64," prefix if present
-        const base64 = imgAttachment.url.includes(',')
-          ? imgAttachment.url.split(',')[1]
-          : imgAttachment.url;
-        userMessage.images = [base64];
-        console.log(`🖼️ [OLLAMA] Image extracted from message attachments (${base64.length} chars base64)`);
+        try {
+          console.log('🖼️ [OLLAMA] Converting image from message attachments to base64...');
+          const base64 = await urlToBase64(imgAttachment.url);
+          userMessage.images = [base64];
+          console.log(`✅ [OLLAMA] Image extracted from message attachments (${base64.length} chars base64)`);
+        } catch (error) {
+          console.error('❌ [OLLAMA] Failed to convert image from attachments:', error);
+          // Continue without image rather than failing completely
+        }
       }
     }
   }
@@ -301,6 +382,15 @@ Current Date: ${new Date().toLocaleDateString()}`;
       }
     };
 
+    // Log request details for debugging
+    console.log('📤 [OLLAMA] Sending request:', {
+      url: targetUrl,
+      model: model,
+      hasImage: !!userMessage.images,
+      imageSize: userMessage.images?.[0]?.length || 0,
+      messageCount: formattedMessages.length
+    });
+
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
@@ -314,13 +404,22 @@ Current Date: ${new Date().toLocaleDateString()}`;
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ [OLLAMA] API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText.substring(0, 500) // First 500 chars
+      });
+      
       let errorData;
       try {
         errorData = JSON.parse(errorText);
       } catch {
         errorData = { error: { message: errorText } };
       }
-      throw new Error(errorData.error?.message || `Ollama API error: ${response.statusText} (${response.status})`);
+      
+      const errorMessage = errorData.error?.message || errorText || `Ollama API error: ${response.statusText} (${response.status})`;
+      console.error('❌ [AI SERVICE ERROR]:', errorMessage);
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
