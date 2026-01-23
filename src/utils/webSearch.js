@@ -1,26 +1,23 @@
 /**
  * Web Search Module
- * Provides web search functionality using Tavily API or DuckDuckGo
- * Placeholder implementation - replace with actual API integration
+ * Provides web search functionality using Tavily API
+ * Uses VITE_TAVILY_KEY from environment variables
  */
 
 /**
- * Search the web for information
+ * Search the web for information using Tavily API
  * @param {string} query - Search query
- * @param {number} maxResults - Maximum number of results (default: 5)
+ * @param {number} maxResults - Maximum number of results (default: 3)
  * @returns {Promise<Array>} - Array of search results with title, url, content
  */
-export const searchWeb = async (query, maxResults = 5) => {
+export const searchWeb = async (query, maxResults = 3) => {
   try {
-    // TODO: Replace with actual Tavily API integration
-    // For now, return mock data structure
     console.log('🔍 [Web Search] Searching web for:', query);
     
-    // Example Tavily API call (uncomment when API key is available):
-    /*
-    const apiKey = import.meta.env.VITE_TAVILY_API_KEY;
-    if (!apiKey) {
-      throw new Error('Tavily API key not configured');
+    const apiKey = import.meta.env.VITE_TAVILY_KEY?.trim();
+    if (!apiKey || apiKey === '') {
+      console.warn('🔍 [Web Search] Tavily API key not configured (VITE_TAVILY_KEY)');
+      return [];
     }
     
     const response = await fetch('https://api.tavily.com/search', {
@@ -32,24 +29,45 @@ export const searchWeb = async (query, maxResults = 5) => {
         api_key: apiKey,
         query: query,
         search_depth: 'basic',
-        max_results: maxResults,
-        include_domains: ['sistc.edu.au', 'sydney.edu.au'], // SISTC-related domains
+        include_answer: true,
+        max_results: maxResults
       }),
     });
     
-    const data = await response.json();
-    return data.results || [];
-    */
+    if (!response.ok) {
+      throw new Error(`Tavily API error: ${response.status} ${response.statusText}`);
+    }
     
-    // Mock response for development
-    return [
-      {
-        title: `Search results for: ${query}`,
-        url: 'https://example.com',
-        content: `Information about ${query} from web search. This is a placeholder - integrate Tavily API for real results.`,
-        score: 0.9
-      }
-    ];
+    const data = await response.json();
+    
+    // Tavily returns results in a specific format
+    const results = [];
+    
+    // Include the answer if available
+    if (data.answer) {
+      results.push({
+        title: 'Answer',
+        url: '',
+        content: data.answer,
+        score: 1.0,
+        isAnswer: true
+      });
+    }
+    
+    // Include individual results
+    if (data.results && Array.isArray(data.results)) {
+      data.results.forEach((result) => {
+        results.push({
+          title: result.title || 'Untitled',
+          url: result.url || '',
+          content: result.content || result.snippet || '',
+          score: result.score || 0.8
+        });
+      });
+    }
+    
+    console.log(`🔍 [Web Search] Found ${results.length} results from Tavily`);
+    return results;
   } catch (error) {
     console.error('🔍 [Web Search] Error searching web:', error);
     return [];

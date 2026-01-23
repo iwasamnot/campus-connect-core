@@ -13,12 +13,13 @@ const PROVIDER_PRIORITY = [
 ];
 
 /**
- * Get Ollama URL with dynamic override support
+ * Get Ollama URL with dynamic override support (Hybrid Configuration)
  * Priority: localStorage custom URL > .env variable > default localhost
+ * This allows dynamic Ngrok URLs via localStorage while keeping static keys in .env
  * @returns {string} - The active Ollama URL
  */
 export const getOllamaURL = () => {
-  // Check localStorage first (for dynamic URL changes)
+  // Check localStorage first (for dynamic URL changes - handles Ngrok URL updates)
   const customUrl = typeof window !== 'undefined' 
     ? localStorage.getItem('custom_ollama_url')?.trim() 
     : null;
@@ -28,7 +29,7 @@ export const getOllamaURL = () => {
     return customUrl;
   }
   
-  // Fallback to .env variable
+  // Fallback to .env variable (static configuration)
   const envUrl = import.meta.env.VITE_OLLAMA_URL?.trim();
   if (envUrl && envUrl !== '') {
     console.log('📦 [OLLAMA] Using URL from environment variable:', envUrl);
