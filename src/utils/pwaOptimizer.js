@@ -5,22 +5,42 @@
 
 /**
  * Register service worker update handler
+ * ✅ FIX: Improved service worker update handling
  */
 export const registerServiceWorkerUpdate = () => {
   if ('serviceWorker' in navigator) {
+    // Listen for service worker updates
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // New service worker activated
+      // New service worker activated - reload to get latest version
+      console.log('[PWA] New service worker activated, reloading...');
       window.location.reload();
     });
 
-    // Check for updates periodically
-    setInterval(() => {
-      navigator.serviceWorker.getRegistration().then(registration => {
-        if (registration) {
-          registration.update();
-        }
-      });
-    }, 60 * 60 * 1000); // Check every hour
+    // Check for updates periodically (but don't create multiple intervals)
+    if (!window.__pwaUpdateInterval) {
+      window.__pwaUpdateInterval = setInterval(() => {
+        navigator.serviceWorker.getRegistration().then(registration => {
+          if (registration) {
+            registration.update().catch(err => {
+              console.warn('[PWA] Service worker update check failed:', err);
+            });
+          }
+        });
+      }, 60 * 60 * 1000); // Check every hour
+    }
+
+    // Also check for updates on page visibility change
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        navigator.serviceWorker.getRegistration().then(registration => {
+          if (registration) {
+            registration.update().catch(err => {
+              console.warn('[PWA] Service worker update check failed:', err);
+            });
+          }
+        });
+      }
+    });
   }
 };
 

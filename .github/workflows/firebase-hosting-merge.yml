@@ -129,26 +129,67 @@ jobs:
       - name: Build project
         run: npm run build
       
-      - name: Quick verify build output (non-blocking)
-        continue-on-error: true
+      - name: Verify build output (CRITICAL - Prevents MIME type errors)
         run: |
-          echo "Quick verification (non-blocking - won't stop deployment)..."
-          # Quick checks - warnings only, don't fail build
+          echo "🔍 Verifying build output..."
+          
+          # ✅ CRITICAL: Ensure dist folder exists
+          if [ ! -d "dist" ]; then
+            echo "❌ ERROR: dist folder does not exist! Build failed."
+            exit 1
+          fi
+          
+          # ✅ CRITICAL: Check for raw JSX files (should NEVER exist in dist)
+          JSX_FILES=$(find dist -name "*.jsx" -o -name "*.tsx" 2>/dev/null || true)
+          if [ -n "$JSX_FILES" ]; then
+            echo "❌ CRITICAL ERROR: Found raw JSX/TSX files in dist folder!"
+            echo "These files will cause 'MIME type text/jsx' errors in production."
+            echo "Files found:"
+            echo "$JSX_FILES"
+            exit 1
+          else
+            echo "✅ No raw JSX/TSX files found in dist (correct)"
+          fi
+          
+          # ✅ Verify only compiled JS files exist
+          JS_FILES=$(find dist -name "*.js" -type f | wc -l)
+          if [ "$JS_FILES" -eq 0 ]; then
+            echo "❌ ERROR: No JavaScript files found in dist! Build may have failed."
+            exit 1
+          else
+            echo "✅ Found $JS_FILES compiled JavaScript file(s)"
+          fi
+          
+          # ✅ Verify index.html exists
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ ERROR: dist/index.html not found! Build failed."
+            exit 1
+          else
+            echo "✅ dist/index.html exists"
+          fi
+          
+          # ✅ Verify index.html references compiled JS (not JSX)
+          if grep -q "\.jsx" dist/index.html 2>/dev/null; then
+            echo "❌ ERROR: index.html references .jsx files! Should reference .js files."
+            exit 1
+          else
+            echo "✅ index.html only references compiled .js files"
+          fi
+          
+          # Quick checks - warnings only
           if grep -q "campus-connect-sistc" dist/assets/*.js 2>/dev/null; then
-            echo "✅ Firebase Project ID found"
+            echo "✅ Firebase Project ID found in build"
           else
-            echo "⚠️ WARNING: Firebase Project ID not found"
+            echo "⚠️ WARNING: Firebase Project ID not found in build"
           fi
-          if grep -q "AIzaSy" dist/assets/*.js 2>/dev/null; then
-            echo "✅ Firebase API Key found"
-          else
-            echo "⚠️ WARNING: Firebase API Key not found"
-          fi
+          
           if [ -f dist/logo.png ]; then
             echo "✅ logo.png copied to dist"
           else
             echo "⚠️ WARNING: logo.png not found in dist"
           fi
+          
+          echo "✅ Build verification complete - safe to deploy"
       
       - name: Install Firebase CLI
         run: npm install -g firebase-tools

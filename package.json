@@ -10,7 +10,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:verify": "npm run build && npm run verify:build",
+    "verify:build": "node scripts/verify-build.js",
     "preview": "vite preview",
+    "predeploy": "npm run build:verify",
     "cap:sync": "npm run build && npx cap sync",
     "cap:ios": "npm run build && npx cap sync && npx cap open ios",
     "cap:android": "npm run build && npx cap sync && npx cap open android",
