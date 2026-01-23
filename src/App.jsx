@@ -150,6 +150,7 @@ const NearbyChat = createLazyComponent(() => import('./components/NearbyChat'), 
 const VisualBoard = createLazyComponent(() => import('./components/VisualBoard'), 'Visual Board');
 const GlobalCommons = createLazyComponent(() => import('./components/GlobalCommons'), 'Global Commons');
 const AIMindMap = createLazyComponent(() => import('./components/AIMindMap'), 'AI Mind Map');
+const InterviewMode = createLazyComponent(() => import('./components/InterviewMode'), 'Interview Mode');
 const NeuralMessageComposer = createLazyComponent(() => import('./components/NeuralMessageComposer'), 'Neural Message Composer');
 const QuantumSearch = createLazyComponent(() => import('./components/QuantumSearch'), 'Quantum Search');
 const SmartWorkspace = createLazyComponent(() => import('./components/SmartWorkspace'), 'Smart Workspace');
@@ -373,6 +374,10 @@ function App() {
         onComplete={() => setShowOnboarding(false)}
         skipOnboarding={showOnboarding === false}
       />
+      {/* Interview Mode */}
+      {showInterviewMode && (
+        <InterviewMode onClose={() => setShowInterviewMode(false)} />
+      )}
       {/* IMPORTANT: Avoid forcing 100vh on mobile/PWA (causes "locked" viewport and jumpy layouts).
           Use h-screen as fallback, but prefer 100dvh where supported. */}
       {/* Aurora Background - Fluid.so aesthetic */}
