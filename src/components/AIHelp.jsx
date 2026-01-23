@@ -475,7 +475,8 @@ ${question}
           question,
           conversationHistory,
           null, // modelName not needed - uses Ollama/Groq from aiProvider
-          userContext
+          userContext,
+          user?.uid || null // Pass userId for connection engine
         );
         
         // Handle new response format (object with answer and metadata)

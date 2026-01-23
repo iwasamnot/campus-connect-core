@@ -9,6 +9,7 @@
 import { ragRetrieval } from './ragRetrieval';
 import { processKnowledgeBase } from './knowledgeBaseProcessor';
 import { callAI, getAIProvider } from './aiProvider';
+import { processConnection, formatConnectionOffer } from './connectionEngine';
 
 // Determine which provider is being used
 const getProviderName = () => {
@@ -46,7 +47,7 @@ export const initializeRAG = async () => {
  * System: You are a helpful senior student...
  * User: Context: {PINECONE_DATA} ... Question: {USER_QUESTION}
  */
-export const generateRAGResponse = async (query, conversationHistory = [], modelName = null, userContext = '') => {
+export const generateRAGResponse = async (query, conversationHistory = [], modelName = null, userContext = '', userId = null) => {
   // Check if RAG Engine is enabled (default: enabled)
   const ragEngineEnabled = typeof window !== 'undefined' 
     ? (localStorage.getItem('ragEngineEnabled') !== 'false') // Enabled by default
@@ -134,7 +135,22 @@ GOAL:
 Produce an answer that is fun to read (like chatting with a charismatic senior student) but academically solid enough to be put in a report.
 Current Date: ${new Date().toLocaleDateString()}`;
 
-    // STEP 6: Call AI with proper structure
+    // STEP 6: Connection Engine - Process user question for matching
+    let connectionOffer = '';
+    if (userId) {
+      try {
+        const connectionResult = await processConnection(userId, query);
+        if (connectionResult.matches && connectionResult.matches.length >= 2) {
+          connectionOffer = formatConnectionOffer(connectionResult.matches, connectionResult.topicTag);
+          console.log(`🔗 [Connection Engine] Connection offer generated for ${connectionResult.matches.length} matches`);
+        }
+      } catch (error) {
+        console.warn('Connection Engine: Error processing connection (non-critical):', error);
+        // Don't fail the entire request if connection engine fails
+      }
+    }
+
+    // STEP 7: Call AI with proper structure
     // System role: Virtual Senior persona
     // User role: RAG context + question
     console.log(`🚀 [OLLAMA RAG] Calling AI provider with context (${context.length} chars) and question (${query.length} chars)`);
@@ -150,8 +166,13 @@ Current Date: ${new Date().toLocaleDateString()}`;
       return null;
     }
 
-    console.log(`✅ [OLLAMA RAG] Response generated successfully using ${providerDisplay} (${response.length} characters)`);
-    return response;
+    // STEP 8: Append connection offer to response if available
+    const finalResponse = connectionOffer 
+      ? `${response}${connectionOffer}`
+      : response;
+
+    console.log(`✅ [OLLAMA RAG] Response generated successfully using ${providerDisplay} (${finalResponse.length} characters)`);
+    return finalResponse;
   } catch (error) {
     console.error(`❌ [OLLAMA RAG] Error generating response with ${providerDisplay}:`, error);
     console.error(`❌ [OLLAMA RAG] Error details:`, {
