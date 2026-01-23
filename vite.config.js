@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readdirSync, renameSync, statSync, readFileSync, writeFileSync } from 'fs'
+import { join } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -391,8 +393,6 @@ export default defineConfig({
     {
       name: 'fix-jsx-extensions',
       writeBundle() {
-        const { readdirSync, renameSync, statSync, readFileSync, writeFileSync } = require('fs');
-        const { join } = require('path');
         const distDir = join(process.cwd(), 'dist');
         
         function fixJSXFiles(dir) {
@@ -517,9 +517,19 @@ export default defineConfig({
           return undefined;
         },
         // ✅ FIX: Ensure chunk names are stable and ALWAYS use .js extension
-        // Use string patterns instead of functions to ensure .js extension
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
+        // Use functions to explicitly force .js extension (string patterns don't override source extension)
+        chunkFileNames: (chunkInfo) => {
+          const name = chunkInfo.name || 'chunk';
+          const hash = chunkInfo.hash || '';
+          // Force .js extension regardless of source file extension
+          return `assets/${name}-${hash}.js`;
+        },
+        entryFileNames: (chunkInfo) => {
+          const name = chunkInfo.name || 'main';
+          const hash = chunkInfo.hash || '';
+          // Force .js extension regardless of source file extension (main.jsx -> main.js)
+          return `assets/${name}-${hash}.js`;
+        },
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
