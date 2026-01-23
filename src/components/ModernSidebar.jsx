@@ -232,7 +232,7 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
         )}
       </AnimatePresence>
       
-      {/* Modern Sidebar */}
+      {/* Modern Sidebar - GPU Accelerated with translate3d */}
       <motion.div
         initial={{ x: -50, opacity: 0 }}
         animate={{
@@ -240,7 +240,13 @@ const ModernSidebar = memo(({ activeView, setActiveView, isOpen, onClose }) => {
           opacity: isOpen || (typeof window !== 'undefined' && window.innerWidth >= 768) ? 1 : 0,
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed md:static top-4 left-4 md:left-4 md:top-4 w-[calc(100%-2rem)] md:w-80 glass-panel text-white flex flex-col h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] rounded-[2rem] z-[70] overflow-hidden"
+        style={{
+          // Force GPU acceleration with translate3d
+          transform: 'translate3d(0, 0, 0)',
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden',
+        }}
+        className="fixed md:static top-4 left-4 md:left-4 md:top-4 w-[calc(100%-2rem)] md:w-80 glass-panel text-white flex flex-col h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] rounded-[2rem] z-[70] overflow-hidden gpu-accelerated"
       >
         {/* Header */}
         <div className="p-6 border-b border-white/10 flex-shrink-0">

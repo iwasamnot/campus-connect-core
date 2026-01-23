@@ -36,10 +36,23 @@ body {
   min-height: -webkit-fill-available;
   height: 100%;
   overflow-x: hidden;
-  /* Prevent iOS bounce effect */
+  /* Prevent iOS bounce effect (rubber banding) */
   position: fixed;
   width: 100%;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none; /* Changed from contain to none for true native feel */
+  overscroll-behavior-x: none;
+  /* Hide scrollbars for native feel */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Hide scrollbars globally */
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 /* Mobile-specific optimizations */
@@ -58,15 +71,27 @@ body {
   input[type="search"],
   input[type="tel"],
   input[type="url"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
   select,
   textarea {
-    font-size: 16px !important; /* Prevents zoom on focus */
+    font-size: 16px !important; /* Prevents zoom on focus - CRITICAL for native feel */
   }
   
   /* Optimize scroll performance on mobile */
   * {
     -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
     -webkit-touch-callout: none; /* Disable callout on long press */
+  }
+  
+  /* Disable text selection on non-input elements for native feel */
+  *:not(input):not(textarea):not([contenteditable="true"]) {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
   
   /* Better scrolling on iOS - iPhone 16 specific */
@@ -112,7 +137,7 @@ body {
 .gpu-accelerated,
 [class*="gpu-"],
 [data-gpu="true"] {
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0); /* Changed from translateZ(0) to translate3d for better GPU acceleration */
   will-change: transform, opacity;
   backface-visibility: hidden;
   perspective: 1000px;
@@ -120,10 +145,21 @@ body {
   isolation: isolate;
   contain: layout style paint;
   /* Force GPU layer creation */
-  -webkit-transform: translateZ(0);
-  -moz-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  -o-transform: translateZ(0);
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
+}
+
+/* Ensure all modals and slide-out menus use transform3d */
+[class*="modal"],
+[class*="drawer"],
+[class*="sidebar"],
+[class*="menu"],
+.motion-safe\:gpu-accelerated {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 /* Optimize all animated elements for GPU - Performance Critical */
@@ -133,7 +169,7 @@ motion.div,
 motion.button,
 motion.section,
 motion.article {
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0); /* Changed to translate3d for better GPU acceleration */
   will-change: transform, opacity;
   backface-visibility: hidden;
   /* Only use will-change when actively animating */
@@ -143,7 +179,7 @@ motion.article {
 [data-framer-component] {
   contain: layout style paint;
   isolation: isolate;
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0); /* Changed to translate3d for better GPU acceleration */
 }
 
 /* Performance: Remove will-change after animation completes */
@@ -157,7 +193,7 @@ motion.article {
 .message-item {
   contain: layout style paint;
   isolation: isolate;
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0); /* Changed to translate3d for better GPU acceleration */
   /* Only use will-change on hover */
   will-change: auto;
 }
@@ -266,7 +302,7 @@ body {
 @supports (will-change: transform) {
   .motion-safe\:gpu-accelerated {
     will-change: transform, opacity;
-    transform: translateZ(0);
+    transform: translate3d(0, 0, 0); /* Changed to translate3d for better GPU acceleration */
   }
 }
 
@@ -282,7 +318,7 @@ body {
 /* Force GPU acceleration for transform operations */
 .transform,
 [style*="transform"] {
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0); /* Changed to translate3d for better GPU acceleration */
   will-change: transform;
 }
 
@@ -394,8 +430,41 @@ img, video, iframe {
   /* Prevent layout shifts from images loading */
   height: auto;
   max-width: 100%;
-  /* Use aspect-ratio for modern browsers */
+  /* Use aspect-ratio for modern browsers - CRITICAL for CLS prevention */
   aspect-ratio: attr(width) / attr(height);
+  /* Force GPU acceleration for image rendering */
+  transform: translateZ(0);
+  will-change: auto;
+}
+
+/* Ensure images have explicit dimensions to prevent layout shift */
+img[src]:not([width]):not([height]) {
+  /* Fallback: Use object-fit to maintain aspect ratio */
+  object-fit: contain;
+  /* Set a minimum aspect ratio to prevent extreme shifts */
+  min-height: 100px;
+}
+
+/* Image loading placeholder to prevent CLS */
+img {
+  background-color: rgba(0, 0, 0, 0.05);
+  background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+img[loading="lazy"] {
+  /* Lazy loaded images should have explicit dimensions */
+  min-height: 200px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 /* Optimize rendering with content-visibility */
@@ -1885,7 +1954,7 @@ input:focus, textarea:focus, select:focus {
   /* Framer Motion handles the hover transform, so we only add a subtle scale effect */
   will-change: transform;
   backface-visibility: hidden;
-  transform: translateZ(0); /* Force GPU acceleration */
+  transform: translate3d(0, 0, 0); /* Force GPU acceleration with translate3d */
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1978,19 +2047,22 @@ input:focus, textarea:focus, select:focus {
   animation: fadeIn 0.3s ease-out, shimmer 2s infinite, skeletonPulse 2s ease-in-out infinite;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Hidden for native feel */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0px;
+  height: 0px;
+  display: none;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: transparent;
+  display: none;
 }
 
 .dark ::-webkit-scrollbar-thumb {
@@ -2090,6 +2162,31 @@ input, textarea, [contenteditable] {
   user-select: text;
 }
 
+/* Native Touch Active State - Fixes iOS Safari :active issues */
+.is-active {
+  opacity: 0.7 !important;
+  transform: scale(0.98) !important;
+  transition: opacity 0.1s ease, transform 0.1s ease !important;
+}
+
+/* Ensure buttons have native-like active states */
+button.is-active,
+a.is-active,
+[role="button"].is-active {
+  opacity: 0.8;
+  transform: scale(0.97);
+}
+
+/* Native touch feedback for interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  button:active,
+  a:active,
+  [role="button"]:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
 #root {
   width: 100%;
   /* Keep a single scroll container (views handle their own scrolling).
@@ -2110,7 +2207,12 @@ input, textarea, [contenteditable] {
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none; /* Changed to none for native feel */
+    /* Safe area insets for notch support */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
 }
 

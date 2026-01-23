@@ -39,6 +39,8 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 // This ensures Logo is always available synchronously
 import Logo, { Logo as LogoNamed } from './components/Logo.jsx'
 import { registerLogo } from './utils/logoRegistry.js'
+// Native optimizations - apply on mount
+import { applyNativeOptimizations } from './utils/nativeOptimizations.js'
 
 // CRITICAL: Import firebaseConfig in main.jsx to ensure it's in main bundle
 // Lazy components import auth, db, etc. from firebaseConfig
@@ -234,6 +236,11 @@ try {
     throw new Error('React.createContext is not available. React may not be fully loaded.');
   }
   
+  // Apply native optimizations on mount
+  if (typeof window !== 'undefined') {
+    applyNativeOptimizations();
+  }
+
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <ThemeProvider>
