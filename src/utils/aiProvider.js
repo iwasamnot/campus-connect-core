@@ -230,7 +230,7 @@ const callOllama = async (prompt, config, options = {}) => {
   
   // ✅ FIX: Select Model - Use llava for vision, deepseek-r1:8b for text
   const model = hasImage ? 'llava:v1.6' : 'deepseek-r1:8b';
-  console.log(`🖼️ [OLLAMA] ${hasImage ? 'Vision mode' : 'Text mode'}: Using model ${model}`);
+  console.error(`🚀 [AI] Requesting Model: ${model}${hasImage ? ' (with image)' : ''}`);
   
   // Build messages array with proper role structure
   // System role: Virtual Senior persona
@@ -317,12 +317,12 @@ Current Date: ${new Date().toLocaleDateString()}`;
   // If image is provided in options, convert and add it to the user message
   if (options.image) {
     try {
-      console.log('🖼️ [OLLAMA] Converting image from options.image to base64...');
+      console.error('📸 [AI] Converting image from options.image to base64...');
       const base64 = await urlToBase64(options.image);
       userMessage.images = [base64];
-      console.log(`✅ [OLLAMA] Image attached to user message (${base64.length} chars base64)`);
+      console.error(`✅ [AI] Image attached to user message (${base64.length} chars base64)`);
     } catch (error) {
-      console.error('❌ [OLLAMA] Failed to convert image from options.image:', error);
+      console.error('❌ [AI] Failed to convert image from options.image:', error);
       // Continue without image rather than failing completely
     }
   }
@@ -333,12 +333,12 @@ Current Date: ${new Date().toLocaleDateString()}`;
       const imgAttachment = lastMessage.attachments.find(a => a.type === 'image');
       if (imgAttachment && imgAttachment.url) {
         try {
-          console.log('🖼️ [OLLAMA] Converting image from message attachments to base64...');
+          console.error('📸 [AI] Converting image from message attachments to base64...');
           const base64 = await urlToBase64(imgAttachment.url);
           userMessage.images = [base64];
-          console.log(`✅ [OLLAMA] Image extracted from message attachments (${base64.length} chars base64)`);
+          console.error(`✅ [AI] Image extracted from message attachments (${base64.length} chars base64)`);
         } catch (error) {
-          console.error('❌ [OLLAMA] Failed to convert image from attachments:', error);
+          console.error('❌ [AI] Failed to convert image from attachments:', error);
           // Continue without image rather than failing completely
         }
       }
@@ -430,6 +430,11 @@ Current Date: ${new Date().toLocaleDateString()}`;
     }
 
     const data = await response.json();
+    console.error('✅ [AI] Success:', { 
+      hasMessage: !!data.message,
+      hasContent: !!data.message?.content,
+      contentLength: data.message?.content?.length || 0
+    });
     
     // CRITICAL: Parse response correctly from data.message.content
     let responseText = null;

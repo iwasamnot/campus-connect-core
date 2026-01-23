@@ -39,6 +39,8 @@
     "pdf-lib": "^1.17.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "web-vitals": "^5.1.0",
     "zego-express-engine-webrtc": "^3.11.0"
   },
