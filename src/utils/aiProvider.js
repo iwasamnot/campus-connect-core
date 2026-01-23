@@ -590,8 +590,9 @@ Current Date: ${new Date().toLocaleDateString()}`;
 
 /**
  * Call Groq API (Fallback - very generous free tier)
+ * ✅ EXPORTED: Used by RAG engine and toxicity checker as fallback
  */
-const callGroq = async (prompt, config, options) => {
+export const callGroq = async (prompt, config, options) => {
   const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {

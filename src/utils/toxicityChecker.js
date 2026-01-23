@@ -318,6 +318,83 @@ export const checkToxicity = async (text, useGemini = true) => {
       return result;
     } catch (error) {
       console.error('Error in Gemini toxicity check:', error);
+      
+      // ✅ FIX: Fallback to Vertex/Groq ONLY for toxicity checks
+      console.warn('⚠️ [TOXICITY] Gemini failed, trying Vertex/Groq fallback:', error.message);
+      
+      // Try Groq fallback for toxicity check
+      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
+      if (groqApiKey && groqApiKey !== '') {
+        try {
+          // Import callGroq function directly
+          const { callGroq } = await import('./aiProvider');
+          const groqConfig = {
+            provider: 'groq',
+            apiKey: groqApiKey,
+            model: 'llama-3.1-8b-instant',
+            baseUrl: 'https://api.groq.com/openai/v1',
+            maxTokens: 512,
+            temperature: 0.3
+          };
+          
+          const toxicityPrompt = `Analyze the following message for toxicity, hate speech, harassment, bullying, threats, or inappropriate content. 
+
+Message: "${text}"
+
+Respond ONLY with a JSON object in this exact format:
+{
+  "isToxic": true/false,
+  "confidence": 0.0-1.0,
+  "reason": "brief explanation",
+  "categories": ["hate_speech", "harassment", "threats", "profanity", "bullying", etc.]
+}
+
+Be strict but fair. Consider context. False positives are better than false negatives for safety.`;
+
+          console.error('🔄 [TOXICITY FALLBACK] Using Groq API for toxicity check...');
+          const groqResponse = await callGroq(toxicityPrompt, groqConfig, {
+            systemPrompt: 'You are a content moderation AI. Analyze messages for toxicity and respond with JSON only.',
+            maxTokens: 512,
+            temperature: 0.3
+          });
+          
+          // Try to parse JSON response
+          try {
+            const jsonMatch = groqResponse.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              const result = {
+                isToxic: parsed.isToxic === true,
+                confidence: parsed.confidence || 0.5,
+                reason: parsed.reason || null,
+                categories: parsed.categories || [],
+                method: 'groq-fallback'
+              };
+              toxicityCache.set(cacheKey, result);
+              return result;
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse Groq toxicity response:', parseError);
+          }
+          
+          // If parsing fails, check if response indicates toxicity
+          const lowerResponse = groqResponse.toLowerCase();
+          if (lowerResponse.includes('toxic') || lowerResponse.includes('true') || lowerResponse.includes('yes')) {
+            const result = {
+              isToxic: true,
+              confidence: 0.7,
+              reason: 'Groq AI detected toxicity',
+              method: 'groq-fallback'
+            };
+            toxicityCache.set(cacheKey, result);
+            return result;
+          }
+        } catch (groqError) {
+          console.error('❌ [TOXICITY] Groq fallback also failed:', groqError);
+          // Continue to word filter fallback below
+        }
+      }
+      
       // Continue to fallback below
     }
   }

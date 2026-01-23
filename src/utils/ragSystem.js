@@ -169,12 +169,60 @@ Current Date: ${new Date().toLocaleDateString()}`;
     // User role: RAG context + question
     console.log(`🚀 [OLLAMA RAG] Calling AI provider with context (${context.length} chars) and question (${query.length} chars)`);
     
-    const response = await callAI(userPrompt, {
-      systemPrompt: systemPrompt,
-      maxTokens: 2048,
-      temperature: 0.7,
-      userId: userId || null // Pass userId for Connection Matcher
-    });
+    let response = null;
+    try {
+      // Try Ollama first (primary for RAG)
+      response = await callAI(userPrompt, {
+        systemPrompt: systemPrompt,
+        maxTokens: 2048,
+        temperature: 0.7,
+        userId: userId || null // Pass userId for Connection Matcher
+      });
+    } catch (ollamaError) {
+      // ✅ FIX: Fallback to Vertex/Groq ONLY for RAG engine
+      console.warn('⚠️ [RAG] Ollama failed, trying Vertex/Groq fallback:', ollamaError.message);
+      
+      // Try Groq fallback
+      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
+      if (groqApiKey && groqApiKey !== '') {
+        try {
+          // Import callGroq function directly
+          const { callGroq } = await import('./aiProvider');
+          const groqConfig = {
+            provider: 'groq',
+            apiKey: groqApiKey,
+            model: 'llama-3.1-8b-instant',
+            baseUrl: 'https://api.groq.com/openai/v1',
+            maxTokens: 2048,
+            temperature: 0.7
+          };
+          console.error('🔄 [RAG FALLBACK] Switching to Groq API for RAG...');
+          response = await callGroq(userPrompt, groqConfig, {
+            systemPrompt: systemPrompt,
+            maxTokens: 2048,
+            temperature: 0.7
+          });
+        } catch (groqError) {
+          console.error('❌ [RAG] Groq fallback also failed:', groqError);
+          // Try Vertex AI if available
+          const vertexApiKey = import.meta.env.VITE_VERTEX_API_KEY?.trim();
+          if (vertexApiKey && vertexApiKey !== '') {
+            try {
+              // Vertex AI fallback would go here if implemented
+              console.error('⚠️ [RAG] Vertex AI fallback not yet implemented');
+              throw new Error('All RAG providers failed');
+            } catch (vertexError) {
+              console.error('❌ [RAG] All providers failed:', { ollama: ollamaError.message, groq: groqError.message });
+              throw new Error(`RAG failed: Ollama: ${ollamaError.message}, Groq: ${groqError.message}`);
+            }
+          } else {
+            throw new Error(`RAG failed: Ollama: ${ollamaError.message}, Groq: ${groqError.message}`);
+          }
+        }
+      } else {
+        throw new Error(`RAG failed: Ollama error: ${ollamaError.message}, Groq not configured`);
+      }
+    }
 
     if (!response || response.trim().length === 0) {
       console.error('❌ [OLLAMA RAG] Empty response received from AI provider');
