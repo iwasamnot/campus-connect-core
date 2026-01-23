@@ -17,13 +17,13 @@ const urlToBase64 = async (url) => {
     // If it's already a data URI, just return the base64 part
     if (url.startsWith('data:')) {
       const base64 = url.includes(',') ? url.split(',')[1] : url;
-      console.log('✅ [Image] Already base64 data URI, extracted base64');
+      console.error('✅ [Image] Already base64 data URI, extracted base64');
       return base64;
     }
 
     // If it's a blob URL, fetch and convert
     if (url.startsWith('blob:')) {
-      console.log('🔄 [Image] Converting blob URL to base64...');
+      console.error('📸 [AI] Converting image...');
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch blob: ${response.statusText}`);
@@ -49,7 +49,7 @@ const urlToBase64 = async (url) => {
 
     // If it's a regular HTTP/HTTPS URL, fetch and convert
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      console.log('🔄 [Image] Converting HTTP URL to base64...');
+      console.error('📸 [AI] Converting image...');
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.statusText}`);
@@ -73,7 +73,7 @@ const urlToBase64 = async (url) => {
     }
 
     // If it's already base64 (no prefix), return as-is
-    console.log('⚠️ [Image] Unknown URL format, assuming base64 string');
+    console.error('⚠️ [Image] Unknown URL format, assuming base64 string');
     return url;
   } catch (error) {
     console.error('❌ [Image] Error converting URL to base64:', error);
