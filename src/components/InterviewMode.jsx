@@ -44,26 +44,46 @@ const InterviewMode = ({ onClose }) => {
     try {
       const analysisResult = await analyzeResponse(transcript, currentQuestion, currentRole);
       
-      if (analysisResult.success) {
-        setFeedback(prev => [...prev, {
+      if (analysisResult.success && analysisResult.analysis) {
+        const newFeedbackItem = {
           question: currentQuestion,
           answer: transcript,
           analysis: analysisResult.analysis,
           timestamp: new Date().toISOString()
-        }]);
-
-        // Update overall score
-        const scores = [...feedback, analysisResult].map(f => f.analysis?.score || 0);
-        const avgScore = scores.length > 0 
-          ? scores.reduce((a, b) => a + b, 0) / scores.length 
-          : analysisResult.analysis.score;
-        setOverallScore(avgScore);
+        };
+        
+        setFeedback(prev => {
+          const updatedFeedback = [...prev, newFeedbackItem];
+          
+          // Update overall score from updated feedback
+          const scores = updatedFeedback
+            .map(f => f?.analysis?.score)
+            .filter(score => typeof score === 'number' && !isNaN(score));
+          
+          const avgScore = scores.length > 0 
+            ? scores.reduce((a, b) => a + b, 0) / scores.length 
+            : (analysisResult.analysis?.score || 0);
+          
+          setOverallScore(avgScore);
+          
+          return updatedFeedback;
+        });
 
         // Generate next question
         setIsGeneratingQuestion(true);
-        const nextQuestion = await generateNextQuestion(currentRole, [...questionsAsked, currentQuestion]);
-        setCurrentQuestion(nextQuestion);
-        setQuestionsAsked(prev => [...prev, currentQuestion]);
+        try {
+          const nextQuestion = await generateNextQuestion(currentRole, [...questionsAsked, currentQuestion]);
+          if (nextQuestion && nextQuestion.trim()) {
+            setCurrentQuestion(nextQuestion);
+            setQuestionsAsked(prev => [...prev, currentQuestion]);
+          } else {
+            console.warn('Generated question is empty, using fallback');
+            setCurrentQuestion(`Tell me about your experience with ${currentRole} responsibilities.`);
+          }
+        } catch (questionError) {
+          console.error('Error generating next question:', questionError);
+          setCurrentQuestion(`Tell me about your experience with ${currentRole} responsibilities.`);
+        }
         
         success('Feedback generated! Next question ready.');
       } else {
@@ -78,18 +98,19 @@ const InterviewMode = ({ onClose }) => {
     }
   }, [currentQuestion, currentRole, questionsAsked, feedback, success, showError]);
 
+  const voiceModeResult = useVoiceMode(handleUserTranscript);
   const {
-    isListening,
-    isSpeaking,
-    isMuted,
-    interimTranscript,
-    error: voiceError,
+    isListening = false,
+    isSpeaking = false,
+    isMuted = false,
+    interimTranscript = '',
+    error: voiceError = null,
     startVoiceMode,
     stopVoiceMode,
     toggleMute,
     speak: speakText,
     stopSpeaking
-  } = useVoiceMode(handleUserTranscript);
+  } = voiceModeResult || {};
 
   // Start interview
   const startInterview = useCallback(async () => {
@@ -107,14 +128,20 @@ const InterviewMode = ({ onClose }) => {
 
       // Generate first question
       const firstQuestion = await generateNextQuestion(currentRole, []);
-      setCurrentQuestion(firstQuestion);
-      setQuestionsAsked([]);
-      setFeedback([]);
-      setInterviewHistory([]);
-      setOverallScore(null);
+      if (firstQuestion && firstQuestion.trim()) {
+        setCurrentQuestion(firstQuestion);
+        setQuestionsAsked([]);
+        setFeedback([]);
+        setInterviewHistory([]);
+        setOverallScore(null);
 
-      // Speak the question
-      speakText(`Let's begin. ${firstQuestion}`);
+        // Speak the question
+        if (speakText) {
+          speakText(`Let's begin. ${firstQuestion}`);
+        }
+      } else {
+        throw new Error('Failed to generate first question');
+      }
       
       success('Interview started! Listen for the first question.');
     } catch (error) {
@@ -311,7 +338,7 @@ const InterviewMode = ({ onClose }) => {
         </div>
 
         {/* Overall Score */}
-        {overallScore !== null && (
+        {overallScore !== null && typeof overallScore === 'number' && !isNaN(overallScore) && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -343,7 +370,15 @@ const InterviewMode = ({ onClose }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {feedback.map((item, index) => (
+              {feedback.map((item, index) => {
+                // Defensive check: ensure item and analysis exist
+                if (!item || !item.analysis) {
+                  return null;
+                }
+                
+                const score = typeof item.analysis.score === 'number' ? item.analysis.score : 0;
+                
+                return (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: 20 }}
@@ -353,26 +388,26 @@ const InterviewMode = ({ onClose }) => {
                   {/* Question */}
                   <div className="mb-3">
                     <p className="text-xs text-indigo-300 mb-1">Q{index + 1}:</p>
-                    <p className="text-sm text-white font-medium">{item.question}</p>
+                    <p className="text-sm text-white font-medium">{item.question || 'Question not available'}</p>
                   </div>
 
                   {/* Score */}
                   <div className="flex items-center gap-2 mb-3">
                     <div className={`p-2 rounded-lg ${
-                      item.analysis.score >= 8 ? 'bg-green-500/20' :
-                      item.analysis.score >= 6 ? 'bg-yellow-500/20' :
+                      score >= 8 ? 'bg-green-500/20' :
+                      score >= 6 ? 'bg-yellow-500/20' :
                       'bg-red-500/20'
                     }`}>
-                      {item.analysis.score >= 8 ? (
+                      {score >= 8 ? (
                         <CheckCircle2 className="text-green-400" size={20} />
-                      ) : item.analysis.score >= 6 ? (
+                      ) : score >= 6 ? (
                         <AlertCircle className="text-yellow-400" size={20} />
                       ) : (
                         <XCircle className="text-red-400" size={20} />
                       )}
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-white">{item.analysis.score}/10</p>
+                      <p className="text-lg font-bold text-white">{score}/10</p>
                       <p className="text-xs text-white/60">Overall</p>
                     </div>
                   </div>
@@ -382,17 +417,17 @@ const InterviewMode = ({ onClose }) => {
                     <div className="mb-3 p-2 bg-indigo-500/10 rounded-lg">
                       <p className="text-xs text-indigo-300 mb-1">STAR Method:</p>
                       <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div className={item.analysis.starMethod.situation === 'yes' ? 'text-green-400' : 'text-white/60'}>
-                          S: {item.analysis.starMethod.situation}
+                        <div className={(item.analysis.starMethod.situation || '').toLowerCase() === 'yes' ? 'text-green-400' : 'text-white/60'}>
+                          S: {item.analysis.starMethod.situation || 'N/A'}
                         </div>
-                        <div className={item.analysis.starMethod.task === 'yes' ? 'text-green-400' : 'text-white/60'}>
-                          T: {item.analysis.starMethod.task}
+                        <div className={(item.analysis.starMethod.task || '').toLowerCase() === 'yes' ? 'text-green-400' : 'text-white/60'}>
+                          T: {item.analysis.starMethod.task || 'N/A'}
                         </div>
-                        <div className={item.analysis.starMethod.action === 'yes' ? 'text-green-400' : 'text-white/60'}>
-                          A: {item.analysis.starMethod.action}
+                        <div className={(item.analysis.starMethod.action || '').toLowerCase() === 'yes' ? 'text-green-400' : 'text-white/60'}>
+                          A: {item.analysis.starMethod.action || 'N/A'}
                         </div>
-                        <div className={item.analysis.starMethod.result === 'yes' ? 'text-green-400' : 'text-white/60'}>
-                          R: {item.analysis.starMethod.result}
+                        <div className={(item.analysis.starMethod.result || '').toLowerCase() === 'yes' ? 'text-green-400' : 'text-white/60'}>
+                          R: {item.analysis.starMethod.result || 'N/A'}
                         </div>
                       </div>
                     </div>
@@ -422,7 +457,8 @@ const InterviewMode = ({ onClose }) => {
                     </div>
                   )}
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

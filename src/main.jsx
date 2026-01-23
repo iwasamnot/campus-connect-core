@@ -41,6 +41,13 @@ import Logo, { Logo as LogoNamed } from './components/Logo.jsx'
 import { registerLogo } from './utils/logoRegistry.js'
 // Native optimizations - apply on mount
 import { applyNativeOptimizations } from './utils/nativeOptimizations.js'
+// PWA optimizations
+import { initializePWAOptimizations } from './utils/pwaOptimizer.js'
+
+// Initialize PWA optimizations early
+if (typeof window !== 'undefined') {
+  initializePWAOptimizations();
+}
 
 // CRITICAL: Import firebaseConfig in main.jsx to ensure it's in main bundle
 // Lazy components import auth, db, etc. from firebaseConfig

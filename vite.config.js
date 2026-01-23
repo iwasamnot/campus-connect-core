@@ -32,7 +32,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['logo.png', 'favicon.ico'],
+      includeAssets: ['logo.png', 'favicon.ico', 'browserconfig.xml'],
       injectManifest: false,
       manifest: {
         name: 'CampusConnect - Student Messaging Platform',
@@ -176,30 +176,30 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,webp}'],
-        maximumFileSizeToCacheInBytes: 10000000, // 10 MB - increased for better mobile caching
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,webp,json}'],
+        maximumFileSizeToCacheInBytes: 5000000, // 5 MB - optimized for mobile
         cleanupOutdatedCaches: true,
         skipWaiting: true, // Immediately activate new service worker
         clientsClaim: true, // Take control of all clients immediately
         // Optimize for mobile networks
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/],
+        navigateFallbackDenylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/, /^\/firebase/],
         // Better offline support for mobile
         offlineGoogleAnalytics: false,
-        // Optimize cache for mobile devices
-        cacheId: 'campusconnect-v1',
+        // Optimize cache for mobile devices with versioning
+        cacheId: 'campusconnect-v8.3.0',
         runtimeCaching: [
           {
             // CRITICAL: Handle JS module requests BEFORE navigateFallback
             // This prevents "Expected a JavaScript module but got text/html" errors
             // When a JS file is missing (old hash), NetworkFirst will fail and return 404 instead of HTML
             urlPattern: /\.(?:js|mjs)$/,
-            handler: 'NetworkFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'js-modules-cache',
+              cacheName: 'js-modules-cache-v1',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 1 day - immutable files with hash in name
+                maxEntries: 50, // Reduced for mobile
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days - immutable files with hash
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -208,12 +208,12 @@ export default defineConfig({
           },
           {
             urlPattern: /\.css$/,
-            handler: 'NetworkFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'css-cache',
+              cacheName: 'css-cache-v1',
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 1 day
+                maxEntries: 30, // Reduced for mobile
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -238,13 +238,18 @@ export default defineConfig({
             urlPattern: /^https:\/\/.*\.firebasestorage\.app\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'firebase-storage-cache',
+              cacheName: 'firebase-storage-cache-v1',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                maxEntries: 200, // Increased for images/files
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days - images rarely change
               },
               cacheableResponse: {
                 statuses: [0, 200]
+              },
+              // Match requests for images
+              matchOptions: {
+                ignoreSearch: false,
+                ignoreVary: true
               }
             }
           },
@@ -294,10 +299,49 @@ export default defineConfig({
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'images-cache',
+              cacheName: 'images-cache-v1',
               expiration: {
-                maxEntries: 50,
+                maxEntries: 100, // Increased for better image caching
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              },
+              // Optimize for images
+              matchOptions: {
+                ignoreSearch: false,
+                ignoreVary: true
+              }
+            }
+          },
+          {
+            // API calls - NetworkFirst with short cache
+            urlPattern: /^https:\/\/.*\.googleapis\.com\/v1\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache-v1',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 5 // 5 minutes - short cache for API
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              },
+              networkTimeoutSeconds: 10 // Timeout after 10s
+            }
+          },
+          {
+            // HTML pages - NetworkFirst with fallback
+            urlPattern: /\.html$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-cache-v1',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 // 1 hour
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           },
@@ -320,19 +364,44 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
-        type: 'module'
+        type: 'module',
+        navigateFallback: '/index.html'
       },
       injectRegister: 'auto',
-      strategies: 'generateSW'
+      strategies: 'generateSW',
+      // Better update handling
+      selfDestroying: false,
+      // Optimize install prompt
+      includeManifestIcons: true,
+      // Better compression
+      minify: true
     })
   ],
   build: {
     // Optimize build output for PWA
-    target: 'es2015', // Better compatibility with service workers
+    target: 'es2020', // Modern target for better performance
     cssCodeSplit: true, // Split CSS for better caching
+    minify: 'terser', // Use terser for better minification
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'] // Remove specific console methods
+      }
+    },
+    // Optimize chunk size
+    chunkSizeWarningLimit: 500, // Lower warning threshold
+    // Report compressed sizes
+    reportCompressedSize: true,
     rollupOptions: {
       // Preserve entry signatures to ensure React is in main bundle
       preserveEntrySignatures: 'strict',
+      // Better tree shaking
+      treeshake: {
+        preset: 'smallest',
+        moduleSideEffects: false,
+        propertyReadSideEffects: false
+      },
       output: {
         manualChunks: (id) => {
           // CRITICAL: Keep React and React-DOM in main bundle to prevent "createContext" errors
@@ -393,7 +462,9 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    sourcemap: false // Disable sourcemaps for production to reduce build size
+    sourcemap: false, // Disable sourcemaps for production to reduce build size
+    // Optimize assets
+    assetsInlineLimit: 4096 // Inline assets smaller than 4kb
   },
   chunkSizeWarningLimit: 600
 })

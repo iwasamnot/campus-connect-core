@@ -63,6 +63,9 @@ const PWAInstallPrompt = () => {
   };
 
   const handleDismiss = () => {
+    // Store dismissal with timestamp
+    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    setShowPrompt(false);
     setShowPrompt(false);
     localStorage.setItem('pwa-install-dismissed', Date.now().toString());
   };
