@@ -129,6 +129,10 @@ jobs:
       - name: Build project
         run: npm run build
       
+      - name: Fix JSX extensions (safety net)
+        run: npm run fix:jsx
+        continue-on-error: true
+      
       - name: Verify build output (CRITICAL - Prevents MIME type errors)
         run: |
           echo "🔍 Verifying build output..."

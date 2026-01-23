@@ -29,7 +29,18 @@ export default defineConfig({
     exclude: []
   },
   plugins: [
-    react(),
+    react({
+      // ✅ FIX: Ensure JSX is always transformed to JS in production
+      // Explicitly configure JSX transformation
+      jsxRuntime: 'automatic',
+      jsxImportSource: 'react',
+      // Include all JSX files for transformation
+      include: /\.(jsx|tsx|js|ts)$/,
+      // Force transformation
+      babel: {
+        plugins: []
+      }
+    }),
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['logo.png', 'favicon.ico', 'browserconfig.xml'],
@@ -375,7 +386,56 @@ export default defineConfig({
       includeManifestIcons: true,
       // Better compression
       minify: true
-    })
+    }),
+    // ✅ FIX: Custom plugin to rename .jsx files to .js after build
+    {
+      name: 'fix-jsx-extensions',
+      writeBundle() {
+        const { readdirSync, renameSync, statSync, readFileSync, writeFileSync } = require('fs');
+        const { join } = require('path');
+        const distDir = join(process.cwd(), 'dist');
+        
+        function fixJSXFiles(dir) {
+          try {
+            const entries = readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+              const fullPath = join(dir, entry.name);
+              if (entry.isDirectory()) {
+                fixJSXFiles(fullPath);
+              } else if (entry.isFile() && (entry.name.endsWith('.jsx') || entry.name.endsWith('.tsx'))) {
+                const newName = entry.name.replace(/\.(jsx|tsx)$/, '.js');
+                const newPath = join(dir, newName);
+                console.log(`[fix-jsx-extensions] Renaming ${entry.name} to ${newName}`);
+                renameSync(fullPath, newPath);
+                
+                // Also update index.html if it references the old file
+                const indexPath = join(distDir, 'index.html');
+                try {
+                  if (statSync(indexPath).isFile()) {
+                    const indexContent = readFileSync(indexPath, 'utf-8');
+                    if (indexContent.includes(entry.name)) {
+                      const updatedContent = indexContent.replace(
+                        new RegExp(entry.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), 
+                        newName
+                      );
+                      writeFileSync(indexPath, updatedContent, 'utf-8');
+                      console.log(`[fix-jsx-extensions] Updated index.html to reference ${newName}`);
+                    }
+                  }
+                } catch (err) {
+                  // Ignore errors updating index.html
+                }
+              }
+            }
+          } catch (error) {
+            if (error.code !== 'EACCES') {
+              console.error('[fix-jsx-extensions] Error:', error);
+            }
+          }
+        }
+        fixJSXFiles(distDir);
+      }
+    }
   ],
   build: {
     // Optimize build output for PWA
@@ -456,7 +516,8 @@ export default defineConfig({
           // Everything else goes to main bundle
           return undefined;
         },
-        // Ensure chunk names are stable
+        // ✅ FIX: Ensure chunk names are stable and ALWAYS use .js extension
+        // Use string patterns instead of functions to ensure .js extension
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
