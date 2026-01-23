@@ -4,6 +4,248 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [19.0.0] - 2025-01-XX - Interview Analysis Engine & Safety Override
+
+### 🚀 New Major Features
+
+#### Interview Analysis Engine
+- **Mock Interview System**: Complete interview preparation platform
+  - Role-based interviewer personas (Cyber Security Analyst, Software Engineer, Data Scientist, etc.)
+  - Strict technical recruiter simulation
+  - Progressive question generation
+- **STAR Method Analysis**: Comprehensive response evaluation
+  - Situation, Task, Action, Result breakdown
+  - Filler word detection and counting (um, like, uh, etc.)
+  - Score out of 10 with detailed breakdown (technical accuracy, communication, structure, relevance)
+  - Specific improvement suggestions for each answer
+- **Real-Time Voice Integration**: Full voice-based interview experience
+  - Deepgram integration (nova-2 model) for speech-to-text
+  - Text-to-speech for AI questions
+  - Live captions during interview
+  - Speech interruption detection
+  - Mute and end call controls
+- **Live Feedback Sidebar**: Real-time feedback after each answer
+  - STAR method indicators (S/T/A/R status)
+  - Filler word highlights
+  - Score visualization with color coding
+  - Improvement recommendations
+- **Overall Score Tracking**: Cumulative performance metrics across all questions
+- **UI Components**: Full-screen interview interface with pulsing AI recruiter visualization
+
+#### Safety Override Layer
+- **Sentiment Monitoring**: Real-time distress signal detection
+  - Comprehensive keyword detection (suicide, self-harm, hopelessness, etc.)
+  - Context-aware severity assessment (low, high, critical)
+  - Automatic LLM generation blocking when crisis detected
+- **Crisis Response System**: Immediate support resource delivery
+  - Hardcoded crisis intervention messages
+  - Support resource cards with clickable links:
+    - Lifeline Australia (13 11 14)
+    - Beyond Blue (1300 22 4636)
+    - Kids Helpline (1800 55 1800)
+    - SISTC Student Support (email)
+    - Emergency Services (000)
+  - Special UI rendering for crisis messages (red/orange gradient)
+  - Runs before toxicity checks (highest priority)
+- **Integration**: Works across all chat types and AI features
+  - Prevents AI processing of crisis messages
+  - Safety check in `callAI` function
+  - Safety check in `sendMessage` function
+  - Crisis messages flagged with `isCrisisIntervention: true`
+
+### 📦 Files Added
+- `src/utils/interviewEngine.js` - Interview persona and analysis logic
+- `src/utils/safetyCheck.js` - Safety monitoring and crisis intervention
+- `src/components/InterviewMode.jsx` - Full interview UI component
+
+### 🔧 Integration Updates
+- Added "Mock Interview" to sidebar navigation (Tools category)
+- Interview mode opens as full-screen modal
+- Safety checks integrated into ChatArea and aiProvider
+- Crisis intervention messages render with special UI
+
+### 🎨 UI Enhancements
+- Interview mode with pulsing AI recruiter visualization
+- Live feedback sidebar with real-time updates
+- Crisis intervention cards with resource links
+- Color-coded score indicators
+
+---
+
+## [18.1.0] - 2025-01-XX - Advanced AI Features & Native Optimization
+
+### 🚀 New Major Features
+
+#### Self-Learning RAG System
+- **Agent Brain**: Intelligent query processing with confidence checking
+  - Initial Pinecone retrieval
+  - AI confidence assessment
+  - Automatic web search when confidence is low
+  - Self-learning from web results
+- **Learning Module**: Automatic knowledge base updates
+  - Web content summarization using DeepSeek
+  - Chunking and embedding generation
+  - Pinecone upsert with metadata (source: "web_auto_learned")
+  - Background learning process
+- **Web Search Integration**: Tavily API for live web search
+  - Real-time information retrieval
+  - Search depth configuration
+  - Answer extraction
+- **UI Feedback**: Real-time status updates
+  - "Searching Internal Database..."
+  - "⚠️ Info missing. Searching Live Web..."
+  - "💾 New information found. Updating Knowledge Base..."
+  - "Answer Ready."
+
+#### Hierarchical Memory System (MemGPT-style)
+- **Memory Store**: JSON-based localStorage system
+  - Core memory (user_name, job, goals, preferences, facts)
+  - Archival memory (past conversation summaries)
+- **Memory Manager**: AI-powered memory updates
+  - DeepSeek analyzes interactions for new facts
+  - Automatic core memory updates
+  - Goal merging without duplicates
+- **Context Injection**: Personalized AI responses
+  - Core memory loaded before every chat
+  - Injected into system prompt
+  - Context-aware responses
+
+#### Real-Time Voice Duplex Mode
+- **Deepgram Integration**: Real-time speech-to-text
+  - nova-2 model with smart formatting
+  - Interim results for live captions
+  - Speech interruption detection (SpeechStarted event)
+  - VAD (Voice Activity Detection) events
+- **Text-to-Speech**: AI responses spoken aloud
+  - Web Speech API integration
+  - Automatic interruption when user speaks
+  - Natural conversation flow
+- **Full-Screen Voice Interface**: Immersive voice mode
+  - Pulsing orb visualization (blue for listening, pink for speaking)
+  - Live captions display
+  - Mute and end call controls
+  - Real-time status indicators
+
+#### Multimodal Vision (Image Analysis)
+- **Image Upload**: Camera/paperclip button integration
+  - Thumbnail preview before sending
+  - Image removal option
+  - Base64 encoding for Ollama
+- **Ollama LLaVA Integration**: Vision-language model
+  - Automatic model switching (deepseek-r1 → llava when image present)
+  - /api/generate endpoint for multimodal requests
+  - Vision-optimized system prompts
+- **Image Display**: Images shown in chat history
+  - "AI Vision Analysis" badge
+  - Image preview in messages
+  - Original image preservation
+
+#### Connection Matcher/Engine
+- **Intent Analysis**: AI extracts topic tags from queries
+  - 2-3 word topic tags (e.g., "Data Structures", "Visa Help")
+  - Asynchronous processing
+  - Firestore storage with timestamps
+- **Match Detection**: Finds students with similar interests
+  - 30-minute time window matching
+  - Anonymous study group suggestions
+  - Real-time notifications
+- **Smart Notifications**: Contextual connection prompts
+  - "psst... 2 other students are asking about [Topic Tag] right now"
+  - Anonymous group join options
+
+#### Universal Group Chat (Global Commons)
+- **Language Selector**: 8+ language support
+  - English, Urdu, Mandarin, Spanish, Hindi, Persian, Nepali, Punjabi
+- **Slang-Aware Translation**: AI-powered translation
+  - Uses deepseek-r1:8b for natural translations
+  - Preserves emojis and casual speech
+  - Real-time translation pipeline
+- **Dual Display**: Original and translated messages
+  - Original text (small, gray)
+  - Translated text (big, readable)
+  - WhatsApp-like group chat interface
+
+#### Form Auto-Filler
+- **Automatic Detection**: AI detects form requests
+  - "Special Consideration" form detection
+  - "Extension" form detection
+  - JSON output for form data
+- **PDF Generation**: Pre-filled PDF creation
+  - pdf-lib integration
+  - Dynamic field mapping
+  - Download-ready PDFs
+- **UI Rendering**: Special form cards in chat
+  - "Form Ready" card display
+  - Download PDF button
+  - Form data preview
+
+#### ReAct Agent (Reasoning + Acting)
+- **Tool Registry**: Executable functions for AI
+  - checkAvailability(resourceType)
+  - bookResource(resourceId, time)
+  - searchLibrary(query)
+  - getCurrentDateTime()
+- **Agent Loop**: Multi-step reasoning and acting
+  - max_steps = 5 loop limit
+  - Tool execution with observations
+  - Iterative refinement
+- **Human in the Loop**: Approval for sensitive actions
+  - User confirmation for bookings
+  - Safety checks for destructive actions
+- **UI Feedback**: Real-time agent thinking log
+  - "⚙️ Checking Schedule..."
+  - "⚙️ Found Conflict..."
+  - "✅ Answer Ready."
+
+#### Dynamic Ollama URL
+- **URL Resolution**: Priority-based URL selection
+  - localStorage custom URL (highest priority)
+  - Environment variable fallback
+  - Default localhost fallback
+- **Settings UI**: Connection manager interface
+  - Custom Ollama URL input field
+  - "Save & Apply" button
+  - "Reset to Default" button
+  - Currently active URL display
+- **Immediate Effect**: No page refresh required
+  - URL changes apply instantly
+  - Real-time connection status
+
+#### Native Feel Optimization
+- **CSS Reset**: Native-like behavior
+  - Disabled rubber banding (overscroll-behavior-y: none)
+  - Hidden scrollbars for native appearance
+  - Safe area insets for notch support
+  - Disabled text selection on non-input elements
+- **Touch Optimization**: Instant, responsive interactions
+  - Removed 300ms tap delay (touch-action: manipulation)
+  - Custom active state hook (useNativeTouch)
+  - Prevents input zoom (16px font-size minimum)
+- **Performance**: GPU-accelerated animations
+  - transform: translate3d(0, 0, 0) for hardware acceleration
+  - Explicit aspect-ratio for images (prevents CLS)
+  - List virtualization recommendations
+- **Image Optimization**: Layout shift prevention
+  - Aspect ratio preservation
+  - Shimmer loading animations
+  - Object-fit containment
+
+### 📦 Dependencies Added
+- `@deepgram/sdk: ^4.11.3` - Real-time speech-to-text
+- `pdf-lib` - PDF form generation
+
+### 🔧 Environment Variables
+- `VITE_TAVILY_KEY` - Web search API key
+- `VITE_DEEPGRAM_KEY` - Deepgram API key for voice mode
+
+### 🐛 Bug Fixes
+- Fixed recursive self-learning loop in callOllama
+- Fixed image dimension handling for CLS prevention
+- Fixed GPU acceleration for transforms
+- Fixed goals array merging in memory manager
+
+---
+
 ## [18.0.0] - 2025-01-20 - Serverless Vector RAG Engine
 
 ### 🚀 New Major Features

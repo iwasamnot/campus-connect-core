@@ -132,12 +132,153 @@ A secure, student-only messaging platform for universities with AI-powered conte
     - Google Gemini embeddings (text-embedding-004)
     - Groq LLM support for faster responses (llama-3.3-70b-versatile)
     - Automatic fallback chain (Pinecone → Firebase → Local)
+  - **Self-Learning RAG System**: AI that learns and updates its own knowledge base
+    - Automatically searches the web when information is missing
+    - Summarizes and stores new information in Pinecone
+    - Real-time knowledge base updates
+    - UI feedback for learning process
+  - **Hierarchical Memory System**: MemGPT-style memory management
+    - Core memory (user name, job, goals, preferences, facts)
+    - Archival memory (past conversation summaries)
+    - AI-powered memory updates
+    - Context injection for personalized responses
   - Conversation history support (maintains context from last 10 messages)
   - Virtual Senior AI mode in Campus Chat
   - Toggle AI Help mode on/off
   - Model selector for choosing the best AI model
   - Free and paid model options
   - Quick question buttons for common scenarios
+- **Interview Analysis Engine**: Mock interview system with AI-powered feedback
+  - **Role-Based Interviewer Personas**: Strict technical recruiter personas for different roles
+    - Cyber Security Analyst, Software Engineer, Data Scientist, DevOps Engineer, and more
+    - Customizable interview styles per role
+  - **STAR Method Analysis**: Comprehensive response evaluation
+    - Situation, Task, Action, Result breakdown
+    - Filler word detection and counting
+    - Score out of 10 with detailed breakdown
+    - Specific improvement suggestions
+  - **Real-Time Voice Integration**: Full voice-based interview experience
+    - Uses Deepgram for real-time speech-to-text
+    - AI speaks questions using text-to-speech
+    - Live captions during interview
+    - Mute and end call controls
+  - **Live Feedback Sidebar**: Real-time feedback after each answer
+    - STAR method indicators
+    - Filler word highlights
+    - Score visualization
+    - Improvement recommendations
+  - **Progressive Question Generation**: AI generates follow-up questions
+    - Context-aware question progression
+    - Avoids repeating previous questions
+    - Role-specific technical depth
+  - **Overall Score Tracking**: Cumulative performance metrics
+- **Safety Override Layer**: Trust & Safety crisis intervention system
+  - **Sentiment Monitoring**: Real-time distress signal detection
+    - Keyword-based crisis detection (suicide, self-harm, hopelessness)
+    - Context-aware severity assessment
+    - Automatic LLM generation blocking
+  - **Crisis Response**: Immediate support resource delivery
+    - Hardcoded crisis intervention messages
+    - Support resource cards (Lifeline, Beyond Blue, Kids Helpline, SISTC Support)
+    - Clickable phone numbers and email links
+    - Emergency services contact (000)
+  - **Integration**: Works across all chat types
+    - Prevents AI processing of crisis messages
+    - Special UI rendering for crisis interventions
+    - Runs before toxicity checks
+- **Real-Time Voice Duplex Mode**: Full-duplex voice conversation with AI
+  - **Deepgram Integration**: Real-time speech-to-text using nova-2 model
+    - Live transcription with interim results
+    - Speech interruption detection
+    - Smart formatting
+  - **Text-to-Speech**: AI responses spoken aloud
+    - Web Speech API integration
+    - Automatic interruption when user speaks
+    - Natural conversation flow
+  - **Full-Screen Voice Interface**: Immersive voice mode UI
+    - Pulsing orb visualization (blue for listening, pink for speaking)
+    - Live captions display
+    - Mute and end call controls
+    - Real-time status indicators
+- **Multimodal Vision (Image Analysis)**: AI-powered image understanding
+  - **Image Upload**: Camera/paperclip button for image selection
+    - Thumbnail preview before sending
+    - Image removal option
+    - Support for common image formats
+  - **Ollama LLaVA Integration**: Vision-language model for image analysis
+    - Automatic model switching (deepseek-r1 → llava when image present)
+    - Base64 image encoding
+    - Vision-optimized system prompts
+  - **Image Display**: Images shown in chat history
+    - "AI Vision Analysis" badge
+    - Image preview in messages
+    - Original image preservation
+- **Connection Matcher/Engine**: Intelligent student connection system
+  - **Intent Analysis**: AI analyzes user queries to extract topic tags
+    - 2-3 word topic tags (e.g., "Data Structures", "Visa Help")
+    - Asynchronous processing
+    - Firestore storage with timestamps
+  - **Match Detection**: Finds students with similar interests
+    - 30-minute time window matching
+    - Anonymous study group suggestions
+    - Real-time notifications
+  - **Smart Notifications**: Contextual connection prompts
+    - "psst... 2 other students are asking about [Topic Tag] right now"
+    - Anonymous group join options
+- **Universal Group Chat (Global Commons)**: Multilingual group chat
+  - **Language Selector**: Choose from 8+ languages
+    - English, Urdu, Mandarin, Spanish, Hindi, Persian, Nepali, Punjabi
+  - **Slang-Aware Translation**: AI-powered translation with tone preservation
+    - Uses deepseek-r1:8b for natural translations
+    - Preserves emojis and casual speech
+    - Real-time translation pipeline
+  - **Dual Display**: Original and translated messages
+    - Original text (small, gray)
+    - Translated text (big, readable)
+    - WhatsApp-like group chat interface
+- **Form Auto-Filler**: AI-powered PDF form generation
+  - **Automatic Detection**: AI detects form requests in chat
+    - "Special Consideration" form detection
+    - "Extension" form detection
+    - JSON output for form data
+  - **PDF Generation**: Pre-filled PDF creation
+    - pdf-lib integration
+    - Dynamic field mapping
+    - Download-ready PDFs
+  - **UI Rendering**: Special form cards in chat
+    - "Form Ready" card display
+    - Download PDF button
+    - Form data preview
+- **ReAct Agent (Reasoning + Acting)**: Autonomous AI agent with tool access
+  - **Tool Registry**: Executable functions for AI
+    - checkAvailability(resourceType)
+    - bookResource(resourceId, time)
+    - searchLibrary(query)
+    - getCurrentDateTime()
+  - **Agent Loop**: Multi-step reasoning and acting
+    - max_steps = 5 loop limit
+    - Tool execution with observations
+    - Iterative refinement
+  - **Human in the Loop**: Approval for sensitive actions
+    - User confirmation for bookings
+    - Safety checks for destructive actions
+  - **UI Feedback**: Real-time agent thinking log
+    - "⚙️ Checking Schedule..."
+    - "⚙️ Found Conflict..."
+    - "✅ Answer Ready."
+- **Dynamic Ollama URL**: Flexible AI provider configuration
+  - **URL Resolution**: Priority-based URL selection
+    - localStorage custom URL (highest priority)
+    - Environment variable fallback
+    - Default localhost fallback
+  - **Settings UI**: Connection manager interface
+    - Custom Ollama URL input field
+    - "Save & Apply" button
+    - "Reset to Default" button
+    - Currently active URL display
+  - **Immediate Effect**: No page refresh required
+    - URL changes apply instantly
+    - Real-time connection status
 - **My Profile**: Comprehensive profile management with:
   - Profile picture upload
   - Personal information (name, bio, course, year of study, date of birth, address)
@@ -467,6 +608,24 @@ A secure, student-only messaging platform for universities with AI-powered conte
   - Full-screen sidebar on mobile with fluid animations
   - Proper viewport handling for iOS Safari and all mobile browsers
   - Pages scroll normally across views (Login/Registration/Admin), including PWA standalone mode
+- **Native Feel Optimization**: Capacitor/WebView app optimization
+  - **CSS Reset**: Native-like behavior
+    - Disabled rubber banding (overscroll-behavior-y: none)
+    - Hidden scrollbars for native appearance
+    - Safe area insets for notch support
+    - Disabled text selection on non-input elements
+  - **Touch Optimization**: Instant, responsive interactions
+    - Removed 300ms tap delay (touch-action: manipulation)
+    - Custom active state hook (useNativeTouch)
+    - Prevents input zoom (16px font-size minimum)
+  - **Performance**: GPU-accelerated animations
+    - transform: translate3d(0, 0, 0) for hardware acceleration
+    - Explicit aspect-ratio for images (prevents CLS)
+    - List virtualization recommendations (react-window/react-virtuoso)
+  - **Image Optimization**: Layout shift prevention
+    - Aspect ratio preservation
+    - Shimmer loading animations
+    - Object-fit containment
 - **Progressive Web App (PWA)**: Advanced PWA features with full optimization
   - **Manifest Optimized**: Supports both portrait and landscape orientations
   - **Install Prompt**: Beautiful fluid design with safe area insets and mobile-optimized layout
