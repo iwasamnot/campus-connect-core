@@ -30,7 +30,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
@@ -64,6 +64,7 @@ import SmartCategorization from './SmartCategorization';
 import CollaborativeEditor from './CollaborativeEditor';
 import PredictiveScheduler from './PredictiveScheduler';
 import VoiceEmotionDetector from './VoiceEmotionDetector';
+import { generateFilledForm, downloadPDF } from '../utils/formFiller';
 // AI Features - lazy loaded based on toggle (no top-level await)
 import SmartTaskExtractor from './SmartTaskExtractor';
 import RelationshipGraph from './RelationshipGraph';
@@ -1318,6 +1319,120 @@ const ChatArea = ({ setActiveView }) => {
     };
   }, [userNames, userProfiles]);
 
+  // Form Filler Card Component
+  const FormFillerCard = ({ formName, data, messageId }) => {
+    const [generating, setGenerating] = useState(false);
+    const [error, setError] = useState(null);
+
+    const handleDownload = async () => {
+      try {
+        setGenerating(true);
+        setError(null);
+        
+        const pdfBytes = await generateFilledForm(formName, data);
+        const filename = `${formName}_${data.studentId || 'form'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        downloadPDF(pdfBytes, filename);
+        
+        success('Form generated and downloaded successfully!');
+      } catch (err) {
+        console.error('Error generating form:', err);
+        setError(err.message || 'Failed to generate form');
+        showError(err.message || 'Failed to generate form. Please try again.');
+      } finally {
+        setGenerating(false);
+      }
+    };
+
+    const formDisplayName = formName === 'special_consideration' 
+      ? 'Special Consideration Form' 
+      : formName === 'extension'
+      ? 'Extension Request Form'
+      : formName;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-panel border-2 border-indigo-500/50 rounded-2xl p-4 md:p-6 my-2 bg-gradient-to-br from-indigo-600/20 to-purple-600/20"
+      >
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-indigo-600/30 border border-indigo-500/50 rounded-xl flex-shrink-0">
+            <FileCheck className="text-indigo-300" size={24} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+              {formDisplayName}
+              <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">
+                Ready
+              </span>
+            </h3>
+            <p className="text-sm text-white/70 mb-4">
+              Your form has been pre-filled with your details. Review and download when ready.
+            </p>
+            
+            {/* Form Data Preview */}
+            <div className="bg-white/5 rounded-xl p-3 mb-4 space-y-2 text-sm">
+              {data.name && (
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 font-medium w-24">Name:</span>
+                  <span className="text-white">{data.name}</span>
+                </div>
+              )}
+              {data.studentId && (
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 font-medium w-24">Student ID:</span>
+                  <span className="text-white">{data.studentId}</span>
+                </div>
+              )}
+              {data.course && (
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 font-medium w-24">Course:</span>
+                  <span className="text-white">{data.course}</span>
+                </div>
+              )}
+              {data.assignment && (
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 font-medium w-24">Assignment:</span>
+                  <span className="text-white">{data.assignment}</span>
+                </div>
+              )}
+              {data.reason && (
+                <div className="flex items-start gap-2">
+                  <span className="text-white/60 font-medium w-24">Reason:</span>
+                  <span className="text-white flex-1">{data.reason}</span>
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-sm text-red-300">
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={handleDownload}
+              disabled={generating}
+              className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95"
+            >
+              {generating ? (
+                <>
+                  <Loader className="animate-spin" size={18} />
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={18} />
+                  <span>Download PDF</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-full w-full relative bg-transparent" style={{ height: '100%', minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}>
       {/* Chat Header - Fluid.so aesthetic */}
@@ -1890,38 +2005,76 @@ const ChatArea = ({ setActiveView }) => {
                     </div>
                   )}
 
+                  {/* Form Auto-Filler Detection */}
+                  {(() => {
+                    const messageText = message.displayText || message.text || '';
+                    // Check if message contains FILL_FORM JSON
+                    const formMatch = messageText.match(/```json\s*([\s\S]*?)\s*```/) || 
+                                     messageText.match(/\{[\s\S]*?"type"\s*:\s*"FILL_FORM"[\s\S]*?\}/);
+                    
+                    if (formMatch) {
+                      try {
+                        const jsonStr = formMatch[1] || formMatch[0];
+                        const formData = JSON.parse(jsonStr);
+                        
+                        if (formData.type === 'FILL_FORM' && formData.formName && formData.data) {
+                          return (
+                            <FormFillerCard 
+                              formName={formData.formName} 
+                              data={formData.data}
+                              messageId={message.id}
+                            />
+                          );
+                        }
+                      } catch (error) {
+                        console.warn('Failed to parse form data:', error);
+                      }
+                    }
+                    
+                    // Regular message text rendering
+                    return null;
+                  })()}
+
                   {/* Message Text with Markdown */}
-                  {message.displayText && message.displayText.trim() && !message.isVoice && (
-                    <div>
-                      {translations[message.id] ? (
-                        <div>
+                  {message.displayText && message.displayText.trim() && !message.isVoice && (() => {
+                    const messageText = message.displayText || message.text || '';
+                    // Skip rendering if it's a form fill message
+                    if (messageText.includes('"type": "FILL_FORM"') || messageText.includes('FILL_FORM')) {
+                      return null;
+                    }
+                    
+                    return (
+                      <div>
+                        {translations[message.id] ? (
+                          <div>
+                            <p 
+                              className="text-sm whitespace-pre-wrap break-words mb-1"
+                              dangerouslySetInnerHTML={{
+                                __html: hasMarkdown(message.displayText) 
+                                  ? parseMarkdown(message.displayText)
+                                  : message.displayText.replace(/\n/g, '<br />')
+                              }}
+                            />
+                            <div className="mt-2 pt-2 border-t border-white/20">
+                              <p className="text-xs text-white/60 mb-1">Translated:</p>
+                              <p className="text-sm whitespace-pre-wrap break-words italic">
+                                {translations[message.id]}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
                           <p 
-                            className="text-sm whitespace-pre-wrap break-words mb-1"
+                            className="text-sm whitespace-pre-wrap break-words"
                             dangerouslySetInnerHTML={{
                               __html: hasMarkdown(message.displayText) 
                                 ? parseMarkdown(message.displayText)
                                 : message.displayText.replace(/\n/g, '<br />')
                             }}
                           />
-                          <div className="mt-2 pt-2 border-t border-white/20">
-                            <p className="text-xs text-white/60 mb-1">Translated:</p>
-                            <p className="text-sm whitespace-pre-wrap break-words italic">
-                              {translations[message.id]}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                    <p 
-                      className="text-sm whitespace-pre-wrap break-words"
-                      dangerouslySetInnerHTML={{
-                        __html: hasMarkdown(message.displayText) 
-                          ? parseMarkdown(message.displayText)
-                          : message.displayText.replace(/\n/g, '<br />')
-                      }}
-                    />
-                  )}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
                 
                 {/* Message Thread */}
