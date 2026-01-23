@@ -214,12 +214,6 @@ export const callAI = async (prompt, options = {}) => {
       } else {
         console.error('❌ [FALLBACK] Ollama failed and Groq is not configured');
       }
-      // Remove the old getAIProvider() call - replaced above
-      const groqConfig = null;
-      if (groqConfig && groqConfig.provider === 'groq') {
-        console.warn('Γ¥î [OLLAMA] Failed, trying Groq fallback:', error.message);
-        return await callGroq(prompt, groqConfig, options);
-      }
     }
     throw error;
   }
@@ -563,17 +557,33 @@ Current Date: ${new Date().toLocaleDateString()}`;
   } catch (error) {
     clearTimeout(timeoutId);
     
+    // ✅ FIX: Force error to console (prevents silent failures)
+    console.error('🔥 [CRITICAL AI ERROR]:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      url: targetUrl,
+      model: model
+    });
+    
+    // Detect network errors (Ollama not available) - triggers Groq fallback
+    if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+      console.error('❌ [OLLAMA] Network error - Ollama may be unavailable:', error.message);
+      throw new Error(`Ollama is not available: ${error.message}. Will try Groq fallback.`);
+    }
+    
     // Detect mixed content errors and provide helpful message
     if (error.message && error.message.includes('Mixed Content')) {
-      console.error('Γ¥î [OLLAMA] Mixed content error detected. Using proxy should fix this.');
+      console.error('❌ [OLLAMA] Mixed content error detected. Using proxy should fix this.');
       throw new Error('Mixed content error: HTTPS page cannot call HTTP API. The proxy should handle this automatically.');
     }
     
     if (error.name === 'AbortError') {
-      throw new Error('Ollama request timed out after 60 seconds. The model may be loading or processing a large request.');
+      console.error('❌ [OLLAMA] Request timed out');
+      throw new Error('Ollama request timed out after 120 seconds. The model may be loading or processing a large request.');
     }
     
-    console.error('Γ¥î [OLLAMA] Request failed:', error);
+    // Re-throw to trigger Groq fallback
     throw error;
   }
 };
