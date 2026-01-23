@@ -193,7 +193,29 @@ export const callAI = async (prompt, options = {}) => {
   } catch (error) {
     // Try fallback provider if primary fails
     if (config.provider === 'ollama') {
-      const groqConfig = getAIProvider();
+      // ✅ FIX: Get Groq config directly (don't use getAIProvider as it will return Ollama again)
+      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
+      if (groqApiKey && groqApiKey !== '') {
+        const groqConfig = {
+          provider: 'groq',
+          apiKey: groqApiKey,
+          model: 'llama-3.1-8b-instant',
+          baseUrl: 'https://api.groq.com/openai/v1',
+          maxTokens: 2048,
+          temperature: 0.7
+        };
+        try {
+          console.error('🔄 [FALLBACK] Switching to Groq API...');
+          return await callGroq(prompt, groqConfig, options);
+        } catch (groqError) {
+          console.error('❌ [GROQ] Fallback also failed:', groqError);
+          throw new Error(`Both Ollama and Groq failed. Ollama: ${error.message}, Groq: ${groqError.message}`);
+        }
+      } else {
+        console.error('❌ [FALLBACK] Ollama failed and Groq is not configured');
+      }
+      // Remove the old getAIProvider() call - replaced above
+      const groqConfig = null;
       if (groqConfig && groqConfig.provider === 'groq') {
         console.warn('Γ¥î [OLLAMA] Failed, trying Groq fallback:', error.message);
         return await callGroq(prompt, groqConfig, options);
