@@ -230,6 +230,12 @@ Current Date: ${new Date().toLocaleDateString()}`;
   const isHttpOllama = baseUrl.startsWith('http://');
   const useProxy = isHttps && isHttpOllama;
 
+  // Define hasImage by checking for direct image property OR attachments
+  const lastMessage = messages[messages.length - 1];
+  const hasImage = options.image || 
+                   (lastMessage?.image) ||
+                   (lastMessage?.attachments && lastMessage.attachments.some(a => a.type === 'image'));
+
   // Use Cloud Function proxy if mixed content detected
   // For llava (multimodal), use /api/generate endpoint instead of /api/chat
   const endpoint = hasImage ? '/api/generate' : '/api/chat';
