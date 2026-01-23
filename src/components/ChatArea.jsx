@@ -30,7 +30,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings, CheckCircle2, XCircle, Phone } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings, CheckCircle2, XCircle, Phone, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
@@ -68,6 +68,7 @@ import VoiceEmotionDetector from './VoiceEmotionDetector';
 import { generateFilledForm, downloadPDF } from '../utils/formFiller';
 import { runAgent, approveAndExecuteTool, continueAgentAfterApproval, processQuery } from '../utils/agentEngine';
 import { manageMemory, summarizeForArchival } from '../utils/memoryManager';
+import { convertImageToBase64, createImagePreview, revokeImagePreview } from '../utils/imageUtils';
 // AI Features - lazy loaded based on toggle (no top-level await)
 import SmartTaskExtractor from './SmartTaskExtractor';
 import RelationshipGraph from './RelationshipGraph';
@@ -126,6 +127,8 @@ const ChatArea = ({ setActiveView }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Show emoji picker
   const [showFileUpload, setShowFileUpload] = useState(false); // Show file upload
   const [attachedFile, setAttachedFile] = useState(null); // Attached file
+  const [selectedImage, setSelectedImage] = useState(null); // Selected image for AI vision analysis
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null); // Preview URL for selected image
   const [replyingTo, setReplyingTo] = useState(null); // Message being replied to
   const [pinnedMessages, setPinnedMessages] = useState([]); // Pinned messages
   const [cursorPosition, setCursorPosition] = useState(0); // Cursor position for mentions
@@ -717,7 +720,7 @@ const ChatArea = ({ setActiveView }) => {
   const sendMessage = async (e) => {
     e.preventDefault();
     // Allow sending if there's either text or an attached file
-    if ((!newMessage.trim() && !attachedFile) || sending) return;
+    if ((!newMessage.trim() && !attachedFile && !selectedImage) || sending) return;
 
     // Rate limiting
     const now = Date.now();
@@ -822,6 +825,17 @@ const ChatArea = ({ setActiveView }) => {
         messageData.fileName = attachedFile.name;
       }
 
+      // Add image for AI vision analysis if present
+      if (selectedImage) {
+        // Store image preview URL for display in chat history
+        messageData.imageForAI = {
+          previewUrl: imagePreviewUrl,
+          name: selectedImage.name,
+          size: selectedImage.size,
+          type: selectedImage.type
+        };
+      }
+
       // Add mentions
       if (mentions.length > 0) {
         messageData.mentions = mentions;
@@ -845,6 +859,14 @@ const ChatArea = ({ setActiveView }) => {
       setNewMessage('');
       clearDraft(CHAT_ID);
       setAttachedFile(null);
+      
+      // Clear image selection and revoke preview URL
+      if (imagePreviewUrl) {
+        revokeImagePreview(imagePreviewUrl);
+      }
+      setSelectedImage(null);
+      setImagePreviewUrl(null);
+      
       setReplyingTo(null);
       setLastMessageTime(now);
       success('Message sent!');
@@ -862,9 +884,30 @@ const ChatArea = ({ setActiveView }) => {
         try {
           let aiResponse = null;
           
+          // Convert image to base64 if present
+          let imageBase64 = null;
+          if (selectedImage) {
+            try {
+              imageBase64 = await convertImageToBase64(selectedImage);
+              console.log('🖼️ [ChatArea] Image converted to base64 for AI vision');
+            } catch (imageError) {
+              console.error('🖼️ [ChatArea] Failed to convert image:', imageError);
+              showError('Failed to process image. Sending text-only message.');
+            }
+          }
+
           // Use Self-Learning RAG if enabled, otherwise use ReAct Agent or standard AI
-          if (selfLearningRAGEnabled) {
-            // Self-Learning RAG mode
+          // Note: RAG and ReAct Agent don't support images yet, so use standard AI for images
+          if (imageBase64) {
+            // Image mode: Use standard AI with image support
+            const { callAI } = await import('../utils/aiProvider');
+            aiResponse = await callAI(originalText || 'What do you see in this image?', {
+              image: imageBase64,
+              userId: user?.uid || null,
+              systemPrompt: 'You are a helpful assistant with vision capabilities. Analyze the image and answer the user\'s question about it. Be descriptive and helpful.'
+            });
+          } else if (selfLearningRAGEnabled) {
+            // Self-Learning RAG mode (text-only)
             const ragResult = await processQuery(originalText, (statusUpdate) => {
               setRagStatus(statusUpdate);
             }, user?.uid || null);
@@ -874,10 +917,11 @@ const ChatArea = ({ setActiveView }) => {
             } else {
               // RAG failed, fallback to standard AI
               console.warn('Self-Learning RAG failed, using standard AI:', ragResult.error);
-              aiResponse = await callGemini(originalText);
+              const { callAI } = await import('../utils/aiProvider');
+              aiResponse = await callAI(originalText, { userId: user?.uid || null });
             }
           } else if (reactAgentEnabled) {
-            // ReAct Agent mode
+            // ReAct Agent mode (text-only)
             const agentResult = await runAgent(originalText, (stepUpdate) => {
               // Update thinking log for UI
               setAgentThinking(prev => {
@@ -906,11 +950,13 @@ const ChatArea = ({ setActiveView }) => {
             } else {
               // Agent failed or hit max steps, fallback to standard AI
               console.warn('ReAct Agent failed, using standard AI:', agentResult.error);
-              aiResponse = await callGemini(originalText);
+              const { callAI } = await import('../utils/aiProvider');
+              aiResponse = await callAI(originalText, { userId: user?.uid || null });
             }
           } else {
-            // Standard AI mode
-            aiResponse = await callGemini(originalText);
+            // Standard AI mode (text-only)
+            const { callAI } = await import('../utils/aiProvider');
+            aiResponse = await callAI(originalText, { userId: user?.uid || null });
           }
           
           if (aiResponse) {
@@ -2262,6 +2308,22 @@ const ChatArea = ({ setActiveView }) => {
                     </div>
                   )}
 
+                  {/* Image for AI Vision Display */}
+                  {message.imageForAI && message.imageForAI.previewUrl && (
+                    <div className="mb-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Camera size={14} className="text-purple-400" />
+                        <span className="text-xs text-purple-300">AI Vision Analysis</span>
+                      </div>
+                      <img
+                        src={message.imageForAI.previewUrl}
+                        alt={message.imageForAI.name || 'Image for AI analysis'}
+                        className="max-w-full max-h-64 object-contain rounded-xl border border-purple-500/30"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
                   {/* Attachment Display */}
                   {message.attachment && !message.isVoice && (
                     <div className="mb-2">
@@ -2835,13 +2897,43 @@ const ChatArea = ({ setActiveView }) => {
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
-                if (newMessage.trim() || attachedFile) {
+                if (newMessage.trim() || attachedFile || selectedImage) {
                   sendMessage(e);
                 }
               }} 
               className="flex gap-2 md:gap-3 relative"
             >
               <div className="flex-1 relative">
+                {/* Image Preview */}
+                {selectedImage && imagePreviewUrl && (
+                  <div className="absolute bottom-full left-0 mb-2 p-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={imagePreviewUrl}
+                        alt="Preview"
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-white/80 truncate">{selectedImage.name}</p>
+                        <p className="text-xs text-white/60">
+                          {(selectedImage.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          revokeImagePreview(imagePreviewUrl);
+                          setSelectedImage(null);
+                          setImagePreviewUrl(null);
+                        }}
+                        className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        aria-label="Remove image"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <label htmlFor="chat-message-input" className="sr-only">Type a message</label>
                 <input
                   ref={messageInputRef}
@@ -2983,6 +3075,42 @@ const ChatArea = ({ setActiveView }) => {
                 >
                   <FileText size={20} />
                 </button>
+
+                {/* Image Upload for AI Vision */}
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="image-upload-input"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          // Create preview
+                          const previewUrl = createImagePreview(file);
+                          setImagePreviewUrl(previewUrl);
+                          setSelectedImage(file);
+                          // Reset input to allow selecting same file again
+                          e.target.value = '';
+                        } catch (error) {
+                          console.error('Error selecting image:', error);
+                          showError('Failed to load image. Please try again.');
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('image-upload-input')?.click()}
+                    className="p-2.5 text-white/70 hover:text-white hover:bg-purple-500/20 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated border border-purple-500/30"
+                    title="Upload image for AI vision analysis"
+                    aria-label="Upload image for AI analysis"
+                    style={{ transform: 'translateZ(0)' }}
+                  >
+                    <Camera size={20} />
+                  </button>
+                </div>
 
                 {/* File Upload */}
                 <div className="relative">

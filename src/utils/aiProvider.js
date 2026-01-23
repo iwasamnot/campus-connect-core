@@ -213,9 +213,11 @@ Current Date: ${new Date().toLocaleDateString()}`;
   const useProxy = isHttps && isHttpOllama;
 
   // Use Cloud Function proxy if mixed content detected
+  // For llava (multimodal), use /api/generate endpoint instead of /api/chat
+  const endpoint = hasImage ? '/api/generate' : '/api/chat';
   const targetUrl = useProxy 
     ? `https://us-central1-campus-connect-sistc.cloudfunctions.net/ollamaProxy`
-    : `${baseUrl}/api/chat`;
+    : `${baseUrl}${endpoint}`;
 
   console.log(`≡ƒÜÇ [OLLAMA] Sending request to ${targetUrl}${useProxy ? ' (via HTTPS proxy)' : ''}`);
   console.log(`≡ƒôª [OLLAMA] Model: ${model}`);
@@ -228,12 +230,21 @@ Current Date: ${new Date().toLocaleDateString()}`;
   const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (2 minutes)
 
   try {
-    const response = await fetch(targetUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // Build request body - different structure for multimodal (llava) vs text-only
+    let requestBody;
+    
+    if (hasImage) {
+      // Multimodal request: llava uses prompt + images format
+      requestBody = {
+        model: model,
+        prompt: prompt, // User query
+        images: [options.image], // Base64 image string (without data URI prefix)
+        stream: false
+      };
+      console.log(`🖼️ [OLLAMA] Sending multimodal request with image (${options.image.length} chars base64)`);
+    } else {
+      // Text-only request: Standard chat format
+      requestBody = {
         model: model,
         messages: messages, // Standard chat format - no complex schemas
         stream: false, // Non-streaming for simplicity
@@ -242,7 +253,15 @@ Current Date: ${new Date().toLocaleDateString()}`;
           num_ctx: 4096,      // Larger context window for reasoning models
           num_predict: 2048,  // Allow 2048 tokens to generate (prevents cutoff during thinking)
         }
-      }),
+      };
+    }
+
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
       signal: controller.signal, // Timeout support
     });
 
