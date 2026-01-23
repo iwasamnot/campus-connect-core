@@ -30,7 +30,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings, CheckCircle2, XCircle } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings, CheckCircle2, XCircle, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
@@ -49,6 +49,7 @@ import PollCreator from './PollCreator';
 import PollDisplay from './PollDisplay';
 import VoiceRecorder from './VoiceRecorder';
 import VoiceMessage from './VoiceMessage';
+import VoiceInterface from './VoiceInterface';
 import QuickReplies from './QuickReplies';
 import MessageThread from './MessageThread';
 import MessageReminder from './MessageReminder';
@@ -135,6 +136,7 @@ const ChatArea = ({ setActiveView }) => {
   const [showPollCreator, setShowPollCreator] = useState(false); // Show poll creator
   const [polls, setPolls] = useState([]); // List of polls in chat
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false); // Show voice recorder
+  const [showVoiceInterface, setShowVoiceInterface] = useState(false); // Show voice duplex interface
   const [showQuickReplies, setShowQuickReplies] = useState(false); // Show quick replies
   const [translating, setTranslating] = useState(new Set()); // Messages being translated
   const [translations, setTranslations] = useState({}); // Translated messages cache
@@ -3018,6 +3020,18 @@ const ChatArea = ({ setActiveView }) => {
                   <BarChart3 size={20} />
                 </button>
 
+                {/* Voice Duplex Mode */}
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceInterface(true)}
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-indigo-500/20 hover:scale-110 active:scale-95 rounded-xl transition-all duration-200 gpu-accelerated border border-indigo-500/30"
+                  title="Real-Time Voice Duplex Mode"
+                  aria-label="Start voice duplex conversation"
+                  style={{ transform: 'translateZ(0)' }}
+                >
+                  <Phone size={20} />
+                </button>
+
                 {/* Voice Recorder */}
                 <button
                   type="button"
@@ -3269,6 +3283,13 @@ const ChatArea = ({ setActiveView }) => {
         <VoiceRecorder
           onSend={handleSendVoiceMessage}
           onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
+
+      {/* Real-Time Voice Duplex Interface */}
+      {showVoiceInterface && (
+        <VoiceInterface
+          onClose={() => setShowVoiceInterface(false)}
         />
       )}
 

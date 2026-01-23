@@ -111,6 +111,7 @@ jobs:
           VITE_OLLAMA_URL=${{ secrets.VITE_OLLAMA_URL }}
           VITE_OLLAMA_MODEL=${{ secrets.VITE_OLLAMA_MODEL }}
           VITE_TAVILY_KEY=${{ secrets.VITE_TAVILY_KEY }}
+          VITE_DEEPGRAM_KEY=${{ secrets.VITE_DEEPGRAM_KEY }}
           EOF
           echo "✅ .env file created (values hidden for security)"
           # Verify .env file was created (without exposing values)
