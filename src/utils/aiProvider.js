@@ -218,6 +218,11 @@ const callOllama = async (prompt, config, options = {}) => {
   // Use dynamic URL getter (checks localStorage first, then .env, then default)
   const baseUrl = config.baseUrl || getOllamaURL();
   
+  // ✅ FIX: Quick connectivity check - if baseUrl is invalid, throw early
+  if (!baseUrl || baseUrl.trim() === '') {
+    throw new Error('Ollama URL is not configured. Please set VITE_OLLAMA_URL or configure a custom URL.');
+  }
+  
   // ✅ FIX: Detect Image (from options.image or message attachments)
   const hasImage = options.image || 
                    (options.messages && options.messages.length > 0 && 
@@ -418,8 +423,10 @@ Current Date: ${new Date().toLocaleDateString()}`;
       }
       
       const errorMessage = errorData.error?.message || errorText || `Ollama API error: ${response.statusText} (${response.status})`;
-      console.error('❌ [AI SERVICE ERROR]:', errorMessage);
-      throw new Error(errorMessage);
+      console.error('❌ [OLLAMA] Request failed:', errorMessage);
+      
+      // ✅ FIX: Throw error that will trigger Groq fallback
+      throw new Error(`Ollama API error: ${errorMessage}`);
     }
 
     const data = await response.json();
