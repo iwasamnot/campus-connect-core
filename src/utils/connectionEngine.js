@@ -197,8 +197,8 @@ export const formatConnectionOffer = (matches, topicTag) => {
 
   const matchCount = matches.length;
   const matchText = matchCount === 1 
-    ? `${matches[0].userId.substring(0, 8)}...`
+    ? `[User${matches[0].userId.substring(0, 8)}]`
     : `${matchCount} other students`;
 
-  return `\n\n🔗 **Connection Found!** ${matchText} ${matchCount === 1 ? 'is' : 'are'} also interested in ${topicTag}. Want to connect?`;
+  return `\n\n🔗 **Connection Found!** ${matchText} ${matchCount === 1 ? 'is' : 'are'} also studying this. Click here to chat.`;
 };

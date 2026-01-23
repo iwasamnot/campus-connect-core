@@ -656,7 +656,7 @@ const ChatArea = ({ setActiveView }) => {
       // Try RAG-enhanced response first (now uses Vertex AI if configured)
       try {
         const { generateRAGResponse } = await import('../utils/ragSystem');
-        const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel);
+        const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel, '', user?.uid || null);
         if (ragResponse && ragResponse.trim() !== '') {
           return ragResponse.trim();
         }
