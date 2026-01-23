@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { RenderingEngine } from '../utils/visualBoardEngine';
 import { 
   collection, 
   doc, 
@@ -62,6 +63,8 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   const [selectedShape, setSelectedShape] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawPath, setDrawPath] = useState([]);
+  const [isDrawingShape, setIsDrawingShape] = useState(false); // Track if we're actively drawing a shape
+  const [drawingShapeId, setDrawingShapeId] = useState(null); // Track which shape we're drawing
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -72,6 +75,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   const [textInput, setTextInput] = useState('');
   const [showTextInput, setShowTextInput] = useState(false);
   const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
+  const textInputRef = useRef(null); // Ref for text input to manage focus
   const [color, setColor] = useState('#3B82F6'); // indigo
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [collaborators, setCollaborators] = useState({}); // { userId: { cursor, name, color } }
@@ -90,6 +94,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   const [dragStart, setDragStart] = useState(null); // For dragging shapes
   const [resizingHandle, setResizingHandle] = useState(null); // Resize handle being dragged
   const [groups, setGroups] = useState({}); // { groupId: [shapeIds] }
+  const [layers, setLayers] = useState([]); // Layer management: [{ id, name, visible, locked, shapes: [shapeIds] }]
   const [showMinimap, setShowMinimap] = useState(true); // Show minimap
   const [textFormatting, setTextFormatting] = useState({ bold: false, italic: false, fontSize: 16 }); // Text formatting
   const [snapToGrid, setSnapToGrid] = useState(false); // Snap to grid
@@ -101,6 +106,9 @@ const VisualBoard = ({ onClose, boardId = null }) => {
   const debounceTimer = useRef(null);
   const imagesLoadedRef = useRef({}); // Track loaded images for canvas
   const [canvasReady, setCanvasReady] = useState(false); // Track when canvas has valid dimensions
+  const shapesRef = useRef([]); // Ref for shapes to avoid stale closures in Firestore sync
+  const boardBackgroundRef = useRef('#111827'); // Ref for board background
+  const renderingEngineRef = useRef(null); // Rendering engine instance
 
   const colors = [
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
@@ -117,30 +125,48 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     { name: 'Pink', value: '#9F1239' }
   ];
 
-  // Save to history
+  // Save to history - use refs to get current shapes
   const saveToHistory = useCallback(() => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(JSON.stringify(shapes));
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [shapes, history, historyIndex]);
+    const currentShapesStr = JSON.stringify(shapesRef.current);
+    setHistory(prevHistory => {
+      setHistoryIndex(prevIndex => {
+        const newHistory = prevHistory.slice(0, prevIndex + 1);
+        newHistory.push(currentShapesStr);
+        setHistory(newHistory);
+        return newHistory.length - 1;
+      });
+      return prevHistory;
+    });
+  }, []); // No dependencies - uses refs
 
-  // Undo/Redo
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      const prevShapes = JSON.parse(history[historyIndex - 1]);
-      setShapes(prevShapes);
-      setHistoryIndex(historyIndex - 1);
-    }
-  };
+  // Undo/Redo - use functional updates
+  const handleUndo = useCallback(() => {
+    setHistory(prevHistory => {
+      setHistoryIndex(prevIndex => {
+        if (prevIndex > 0) {
+          const prevShapes = JSON.parse(prevHistory[prevIndex - 1]);
+          setShapes(prevShapes);
+          return prevIndex - 1;
+        }
+        return prevIndex;
+      });
+      return prevHistory;
+    });
+  }, []);
 
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const nextShapes = JSON.parse(history[historyIndex + 1]);
-      setShapes(nextShapes);
-      setHistoryIndex(historyIndex + 1);
-    }
-  };
+  const handleRedo = useCallback(() => {
+    setHistory(prevHistory => {
+      setHistoryIndex(prevIndex => {
+        if (prevIndex < prevHistory.length - 1) {
+          const nextShapes = JSON.parse(prevHistory[prevIndex + 1]);
+          setShapes(nextShapes);
+          return prevIndex + 1;
+        }
+        return prevIndex;
+      });
+      return prevHistory;
+    });
+  }, []); // No dependencies - uses functional updates
 
   // Get mouse position relative to canvas (works with event or {clientX, clientY} object)
   const getMousePos = (e) => {
@@ -156,135 +182,166 @@ const VisualBoard = ({ onClose, boardId = null }) => {
 
   // Handle mouse down
   const handleMouseDown = (e) => {
+    // Prevent default for middle mouse button to avoid scrolling
+    if (e.button === 1) {
+      e.preventDefault();
+    }
+    
+    // Don't handle if clicking on text input
+    if (e.target.tagName === 'INPUT' || e.target.closest('input')) {
+      return;
+    }
+    
     const pos = getMousePos(e);
     
-      if (tool === 'select') {
-      // Check if clicking on a shape (from top to bottom, topmost selected first)
-      const clickedShape = [...shapes].reverse().find(s => {
-        // Skip locked shapes during selection (but allow clicking to see it's locked)
-        if (lockedShapes.has(s.id) && tool !== 'connector') return false;
-        
-        if (s.type === 'text') {
-          // Better text hit test - approximate text width
-          const text = s.text || '';
-          const fontSize = s.fontSize || 16;
-          const textWidth = text.length * fontSize * 0.6; // Approximate character width
-          const textHeight = fontSize;
-          return pos.x >= s.x && pos.x <= s.x + textWidth && 
-                 pos.y >= s.y && pos.y <= s.y + textHeight;
-        } else if (s.type === 'sticky') {
-          return pos.x >= s.x && pos.x <= s.x + (s.width || 200) && 
-                 pos.y >= s.y && pos.y <= s.y + (s.height || 150);
-        } else if (s.type === 'image') {
-          return pos.x >= s.x && pos.x <= s.x + (s.width || 200) && 
-                 pos.y >= s.y && pos.y <= s.y + (s.height || 150);
-        } else if (s.type === 'path') {
-          // Check if click is near any point in path (within 10px)
-          if (s.points && s.points.length > 0) {
-            return s.points.some(point => 
-              Math.abs(pos.x - point.x) < 10 && Math.abs(pos.y - point.y) < 10
-            );
-          }
-          return false;
-        } else {
-          // Better hit test for shapes - use bounding box
-          const width = Math.abs(s.width || 50);
-          const height = Math.abs(s.height || 50);
-          return pos.x >= s.x && pos.x <= s.x + width && 
-                 pos.y >= s.y && pos.y <= s.y + height;
+    if (tool === 'select') {
+      // Use rendering engine for fast hit testing with spatial index
+      const clickedShape = renderingEngineRef.current?.hitTest(
+        pos.x, 
+        pos.y, 
+        shapesRef.current, 
+        { 
+          radius: 10, 
+          excludeLocked: tool !== 'connector',
+          lockedShapes 
         }
+      ) || null;
+      
+      setShapes(prevShapes => {
+        
+        if (clickedShape) {
+          // Multi-select with Shift
+          if (e.shiftKey) {
+            setSelectedShapes(prevSelected => {
+              const newSelection = new Set(prevSelected);
+              if (newSelection.has(clickedShape.id)) {
+                newSelection.delete(clickedShape.id);
+                if (newSelection.size === 0) setSelectedShape(null);
+              } else {
+                newSelection.add(clickedShape.id);
+              }
+              setSelectedShape(clickedShape.id);
+              return newSelection;
+            });
+          } else {
+            setSelectedShape(clickedShape.id);
+            setSelectedShapes(new Set([clickedShape.id]));
+          }
+          // Double-click to edit text/sticky
+          if (e.detail === 2 && (clickedShape.type === 'text' || clickedShape.type === 'sticky')) {
+            setEditingText(clickedShape.id);
+            setTextInput(clickedShape.text || '');
+            setTextPosition({ x: clickedShape.x, y: clickedShape.y });
+            setShowTextInput(true);
+            setTimeout(() => {
+              if (textInputRef.current) {
+                textInputRef.current.focus();
+                textInputRef.current.select();
+              }
+            }, 0);
+          }
+          // Start dragging - store click position and shape position for proper offset calculation
+          setDragStart({ 
+            clickX: pos.x, 
+            clickY: pos.y,
+            shapeX: clickedShape.x, 
+            shapeY: clickedShape.y 
+          });
+        } else {
+          // Clicked on empty space - start selection box if not shift
+          if (!e.shiftKey && e.button === 0 && tool === 'select') {
+            setSelectedShape(null);
+            setSelectedShapes(new Set());
+            setIsSelecting(true);
+            setSelectionBox({ x: pos.x, y: pos.y, width: 0, height: 0 });
+          }
+        }
+        return prevShapes; // Don't modify shapes
       });
       
-      if (clickedShape) {
-        // Multi-select with Shift
-        if (e.shiftKey) {
-          const newSelection = new Set(selectedShapes);
-          if (newSelection.has(clickedShape.id)) {
-            newSelection.delete(clickedShape.id);
-            if (newSelection.size === 0) setSelectedShape(null);
-          } else {
-            newSelection.add(clickedShape.id);
-          }
-          setSelectedShapes(newSelection);
-          setSelectedShape(clickedShape.id);
-        } else {
-          setSelectedShape(clickedShape.id);
-          setSelectedShapes(new Set([clickedShape.id]));
-        }
-        // Double-click to edit text/sticky
-        if (e.detail === 2 && (clickedShape.type === 'text' || clickedShape.type === 'sticky')) {
-          setEditingText(clickedShape.id);
-          setTextInput(clickedShape.text || '');
-          setTextPosition({ x: clickedShape.x, y: clickedShape.y });
-          setShowTextInput(true);
-        }
-        // Start dragging - store click position and shape position for proper offset calculation
-        setDragStart({ 
-          clickX: pos.x, 
-          clickY: pos.y,
-          shapeX: clickedShape.x, 
-          shapeY: clickedShape.y 
-        });
-      } else {
-        // Clicked on empty space - start selection box if not shift
-        if (!e.shiftKey && e.button === 0) {
-          setSelectedShape(null);
-          setSelectedShapes(new Set());
-          setIsSelecting(true);
-          setSelectionBox({ x: pos.x, y: pos.y, width: 0, height: 0 });
-        }
-      }
-      
-      // Start panning with middle mouse button (not shift + left click)
-      if (e.button === 1) {
+      // Start panning with middle mouse button or space + drag
+      if (e.button === 1 || (e.button === 0 && (e.spaceKey || e.altKey))) {
+        e.preventDefault();
         setIsPanning(true);
-        setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+        setPan(prevPan => {
+          setPanStart({ x: e.clientX - prevPan.x, y: e.clientY - prevPan.y });
+          return prevPan;
+        });
       }
     } else if (tool === 'pen') {
       setIsDrawing(true);
       setDrawPath([pos]);
+      // Clear selection when starting to draw
+      setSelectedShape(null);
+      setSelectedShapes(new Set());
     } else if (tool === 'text') {
-      setTextPosition(pos);
-      setTextInput('');
-      setShowTextInput(true);
-    } else if (tool === 'connector') {
-      // Find shape at click position
-      const clickedShape = [...shapes].reverse().find(s => {
-        const centerX = s.x + (s.width || 0) / 2;
-        const centerY = s.y + (s.height || 0) / 2;
-        return Math.abs(pos.x - centerX) < 30 && Math.abs(pos.y - centerY) < 30;
-      });
+      // Use rendering engine for fast hit testing
+      const clickedShape = renderingEngineRef.current?.hitTest(
+        pos.x, 
+        pos.y, 
+        shapesRef.current.filter(s => s.type === 'text'),
+        { radius: 10 }
+      ) || null;
       
-      if (clickedShape) {
-        if (!connectorStart) {
-          // Start connector
-          const centerX = clickedShape.x + (clickedShape.width || 0) / 2;
-          const centerY = clickedShape.y + (clickedShape.height || 0) / 2;
-          setConnectorStart({ shapeId: clickedShape.id, x: centerX, y: centerY });
-        } else {
-          // Complete connector
-          const centerX = clickedShape.x + (clickedShape.width || 0) / 2;
-          const centerY = clickedShape.y + (clickedShape.height || 0) / 2;
-          const newConnector = {
-            id: Date.now(),
-            type: 'connector',
-            fromShapeId: connectorStart.shapeId,
-            toShapeId: clickedShape.id,
-            fromX: connectorStart.x,
-            fromY: connectorStart.y,
-            toX: centerX,
-            toY: centerY,
-            color: '#666',
-            strokeWidth: 2
-          };
-          setShapes([...shapes, newConnector]);
-          setConnectorStart(null);
-          saveToHistory();
+      setShapes(prevShapes => {
+        
+        if (!clickedShape) {
+          setTextPosition(pos);
+          setTextInput('');
+          setShowTextInput(true);
+          setEditingText(null);
+          // Focus input after state update
+          setTimeout(() => {
+            if (textInputRef.current) {
+              textInputRef.current.focus();
+              textInputRef.current.select();
+            }
+          }, 0);
         }
-      }
+        return prevShapes; // Don't modify shapes
+      });
+    } else if (tool === 'connector') {
+      // Find shape at click position - use functional update
+      setShapes(prevShapes => {
+        const clickedShape = [...prevShapes].reverse().find(s => {
+          const centerX = s.x + (s.width || 0) / 2;
+          const centerY = s.y + (s.height || 0) / 2;
+          return Math.abs(pos.x - centerX) < 30 && Math.abs(pos.y - centerY) < 30;
+        });
+        
+        if (clickedShape) {
+          if (!connectorStart) {
+            // Start connector
+            const centerX = clickedShape.x + (clickedShape.width || 0) / 2;
+            const centerY = clickedShape.y + (clickedShape.height || 0) / 2;
+            setConnectorStart({ shapeId: clickedShape.id, x: centerX, y: centerY });
+          } else {
+            // Complete connector
+            const centerX = clickedShape.x + (clickedShape.width || 0) / 2;
+            const centerY = clickedShape.y + (clickedShape.height || 0) / 2;
+            const newConnector = {
+              id: Date.now(),
+              type: 'connector',
+              fromShapeId: connectorStart.shapeId,
+              toShapeId: clickedShape.id,
+              fromX: connectorStart.x,
+              fromY: connectorStart.y,
+              toX: centerX,
+              toY: centerY,
+              color: '#666',
+              strokeWidth: 2
+            };
+            setShapes(prev => [...prev, newConnector]);
+            setConnectorStart(null);
+            saveToHistory();
+          }
+        }
+        return prevShapes; // Don't modify shapes here
+      });
     } else if (tool === 'shape') {
+      const newShapeId = Date.now();
       const newShape = {
-        id: Date.now(),
+        id: newShapeId,
         type: shapeType,
         x: pos.x,
         y: pos.y,
@@ -293,8 +350,10 @@ const VisualBoard = ({ onClose, boardId = null }) => {
         color,
         strokeWidth
       };
-      setShapes([...shapes, newShape]);
-      setSelectedShape(newShape.id);
+      setShapes(prev => [...prev, newShape]);
+      setSelectedShape(newShapeId);
+      setIsDrawingShape(true);
+      setDrawingShapeId(newShapeId);
     } else if (tool === 'sticky') {
       const newSticky = {
         id: Date.now(),
@@ -306,7 +365,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
         text: 'New note',
         color: '#FEF08A'
       };
-      setShapes([...shapes, newSticky]);
+      setShapes(prev => [...prev, newSticky]);
       setSelectedShape(newSticky.id);
       saveToHistory();
     }
@@ -314,14 +373,17 @@ const VisualBoard = ({ onClose, boardId = null }) => {
 
   // Handle mouse move
   const handleMouseMove = (e) => {
+    // Prevent panning if text input is open
+    if (showTextInput) return;
+    
     const pos = getMousePos(e);
     setCursorPosition(pos); // Always update cursor for connector preview
     
     if (isPanning) {
-      setPan({
+      setPan(prevPan => ({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y
-      });
+      }));
       return;
     }
 
@@ -336,110 +398,127 @@ const VisualBoard = ({ onClose, boardId = null }) => {
         height: Math.abs(pos.y - startY)
       });
     } else if (isDrawing && tool === 'pen') {
-      setDrawPath([...drawPath, pos]);
-    } else if (tool === 'shape' && selectedShape) {
-      const shape = shapes.find(s => s.id === selectedShape);
-      if (shape) {
-        const newWidth = pos.x - shape.x;
-        const newHeight = pos.y - shape.y;
-        setShapes(shapes.map(s => 
-          s.id === selectedShape
-            ? { ...s, width: newWidth, height: newHeight }
-            : s
-        ));
-      }
+      setDrawPath(prevPath => [...prevPath, pos]);
+    } else if (tool === 'shape' && isDrawingShape && drawingShapeId) {
+      // Use functional update to ensure we have the latest shapes
+      setShapes(prevShapes => {
+        const shape = prevShapes.find(s => s.id === drawingShapeId);
+        if (shape) {
+          const newWidth = pos.x - shape.x;
+          const newHeight = pos.y - shape.y;
+          return prevShapes.map(s => 
+            s.id === drawingShapeId
+              ? { ...s, width: newWidth, height: newHeight }
+              : s
+          );
+        }
+        return prevShapes;
+      });
     } else if (tool === 'connector' && connectorStart) {
       // Cursor position already updated above
-    } else if (tool === 'select' && dragStart && (selectedShape || selectedShapes.size > 0)) {
-      // Drag selected shape(s) - use proper offset calculation
-      if (!dragStart.shapeX || !dragStart.shapeY || lockedShapes.has(selectedShape)) return; // Guard against invalid dragStart and locked shapes
-      
-      const deltaX = pos.x - dragStart.clickX;
-      const deltaY = pos.y - dragStart.clickY;
-      
-      // Don't move if delta is too small (prevents jitter)
-      if (Math.abs(deltaX) < 0.1 && Math.abs(deltaY) < 0.1) return;
-      
-      const shapeIds = selectedShapes.size > 0 
-        ? Array.from(selectedShapes)
-        : [selectedShape].filter(Boolean);
-      
-      // Move all selected shapes by the same delta
-      // For the first shape, use dragStart positions; for others, maintain relative offset
-      setShapes(prevShapes => {
-        const firstShape = prevShapes.find(s => s.id === selectedShape);
-        if (!firstShape) return prevShapes;
-        
-        const baseX = dragStart.shapeX !== undefined ? dragStart.shapeX : firstShape.x;
-        const baseY = dragStart.shapeY !== undefined ? dragStart.shapeY : firstShape.y;
-        const newFirstX = baseX + deltaX;
-        const newFirstY = baseY + deltaY;
-        const offsetX = newFirstX - firstShape.x;
-        const offsetY = newFirstY - firstShape.y;
-        
-        return prevShapes.map(s => {
-          if (!shapeIds.includes(s.id) || lockedShapes.has(s.id)) return s;
-          
-          let newX = s.x + offsetX;
-          let newY = s.y + offsetY;
-          
-          // Apply snap to grid if enabled
-          if (snapToGrid) {
-            const snap = 20;
-            newX = Math.round(newX / snap) * snap;
-            newY = Math.round(newY / snap) * snap;
+    } else if (tool === 'select' && dragStart) {
+      // Drag selected shape(s) - use proper offset calculation with functional updates
+      setSelectedShape(prevSelectedShape => {
+        setSelectedShapes(prevSelectedShapes => {
+          if (!dragStart.shapeX || !dragStart.shapeY || (prevSelectedShape && lockedShapes.has(prevSelectedShape))) {
+            return prevSelectedShapes;
           }
           
-          return { ...s, x: newX, y: newY };
+          const deltaX = pos.x - dragStart.clickX;
+          const deltaY = pos.y - dragStart.clickY;
+          
+          // Don't move if delta is too small (prevents jitter)
+          if (Math.abs(deltaX) < 0.1 && Math.abs(deltaY) < 0.1) return prevSelectedShapes;
+          
+          const shapeIds = prevSelectedShapes.size > 0 
+            ? Array.from(prevSelectedShapes)
+            : [prevSelectedShape].filter(Boolean);
+          
+          if (shapeIds.length === 0) return prevSelectedShapes;
+          
+          // Move all selected shapes by the same delta
+          setShapes(prevShapes => {
+            const firstShape = prevShapes.find(s => s.id === prevSelectedShape);
+            if (!firstShape) return prevShapes;
+            
+            const baseX = dragStart.shapeX !== undefined ? dragStart.shapeX : firstShape.x;
+            const baseY = dragStart.shapeY !== undefined ? dragStart.shapeY : firstShape.y;
+            const newFirstX = baseX + deltaX;
+            const newFirstY = baseY + deltaY;
+            const offsetX = newFirstX - firstShape.x;
+            const offsetY = newFirstY - firstShape.y;
+            
+            return prevShapes.map(s => {
+              if (!shapeIds.includes(s.id) || lockedShapes.has(s.id)) return s;
+              
+              let newX = s.x + offsetX;
+              let newY = s.y + offsetY;
+              
+              // Apply snap to grid if enabled
+              if (snapToGrid) {
+                const snap = 20;
+                newX = Math.round(newX / snap) * snap;
+                newY = Math.round(newY / snap) * snap;
+              }
+              
+              return { ...s, x: newX, y: newY };
+            });
+          });
+          return prevSelectedShapes;
         });
+        return prevSelectedShape;
       });
     }
   };
 
   // Handle mouse up
   const handleMouseUp = () => {
-    // Finalize selection box
+    // Finalize selection box - use functional updates
     if (isSelecting && selectionBox && selectionBox.width > 5 && selectionBox.height > 5) {
-      const selectedIds = new Set();
-      shapes.forEach(shape => {
-        if (lockedShapes.has(shape.id)) return;
-        const shapeLeft = shape.x;
-        const shapeRight = shape.x + (shape.width || 100);
-        const shapeTop = shape.y;
-        const shapeBottom = shape.y + (shape.height || 100);
+      setShapes(prevShapes => {
+        const selectedIds = new Set();
+        prevShapes.forEach(shape => {
+          if (lockedShapes.has(shape.id)) return;
+          const shapeLeft = shape.x;
+          const shapeRight = shape.x + (shape.width || 100);
+          const shapeTop = shape.y;
+          const shapeBottom = shape.y + (shape.height || 100);
+          
+          const boxLeft = Math.min(selectionBox.x, selectionBox.x + selectionBox.width);
+          const boxRight = Math.max(selectionBox.x, selectionBox.x + selectionBox.width);
+          const boxTop = Math.min(selectionBox.y, selectionBox.y + selectionBox.height);
+          const boxBottom = Math.max(selectionBox.y, selectionBox.y + selectionBox.height);
+          
+          // Check if shape overlaps with selection box
+          if (shapeRight > boxLeft && shapeLeft < boxRight && shapeBottom > boxTop && shapeTop < boxBottom) {
+            selectedIds.add(shape.id);
+          }
+        });
         
-        const boxLeft = Math.min(selectionBox.x, selectionBox.x + selectionBox.width);
-        const boxRight = Math.max(selectionBox.x, selectionBox.x + selectionBox.width);
-        const boxTop = Math.min(selectionBox.y, selectionBox.y + selectionBox.height);
-        const boxBottom = Math.max(selectionBox.y, selectionBox.y + selectionBox.height);
-        
-        // Check if shape overlaps with selection box
-        if (shapeRight > boxLeft && shapeLeft < boxRight && shapeBottom > boxTop && shapeTop < boxBottom) {
-          selectedIds.add(shape.id);
+        if (selectedIds.size > 0) {
+          setSelectedShapes(selectedIds);
+          setSelectedShape(Array.from(selectedIds)[0]);
         }
+        setSelectionBox(null);
+        return prevShapes; // Don't modify shapes
       });
-      
-      if (selectedIds.size > 0) {
-        setSelectedShapes(selectedIds);
-        setSelectedShape(Array.from(selectedIds)[0]);
-      }
-      setSelectionBox(null);
     }
     
-    if (isDrawing && tool === 'pen' && drawPath.length > 1) {
-      const newPath = {
-        id: Date.now(),
-        type: 'path',
-        points: [...drawPath],
-        color,
-        strokeWidth
-      };
-      setShapes([...shapes, newPath]);
-      setDrawPath([]);
-      saveToHistory();
-    } else if (tool === 'shape' && selectedShape) {
-      // Finalize shape on mouse up
-      saveToHistory();
+    if (isDrawing && tool === 'pen') {
+      setDrawPath(prevPath => {
+        if (prevPath.length > 1) {
+          const newPath = {
+            id: Date.now(),
+            type: 'path',
+            points: [...prevPath],
+            color,
+            strokeWidth
+          };
+          setShapes(prevShapes => [...prevShapes, newPath]);
+          saveToHistory();
+        }
+        return []; // Clear path
+      });
     }
     
     setIsDrawing(false);
@@ -447,66 +526,147 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     setIsSelecting(false);
     setDragStart(null);
     setResizingHandle(null);
+    
+    // Finalize shape drawing
+    if (isDrawingShape && drawingShapeId) {
+      const finalShapeId = drawingShapeId;
+      setIsDrawingShape(false);
+      setDrawingShapeId(null);
+      // Ensure shape has minimum size
+      setShapes(prevShapes => {
+        const updated = prevShapes.map(s => {
+          if (s.id === finalShapeId) {
+            const minSize = 20;
+            const newWidth = Math.abs(s.width) < minSize ? (s.width >= 0 ? minSize : -minSize) : s.width;
+            const newHeight = Math.abs(s.height) < minSize ? (s.height >= 0 ? minSize : -minSize) : s.height;
+            // Only save to history if shape has meaningful size
+            if (Math.abs(newWidth) >= minSize && Math.abs(newHeight) >= minSize) {
+              saveToHistory();
+            }
+            return {
+              ...s,
+              width: newWidth,
+              height: newHeight
+            };
+          }
+          return s;
+        });
+        return updated;
+      });
+    }
   };
 
-  // Handle text input
-  const handleTextSubmit = () => {
-    if (editingText) {
-      // Update existing text
-      setShapes(shapes.map(s => 
-        s.id === editingText 
-          ? { ...s, text: textInput.trim() || s.text }
-          : s
-      ));
-      setEditingText(null);
-      saveToHistory();
-    } else if (textInput.trim()) {
-      // Create new text
-      const newText = {
-        id: Date.now(),
-        type: 'text',
-        x: textPosition.x,
-        y: textPosition.y,
-        text: textInput,
-        color,
-        fontSize: 16
-      };
-      setShapes([...shapes, newText]);
-      saveToHistory();
+  // Handle text input - use functional updates
+  const handleTextSubmit = useCallback((e) => {
+    // Prevent default if event exists
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
+    
+    setEditingText(prevEditing => {
+      const currentEditing = prevEditing;
+      const currentText = textInput;
+      
+      if (currentEditing) {
+        // Update existing text
+        setShapes(prevShapes => {
+          const updated = prevShapes.map(s => 
+            s.id === currentEditing 
+              ? { ...s, text: currentText.trim() || s.text }
+              : s
+          );
+          saveToHistory();
+          return updated;
+        });
+        setEditingText(null);
+      } else if (currentText.trim()) {
+        // Create new text
+        const newText = {
+          id: Date.now(),
+          type: 'text',
+          x: textPosition.x,
+          y: textPosition.y,
+          text: currentText.trim(),
+          color,
+          fontSize: textFormatting.fontSize || 16
+        };
+        setShapes(prevShapes => {
+          const updated = [...prevShapes, newText];
+          saveToHistory();
+          return updated;
+        });
+      }
+      setTextInput('');
+      setShowTextInput(false);
+      
+      // Return focus to canvas
+      if (containerRef.current) {
+        containerRef.current.focus();
+      }
+      return null;
+    });
+  }, [textInput, textPosition, color, textFormatting.fontSize, saveToHistory]);
+  
+  // Handle text input cancel
+  const handleTextCancel = () => {
     setTextInput('');
     setShowTextInput(false);
-  };
-
-  // Delete selected shape(s)
-  const handleDelete = () => {
-    if (selectedShapes.size > 0) {
-      // Multi-delete
-      setShapes(shapes.filter(s => !selectedShapes.has(s.id)));
-      setSelectedShapes(new Set());
-      setSelectedShape(null);
-      saveToHistory();
-    } else if (selectedShape) {
-      // Single delete
-      setShapes(shapes.filter(s => s.id !== selectedShape));
-      setSelectedShape(null);
-      saveToHistory();
+    setEditingText(null);
+    if (containerRef.current) {
+      containerRef.current.focus();
     }
   };
 
-  // Copy selected shapes
+  // Delete selected shape(s) - use functional updates
+  const handleDelete = useCallback(() => {
+    setShapes(prevShapes => {
+      setSelectedShapes(prevSelected => {
+        setSelectedShape(prevShape => {
+          if (prevSelected.size > 0) {
+            // Multi-delete
+            const updated = prevShapes.filter(s => !prevSelected.has(s.id));
+            setShapes(updated);
+            setSelectedShapes(new Set());
+            setSelectedShape(null);
+            saveToHistory();
+          } else if (prevShape) {
+            // Single delete
+            const updated = prevShapes.filter(s => s.id !== prevShape);
+            setShapes(updated);
+            setSelectedShape(null);
+            saveToHistory();
+          }
+          return null;
+        });
+        return new Set();
+      });
+      return prevShapes;
+    });
+  }, [saveToHistory]);
+
+  // Copy selected shapes - use functional updates
   const handleCopy = useCallback(() => {
-    const shapesToCopy = selectedShapes.size > 0
-      ? shapes.filter(s => selectedShapes.has(s.id))
-      : selectedShape ? shapes.filter(s => s.id === selectedShape) : [];
-    
-    if (shapesToCopy.length > 0) {
-      setCopiedShapes(shapesToCopy.map(s => ({ ...s, id: undefined })));
-      success(`Copied ${shapesToCopy.length} shape(s)`);
-    }
-  }, [selectedShapes, selectedShape, shapes, success]);
+    setShapes(prevShapes => {
+      setSelectedShapes(prevSelected => {
+        setSelectedShape(prevShape => {
+          const shapesToCopy = prevSelected.size > 0
+            ? prevShapes.filter(s => prevSelected.has(s.id))
+            : prevShape ? prevShapes.filter(s => s.id === prevShape) : [];
+          
+          if (shapesToCopy.length > 0) {
+            setCopiedShapes(shapesToCopy.map(s => ({ ...s, id: undefined })));
+            success(`Copied ${shapesToCopy.length} shape(s)`);
+          }
+          return prevShape;
+        });
+        return prevSelected;
+      });
+      return prevShapes;
+    });
+  }, [success]);
 
-  // Paste copied shapes
+  // Paste copied shapes - use functional updates
   const handlePaste = useCallback(() => {
     if (copiedShapes.length === 0) return;
     
@@ -518,54 +678,65 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       y: (shape.y || 0) + offset
     }));
     
-    setShapes([...shapes, ...newShapes]);
+    setShapes(prev => [...prev, ...newShapes]);
     setSelectedShapes(new Set(newShapes.map(s => s.id)));
     saveToHistory();
     success(`Pasted ${newShapes.length} shape(s)`);
-  }, [copiedShapes, shapes, saveToHistory, success]);
+  }, [copiedShapes, saveToHistory, success]);
 
-  // Align shapes
-  const handleAlign = (direction) => {
-    const shapesToAlign = selectedShapes.size > 0
-      ? shapes.filter(s => selectedShapes.has(s.id))
-      : selectedShape ? shapes.filter(s => s.id === selectedShape) : [];
-    
-    if (shapesToAlign.length < 2) return;
+  // Align shapes - use functional updates
+  const handleAlign = useCallback((direction) => {
+    setShapes(prevShapes => {
+      setSelectedShapes(prevSelected => {
+        setSelectedShape(prevShape => {
+          const shapesToAlign = prevSelected.size > 0
+            ? prevShapes.filter(s => prevSelected.has(s.id))
+            : prevShape ? prevShapes.filter(s => s.id === prevShape) : [];
+          
+          if (shapesToAlign.length < 2) {
+            return prevShape;
+          }
 
-    const bounds = shapesToAlign.reduce((acc, s) => {
-      const left = s.x;
-      const right = s.x + (s.width || 0);
-      const top = s.y;
-      const bottom = s.y + (s.height || 0);
-      return {
-        left: Math.min(acc.left, left),
-        right: Math.max(acc.right, right),
-        top: Math.min(acc.top, top),
-        bottom: Math.max(acc.bottom, bottom)
-      };
-    }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
+          const bounds = shapesToAlign.reduce((acc, s) => {
+            const left = s.x;
+            const right = s.x + (s.width || 0);
+            const top = s.y;
+            const bottom = s.y + (s.height || 0);
+            return {
+              left: Math.min(acc.left, left),
+              right: Math.max(acc.right, right),
+              top: Math.min(acc.top, top),
+              bottom: Math.max(acc.bottom, bottom)
+            };
+          }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
 
-    const updatedShapes = shapes.map(s => {
-      if (!shapesToAlign.some(align => align.id === s.id)) return s;
-      
-      let newX = s.x, newY = s.y;
-      
-      switch (direction) {
-        case 'left': newX = bounds.left; break;
-        case 'right': newX = bounds.right - (s.width || 0); break;
-        case 'center': newX = (bounds.left + bounds.right) / 2 - (s.width || 0) / 2; break;
-        case 'top': newY = bounds.top; break;
-        case 'bottom': newY = bounds.bottom - (s.height || 0); break;
-        case 'middle': newY = (bounds.top + bounds.bottom) / 2 - (s.height || 0) / 2; break;
-      }
-      
-      return { ...s, x: newX, y: newY };
+          const updatedShapes = prevShapes.map(s => {
+            if (!shapesToAlign.some(align => align.id === s.id)) return s;
+            
+            let newX = s.x, newY = s.y;
+            
+            switch (direction) {
+              case 'left': newX = bounds.left; break;
+              case 'right': newX = bounds.right - (s.width || 0); break;
+              case 'center': newX = (bounds.left + bounds.right) / 2 - (s.width || 0) / 2; break;
+              case 'top': newY = bounds.top; break;
+              case 'bottom': newY = bounds.bottom - (s.height || 0); break;
+              case 'middle': newY = (bounds.top + bounds.bottom) / 2 - (s.height || 0) / 2; break;
+            }
+            
+            return { ...s, x: newX, y: newY };
+          });
+
+          setShapes(updatedShapes);
+          saveToHistory();
+          success(`Aligned ${shapesToAlign.length} shape(s) ${direction}`);
+          return prevShape;
+        });
+        return prevSelected;
+      });
+      return prevShapes;
     });
-
-    setShapes(updatedShapes);
-    saveToHistory();
-    success(`Aligned ${shapesToAlign.length} shape(s) ${direction}`);
-  };
+  }, [saveToHistory, success]);
 
   // Export to PNG
   const handleExportPNG = () => {
@@ -583,7 +754,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     }, 'image/png');
   };
 
-  // Export to SVG
+  // Export to SVG - use ref to get latest shapes
   const handleExportSVG = () => {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', '2000');
@@ -594,11 +765,11 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('width', '100%');
     rect.setAttribute('height', '100%');
-    rect.setAttribute('fill', boardBackground);
+    rect.setAttribute('fill', boardBackgroundRef.current);
     svg.appendChild(rect);
     
-    // Add shapes
-    shapes.forEach(shape => {
+    // Add shapes - use ref to get latest
+    shapesRef.current.forEach(shape => {
       if (shape.type === 'text') {
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', shape.x);
@@ -673,7 +844,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
           url: result.url,
           src: result.url
         };
-        setShapes([...shapes, newImageShape]);
+        setShapes(prev => [...prev, newImageShape]);
         saveToHistory();
         success('Image added to board!');
         setSaving(false);
@@ -692,54 +863,75 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Duplicate selected shapes
-  const handleDuplicate = () => {
-    const shapesToDuplicate = selectedShapes.size > 0
-      ? shapes.filter(s => selectedShapes.has(s.id))
-      : selectedShape ? shapes.filter(s => s.id === selectedShape) : [];
-    
-    if (shapesToDuplicate.length === 0) return;
-    
-    const offset = 30; // Offset for duplicated shapes
-    const newShapes = shapesToDuplicate.map((shape, idx) => ({
-      ...shape,
-      id: Date.now() + idx,
-      x: (shape.x || 0) + offset,
-      y: (shape.y || 0) + offset
-    }));
-    
-    setShapes([...shapes, ...newShapes]);
-    setSelectedShapes(new Set(newShapes.map(s => s.id)));
-    setSelectedShape(newShapes[0]?.id || null);
-    saveToHistory();
-    success(`Duplicated ${newShapes.length} shape(s)`);
-  };
+  // Duplicate selected shapes - use functional updates
+  const handleDuplicate = useCallback(() => {
+    setShapes(prevShapes => {
+      setSelectedShapes(prevSelected => {
+        setSelectedShape(prevShape => {
+          const shapesToDuplicate = prevSelected.size > 0
+            ? prevShapes.filter(s => prevSelected.has(s.id))
+            : prevShape ? prevShapes.filter(s => s.id === prevShape) : [];
+          
+          if (shapesToDuplicate.length === 0) return prevShape;
+          
+          const offset = 30; // Offset for duplicated shapes
+          const newShapes = shapesToDuplicate.map((shape, idx) => ({
+            ...shape,
+            id: Date.now() + idx,
+            x: (shape.x || 0) + offset,
+            y: (shape.y || 0) + offset
+          }));
+          
+          setShapes(prev => [...prev, ...newShapes]);
+          setSelectedShapes(new Set(newShapes.map(s => s.id)));
+          setSelectedShape(newShapes[0]?.id || null);
+          saveToHistory();
+          success(`Duplicated ${newShapes.length} shape(s)`);
+          return newShapes[0]?.id || null;
+        });
+        return prevSelected;
+      });
+      return prevShapes;
+    });
+  }, [saveToHistory, success]);
 
-  // Layer management - Bring to front
-  const handleBringToFront = () => {
-    if (!selectedShape) return;
-    
-    const shape = shapes.find(s => s.id === selectedShape);
-    if (!shape) return;
-    
-    const otherShapes = shapes.filter(s => s.id !== selectedShape);
-    setShapes([...otherShapes, shape]);
-    saveToHistory();
-    success('Shape brought to front');
-  };
+  // Layer management - Bring to front - use functional updates
+  const handleBringToFront = useCallback(() => {
+    setSelectedShape(prevShape => {
+      if (!prevShape) return prevShape;
+      
+      setShapes(prevShapes => {
+        const shape = prevShapes.find(s => s.id === prevShape);
+        if (!shape) return prevShapes;
+        
+        const otherShapes = prevShapes.filter(s => s.id !== prevShape);
+        const updated = [...otherShapes, shape];
+        saveToHistory();
+        success('Shape brought to front');
+        return updated;
+      });
+      return prevShape;
+    });
+  }, [saveToHistory, success]);
 
-  // Layer management - Send to back
-  const handleSendToBack = () => {
-    if (!selectedShape) return;
-    
-    const shape = shapes.find(s => s.id === selectedShape);
-    if (!shape) return;
-    
-    const otherShapes = shapes.filter(s => s.id !== selectedShape);
-    setShapes([shape, ...otherShapes]);
-    saveToHistory();
-    success('Shape sent to back');
-  };
+  // Layer management - Send to back - use functional updates
+  const handleSendToBack = useCallback(() => {
+    setSelectedShape(prevShape => {
+      if (!prevShape) return prevShape;
+      
+      setShapes(prevShapes => {
+        const shape = prevShapes.find(s => s.id === prevShape);
+        if (!shape) return prevShapes;
+        
+        const otherShapes = prevShapes.filter(s => s.id !== prevShape);
+        const updated = [shape, ...otherShapes];
+        saveToHistory();
+        success('Shape sent to back');
+        return updated;
+      });
+      return prevShape;
+    });
+  }, [saveToHistory, success]);
 
   // Toggle lock on selected shape
   const handleToggleLock = () => {
@@ -755,6 +947,52 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     }
     setLockedShapes(newLocked);
   };
+
+  // Group selected shapes
+  const handleGroup = useCallback(() => {
+    setShapes(prevShapes => {
+      setSelectedShapes(prevSelected => {
+        if (prevSelected.size < 2) {
+          success('Select at least 2 shapes to group');
+          return prevSelected;
+        }
+
+        const { updatedShapes, newGroup } = groupShapes(prevShapes, prevSelected);
+        if (newGroup) {
+          setSelectedShapes(new Set([newGroup.id]));
+          setSelectedShape(newGroup.id);
+          saveToHistory();
+          success(`Grouped ${prevSelected.size} shape(s)`);
+        }
+        return new Set([newGroup?.id].filter(Boolean));
+      });
+      return prevShapes;
+    });
+  }, [saveToHistory, success]);
+
+  // Ungroup selected group
+  const handleUngroup = useCallback(() => {
+    setShapes(prevShapes => {
+      setSelectedShape(prevShape => {
+        if (!prevShape) return prevShape;
+        
+        const shape = prevShapes.find(s => s.id === prevShape);
+        if (!shape || shape.type !== 'group') {
+          success('Select a group to ungroup');
+          return prevShape;
+        }
+
+        const updated = ungroupShapes(prevShapes, prevShape);
+        setShapes(updated);
+        setSelectedShape(null);
+        setSelectedShapes(new Set());
+        saveToHistory();
+        success('Group ungrouped');
+        return null;
+      });
+      return prevShapes;
+    });
+  }, [saveToHistory, success]);
 
   // Zoom controls
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3));
@@ -788,8 +1026,11 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       // Ctrl/Cmd + A: Select all
       else if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !e.shiftKey) {
         e.preventDefault();
-        setSelectedShapes(new Set(shapes.map(s => s.id)));
-        success(`Selected all ${shapes.length} shape(s)`);
+        setShapes(prevShapes => {
+          setSelectedShapes(new Set(prevShapes.map(s => s.id)));
+          success(`Selected all ${prevShapes.length} shape(s)`);
+          return prevShapes;
+        });
       }
       // Delete or Backspace: Delete selected
       else if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedShape || selectedShapes.size > 0)) {
@@ -807,10 +1048,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
           ? Array.from(selectedShapes) 
           : [selectedShape];
         
-        setShapes(shapes.map(s => 
-          shapeIds.includes(s.id) ? { ...s, x: s.x + deltaX, y: s.y + deltaY } : s
-        ));
-        saveToHistory();
+        setShapes(prevShapes => {
+          const updated = prevShapes.map(s => 
+            shapeIds.includes(s.id) ? { ...s, x: s.x + deltaX, y: s.y + deltaY } : s
+          );
+          saveToHistory();
+          return updated;
+        });
       }
       // Escape: Deselect
       else if (e.key === 'Escape') {
@@ -838,280 +1082,80 @@ const VisualBoard = ({ onClose, boardId = null }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedShape, selectedShapes, shapes, handleCopy, handlePaste, handleDelete, handleDuplicate, saveToHistory, handleUndo, handleRedo, success]);
+  }, [selectedShape, selectedShapes, shapes, handleCopy, handlePaste, handleDelete, handleDuplicate, handleGroup, handleUngroup, saveToHistory, handleUndo, handleRedo, success]);
 
-  // Draw shape
-  const drawShape = (ctx, shape) => {
-    ctx.strokeStyle = shape.color || color;
-    ctx.fillStyle = shape.fillColor || 'transparent';
-    ctx.lineWidth = shape.strokeWidth || strokeWidth;
+  // Initialize rendering engine
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Initialize rendering engine
+    renderingEngineRef.current = new RenderingEngine(canvas, { cellSize: 100 });
     
-    ctx.beginPath();
-    
-    switch (shape.type) {
-      case 'rectangle':
-        ctx.rect(shape.x, shape.y, shape.width, shape.height);
-        break;
-      case 'circle': {
-        const radius = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 2;
-        ctx.arc(shape.x + shape.width / 2, shape.y + shape.height / 2, radius, 0, Math.PI * 2);
-        break;
+    return () => {
+      if (renderingEngineRef.current) {
+        renderingEngineRef.current.destroy();
+        renderingEngineRef.current = null;
       }
-      case 'triangle':
-        ctx.moveTo(shape.x + shape.width / 2, shape.y);
-        ctx.lineTo(shape.x + shape.width, shape.y + shape.height);
-        ctx.lineTo(shape.x, shape.y + shape.height);
-        ctx.closePath();
-        break;
-      case 'arrow':
-        ctx.moveTo(shape.x, shape.y);
-        ctx.lineTo(shape.x + shape.width, shape.y + shape.height);
-        ctx.moveTo(shape.x + shape.width - 10, shape.y + shape.height - 10);
-        ctx.lineTo(shape.x + shape.width, shape.y + shape.height);
-        ctx.lineTo(shape.x + shape.width - 10, shape.y + shape.height + 10);
-        break;
-      case 'diamond': {
-        const dx = shape.width / 2;
-        const dy = shape.height / 2;
-        ctx.moveTo(shape.x + dx, shape.y);
-        ctx.lineTo(shape.x + shape.width, shape.y + dy);
-        ctx.lineTo(shape.x + dx, shape.y + shape.height);
-        ctx.lineTo(shape.x, shape.y + dy);
-        ctx.closePath();
-        break;
-      }
-      case 'hexagon': {
-        const centerX = shape.x + shape.width / 2;
-        const centerY = shape.y + shape.height / 2;
-        const hexRadius = Math.min(shape.width, shape.height) / 2;
-        for (let i = 0; i < 6; i++) {
-          const angle = (Math.PI / 3) * i;
-          const x = centerX + hexRadius * Math.cos(angle);
-          const y = centerY + hexRadius * Math.sin(angle);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-        break;
-      }
-      case 'path':
-        if (shape.points && shape.points.length > 0) {
-          ctx.moveTo(shape.points[0].x, shape.points[0].y);
-          shape.points.forEach(point => ctx.lineTo(point.x, point.y));
-        }
-        break;
+    };
+  }, []);
+
+  // Update engine when shapes change
+  useEffect(() => {
+    if (renderingEngineRef.current && shapes.length >= 0) {
+      renderingEngineRef.current.updateShapes(shapes);
     }
-    
-    ctx.stroke();
-    if (shape.fillColor) ctx.fill();
-  };
+  }, [shapes]);
 
   // Optimized canvas rendering with requestAnimationFrame
   const animationFrameRef = useRef(null);
   
-  // Render canvas
+  // Render canvas using rendering engine
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
+    if (!canvas || !renderingEngineRef.current) return;
     
     const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw background FIRST (before transform) - always cover entire canvas
-      ctx.fillStyle = boardBackground;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Apply zoom and pan
-      ctx.save();
-      ctx.translate(pan.x, pan.y);
-      ctx.scale(zoom, zoom);
-      
-      // Draw grid (optimized) - always show, but with adaptive color
-      const isLightBackground = boardBackground === '#FFFFFF' || boardBackground === '#F3F4F6' || boardBackground === '#FAFAFA';
-      const gridColor = isLightBackground ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-      ctx.strokeStyle = gridColor;
-      ctx.lineWidth = 0.5 / zoom; // Scale line width with zoom for consistency
-      const gridSize = 20;
-      
-      // Calculate visible grid area in canvas coordinates (after transform)
-      // Screen (0,0) maps to canvas (-pan.x/zoom, -pan.y/zoom)
-      // Screen (width,height) maps to canvas ((width-pan.x)/zoom, (height-pan.y)/zoom)
-      const viewLeft = -pan.x / zoom;
-      const viewTop = -pan.y / zoom;
-      const viewRight = (canvas.width - pan.x) / zoom;
-      const viewBottom = (canvas.height - pan.y) / zoom;
-      
-      const startX = Math.floor(viewLeft / gridSize) * gridSize;
-      const startY = Math.floor(viewTop / gridSize) * gridSize;
-      const endX = Math.ceil(viewRight / gridSize) * gridSize;
-      const endY = Math.ceil(viewBottom / gridSize) * gridSize;
-      
-      // Draw grid lines
-      for (let x = startX; x <= endX; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, startY);
-        ctx.lineTo(x, endY);
-        ctx.stroke();
-      }
-      for (let y = startY; y <= endY; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(startX, y);
-        ctx.lineTo(endX, y);
-        ctx.stroke();
-      }
-      
-      // Draw shapes
-      shapes.forEach(shape => {
-        // Skip locked shapes - they'll be drawn with overlay later
-        const isLocked = lockedShapes.has(shape.id);
-        const isSelected = selectedShape === shape.id || selectedShapes.has(shape.id);
-        
-        if (shape.type === 'text') {
-          ctx.fillStyle = shape.color || color || '#FFFFFF';
-          ctx.font = `${shape.fontSize || 16}px sans-serif`;
-          ctx.textBaseline = 'top';
-          ctx.textAlign = 'left';
-          const textContent = shape.text || '';
-          if (textContent) {
-            ctx.fillText(textContent, shape.x, shape.y);
-          }
-        } else if (shape.type === 'sticky') {
-          ctx.fillStyle = shape.color || '#FEF08A';
-          ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
-          ctx.strokeStyle = '#D97706';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-          ctx.fillStyle = '#000';
-          ctx.font = '14px sans-serif';
-          ctx.textBaseline = 'top';
-          ctx.textAlign = 'left';
-          ctx.fillText(shape.text || 'New note', shape.x + 10, shape.y + 20);
-        } else if (shape.type === 'connector') {
-          // Draw connector line between shapes
-          ctx.strokeStyle = shape.color || '#666';
-          ctx.lineWidth = shape.strokeWidth || 2;
-          ctx.beginPath();
-          ctx.moveTo(shape.fromX, shape.fromY);
-          ctx.lineTo(shape.toX, shape.toY);
-          ctx.stroke();
-          // Draw arrowhead
-          const angle = Math.atan2(shape.toY - shape.fromY, shape.toX - shape.fromX);
-          ctx.beginPath();
-          ctx.moveTo(shape.toX, shape.toY);
-          ctx.lineTo(shape.toX - 10 * Math.cos(angle - Math.PI / 6), shape.toY - 10 * Math.sin(angle - Math.PI / 6));
-          ctx.moveTo(shape.toX, shape.toY);
-          ctx.lineTo(shape.toX - 10 * Math.cos(angle + Math.PI / 6), shape.toY - 10 * Math.sin(angle + Math.PI / 6));
-          ctx.stroke();
-        } else if (shape.type === 'image') {
-          // Draw image if loaded, otherwise placeholder
-          const imgUrl = shape.url || shape.src;
-          const cachedImg = imagesLoadedRef.current[imgUrl];
-          if (cachedImg && cachedImg.complete) {
-            ctx.drawImage(cachedImg, shape.x, shape.y, shape.width || 200, shape.height || 150);
-          } else {
-            // Placeholder while loading
-            ctx.fillStyle = '#666';
-            ctx.fillRect(shape.x, shape.y, shape.width || 200, shape.height || 150);
-            ctx.strokeStyle = '#999';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(shape.x, shape.y, shape.width || 200, shape.height || 150);
-          }
-        } else {
-          drawShape(ctx, shape);
-        }
-        
-        // Draw lock overlay on top of shape
-        if (isLocked) {
-          ctx.fillStyle = 'rgba(251, 191, 36, 0.5)';
-          ctx.fillRect(shape.x - 2, shape.y - 2, (shape.width || 100) + 4, (shape.height || 100) + 4);
-          ctx.fillStyle = '#000';
-          ctx.font = '16px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('🔒', shape.x + (shape.width || 100) / 2, shape.y + (shape.height || 100) / 2);
-        }
-        
-        // Draw selection outline (drawn after shape) - account for zoom
-        if (isSelected && !isLocked) {
-          const shapeWidth = Math.abs(shape.width || 100);
-          const shapeHeight = Math.abs(shape.height || 100);
-          const padding = 5 / zoom; // Account for zoom so padding stays constant
-          
-          ctx.strokeStyle = '#3B82F6';
-          ctx.lineWidth = 2 / zoom; // Account for zoom so line width stays constant
-          ctx.setLineDash([5 / zoom, 5 / zoom]); // Account for zoom
-          ctx.strokeRect(shape.x - padding, shape.y - padding, shapeWidth + 2 * padding, shapeHeight + 2 * padding);
-          ctx.setLineDash([]);
-          
-          // Draw resize handles for selected single shape (only if not locked)
-          if (selectedShape === shape.id && (shape.type === 'rectangle' || shape.type === 'circle' || shape.type === 'sticky' || shape.type === 'image')) {
-            const handleSize = 6 / zoom;
-            const handles = [
-              { x: shape.x - padding, y: shape.y - padding }, // Top-left
-              { x: shape.x + shapeWidth + padding, y: shape.y - padding }, // Top-right
-              { x: shape.x - padding, y: shape.y + shapeHeight + padding }, // Bottom-left
-              { x: shape.x + shapeWidth + padding, y: shape.y + shapeHeight + padding } // Bottom-right
-            ];
-            handles.forEach(handle => {
-              ctx.fillStyle = '#3B82F6';
-              ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
-              ctx.strokeStyle = '#fff';
-              ctx.lineWidth = 1 / zoom; // Account for zoom
-              ctx.strokeRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
-            });
-          }
-        }
+      renderingEngineRef.current.render({
+        shapes,
+        selectedShape,
+        selectedShapes,
+        zoom,
+        pan,
+        boardBackground,
+        lockedShapes,
+        drawPath,
+        isDrawing,
+        color,
+        strokeWidth,
+        selectionBox,
+        connectorStart,
+        cursorPosition,
+        tool,
+        gridSize: 20,
+        showGrid: true
       });
-    
-    // Draw selection box (already in canvas coordinates from getMousePos)
-    if (selectionBox && selectionBox.width > 0 && selectionBox.height > 0) {
-      ctx.strokeStyle = '#3B82F6';
-      ctx.lineWidth = 2 / zoom; // Account for zoom so line width stays constant
-      ctx.setLineDash([5 / zoom, 5 / zoom]); // Account for zoom
-      ctx.strokeRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
-      ctx.fillRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
-      ctx.setLineDash([]);
-    }
-    
-    // Draw current path
-    if (isDrawing && drawPath.length > 1) {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = strokeWidth;
-      ctx.beginPath();
-      ctx.moveTo(drawPath[0].x, drawPath[0].y);
-      drawPath.forEach(point => ctx.lineTo(point.x, point.y));
-      ctx.stroke();
-    }
-
-    // Draw connector preview
-    if (tool === 'connector' && connectorStart) {
-      const pos = cursorPosition;
-      ctx.strokeStyle = '#666';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(connectorStart.x, connectorStart.y);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-    
-    ctx.restore();
     };
     
-    // Use requestAnimationFrame properly - don't create infinite loop
-    const frameId = requestAnimationFrame(render);
-    animationFrameRef.current = frameId;
+    // Proper animation loop - only create one frame, then let it loop
+    let animationId = null;
+    const loop = () => {
+      render();
+      animationId = requestAnimationFrame(loop);
+      animationFrameRef.current = animationId;
+    };
+    
+    // Start the loop
+    animationId = requestAnimationFrame(loop);
+    animationFrameRef.current = animationId;
     
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
     };
-  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes, boardBackground, imageCache, snapToGrid, canvasReady]);
+  }, [shapes, selectedShape, selectedShapes, isDrawing, drawPath, zoom, pan, color, strokeWidth, tool, connectorStart, cursorPosition, selectionBox, lockedShapes, boardBackground, canvasReady, isDrawingShape, drawingShapeId]);
 
   // Update canvas size - use ResizeObserver for reliable sizing
   useEffect(() => {
@@ -1242,7 +1286,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
 
     initBoard();
 
-    // Real-time listener for board updates
+    // Real-time listener for board updates - use refs to avoid stale closures
     const unsubscribe = onSnapshot(boardRef, (snapshot) => {
       if (!snapshot.exists()) return;
       
@@ -1253,21 +1297,38 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       // Check if this is our local update by checking if debounce timer is active
       const isOurUpdate = isLocalUpdate.current || debounceTimer.current !== null;
       
-      // Deep comparison to avoid unnecessary updates
-      const currentShapesStr = JSON.stringify(shapes);
-      const remoteShapesStr = JSON.stringify(remoteShapes);
-      
-      if (!isOurUpdate && currentShapesStr !== remoteShapesStr) {
-        setShapes(remoteShapes);
-        // Update history when receiving remote changes
-        const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push(remoteShapesStr);
-        setHistory(newHistory);
-        setHistoryIndex(newHistory.length - 1);
-        
-        if (boardData.backgroundColor && boardData.backgroundColor !== boardBackground) {
-          setBoardBackground(boardData.backgroundColor);
-        }
+      if (!isOurUpdate) {
+        // Use functional updates to get latest state
+        setShapes(prevShapes => {
+          // Deep comparison to avoid unnecessary updates
+          const currentShapesStr = JSON.stringify(prevShapes);
+          const remoteShapesStr = JSON.stringify(remoteShapes);
+          
+          if (currentShapesStr !== remoteShapesStr) {
+            // Update history when receiving remote changes
+            setHistory(prevHistory => {
+              setHistoryIndex(prevIndex => {
+                const newHistory = prevHistory.slice(0, prevIndex + 1);
+                newHistory.push(remoteShapesStr);
+                setHistory(newHistory);
+                return newHistory.length - 1;
+              });
+              return prevHistory;
+            });
+            
+            if (boardData.backgroundColor) {
+              setBoardBackground(prevBg => {
+                if (boardData.backgroundColor !== prevBg) {
+                  return boardData.backgroundColor;
+                }
+                return prevBg;
+              });
+            }
+            
+            return remoteShapes;
+          }
+          return prevShapes;
+        });
       }
       
       // Reset local update flag after processing
@@ -1370,7 +1431,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
     };
   }, [db, currentBoardId, user]);
 
-  // Load shapes when board changes
+  // Load shapes when board changes and initialize history
   useEffect(() => {
     if (!db || !currentBoardId) return;
 
@@ -1379,10 +1440,21 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       const boardDoc = await getDoc(boardRef);
       if (boardDoc.exists()) {
         const boardData = boardDoc.data();
-        setShapes(boardData.shapes || []);
+        const loadedShapes = boardData.shapes || [];
+        setShapes(loadedShapes);
+        
+        // Initialize history with loaded shapes
+        const initialHistory = [JSON.stringify(loadedShapes)];
+        setHistory(initialHistory);
+        setHistoryIndex(0);
+        
         if (boardData.backgroundColor) {
           setBoardBackground(boardData.backgroundColor);
         }
+      } else {
+        // New board - initialize empty history
+        setHistory([]);
+        setHistoryIndex(-1);
       }
     };
 
@@ -1679,6 +1751,30 @@ const VisualBoard = ({ onClose, boardId = null }) => {
             </div>
           )}
 
+          {/* Grouping */}
+          {(selectedShapes.size >= 2 || (selectedShape && shapesRef.current.find(s => s.id === selectedShape)?.type === 'group')) && (
+            <div className="flex items-center gap-1 glass-panel border border-white/10 rounded-xl p-1">
+              {selectedShapes.size >= 2 && (
+                <button
+                  onClick={handleGroup}
+                  className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10"
+                  title="Group (Ctrl+G)"
+                >
+                  <Boxes size={18} />
+                </button>
+              )}
+              {selectedShape && shapesRef.current.find(s => s.id === selectedShape)?.type === 'group' && (
+                <button
+                  onClick={handleUngroup}
+                  className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10"
+                  title="Ungroup (Ctrl+Shift+G)"
+                >
+                  <Box size={18} />
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Snap to Grid */}
           <button
             onClick={() => setSnapToGrid(!snapToGrid)}
@@ -1736,7 +1832,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       <div
         ref={containerRef}
         className="flex-1 relative overflow-hidden min-h-0"
-        onMouseDown={handleMouseDown}
+        onMouseDown={(e) => {
+          // Don't handle mouse down if clicking on text input
+          if (e.target.tagName === 'INPUT' || e.target.closest('input')) {
+            return;
+          }
+          handleMouseDown(e);
+        }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
@@ -1745,6 +1847,8 @@ const VisualBoard = ({ onClose, boardId = null }) => {
           const delta = e.deltaY > 0 ? -0.1 : 0.1;
           setZoom(prev => Math.max(0.5, Math.min(3, prev + delta)));
         }}
+        tabIndex={0}
+        style={{ outline: 'none' }}
       >
         <canvas
           ref={canvasRef}
@@ -1759,30 +1863,51 @@ const VisualBoard = ({ onClose, boardId = null }) => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute glass-panel border border-white/20 rounded-lg p-2"
+              className="absolute glass-panel border border-white/20 rounded-lg p-2 shadow-2xl"
               style={{
-                left: `${textPosition.x * zoom + pan.x}px`,
-                top: `${textPosition.y * zoom + pan.y}px`,
-                zIndex: 1000
+                left: `${(textPosition.x * zoom) + pan.x}px`,
+                top: `${(textPosition.y * zoom) + pan.y}px`,
+                zIndex: 1000,
+                minWidth: '200px',
+                transform: 'translate(0, 0)' // Ensure proper positioning
               }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
             >
               <input
+                ref={textInputRef}
                 type="text"
                 value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                onKeyPress={(e) => {
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setTextInput(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
                   if (e.key === 'Enter') {
-                    handleTextSubmit();
+                    handleTextSubmit(e);
                   } else if (e.key === 'Escape') {
-                    setShowTextInput(false);
-                    setTextInput('');
+                    handleTextCancel();
                   }
                 }}
-                onBlur={handleTextSubmit}
+                onBlur={(e) => {
+                  // Delay blur to allow Enter key to process first
+                  setTimeout(() => {
+                    if (textInput.trim() || editingText) {
+                      handleTextSubmit(e);
+                    } else {
+                      handleTextCancel();
+                    }
+                  }, 200);
+                }}
                 autoFocus
-                className="px-3 py-1 bg-white text-black rounded border-2 border-indigo-500 focus:outline-none"
-                style={{ fontSize: '16px' }}
+                className="px-3 py-2 bg-white text-black rounded border-2 border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-full"
+                style={{ fontSize: `${textFormatting.fontSize || 16}px` }}
+                placeholder="Type text here..."
               />
+              <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
+                <span>Press Enter to save, Esc to cancel</span>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1977,7 +2102,8 @@ const VisualBoard = ({ onClose, boardId = null }) => {
             </div>
             
             {selectedShape && (() => {
-              const shape = shapes.find(s => s.id === selectedShape);
+              // Use functional update to get latest shape
+              const shape = shapesRef.current.find(s => s.id === selectedShape);
               if (!shape) return null;
               
               return (
@@ -1990,10 +2116,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                         <button
                           key={c}
                           onClick={() => {
-                            setShapes(shapes.map(s => 
-                              s.id === selectedShape ? { ...s, color: c } : s
-                            ));
-                            saveToHistory();
+                            setShapes(prevShapes => {
+                              const updated = prevShapes.map(s => 
+                                s.id === selectedShape ? { ...s, color: c } : s
+                              );
+                              saveToHistory();
+                              return updated;
+                            });
                           }}
                           className={`w-8 h-8 rounded ${shape.color === c ? 'ring-2 ring-white' : ''}`}
                           style={{ backgroundColor: c }}
@@ -2014,10 +2143,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                         max="10"
                         value={shape.strokeWidth || strokeWidth}
                         onChange={(e) => {
-                          setShapes(shapes.map(s => 
-                            s.id === selectedShape ? { ...s, strokeWidth: Number(e.target.value) } : s
-                          ));
-                          saveToHistory();
+                          setShapes(prevShapes => {
+                            const updated = prevShapes.map(s => 
+                              s.id === selectedShape ? { ...s, strokeWidth: Number(e.target.value) } : s
+                            );
+                            saveToHistory();
+                            return updated;
+                          });
                         }}
                         className="w-full"
                       />
@@ -2034,10 +2166,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                         max="48"
                         value={shape.fontSize || 16}
                         onChange={(e) => {
-                          setShapes(shapes.map(s => 
-                            s.id === selectedShape ? { ...s, fontSize: Number(e.target.value) } : s
-                          ));
-                          saveToHistory();
+                          setShapes(prevShapes => {
+                            const updated = prevShapes.map(s => 
+                              s.id === selectedShape ? { ...s, fontSize: Number(e.target.value) } : s
+                            );
+                            saveToHistory();
+                            return updated;
+                          });
                         }}
                         className="w-full"
                       />
@@ -2054,10 +2189,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                             type="number"
                             value={Math.round(shape.x || 0)}
                             onChange={(e) => {
-                              setShapes(shapes.map(s => 
-                                s.id === selectedShape ? { ...s, x: Number(e.target.value) } : s
-                              ));
-                              saveToHistory();
+                              setShapes(prevShapes => {
+                                const updated = prevShapes.map(s => 
+                                  s.id === selectedShape ? { ...s, x: Number(e.target.value) } : s
+                                );
+                                saveToHistory();
+                                return updated;
+                              });
                             }}
                             className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs"
                           />
@@ -2068,10 +2206,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                             type="number"
                             value={Math.round(shape.y || 0)}
                             onChange={(e) => {
-                              setShapes(shapes.map(s => 
-                                s.id === selectedShape ? { ...s, y: Number(e.target.value) } : s
-                              ));
-                              saveToHistory();
+                              setShapes(prevShapes => {
+                                const updated = prevShapes.map(s => 
+                                  s.id === selectedShape ? { ...s, y: Number(e.target.value) } : s
+                                );
+                                saveToHistory();
+                                return updated;
+                              });
                             }}
                             className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs"
                           />
@@ -2084,10 +2225,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                                 type="number"
                                 value={Math.round(shape.width || 0)}
                                 onChange={(e) => {
-                                  setShapes(shapes.map(s => 
-                                    s.id === selectedShape ? { ...s, width: Number(e.target.value) } : s
-                                  ));
-                                  saveToHistory();
+                                  setShapes(prevShapes => {
+                                    const updated = prevShapes.map(s => 
+                                      s.id === selectedShape ? { ...s, width: Number(e.target.value) } : s
+                                    );
+                                    saveToHistory();
+                                    return updated;
+                                  });
                                 }}
                                 className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs"
                               />
@@ -2098,10 +2242,13 @@ const VisualBoard = ({ onClose, boardId = null }) => {
                                 type="number"
                                 value={Math.round(shape.height || 0)}
                                 onChange={(e) => {
-                                  setShapes(shapes.map(s => 
-                                    s.id === selectedShape ? { ...s, height: Number(e.target.value) } : s
-                                  ));
-                                  saveToHistory();
+                                  setShapes(prevShapes => {
+                                    const updated = prevShapes.map(s => 
+                                      s.id === selectedShape ? { ...s, height: Number(e.target.value) } : s
+                                    );
+                                    saveToHistory();
+                                    return updated;
+                                  });
                                 }}
                                 className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs"
                               />
@@ -2129,9 +2276,9 @@ const VisualBoard = ({ onClose, boardId = null }) => {
             <span>Minimap</span>
             <button
               onClick={() => {
-                // Zoom to fit all shapes
-                if (shapes.length === 0) return;
-                const bounds = shapes.reduce((acc, s) => {
+                // Zoom to fit all shapes - use ref to get latest
+                if (shapesRef.current.length === 0) return;
+                const bounds = shapesRef.current.reduce((acc, s) => {
                   const left = s.x;
                   const right = s.x + (s.width || 100);
                   const top = s.y;
@@ -2178,17 +2325,21 @@ const VisualBoard = ({ onClose, boardId = null }) => {
             />
             {/* Mini shapes */}
             <svg className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
-              {shapes.slice(0, 50).map(shape => (
-                <rect
-                  key={shape.id}
-                  x={`${(shape.x || 0) / 10}%`}
-                  y={`${(shape.y || 0) / 10}%`}
-                  width={`${((shape.width || 100) / 10)}%`}
-                  height={`${((shape.height || 100) / 10)}%`}
-                  fill={shape.color || '#3B82F6'}
-                  opacity={0.5}
-                />
-              ))}
+              {shapes.slice(0, 50).map(shape => {
+                const shapeWidth = Math.abs(shape.width || 100);
+                const shapeHeight = Math.abs(shape.height || 100);
+                return (
+                  <rect
+                    key={shape.id}
+                    x={`${Math.max(0, (shape.x || 0) / 10)}%`}
+                    y={`${Math.max(0, (shape.y || 0) / 10)}%`}
+                    width={`${Math.max(1, shapeWidth / 10)}%`}
+                    height={`${Math.max(1, shapeHeight / 10)}%`}
+                    fill={shape.color || '#3B82F6'}
+                    opacity={0.5}
+                  />
+                );
+              })}
             </svg>
           </div>
         </motion.div>
@@ -2210,7 +2361,7 @@ const VisualBoard = ({ onClose, boardId = null }) => {
       {/* Info Bar */}
       <div className="glass-panel border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-white/60">
         <div className="flex items-center gap-4">
-          <span>Shapes: {shapes.length}</span>
+          <span>Shapes: {shapesRef.current.length}</span>
           <span>Zoom: {Math.round(zoom * 100)}%</span>
           <span>Tool: {tool}</span>
           {connectorStart && <span className="text-indigo-400">Click shape to connect</span>}
