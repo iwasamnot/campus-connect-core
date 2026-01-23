@@ -45,6 +45,8 @@
     "zego-express-engine-webrtc": "^3.11.0"
   },
   "devDependencies": {
+    "@csstools/css-parser-algorithms": "^3.0.5",
+    "@csstools/css-tokenizer": "^3.0.4",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
