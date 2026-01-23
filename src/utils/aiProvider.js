@@ -431,13 +431,25 @@ Current Date: ${new Date().toLocaleDateString()}`;
       messageCount: formattedMessages.length
     });
 
+    // ✅ FIX: Add headers for ngrok (bypass browser warning page) and CORS
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    // ✅ FIX: Add ngrok bypass header if using ngrok URL (free tier requires this)
+    if (targetUrl.includes('ngrok')) {
+      headers['ngrok-skip-browser-warning'] = 'true';
+      console.error('🔓 [OLLAMA] Added ngrok bypass header to skip browser warning page');
+    }
+    
     const response = await fetch(targetUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
       body: JSON.stringify(requestBody),
       signal: controller.signal, // Timeout support
+      // ✅ FIX: Add mode and credentials for CORS
+      mode: 'cors', // Explicitly request CORS
+      credentials: 'omit', // Don't send cookies (not needed for Ollama)
     });
 
     clearTimeout(timeoutId);
@@ -447,8 +459,28 @@ Current Date: ${new Date().toLocaleDateString()}`;
       console.error('❌ [OLLAMA] API Error Response:', {
         status: response.status,
         statusText: response.statusText,
-        errorText: errorText.substring(0, 500) // First 500 chars
+        errorText: errorText.substring(0, 500), // First 500 chars
+        url: targetUrl
       });
+      
+      // ✅ FIX: Provide helpful error messages for common issues
+      if (response.status === 404) {
+        console.error('❌ [OLLAMA] 404 Not Found - Possible issues:');
+        console.error('   1. Ollama is not running on the server');
+        console.error('   2. Ngrok tunnel is not forwarding to port 11434');
+        console.error('   3. URL endpoint is incorrect');
+        console.error('   💡 Check: curl http://localhost:11434/api/tags (on server)');
+        console.error('   💡 Check: ngrok should forward to http://localhost:11434');
+        throw new Error(`Ollama API 404: Server not found. Check if Ollama is running and ngrok is forwarding to port 11434. URL: ${targetUrl}`);
+      }
+      
+      if (response.status === 0 || errorText.includes('CORS') || errorText.includes('Access-Control')) {
+        console.error('❌ [OLLAMA] CORS Error - Possible solutions:');
+        console.error('   1. Use ngrok paid tier (no browser warning)');
+        console.error('   2. Configure Ollama to allow CORS: OLLAMA_ORIGINS="*"');
+        console.error('   3. Use Cloud Function proxy instead');
+        throw new Error(`CORS error: Browser blocked request. Configure Ollama with OLLAMA_ORIGINS="*" or use ngrok paid tier.`);
+      }
       
       let errorData;
       try {
@@ -588,7 +620,19 @@ Current Date: ${new Date().toLocaleDateString()}`;
     // Detect network errors (Ollama not available) - triggers Groq fallback
     if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
       console.error('❌ [OLLAMA] Network error - Ollama may be unavailable:', error.message);
+      console.error('💡 [OLLAMA] Troubleshooting:');
+      console.error('   1. Check if ngrok tunnel is active: ngrok http 11434');
+      console.error('   2. Verify Ollama is running: curl http://localhost:11434/api/tags');
+      console.error('   3. Check ngrok URL in localStorage: localStorage.getItem("custom_ollama_url")');
       throw new Error(`Ollama is not available: ${error.message}. Will try Groq fallback.`);
+    }
+    
+    // Detect CORS errors specifically
+    if (error.message.includes('CORS') || error.message.includes('Access-Control')) {
+      console.error('❌ [OLLAMA] CORS Error detected');
+      console.error('💡 [OLLAMA] Solution: Configure Ollama with CORS enabled');
+      console.error('   On your server, run: export OLLAMA_ORIGINS="*" && ollama serve');
+      throw new Error(`CORS error: ${error.message}. Configure Ollama with OLLAMA_ORIGINS="*"`);
     }
     
     // Detect mixed content errors and provide helpful message
