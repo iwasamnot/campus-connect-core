@@ -30,7 +30,7 @@ import {
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
   : null;
-import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings } from 'lucide-react';
+import { Send, Trash2, Edit2, X, Check, Search, Flag, Smile, MoreVertical, User, Bot, Paperclip, Pin, Reply, Image as ImageIcon, File, Forward, Download, Keyboard, Bookmark, Share2, BarChart3, Mic, MessageSquare, Languages, FileText, Copy, Clock, Sparkles, FileCheck, Loader, Settings, CheckCircle2, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { shareMessage } from '../utils/webShare';
 import ImagePreview from './ImagePreview';
@@ -65,7 +65,7 @@ import CollaborativeEditor from './CollaborativeEditor';
 import PredictiveScheduler from './PredictiveScheduler';
 import VoiceEmotionDetector from './VoiceEmotionDetector';
 import { generateFilledForm, downloadPDF } from '../utils/formFiller';
-import { runAgent, approveAndExecuteTool, continueAgentAfterApproval } from '../utils/agentEngine';
+import { runAgent, approveAndExecuteTool, continueAgentAfterApproval, processQuery } from '../utils/agentEngine';
 import { manageMemory, summarizeForArchival } from '../utils/memoryManager';
 // AI Features - lazy loaded based on toggle (no top-level await)
 import SmartTaskExtractor from './SmartTaskExtractor';
@@ -112,6 +112,7 @@ const ChatArea = ({ setActiveView }) => {
   const [reportReason, setReportReason] = useState('');
   const [agentThinking, setAgentThinking] = useState([]); // ReAct agent thinking log
   const [awaitingApproval, setAwaitingApproval] = useState(null); // Tool call awaiting approval
+  const [ragStatus, setRagStatus] = useState(null); // Self-learning RAG status
   const [onlineUsers, setOnlineUsers] = useState({});
   const [userNames, setUserNames] = useState({}); // Cache user names
   const [userProfiles, setUserProfiles] = useState({}); // Cache user profile data
@@ -849,16 +850,31 @@ const ChatArea = ({ setActiveView }) => {
       // If message is NOT toxic AND AI Help mode is enabled AND Virtual Senior is enabled, get AI response
       const virtualSeniorEnabled = localStorage.getItem('virtualSeniorEnabled') !== 'false'; // Enabled by default
       const reactAgentEnabled = localStorage.getItem('reactAgentEnabled') !== 'false'; // Enabled by default
+      const selfLearningRAGEnabled = localStorage.getItem('selfLearningRAGEnabled') !== 'false'; // Enabled by default
       
       if (!isToxic && aiHelpMode && virtualSeniorEnabled) {
         setWaitingForAI(true);
         setAgentThinking([]); // Clear previous thinking log
+        setRagStatus(null); // Clear previous RAG status
         
         try {
           let aiResponse = null;
           
-          // Use ReAct Agent if enabled, otherwise use standard AI
-          if (reactAgentEnabled) {
+          // Use Self-Learning RAG if enabled, otherwise use ReAct Agent or standard AI
+          if (selfLearningRAGEnabled) {
+            // Self-Learning RAG mode
+            const ragResult = await processQuery(originalText, (statusUpdate) => {
+              setRagStatus(statusUpdate);
+            }, user?.uid || null);
+            
+            if (ragResult.success && ragResult.answer) {
+              aiResponse = ragResult.answer;
+            } else {
+              // RAG failed, fallback to standard AI
+              console.warn('Self-Learning RAG failed, using standard AI:', ragResult.error);
+              aiResponse = await callGemini(originalText);
+            }
+          } else if (reactAgentEnabled) {
             // ReAct Agent mode
             const agentResult = await runAgent(originalText, (stepUpdate) => {
               // Update thinking log for UI
@@ -947,6 +963,7 @@ const ChatArea = ({ setActiveView }) => {
         } finally {
           setWaitingForAI(false);
           setAgentThinking([]); // Clear thinking log after response
+          setRagStatus(null); // Clear RAG status after response
         }
       }
     } catch (error) {
@@ -1787,6 +1804,54 @@ const ChatArea = ({ setActiveView }) => {
                       </p>
                     </motion.div>
                   ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Self-Learning RAG Status */}
+          {ragStatus && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel border-b border-purple-500/30 bg-purple-600/10 px-4 md:px-6 py-3"
+            >
+              <div className="flex items-center gap-2">
+                {ragStatus.status === 'searching_internal' && (
+                  <>
+                    <Loader size={16} className="text-purple-300 animate-spin" />
+                    <span className="text-sm text-purple-300">{ragStatus.message}</span>
+                  </>
+                )}
+                {ragStatus.status === 'searching_web' && (
+                  <>
+                    <Search size={16} className="text-yellow-300 animate-pulse" />
+                    <span className="text-sm text-yellow-300">{ragStatus.message}</span>
+                  </>
+                )}
+                {ragStatus.status === 'learning' && (
+                  <>
+                    <Sparkles size={16} className="text-green-300 animate-pulse" />
+                    <span className="text-sm text-green-300">{ragStatus.message}</span>
+                  </>
+                )}
+                {ragStatus.status === 'generating' && (
+                  <>
+                    <Loader size={16} className="text-blue-300 animate-spin" />
+                    <span className="text-sm text-blue-300">{ragStatus.message}</span>
+                  </>
+                )}
+                {ragStatus.status === 'ready' && (
+                  <>
+                    <CheckCircle2 size={16} className="text-green-400" />
+                    <span className="text-sm text-green-400">{ragStatus.message}</span>
+                  </>
+                )}
+                {ragStatus.status === 'error' && (
+                  <>
+                    <XCircle size={16} className="text-red-300" />
+                    <span className="text-sm text-red-300">{ragStatus.message}</span>
+                  </>
+                )}
               </div>
             </motion.div>
           )}

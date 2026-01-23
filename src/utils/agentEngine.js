@@ -308,3 +308,154 @@ Continue reasoning. Use more tools if needed, or provide the final answer.`;
     };
   }
 };
+
+/**
+ * Self-Correcting & Self-Learning RAG System
+ * Processes queries with automatic web search fallback and knowledge base updates
+ * @param {string} userQuery - User's question
+ * @param {Function} onStatusUpdate - Callback for status updates (for UI)
+ * @param {string} userId - User ID for context
+ * @returns {Promise<Object>} - Answer and metadata
+ */
+export const processQuery = async (userQuery, onStatusUpdate = null, userId = null) => {
+  try {
+    // Step 1: Initial Retrieval from Pinecone
+    if (onStatusUpdate) {
+      onStatusUpdate({ status: 'searching_internal', message: 'Searching Internal Database...' });
+    }
+    
+    const { ragRetrieval } = await import('./ragRetrieval');
+    const retrievedDocs = await ragRetrieval.retrieve(userQuery, 10, 0.01);
+    
+    // Format context for AI
+    const context = retrievedDocs.length > 0
+      ? retrievedDocs.map((doc, idx) => `${idx + 1}. ${doc.text || doc.content || ''}`).join('\n\n')
+      : '';
+    
+    // Step 2: Ask DeepSeek if it can answer with HIGH confidence
+    const confidencePrompt = `Given this internal context from the knowledge base, can you answer the following question with HIGH confidence (90%+)? 
+
+Context:
+${context || 'No relevant context found in internal database.'}
+
+Question: ${userQuery}
+
+Reply with ONLY "YES" or "NO". Do not provide any explanation.`;
+    
+    const confidenceResponse = await callAI(confidencePrompt, {
+      systemPrompt: 'You are a confidence evaluator. Analyze if the provided context is sufficient to answer the question with high confidence. Reply only YES or NO.',
+      maxTokens: 10,
+      temperature: 0.1
+    });
+    
+    const hasHighConfidence = confidenceResponse.trim().toUpperCase().startsWith('YES');
+    
+    if (hasHighConfidence && context) {
+      // Step 3A: Generate answer from internal context
+      if (onStatusUpdate) {
+        onStatusUpdate({ status: 'generating', message: 'Answer Ready.' });
+      }
+      
+      const answerPrompt = `Context from knowledge base:
+${context}
+
+Question: ${userQuery}
+
+Provide a clear, accurate answer based on the context above.`;
+      
+      const answer = await callAI(answerPrompt, {
+        systemPrompt: 'You are a helpful assistant for SISTC students. Answer questions accurately based on the provided context.',
+        maxTokens: 2048,
+        temperature: 0.7,
+        userId: userId
+      });
+      
+      return {
+        success: true,
+        answer: answer,
+        source: 'internal',
+        confidence: 'high',
+        contextUsed: true
+      };
+    } else {
+      // Step 3B: Search web for missing information
+      if (onStatusUpdate) {
+        onStatusUpdate({ status: 'searching_web', message: '⚠️ Info missing. Searching Live Web...' });
+      }
+      
+      const { searchWeb, formatWebResults } = await import('./webSearch');
+      const webResults = await searchWeb(userQuery, 5);
+      
+      if (webResults.length === 0) {
+        // No web results - generate answer from available context anyway
+        const answerPrompt = `Context (limited):
+${context || 'No internal context available.'}
+
+Question: ${userQuery}
+
+Provide the best answer you can with the available information. If you don't know, say so.`;
+        
+        const answer = await callAI(answerPrompt, {
+          systemPrompt: 'You are a helpful assistant. Answer based on available information.',
+          maxTokens: 2048,
+          temperature: 0.7,
+          userId: userId
+        });
+        
+        return {
+          success: true,
+          answer: answer,
+          source: 'limited',
+          confidence: 'low',
+          contextUsed: context.length > 0
+        };
+      }
+      
+      // Step 4: Generate answer from web results
+      const webContext = formatWebResults(webResults);
+      const answerPrompt = `Web Search Results:
+${webContext}
+
+Question: ${userQuery}
+
+Provide a clear, accurate answer based on the web search results above.`;
+      
+      const answer = await callAI(answerPrompt, {
+        systemPrompt: 'You are a helpful assistant for SISTC students. Answer questions accurately based on the provided web search results.',
+        maxTokens: 2048,
+        temperature: 0.7,
+        userId: userId
+      });
+      
+      // Step 5: Trigger Self-Learning
+      if (onStatusUpdate) {
+        onStatusUpdate({ status: 'learning', message: '💾 New information found. Updating Knowledge Base...' });
+      }
+      
+      const { learnFromWeb } = await import('./knowledgeBase');
+      await learnFromWeb(userQuery, webResults);
+      
+      if (onStatusUpdate) {
+        onStatusUpdate({ status: 'ready', message: 'Answer Ready.' });
+      }
+      
+      return {
+        success: true,
+        answer: answer,
+        source: 'web',
+        confidence: 'medium',
+        contextUsed: false,
+        learned: true
+      };
+    }
+  } catch (error) {
+    console.error('🧠 [Self-Learning RAG] Error processing query:', error);
+    if (onStatusUpdate) {
+      onStatusUpdate({ status: 'error', message: 'Error processing query.' });
+    }
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
