@@ -8,6 +8,9 @@ import { callAI, getAIProvider } from '../utils/aiProvider';
 import { getUserProfile, updateProfileFromConversation, getPersonalizedSystemPrompt, updateAssistantName } from '../utils/userProfileAI';
 import { useAuth } from '../context/AuthContext';
 import MarkdownMessage from './MarkdownMessage';
+// ✅ FIX: Import ReactMarkdown and remarkGfm directly as fallback (in case production build has old code)
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 
 // Enhanced SISTC Knowledge Base with more detailed information
