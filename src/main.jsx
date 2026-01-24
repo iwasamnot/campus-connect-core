@@ -1,6 +1,6 @@
 // ✅ SANITY CHECK: If you can see this, the console is working
 console.error('🔥 SYSTEM START: Console is active. If you see this, logging is working.');
-console.error('📦 BUILD VERSION: 8.3.4 - ReactMarkdown fix applied - Force deployment');
+console.error('📦 BUILD VERSION: 8.3.5 - AIChatView cache-busting rename - ReactMarkdown fix');
 
 // CRITICAL: Import React first and ensure it's available globally
 import React from 'react'

@@ -203,7 +203,7 @@ export default defineConfig({
         // Better offline support for mobile
         offlineGoogleAnalytics: false,
         // Optimize cache for mobile devices with versioning
-        cacheId: 'campusconnect-v8.3.4',
+        cacheId: 'campusconnect-v8.3.5',
         runtimeCaching: [
           {
             // ✅ FIX: Exclude blob URLs from caching (they're temporary and can't be cached)
