@@ -1,6 +1,6 @@
 // ✅ SANITY CHECK: If you can see this, the console is working
 console.error('🔥 SYSTEM START: Console is active. If you see this, logging is working.');
-console.error('📦 BUILD VERSION: 8.3.1 - ReactMarkdown fix applied');
+console.error('📦 BUILD VERSION: 8.3.2 - ReactMarkdown fix applied');
 
 // CRITICAL: Import React first and ensure it's available globally
 import React from 'react'
