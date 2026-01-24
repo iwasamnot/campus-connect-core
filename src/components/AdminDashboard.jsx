@@ -1303,21 +1303,24 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="glass-panel bg-indigo-600/20 border-b border-indigo-500/30 backdrop-blur-xl px-6 py-4 max-h-64 overflow-y-auto"
+          className="glass-panel bg-indigo-600/20 border-b border-indigo-500/30 backdrop-blur-xl px-4 py-2 max-h-64 overflow-y-auto"
         >
-          <h3 className="font-semibold text-white mb-2 text-glow">Recent Audit Logs ({auditLogs.length})</h3>
-          <div className="space-y-2">
+          <h3 className="font-semibold text-white mb-1.5 text-sm text-glow">Recent Audit Logs ({auditLogs.length})</h3>
+          <div className="space-y-1">
             {auditLogs.slice(0, 10).map(log => (
               <motion.div 
                 key={log.id} 
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                whileHover={{ x: 4, scale: 1.02 }}
-                className="glass-panel bg-white/5 border border-white/10 p-2 rounded-xl backdrop-blur-sm text-xs text-white"
+                whileHover={{ x: 2, scale: 1.01 }}
+                className="glass-panel bg-white/5 border border-white/10 px-2 py-1 rounded-lg backdrop-blur-sm text-xs text-white"
               >
                 <span className="font-medium">{log.action}</span> by {log.performedByEmail} - {formatTimestamp(log.timestamp)}
               </motion.div>
             ))}
+            {auditLogs.length === 0 && (
+              <p className="text-xs text-white/60 py-2">No audit logs yet</p>
+            )}
           </div>
         </motion.div>
       )}
