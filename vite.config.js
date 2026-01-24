@@ -475,7 +475,6 @@ export default defineConfig({
       // Better tree shaking
       treeshake: {
         preset: 'smallest',
-        moduleSideEffects: false,
         propertyReadSideEffects: false,
         // ✅ FIX: Preserve react-markdown imports to prevent tree-shaking
         moduleSideEffects: (id) => {
