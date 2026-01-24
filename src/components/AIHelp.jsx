@@ -7,8 +7,7 @@ import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calend
 import { callAI, getAIProvider } from '../utils/aiProvider';
 import { getUserProfile, updateProfileFromConversation, getPersonalizedSystemPrompt, updateAssistantName } from '../utils/userProfileAI';
 import { useAuth } from '../context/AuthContext';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import MarkdownMessage from './MarkdownMessage';
 
 
 // Enhanced SISTC Knowledge Base with more detailed information

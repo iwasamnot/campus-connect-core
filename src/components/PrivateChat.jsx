@@ -32,8 +32,7 @@ const db = typeof window !== 'undefined' && window.__firebaseDb
   ? window.__firebaseDb 
   : null;
 import { Send, Trash2, Edit2, X, Check, ArrowLeft, MessageCircle, User, Clock, Settings, Search, Plus, Mail, Paperclip, Smile, File, Image as ImageIcon, Phone, Video } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import MarkdownMessage from './MarkdownMessage';
 import UserProfilePopup from './UserProfilePopup';
 import FileUpload from './FileUpload';
 import EmojiPicker from './EmojiPicker';
@@ -1599,30 +1598,11 @@ const PrivateChat = () => {
                               )}
                             </div>
                           )}
-                          {message.isAI ? (
-                            <div className="text-sm text-white/90 prose prose-invert prose-sm max-w-none">
-                              <ReactMarkdown 
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                  strong: ({node, ...props}) => <strong className="font-bold text-indigo-300" {...props} />,
-                                  p: ({node, ...props}) => <p className="my-1 break-words" {...props} />,
-                                  ul: ({node, ...props}) => <ul className="list-disc ml-4 my-2 space-y-1" {...props} />,
-                                  ol: ({node, ...props}) => <ol className="list-decimal ml-4 my-2 space-y-1" {...props} />,
-                                  li: ({node, ...props}) => <li className="my-0.5 break-words" {...props} />,
-                                  code: ({node, inline, ...props}) => 
-                                    inline ? (
-                                      <code className="bg-white/10 px-1 py-0.5 rounded text-indigo-300 text-xs" {...props} />
-                                    ) : (
-                                      <code className="block bg-white/5 p-2 rounded my-2 overflow-x-auto text-xs" {...props} />
-                                    ),
-                                  a: ({node, ...props}) => <a className="text-indigo-400 hover:text-indigo-300 underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                }}
-                              >
-                                {message.displayText || message.text}
-                              </ReactMarkdown>
-                            </div>
+                          {/* ✅ FIX: Use MarkdownMessage for AI messages or any message with markdown */}
+                          {(message.isAI || message.userId === 'virtual-senior' || message.sender === 'Virtual Senior' || /(\*\*|__|\*|_|`|\[.*?\]\(.*?\)|###|##|#)/.test(message.displayText || message.text || '')) ? (
+                            <MarkdownMessage content={message.displayText || message.text} />
                           ) : (
-                            <p className="text-sm whitespace-pre-wrap break-words">
+                            <p className="text-sm whitespace-pre-wrap break-words text-white/90">
                               {message.displayText || message.text}
                             </p>
                           )}

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Reply, Send, X, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MarkdownMessage from './MarkdownMessage';
 
 const db = typeof window !== 'undefined' && window.__firebaseDb 
   ? window.__firebaseDb 
@@ -124,9 +125,18 @@ const MessageThread = ({ parentMessageId, onClose, isOpen }) => {
                         {message.timestamp?.toDate?.().toLocaleTimeString() || ''}
                       </span>
                     </div>
-                    <p className="text-sm text-white/90 break-words">
-                      {message.displayText || message.text}
-                    </p>
+                    {/* ✅ FIX: Use MarkdownMessage for AI messages or any message with markdown */}
+                    {(() => {
+                      const messageText = message.displayText || message.text || '';
+                      const isAIMessage = message.isAI || message.userId === 'virtual-senior' || message.sender === 'Virtual Senior';
+                      const hasMarkdown = /(\*\*|__|\*|_|`|\[.*?\]\(.*?\)|###|##|#)/.test(messageText);
+                      
+                      if (isAIMessage || hasMarkdown) {
+                        return <MarkdownMessage content={messageText} />;
+                      }
+                      
+                      return <p className="text-sm text-white/90 break-words whitespace-pre-wrap">{messageText}</p>;
+                    })()}
                   </div>
                 </div>
               </motion.div>

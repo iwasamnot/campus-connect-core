@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { Send, Languages, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MarkdownMessage from './MarkdownMessage';
 import { translateMessage } from '../utils/aiProvider';
 
 // Use window.__firebaseDb to avoid import/export issues
@@ -307,6 +308,18 @@ const GlobalCommons = () => {
                     {/* Translated text (big, readable) */}
                     <div className="text-base">
                       {isTranslating ? (
+                        <Loader className="animate-spin" size={16} />
+                      ) : (() => {
+                        const messageText = displayText || message.text || '';
+                        const isAIMessage = message.isAI || message.userId === 'virtual-senior' || message.sender === 'Virtual Senior';
+                        const hasMarkdown = /(\*\*|__|\*|_|`|\[.*?\]\(.*?\)|###|##|#)/.test(messageText);
+                        
+                        if (isAIMessage || hasMarkdown) {
+                          return <MarkdownMessage content={messageText} className="text-base" />;
+                        }
+                        
+                        return <span className="whitespace-pre-wrap break-words">{messageText}</span>;
+                      })()}
                         <div className="flex items-center gap-2">
                           <Loader className="animate-spin" size={14} />
                           <span className="text-white/70">Translating...</span>
