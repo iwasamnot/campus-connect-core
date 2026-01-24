@@ -8,8 +8,10 @@
 
 import { ragRetrieval } from './ragRetrieval';
 import { processKnowledgeBase } from './knowledgeBaseProcessor';
-import { callAI, getAIProvider } from './aiProvider';
+import { callAI, getAIProvider, callGroq, getProviderByPriority } from './aiProvider';
 import { processConnection, formatConnectionOffer } from './connectionEngine';
+import { searchWeb, formatWebResults } from './webSearch';
+import { learnFromUserMessage } from './dualBrainLearner';
 
 // Determine which provider is being used
 const getProviderName = () => {
@@ -58,10 +60,8 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
     return null;
   }
   
-  const provider = getProviderName();
-  const providerDisplay = provider === 'ollama' ? 'Ollama' : provider === 'groq' ? 'Groq' : provider === 'unknown' ? 'Offline Fallback' : provider;
-  
-  console.log(`🔍 [OLLAMA RAG] Using provider: ${providerDisplay} for query: "${query.substring(0, 50)}..."`);
+  // ✅ UPGRADED: RAG engine now uses Groq directly
+  console.log(`🔍 [GROQ RAG] Using Groq API for RAG engine with query: "${query.substring(0, 50)}..."`);
 
   try {
     // STEP 1: Retrieve relevant documents from Pinecone (both public and private namespaces)
@@ -165,53 +165,72 @@ Current Date: ${new Date().toLocaleDateString()}`;
       }
     }
 
-    // STEP 7: Call AI with proper structure
-    // System role: Virtual Senior persona
-    // User role: RAG context + question
-    console.log(`🚀 [OLLAMA RAG] Calling AI provider with context (${context.length} chars) and question (${query.length} chars)`);
+    // ✅ STEP 6.5: Search web using Tavily for additional context
+    let tavilyResults = [];
+    let tavilyContext = '';
+    try {
+      console.log('🔍 [RAG] Searching web with Tavily for additional context...');
+      tavilyResults = await searchWeb(query, 5); // Get top 5 results
+      
+      if (tavilyResults && tavilyResults.length > 0) {
+        tavilyContext = formatWebResults(tavilyResults);
+        console.log(`✅ [RAG] Found ${tavilyResults.length} Tavily results, adding to context`);
+      } else {
+        console.log('⚠️ [RAG] No Tavily results found');
+      }
+    } catch (tavilyError) {
+      console.warn('⚠️ [RAG] Tavily search failed (non-critical):', tavilyError.message);
+    }
+
+    // Add Tavily context to user prompt if available
+    if (tavilyContext) {
+      userPrompt = `${userPrompt}
+
+**Live Web Search Results (Tavily):**
+${tavilyContext}
+
+**Instructions:**
+- Use web search results to supplement the knowledge base context
+- If web results contradict knowledge base, prioritize knowledge base for SISTC-specific info
+- Cite web sources when using them: [Web: Source Title]`;
+    }
+
+    // STEP 7: Call AI with proper structure using Groq
+    // ✅ UPGRADED: Use Groq directly for RAG engine (faster, more reliable)
+    console.log(`🚀 [GROQ RAG] Calling Groq API with context (${context.length} chars), Tavily results (${tavilyResults.length}), and question (${query.length} chars)`);
     
     let response = null;
     try {
-      // Try Ollama first (primary for RAG)
-      response = await callAI(userPrompt, {
+      // Use Groq directly for RAG
+      const groqConfig = getProviderByPriority('groq');
+      
+      if (!groqConfig || !groqConfig.apiKey) {
+        throw new Error('Groq API key not configured (VITE_GROQ_API_KEY)');
+      }
+      
+      console.log('🤖 [GROQ RAG] Using Groq API for RAG engine');
+      response = await callGroq(userPrompt, groqConfig, {
         systemPrompt: systemPrompt,
         maxTokens: 2048,
-        temperature: 0.7,
-        userId: userId || null // Pass userId for Connection Matcher
+        temperature: 0.7
       });
-    } catch (ollamaError) {
-      // ✅ FIX: Fallback to Vertex/Groq ONLY for RAG engine
-      console.warn('⚠️ [RAG] Ollama failed, trying Vertex/Groq fallback:', ollamaError.message);
       
-      // Try Groq fallback
-      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
-      if (groqApiKey && groqApiKey !== '') {
-        try {
-          // Import callGroq function directly
-          const { callGroq } = await import('./aiProvider');
-          const groqConfig = {
-            provider: 'groq',
-            apiKey: groqApiKey,
-            model: 'llama-3.1-8b-instant',
-            baseUrl: 'https://api.groq.com/openai/v1',
-            maxTokens: 2048,
-            temperature: 0.7
-          };
-          console.error('🔄 [RAG FALLBACK] Switching to Groq API for RAG...');
-          response = await callGroq(userPrompt, groqConfig, {
-            systemPrompt: systemPrompt,
-            maxTokens: 2048,
-            temperature: 0.7
-          });
-        } catch (groqError) {
-          console.error('❌ [RAG] Groq fallback also failed:', groqError);
-          // Try Vertex AI if available
-          const vertexApiKey = import.meta.env.VITE_VERTEX_API_KEY?.trim();
-          if (vertexApiKey && vertexApiKey !== '') {
-            try {
-              // Vertex AI fallback would go here if implemented
-              console.error('⚠️ [RAG] Vertex AI fallback not yet implemented');
-              throw new Error('All RAG providers failed');
+      console.log('✅ [GROQ RAG] Response received from Groq');
+    } catch (groqError) {
+      console.error('❌ [RAG] Groq failed, trying Ollama fallback:', groqError.message);
+      
+      // Fallback to Ollama if Groq fails
+      try {
+        response = await callAI(userPrompt, {
+          systemPrompt: systemPrompt,
+          maxTokens: 2048,
+          temperature: 0.7,
+          userId: userId || null
+        });
+        console.log('✅ [RAG] Fallback to Ollama succeeded');
+      } catch (ollamaError) {
+        console.error('❌ [RAG] All providers failed:', ollamaError);
+        throw new Error('All RAG providers failed');
             } catch (vertexError) {
               console.error('❌ [RAG] All providers failed:', { ollama: ollamaError.message, groq: groqError.message });
               throw new Error(`RAG failed: Ollama: ${ollamaError.message}, Groq: ${groqError.message}`);
