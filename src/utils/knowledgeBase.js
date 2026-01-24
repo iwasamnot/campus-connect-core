@@ -2,11 +2,19 @@
  * Knowledge Base Learning Module
  * Handles self-learning from web search results
  * Automatically updates Pinecone with new information
+ * 
+ * ✅ UPGRADED: Now uses Semantic Verification (Evaluator + De-duplication + Source Weighting)
  */
 
 import { generateEmbedding } from './ragEmbeddings';
 import { ragRetrieval } from './ragRetrieval';
 import { callAI } from './aiProvider';
+import { 
+  evaluateInformation, 
+  getTrustTier, 
+  calculateRetrievalWeight,
+  TRUST_TIERS 
+} from './ragEvaluator';
 
 /**
  * Learn from web search results and update knowledge base
@@ -53,11 +61,23 @@ Provide a concise, factual summary (2-4 sentences) that can be stored in the kno
     
     console.log(`🧠 [Learning] Generated summary: ${summary.substring(0, 100)}...`);
     
-    // Step 3: Chunk the summary (for now, use the whole summary as one chunk)
-    // In production, you might want to split into smaller chunks
-    const chunks = [summary.trim()];
+    // ✅ NEW STEP 2.5: Evaluate information quality (Semantic Verification)
+    const evaluation = await evaluateInformation(summary, `From web search results for query: "${userQuery}"`);
     
-    // Step 4: Generate embeddings and upsert to Pinecone
+    if (!evaluation.shouldStore) {
+      console.warn(`🧠 [Evaluator] Rejected: ${evaluation.reason} (confidence: ${evaluation.confidence.toFixed(2)})`);
+      console.warn(`🧠 [Evaluator] Text: "${summary.substring(0, 100)}..."`);
+      return false;
+    }
+    
+    const cleanedText = evaluation.cleanedText || summary.trim();
+    console.log(`✅ [Evaluator] Approved with confidence ${evaluation.confidence.toFixed(2)}: ${evaluation.reason}`);
+    console.log(`📝 [Evaluator] Cleaned text: "${cleanedText.substring(0, 100)}..."`);
+    
+    // Step 3: Chunk the cleaned summary
+    const chunks = [cleanedText];
+    
+    // Step 4: Generate embeddings and check for duplicates before upserting
     let learnedCount = 0;
     for (const chunk of chunks) {
       try {
@@ -69,17 +89,51 @@ Provide a concise, factual summary (2-4 sentences) that can be stored in the kno
           continue;
         }
         
-        // Upsert to Pinecone
-        const success = await upsertToPinecone(chunk, embedding, {
-          source: 'web_auto_learned',
-          date: Date.now(),
-          query: userQuery,
-          originalResults: webResults.length
-        });
+        // ✅ NEW STEP 4.5: Semantic De-duplication - Check for similar vectors
+        const isDuplicate = await checkForDuplicate(embedding, chunk, 0.90); // 90% similarity threshold
         
-        if (success) {
-          learnedCount++;
-          console.log(`🧠 [Learning] Successfully learned and saved chunk ${learnedCount}/${chunks.length}`);
+        if (isDuplicate) {
+          console.log(`🔄 [De-duplication] Similar fact already exists, updating instead of creating duplicate`);
+          // Update existing record instead of creating new one
+          const updateSuccess = await updateExistingRecord(isDuplicate.id, chunk, embedding, {
+            source: 'web_auto_learned',
+            date: Date.now(),
+            query: userQuery,
+            originalResults: webResults.length,
+            trust_tier: TRUST_TIERS.TIER_3_LOW.level,
+            trust_weight: TRUST_TIERS.TIER_3_LOW.weight,
+            confidence: evaluation.confidence,
+            retrieval_weight: calculateRetrievalWeight(TRUST_TIERS.TIER_3_LOW, evaluation.confidence),
+            lastUpdated: new Date().toISOString()
+          });
+          
+          if (updateSuccess) {
+            learnedCount++;
+            console.log(`✅ [De-duplication] Updated existing record: ${isDuplicate.id}`);
+          }
+        } else {
+          // ✅ NEW: Add source weighting to metadata
+          const trustTier = getTrustTier('web_auto_learned');
+          const retrievalWeight = calculateRetrievalWeight(trustTier, evaluation.confidence);
+          
+          // Upsert to Pinecone with trust metadata
+          const success = await upsertToPinecone(chunk, embedding, {
+            source: 'web_auto_learned',
+            date: Date.now(),
+            query: userQuery,
+            originalResults: webResults.length,
+            trust_tier: trustTier.level,
+            trust_weight: trustTier.weight,
+            confidence: evaluation.confidence,
+            retrieval_weight: retrievalWeight,
+            evaluated: true,
+            evaluation_reason: evaluation.reason
+          });
+          
+          if (success) {
+            learnedCount++;
+            console.log(`🧠 [Learning] Successfully learned and saved chunk ${learnedCount}/${chunks.length}`);
+          }
         }
       } catch (chunkError) {
         console.error('🧠 [Learning] Error processing chunk:', chunkError);
@@ -99,10 +153,95 @@ Provide a concise, factual summary (2-4 sentences) that can be stored in the kno
 };
 
 /**
+ * Check for duplicate/similar vectors in Pinecone (Semantic De-duplication)
+ * @param {Array} embedding - Vector embedding to check
+ * @param {string} text - Text content for additional verification
+ * @param {number} similarityThreshold - Minimum similarity score (0-1)
+ * @returns {Promise<{id: string, score: number} | null>} - Duplicate match or null
+ */
+const checkForDuplicate = async (embedding, text, similarityThreshold = 0.90) => {
+  try {
+    if (!ragRetrieval.pineconeConfigured || !ragRetrieval.pineconeIndex) {
+      return null;
+    }
+    
+    // Query Pinecone for similar vectors
+    const results = await ragRetrieval.pineconeIndex.query({
+      vector: embedding,
+      topK: 5, // Check top 5 matches
+      includeMetadata: true,
+      filter: {
+        source: { $eq: 'web_auto_learned' } // Only check within same source type
+      }
+    });
+    
+    if (results.matches && results.matches.length > 0) {
+      // Find matches above similarity threshold
+      const highSimilarityMatches = results.matches.filter(
+        match => match.score >= similarityThreshold
+      );
+      
+      if (highSimilarityMatches.length > 0) {
+        // Return the highest scoring match
+        const bestMatch = highSimilarityMatches[0];
+        console.log(`🔄 [De-duplication] Found similar vector: ${bestMatch.id} (similarity: ${bestMatch.score.toFixed(3)})`);
+        return {
+          id: bestMatch.id,
+          score: bestMatch.score,
+          metadata: bestMatch.metadata
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('🧠 [De-duplication] Error checking for duplicates:', error);
+    return null;
+  }
+};
+
+/**
+ * Update an existing Pinecone record instead of creating a duplicate
+ * @param {string} id - Existing vector ID
+ * @param {string} text - Updated text
+ * @param {Array} embedding - Updated embedding
+ * @param {Object} metadata - Updated metadata
+ * @returns {Promise<boolean>} - Success status
+ */
+const updateExistingRecord = async (id, text, embedding, metadata = {}) => {
+  try {
+    if (!ragRetrieval.pineconeConfigured || !ragRetrieval.pineconeIndex) {
+      return false;
+    }
+    
+    const fullMetadata = {
+      text: text.substring(0, 1000),
+      ...metadata,
+      lastUpdated: new Date().toISOString(),
+      updateCount: (metadata.updateCount || 0) + 1
+    };
+    
+    await ragRetrieval.pineconeIndex.upsert([
+      {
+        id: id,
+        values: embedding,
+        metadata: fullMetadata
+      }
+    ]);
+    
+    console.log(`✅ [De-duplication] Updated existing record: ${id}`);
+    return true;
+  } catch (error) {
+    console.error('🧠 [De-duplication] Error updating record:', error);
+    return false;
+  }
+};
+
+/**
  * Upsert a document to Pinecone
  * @param {string} text - Document text
  * @param {Array} embedding - Vector embedding (768 dimensions)
- * @param {Object} metadata - Metadata object
+ * @param {Object} metadata - Metadata object (now includes trust_tier, trust_weight, retrieval_weight)
  * @returns {Promise<boolean>} - Success status
  */
 const upsertToPinecone = async (text, embedding, metadata = {}) => {
@@ -116,11 +255,15 @@ const upsertToPinecone = async (text, embedding, metadata = {}) => {
     // Generate unique ID
     const id = `learned_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
-    // Prepare metadata
+    // Prepare metadata with trust weighting
     const fullMetadata = {
       text: text.substring(0, 1000), // Store first 1000 chars in metadata
       ...metadata,
-      learnedAt: new Date().toISOString()
+      learnedAt: new Date().toISOString(),
+      // Ensure trust metadata is included
+      trust_tier: metadata.trust_tier || TRUST_TIERS.TIER_3_LOW.level,
+      trust_weight: metadata.trust_weight || TRUST_TIERS.TIER_3_LOW.weight,
+      retrieval_weight: metadata.retrieval_weight || 1.0
     };
     
     // Upsert to Pinecone
@@ -132,7 +275,7 @@ const upsertToPinecone = async (text, embedding, metadata = {}) => {
       }
     ]);
     
-    console.log(`🧠 [Learning] Upserted to Pinecone: ${id}`);
+    console.log(`🧠 [Learning] Upserted to Pinecone: ${id} (trust_tier: ${fullMetadata.trust_tier}, weight: ${fullMetadata.retrieval_weight.toFixed(2)})`);
     return true;
   } catch (error) {
     console.error('🧠 [Learning] Error upserting to Pinecone:', error);

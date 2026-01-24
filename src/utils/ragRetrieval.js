@@ -144,16 +144,22 @@ export class RAGRetrieval {
           console.log(`✅ [Pinecone] Retrieved ${results.matches.length} matches from Pinecone`);
           
           // Convert Pinecone matches to KnowledgeDocument format
+          // ✅ UPGRADED: Apply trust weighting to scores
           const documents = results.matches
             .filter(match => {
-              const score = match.score || 0;
-              if (score < minSimilarity) {
-                console.log(`   ⚠️ Filtered out match (score: ${score.toFixed(3)} < ${minSimilarity})`);
+              const baseScore = match.score || 0;
+              if (baseScore < minSimilarity) {
+                console.log(`   ⚠️ Filtered out match (score: ${baseScore.toFixed(3)} < ${minSimilarity})`);
                 return false;
               }
               return true;
             })
             .map(match => {
+              // Apply trust weight to score (higher trust = boosted score)
+              const trustWeight = match.metadata?.retrieval_weight || match.metadata?.trust_weight || 1.0;
+              const trustTier = match.metadata?.trust_tier || 3;
+              const weightedScore = (match.score || 0) * trustWeight;
+              
               const doc = new KnowledgeDocument({
                 id: match.id,
                 text: match.metadata?.text || match.metadata?.content || '',
@@ -161,13 +167,21 @@ export class RAGRetrieval {
                   title: match.metadata?.title || 'Document',
                   category: match.metadata?.category || 'general',
                   source: match.metadata?.source || 'Pinecone',
-                  score: match.score
+                  score: match.score, // Original score
+                  weightedScore: weightedScore, // Weighted score for sorting
+                  trustTier: trustTier,
+                  trustWeight: trustWeight,
+                  confidence: match.metadata?.confidence || 1.0
                 },
                 embedding: null // Don't store embedding in document object
               });
-              console.log(`   📄 Match: "${doc.metadata.title}" (score: ${match.score?.toFixed(3)})`);
+              
+              const trustLabel = trustTier === 1 ? '🔒 High' : trustTier === 2 ? '📄 Medium' : '💬 Low';
+              console.log(`   📄 Match: "${doc.metadata.title}" (score: ${match.score?.toFixed(3)}, weighted: ${weightedScore.toFixed(3)}, ${trustLabel} trust)`);
               return doc;
-            });
+            })
+            // Sort by weighted score (highest first) to prioritize high-trust sources
+            .sort((a, b) => (b.metadata.weightedScore || 0) - (a.metadata.weightedScore || 0));
           
           if (documents.length > 0) {
             console.log(`✅ [Pinecone] Returning ${documents.length} documents after filtering`);
