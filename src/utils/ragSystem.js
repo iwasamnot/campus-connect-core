@@ -1,7 +1,7 @@
 /**
  * RAG System - Main Integration
  * Combines retrieval and generation for RAG-powered responses
- * ✅ UPGRADED: Uses Groq directly for RAG engine + Tavily for live web search
+ * ✅ UPGRADED: Uses Ollama as primary, Groq as fallback, + Tavily for live web search
  * 
  * CRITICAL: Ensures RAG context from Pinecone is properly merged into the prompt
  */
@@ -60,8 +60,8 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
     return null;
   }
   
-  // ✅ UPGRADED: RAG engine now uses Groq directly
-  console.log(`🔍 [GROQ RAG] Using Groq API for RAG engine with query: "${query.substring(0, 50)}..."`);
+  // ✅ UPGRADED: RAG engine uses Ollama as primary, Groq as fallback, with Tavily for live web search
+  console.log(`🔍 [OLLAMA RAG] Using Ollama as primary for RAG engine with query: "${query.substring(0, 50)}..."`);
 
   try {
     // STEP 1: Retrieve relevant documents from Pinecone (both public and private namespaces)
@@ -195,52 +195,44 @@ ${tavilyContext}
 - Cite web sources when using them: [Web: Source Title]`;
     }
 
-    // STEP 7: Call AI with proper structure using Groq
-    // ✅ UPGRADED: Use Groq directly for RAG engine (faster, more reliable)
-    console.log(`🚀 [GROQ RAG] Calling Groq API with context (${context.length} chars), Tavily results (${tavilyResults.length}), and question (${query.length} chars)`);
+    // STEP 7: Call AI with proper structure using Ollama as primary
+    // ✅ UPGRADED: Use Ollama as primary, Groq as fallback, with Tavily for live web search
+    console.log(`🚀 [OLLAMA RAG] Calling Ollama API with context (${context.length} chars), Tavily results (${tavilyResults.length}), and question (${query.length} chars)`);
     
     let response = null;
     try {
-      // Use Groq directly for RAG
-      const groqConfig = getProviderByPriority('groq');
-      
-      if (!groqConfig || !groqConfig.apiKey) {
-        throw new Error('Groq API key not configured (VITE_GROQ_API_KEY)');
-      }
-      
-      console.log('🤖 [GROQ RAG] Using Groq API for RAG engine');
-      response = await callGroq(userPrompt, groqConfig, {
+      // Use Ollama as primary for RAG
+      console.log('🤖 [OLLAMA RAG] Using Ollama as primary for RAG engine');
+      response = await callAI(userPrompt, {
         systemPrompt: systemPrompt,
         maxTokens: 2048,
-        temperature: 0.7
+        temperature: 0.7,
+        userId: userId || null
       });
       
-      console.log('✅ [GROQ RAG] Response received from Groq');
-    } catch (groqError) {
-      console.error('❌ [RAG] Groq failed, trying Ollama fallback:', groqError.message);
+      console.log('✅ [OLLAMA RAG] Response received from Ollama');
+    } catch (ollamaError) {
+      console.error('❌ [RAG] Ollama failed, trying Groq fallback:', ollamaError.message);
       
-      // Fallback to Ollama if Groq fails
+      // Fallback to Groq if Ollama fails
       try {
-        response = await callAI(userPrompt, {
+        const groqConfig = getProviderByPriority('groq');
+        
+        if (!groqConfig || !groqConfig.apiKey) {
+          throw new Error('Groq API key not configured (VITE_GROQ_API_KEY)');
+        }
+        
+        console.log('🔄 [RAG FALLBACK] Switching to Groq API for RAG...');
+        response = await callGroq(userPrompt, groqConfig, {
           systemPrompt: systemPrompt,
           maxTokens: 2048,
-          temperature: 0.7,
-          userId: userId || null
+          temperature: 0.7
         });
-        console.log('✅ [RAG] Fallback to Ollama succeeded');
-      } catch (ollamaError) {
-        console.error('❌ [RAG] All providers failed:', ollamaError);
-        throw new Error('All RAG providers failed');
-            } catch (vertexError) {
-              console.error('❌ [RAG] All providers failed:', { ollama: ollamaError.message, groq: groqError.message });
-              throw new Error(`RAG failed: Ollama: ${ollamaError.message}, Groq: ${groqError.message}`);
-            }
-          } else {
-            throw new Error(`RAG failed: Ollama: ${ollamaError.message}, Groq: ${groqError.message}`);
-          }
-        }
-      } else {
-        throw new Error(`RAG failed: Ollama error: ${ollamaError.message}, Groq not configured`);
+        
+        console.log('✅ [RAG] Fallback to Groq succeeded');
+      } catch (groqError) {
+        console.error('❌ [RAG] All providers failed:', groqError);
+        throw new Error(`RAG failed: Ollama: ${ollamaError.message}, Groq: ${groqError.message}`);
       }
     }
 
@@ -249,15 +241,39 @@ ${tavilyContext}
       return null;
     }
 
-    // STEP 8: Append connection offer to response if available
+    // ✅ STEP 8: Learn from Tavily results using dual-brain learner
+    if (tavilyResults && tavilyResults.length > 0 && userId) {
+      // Process each Tavily result through dual-brain learner
+      Promise.all(
+        tavilyResults.map(async (result) => {
+          try {
+            // Combine title and content for learning
+            const learnableText = `${result.title || ''}\n${result.content || ''}`.trim();
+            if (learnableText.length > 20) {
+              const learnResult = await learnFromUserMessage(learnableText, userId);
+              if (learnResult.learned) {
+                console.log(`🧠 [Dual-Brain] Learned ${learnResult.type} from Tavily: ${learnResult.fact.substring(0, 50)}...`);
+              }
+            }
+          } catch (learnError) {
+            console.warn('⚠️ [RAG] Error learning from Tavily result (non-critical):', learnError.message);
+          }
+        })
+      ).catch(() => {
+        // Silent fail - learning is non-critical
+      });
+    }
+
+    // STEP 9: Append connection offer to response if available
     const finalResponse = connectionOffer 
       ? `${response}${connectionOffer}`
       : response;
 
+    const providerDisplay = 'Ollama (with Groq fallback)';
     console.log(`✅ [OLLAMA RAG] Response generated successfully using ${providerDisplay} (${finalResponse.length} characters)`);
     return finalResponse;
   } catch (error) {
-    console.error(`❌ [OLLAMA RAG] Error generating response with ${providerDisplay}:`, error);
+    console.error(`❌ [OLLAMA RAG] Error generating response:`, error);
     console.error(`❌ [OLLAMA RAG] Error details:`, {
       message: error.message,
       stack: error.stack,
