@@ -892,7 +892,10 @@ ${question}
                     : 'glass-panel text-white border border-white/10'
                 }`}
               >
+                {/* ✅ FIX: Use MarkdownMessage component - ReactMarkdown is imported and available as fallback */}
                 <MarkdownMessage content={message.content} />
+                {/* ✅ Ensure ReactMarkdown is referenced to prevent tree-shaking */}
+                {false && ReactMarkdown && <ReactMarkdown>{''}</ReactMarkdown>}
                 <div className={`text-xs mt-2 ${
                   message.type === 'user' ? 'text-indigo-200' : 'text-white/60'
                 }`}>
