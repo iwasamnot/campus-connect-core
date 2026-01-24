@@ -18,14 +18,15 @@ export { useTheme };
 // CRITICAL: Declare ThemeProvider as a top-level const (no export keyword here)
 const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
-    // Check localStorage first, then system preference
-    if (typeof window === 'undefined') return false;
+    // Check localStorage first, then default to dark mode
+    if (typeof window === 'undefined') return true; // Default to dark mode for SSR
     
     const saved = safeLocalStorage.getItem('darkMode');
     if (saved !== null) {
       return saved === 'true';
     }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // ✅ FIX: Default to dark mode instead of system preference
+    return true; // Default to dark mode
   });
 
   const [themeStyle, setThemeStyle] = useState(() => {
