@@ -474,11 +474,13 @@ Current Date: ${new Date().toLocaleDateString()}`;
       'Content-Type': 'application/json',
     };
     
-    // ✅ FIX: Add ngrok bypass header if using ngrok URL (free tier requires this)
-    if (targetUrl.includes('ngrok')) {
-      headers['ngrok-skip-browser-warning'] = 'true';
-      console.error('🔓 [OLLAMA] Added ngrok bypass header to skip browser warning page');
-    }
+    // ❌ REMOVED: ngrok-skip-browser-warning header causes CORS preflight failures
+    // The header is not allowed by Access-Control-Allow-Headers in preflight response
+    // The request will still work, but ngrok warning page may appear
+    // For production, use ngrok paid tier or configure server CORS to allow this header
+    // if (targetUrl.includes('ngrok')) {
+    //   headers['ngrok-skip-browser-warning'] = 'true';
+    // }
     
     const response = await fetch(targetUrl, {
       method: 'POST',
