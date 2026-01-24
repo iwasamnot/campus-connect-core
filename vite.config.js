@@ -16,6 +16,9 @@ export default defineConfig({
       'framer-motion',
       '@react-spring/web',
       'gsap',
+      // ✅ FIX: Ensure react-markdown and remark-gfm are pre-bundled
+      'react-markdown',
+      'remark-gfm',
       // Force Logo to be pre-bundled and always available
       './src/components/Logo.jsx'
     ],
@@ -473,7 +476,15 @@ export default defineConfig({
       treeshake: {
         preset: 'smallest',
         moduleSideEffects: false,
-        propertyReadSideEffects: false
+        propertyReadSideEffects: false,
+        // ✅ FIX: Preserve react-markdown imports to prevent tree-shaking
+        moduleSideEffects: (id) => {
+          // Don't tree-shake react-markdown or remark-gfm
+          if (id.includes('react-markdown') || id.includes('remark-gfm')) {
+            return true;
+          }
+          return false;
+        }
       },
       output: {
         manualChunks: (id) => {
