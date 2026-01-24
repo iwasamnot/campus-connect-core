@@ -885,27 +885,7 @@ ${question}
                     : 'glass-panel text-white border border-white/10'
                 }`}
               >
-                <div className="text-sm text-white/90 prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      // Custom styling for markdown elements
-                      h1: ({node, ...props}) => <h1 className="text-xl font-bold text-indigo-300 mt-4 mb-2" {...props} />,
-                      h2: ({node, ...props}) => <h2 className="text-lg font-bold text-indigo-300 mt-3 mb-2" {...props} />,
-                      h3: ({node, ...props}) => <h3 className="text-base font-bold text-indigo-300 mt-2 mb-1" {...props} />,
-                      strong: ({node, ...props}) => <strong className="font-bold text-indigo-300" {...props} />,
-                      p: ({node, ...props}) => <p className="my-1" {...props} />,
-                      ul: ({node, ...props}) => <ul className="list-disc ml-4 my-2" {...props} />,
-                      ol: ({node, ...props}) => <ol className="list-decimal ml-4 my-2" {...props} />,
-                      li: ({node, ...props}) => <li className="my-1" {...props} />,
-                      code: ({node, ...props}) => <code className="bg-white/10 px-1 py-0.5 rounded text-indigo-300" {...props} />,
-                      pre: ({node, ...props}) => <pre className="bg-white/5 p-2 rounded my-2 overflow-x-auto" {...props} />,
-                      a: ({node, ...props}) => <a className="text-indigo-400 hover:text-indigo-300 underline" {...props} />,
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                </div>
+                <MarkdownMessage content={message.content} />
                 <div className={`text-xs mt-2 ${
                   message.type === 'user' ? 'text-indigo-200' : 'text-white/60'
                 }`}>
