@@ -1,7 +1,7 @@
 {
   "name": "campusconnect",
   "private": true,
-  "version": "8.3.0",
+  "version": "8.3.1",
   "type": "module",
   "engines": {
     "node": ">=22.0.0",
