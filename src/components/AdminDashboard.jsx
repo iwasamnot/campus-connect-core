@@ -27,6 +27,7 @@ const isAdminRole = typeof window !== 'undefined' && window.__isAdminRole
   : (role) => role === 'admin' || role === 'admin1';
 import { motion } from 'framer-motion';
 import { Ban, AlertTriangle, Trash2, Filter, Download, Search, Calendar, User, ChevronDown, ChevronUp, FileText, MessageSquare, X, Shield, Settings } from 'lucide-react';
+import MarkdownMessage from './MarkdownMessage';
 // Use window.__LogoComponent directly to avoid import/export issues
 const Logo = typeof window !== 'undefined' && window.__LogoComponent 
   ? window.__LogoComponent 
@@ -1379,8 +1380,23 @@ const AdminDashboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-white/90 max-w-xs">
-                        <div className="truncate" title={message.text}>
-                          {message.text}
+                        <div className="truncate" title={message.displayText || message.text}>
+                          {/* ✅ FIX: Use MarkdownMessage for AI messages or any message with markdown */}
+                          {(() => {
+                            const messageText = message.displayText || message.text || '';
+                            const isAIMessage = message.isAI || message.userId === 'virtual-senior' || message.sender === 'Virtual Senior';
+                            const hasMarkdown = /(\*\*|__|\*|_|`|\[.*?\]\(.*?\)|###|##|#)/.test(messageText);
+                            
+                            if (isAIMessage || hasMarkdown) {
+                              return (
+                                <div className="max-w-xs overflow-hidden">
+                                  <MarkdownMessage content={messageText} />
+                                </div>
+                              );
+                            }
+                            
+                            return <span className="whitespace-pre-wrap break-words">{messageText}</span>;
+                          })()}
                         </div>
                         {message.edited && (
                           <span className="text-xs text-white/40 italic">(edited)</span>
