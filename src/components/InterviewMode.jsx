@@ -270,16 +270,16 @@ const InterviewMode = ({ onClose }) => {
     
     try {
       // Start voice mode
-      console.log('🎤 [InterviewMode] Starting voice mode...');
+      console.error('🎤 [InterviewMode] Starting voice mode...');
       const voiceStarted = await startVoiceMode();
       if (!voiceStarted) {
-        const error = 'Failed to start voice mode. Please check microphone permissions.';
+        const error = voiceError || 'Failed to start voice mode. Please check microphone permissions and try again.';
         console.error('❌ [InterviewMode]', error);
         showError(error);
         setIsInterviewActive(false);
         return;
       }
-      console.log('✅ [InterviewMode] Voice mode started');
+      console.error('✅ [InterviewMode] Voice mode started successfully');
 
       // Generate first question
       console.log('🤖 [InterviewMode] Generating first question...');
@@ -292,12 +292,15 @@ const InterviewMode = ({ onClose }) => {
       setInterviewHistory([]);
       setOverallScore(null);
 
-      // Speak the question
-      console.log('🔊 [InterviewMode] Speaking question...');
-      speakText(`Let's begin. ${firstQuestion}`);
+      // Speak the question (with delay to ensure TTS is ready)
+      console.error('🔊 [InterviewMode] Speaking question...');
+      setTimeout(() => {
+        speakText(`Let's begin. ${firstQuestion}`);
+        console.error('✅ [InterviewMode] Question spoken');
+      }, 500); // Small delay to ensure audio context is ready
       
       success('Interview started! Listen for the first question.');
-      console.log('✅ [InterviewMode] Interview started successfully');
+      console.error('✅ [InterviewMode] Interview started successfully');
     } catch (error) {
       console.error('❌ [InterviewMode] Error starting interview:', error);
       console.error('Error details:', {
@@ -477,6 +480,57 @@ const InterviewMode = ({ onClose }) => {
               className="mt-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 max-w-2xl mx-auto"
             >
               <p className="text-white/80 text-center">{interimTranscript}</p>
+            </motion.div>
+          )}
+
+          {/* Error Display */}
+          {voiceError && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-4 bg-red-500/20 backdrop-blur-sm rounded-xl border border-red-500/30 max-w-2xl mx-auto"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="text-red-400" size={20} />
+                <p className="text-red-300 text-sm">{voiceError}</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Mic Status Indicator */}
+          {isInterviewActive && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 flex items-center justify-center gap-4"
+            >
+              <div className="flex items-center gap-2">
+                {isListening ? (
+                  <>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="w-3 h-3 bg-green-500 rounded-full"
+                    />
+                    <span className="text-green-400 text-sm">Listening...</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-3 h-3 bg-gray-500 rounded-full" />
+                    <span className="text-gray-400 text-sm">Not listening</span>
+                  </>
+                )}
+              </div>
+              {isSpeaking && (
+                <div className="flex items-center gap-2">
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="w-3 h-3 bg-blue-500 rounded-full"
+                  />
+                  <span className="text-blue-400 text-sm">Speaking...</span>
+                </div>
+              )}
             </motion.div>
           )}
 
