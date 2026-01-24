@@ -1,7 +1,7 @@
 /**
  * RAG System - Main Integration
  * Combines retrieval and generation for RAG-powered responses
- * Uses Ollama (primary) or Groq (fallback) for AI generation
+ * ✅ UPGRADED: Uses Groq directly for RAG engine + Tavily for live web search
  * 
  * CRITICAL: Ensures RAG context from Pinecone is properly merged into the prompt
  */
