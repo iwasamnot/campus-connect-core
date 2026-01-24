@@ -320,13 +320,6 @@ const GlobalCommons = () => {
                         
                         return <span className="whitespace-pre-wrap break-words">{messageText}</span>;
                       })()}
-                        <div className="flex items-center gap-2">
-                          <Loader className="animate-spin" size={14} />
-                          <span className="text-white/70">Translating...</span>
-                        </div>
-                      ) : (
-                        displayText
-                      )}
                     </div>
                   </div>
 
