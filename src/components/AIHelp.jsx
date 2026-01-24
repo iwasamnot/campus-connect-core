@@ -11,9 +11,17 @@ import { useAuth } from '../context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MarkdownMessage from './MarkdownMessage';
-// ✅ Ensure ReactMarkdown is available globally as fallback
+// ✅ CRITICAL: Ensure ReactMarkdown is available globally as fallback
+// Force reference to prevent tree-shaking - this MUST execute
 if (typeof window !== 'undefined') {
   window.ReactMarkdown = ReactMarkdown;
+  window.remarkGfm = remarkGfm;
+  // Force a reference that can't be optimized away
+  if (!window.__REACT_MARKDOWN_LOADED) {
+    window.__REACT_MARKDOWN_LOADED = true;
+    // This ensures the import is never tree-shaken
+    console.log('✅ ReactMarkdown loaded:', typeof ReactMarkdown);
+  }
 }
 
 
@@ -892,10 +900,33 @@ ${question}
                     : 'glass-panel text-white border border-white/10'
                 }`}
               >
-                {/* ✅ FIX: Use MarkdownMessage component - ReactMarkdown is imported and available as fallback */}
-                <MarkdownMessage content={message.content} />
-                {/* ✅ Ensure ReactMarkdown is referenced to prevent tree-shaking */}
-                {false && ReactMarkdown && <ReactMarkdown>{''}</ReactMarkdown>}
+                {/* ✅ FIX: Use MarkdownMessage component with direct ReactMarkdown fallback */}
+                {(() => {
+                  try {
+                    // Try MarkdownMessage first (preferred)
+                    return <MarkdownMessage content={message.content} />;
+                  } catch (error) {
+                    // Fallback: Use ReactMarkdown directly if MarkdownMessage fails
+                    console.warn('MarkdownMessage failed, using ReactMarkdown directly:', error);
+                    if (typeof ReactMarkdown !== 'undefined') {
+                      return (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content || ''}
+                        </ReactMarkdown>
+                      );
+                    } else if (typeof window !== 'undefined' && window.ReactMarkdown) {
+                      const FallbackMarkdown = window.ReactMarkdown;
+                      return (
+                        <FallbackMarkdown remarkPlugins={[window.remarkGfm]}>
+                          {message.content || ''}
+                        </FallbackMarkdown>
+                      );
+                    } else {
+                      // Last resort: plain text
+                      return <div className="text-white/90 whitespace-pre-wrap">{message.content}</div>;
+                    }
+                  }
+                })()}
                 <div className={`text-xs mt-2 ${
                   message.type === 'user' ? 'text-indigo-200' : 'text-white/60'
                 }`}>
