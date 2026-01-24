@@ -132,8 +132,14 @@
      crossorigin="anonymous"></script>
     
     <title>CampusConnect - Your Campus Connected Anywhere</title>
+    <!-- ✅ Default dark mode class to prevent flash of light mode -->
+    <script>
+      // Apply dark mode immediately to prevent flash of light mode
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    </script>
   </head>
-  <body>
+  <body class="dark">
     <div id="root">
       <!-- Loading fallback - shown if React fails to load -->
       <div id="loading-fallback" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui;">
