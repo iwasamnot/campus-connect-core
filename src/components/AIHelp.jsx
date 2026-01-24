@@ -7,10 +7,14 @@ import { Send, Bot, Loader, BookOpen, GraduationCap, MapPin, Phone, Mail, Calend
 import { callAI, getAIProvider } from '../utils/aiProvider';
 import { getUserProfile, updateProfileFromConversation, getPersonalizedSystemPrompt, updateAssistantName } from '../utils/userProfileAI';
 import { useAuth } from '../context/AuthContext';
-import MarkdownMessage from './MarkdownMessage';
-// ✅ FIX: Import ReactMarkdown and remarkGfm directly as fallback (in case production build has old code)
+// ✅ FIX: Import ReactMarkdown and remarkGfm FIRST to ensure they're available
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import MarkdownMessage from './MarkdownMessage';
+// ✅ Ensure ReactMarkdown is available globally as fallback
+if (typeof window !== 'undefined') {
+  window.ReactMarkdown = ReactMarkdown;
+}
 
 
 // Enhanced SISTC Knowledge Base with more detailed information
