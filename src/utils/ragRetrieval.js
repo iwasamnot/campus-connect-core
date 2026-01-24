@@ -104,10 +104,16 @@ export class RAGRetrieval {
   }
 
   /**
-   * Retrieve relevant documents for a query
+   * Retrieve relevant documents for a query from both public and private namespaces
    * NOW QUERIES PINECONE if configured, otherwise falls back to local documents
+   * 
+   * @param {string} queryText - Query text
+   * @param {number} topK - Number of results per namespace
+   * @param {number} minSimilarity - Minimum similarity threshold
+   * @param {string} userId - Optional user ID for private namespace queries
+   * @returns {Promise<Array>} - Combined results from public and private namespaces
    */
-  async retrieve(queryText, topK = 10, minSimilarity = 0.3) {
+  async retrieve(queryText, topK = 10, minSimilarity = 0.3, userId = null) {
     if (!queryText || queryText.trim().length === 0) {
       return [];
     }
@@ -132,8 +138,67 @@ export class RAGRetrieval {
           return this.retrieveLocal(queryText, topK, minSimilarity);
         }
 
-        // Query Pinecone
-        console.log(`🔍 [Pinecone] Querying with ${queryEmbedding.length}-dimensional vector (topK: ${topK}, minSimilarity: ${minSimilarity})`);
+        // ✅ UPGRADED: Query both public and private namespaces
+        const allDocuments = [];
+        
+        // 1. Query Public Namespace (University Facts)
+        console.log(`🔍 [Pinecone] Querying PUBLIC namespace with ${queryEmbedding.length}-dimensional vector`);
+        try {
+          const publicNamespace = this.pineconeIndex.namespace('sistc-public');
+          const publicResults = await publicNamespace.query({
+            vector: queryEmbedding,
+            topK: Math.floor(topK * 0.7), // 70% from public
+            includeMetadata: true,
+          });
+          
+          if (publicResults.matches && publicResults.matches.length > 0) {
+            console.log(`✅ [Pinecone] Retrieved ${publicResults.matches.length} matches from PUBLIC namespace`);
+            allDocuments.push(...this.convertMatchesToDocuments(publicResults.matches, minSimilarity, 'public'));
+          }
+        } catch (namespaceError) {
+          console.warn('⚠️ [Pinecone] Public namespace query failed, trying default:', namespaceError);
+          // Fallback to default namespace
+          const results = await this.pineconeIndex.query({
+            vector: queryEmbedding,
+            topK: topK,
+            includeMetadata: true,
+          });
+          if (results.matches && results.matches.length > 0) {
+            allDocuments.push(...this.convertMatchesToDocuments(results.matches, minSimilarity, 'default'));
+          }
+        }
+        
+        // 2. Query Private Namespace (User Profile) - Only if userId provided
+        if (userId) {
+          try {
+            const userNamespace = this.pineconeIndex.namespace(`user_context_${userId}`);
+            const userResults = await userNamespace.query({
+              vector: queryEmbedding,
+              topK: Math.floor(topK * 0.3), // 30% from user profile
+              includeMetadata: true,
+            });
+            
+            if (userResults.matches && userResults.matches.length > 0) {
+              console.log(`👤 [Pinecone] Retrieved ${userResults.matches.length} matches from USER namespace`);
+              allDocuments.push(...this.convertMatchesToDocuments(userResults.matches, minSimilarity, 'user'));
+            }
+          } catch (userNamespaceError) {
+            console.warn('⚠️ [Pinecone] User namespace query failed (may not exist yet):', userNamespaceError.message);
+          }
+        }
+        
+        // Use combined results if we have namespace results, otherwise fall back to old method
+        if (allDocuments.length > 0) {
+          // Remove duplicates and sort by weighted score
+          const uniqueDocs = this.deduplicateDocuments(allDocuments);
+          const sortedDocs = uniqueDocs.sort((a, b) => (b.metadata.weightedScore || 0) - (a.metadata.weightedScore || 0));
+          
+          console.log(`✅ [Pinecone] Returning ${sortedDocs.length} combined documents (public + user)`);
+          return sortedDocs.slice(0, topK); // Limit to topK
+        }
+        
+        // Fallback: Query default namespace if namespace queries failed
+        console.log(`🔍 [Pinecone] Querying DEFAULT namespace with ${queryEmbedding.length}-dimensional vector (topK: ${topK}, minSimilarity: ${minSimilarity})`);
         const results = await this.pineconeIndex.query({
           vector: queryEmbedding,
           topK: topK,
@@ -142,46 +207,7 @@ export class RAGRetrieval {
 
         if (results.matches && results.matches.length > 0) {
           console.log(`✅ [Pinecone] Retrieved ${results.matches.length} matches from Pinecone`);
-          
-          // Convert Pinecone matches to KnowledgeDocument format
-          // ✅ UPGRADED: Apply trust weighting to scores
-          const documents = results.matches
-            .filter(match => {
-              const baseScore = match.score || 0;
-              if (baseScore < minSimilarity) {
-                console.log(`   ⚠️ Filtered out match (score: ${baseScore.toFixed(3)} < ${minSimilarity})`);
-                return false;
-              }
-              return true;
-            })
-            .map(match => {
-              // Apply trust weight to score (higher trust = boosted score)
-              const trustWeight = match.metadata?.retrieval_weight || match.metadata?.trust_weight || 1.0;
-              const trustTier = match.metadata?.trust_tier || 3;
-              const weightedScore = (match.score || 0) * trustWeight;
-              
-              const doc = new KnowledgeDocument({
-                id: match.id,
-                text: match.metadata?.text || match.metadata?.content || '',
-                metadata: {
-                  title: match.metadata?.title || 'Document',
-                  category: match.metadata?.category || 'general',
-                  source: match.metadata?.source || 'Pinecone',
-                  score: match.score, // Original score
-                  weightedScore: weightedScore, // Weighted score for sorting
-                  trustTier: trustTier,
-                  trustWeight: trustWeight,
-                  confidence: match.metadata?.confidence || 1.0
-                },
-                embedding: null // Don't store embedding in document object
-              });
-              
-              const trustLabel = trustTier === 1 ? '🔒 High' : trustTier === 2 ? '📄 Medium' : '💬 Low';
-              console.log(`   📄 Match: "${doc.metadata.title}" (score: ${match.score?.toFixed(3)}, weighted: ${weightedScore.toFixed(3)}, ${trustLabel} trust)`);
-              return doc;
-            })
-            // Sort by weighted score (highest first) to prioritize high-trust sources
-            .sort((a, b) => (b.metadata.weightedScore || 0) - (a.metadata.weightedScore || 0));
+          const documents = this.convertMatchesToDocuments(results.matches, minSimilarity, 'default');
           
           if (documents.length > 0) {
             console.log(`✅ [Pinecone] Returning ${documents.length} documents after filtering`);
@@ -208,6 +234,65 @@ export class RAGRetrieval {
 
     // PRIORITY 2: Fallback to local document search
     return this.retrieveLocal(queryText, topK, minSimilarity);
+  }
+
+  /**
+   * Convert Pinecone matches to KnowledgeDocument format
+   * @private
+   */
+  convertMatchesToDocuments(matches, minSimilarity, namespaceType = 'default') {
+    return matches
+      .filter(match => {
+        const baseScore = match.score || 0;
+        if (baseScore < minSimilarity) {
+          console.log(`   ⚠️ Filtered out match (score: ${baseScore.toFixed(3)} < ${minSimilarity})`);
+          return false;
+        }
+        return true;
+      })
+      .map(match => {
+        // Apply trust weight to score (higher trust = boosted score)
+        const trustWeight = match.metadata?.retrieval_weight || match.metadata?.trust_weight || 1.0;
+        const trustTier = match.metadata?.trust_tier || 3;
+        const weightedScore = (match.score || 0) * trustWeight;
+        
+        const doc = new KnowledgeDocument({
+          id: match.id,
+          text: match.metadata?.text || match.metadata?.content || '',
+          metadata: {
+            title: match.metadata?.title || 'Document',
+            category: match.metadata?.category || 'general',
+            source: match.metadata?.source || 'Pinecone',
+            namespace: namespaceType,
+            score: match.score, // Original score
+            weightedScore: weightedScore, // Weighted score for sorting
+            trustTier: trustTier,
+            trustWeight: trustWeight,
+            confidence: match.metadata?.confidence || 1.0
+          },
+          embedding: null // Don't store embedding in document object
+        });
+        
+        const trustLabel = trustTier === 1 ? '🔒 High' : trustTier === 2 ? '📄 Medium' : '💬 Low';
+        const namespaceLabel = namespaceType === 'user' ? '👤' : namespaceType === 'public' ? '🌍' : '📚';
+        console.log(`   ${namespaceLabel} Match: "${doc.metadata.title}" (score: ${match.score?.toFixed(3)}, weighted: ${weightedScore.toFixed(3)}, ${trustLabel} trust)`);
+        return doc;
+      });
+  }
+
+  /**
+   * Remove duplicate documents based on ID
+   * @private
+   */
+  deduplicateDocuments(documents) {
+    const seen = new Set();
+    return documents.filter(doc => {
+      if (seen.has(doc.id)) {
+        return false;
+      }
+      seen.add(doc.id);
+      return true;
+    });
   }
   
   /**

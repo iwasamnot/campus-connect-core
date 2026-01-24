@@ -159,7 +159,7 @@ Provide a concise, factual summary (2-4 sentences) that can be stored in the kno
  * @param {number} similarityThreshold - Minimum similarity score (0-1)
  * @returns {Promise<{id: string, score: number} | null>} - Duplicate match or null
  */
-const checkForDuplicate = async (embedding, text, similarityThreshold = 0.90) => {
+export const checkForDuplicate = async (embedding, text, similarityThreshold = 0.90) => {
   try {
     if (!ragRetrieval.pineconeConfigured || !ragRetrieval.pineconeIndex) {
       return null;
@@ -208,7 +208,7 @@ const checkForDuplicate = async (embedding, text, similarityThreshold = 0.90) =>
  * @param {Object} metadata - Updated metadata
  * @returns {Promise<boolean>} - Success status
  */
-const updateExistingRecord = async (id, text, embedding, metadata = {}) => {
+export const updateExistingRecord = async (id, text, embedding, metadata = {}) => {
   try {
     if (!ragRetrieval.pineconeConfigured || !ragRetrieval.pineconeIndex) {
       return false;

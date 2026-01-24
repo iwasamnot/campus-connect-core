@@ -64,12 +64,13 @@ export const generateRAGResponse = async (query, conversationHistory = [], model
   console.log(`🔍 [OLLAMA RAG] Using provider: ${providerDisplay} for query: "${query.substring(0, 50)}..."`);
 
   try {
-    // STEP 1: Retrieve relevant documents from Pinecone
+    // STEP 1: Retrieve relevant documents from Pinecone (both public and private namespaces)
     // CRITICAL: Lowered threshold from 0.2 to 0.01 to accept matches from different embedding models
     // We're mixing Google embeddings (in Pinecone) with hash-based query embeddings, which results in low scores
     // Accept ANY match (0.01) rather than sending zero context
-    const retrievedDocs = await ragRetrieval.retrieve(query, 10, 0.01);
-    console.log(`📚 [OLLAMA RAG] Retrieved ${retrievedDocs.length} documents from Pinecone`);
+    // ✅ UPGRADED: Now retrieves from both public (university facts) and private (user profile) namespaces
+    const retrievedDocs = await ragRetrieval.retrieve(query, 10, 0.01, userId);
+    console.log(`📚 [OLLAMA RAG] Retrieved ${retrievedDocs.length} documents from Pinecone (public + user namespaces)`);
     
     // STEP 2: Format context from retrieved documents - all 10 results joined cleanly
     // CRITICAL: This is where Pinecone data is merged into the context string
