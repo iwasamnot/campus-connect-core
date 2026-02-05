@@ -172,10 +172,13 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
+// Clear all caches and unregister service workers IMMEDIATELY
+if ('serviceWorker' in navigator && 'caches' in window) {
+  console.log('Starting aggressive cache cleanup...');
+  
   // Force unregister all service workers and clear all caches
   navigator.serviceWorker.getRegistrations().then(registrations => {
+    console.log(`Found ${registrations.length} service worker registrations`);
     return Promise.all(registrations.map(registration => {
       console.log('Unregistering service worker:', registration.scope);
       return registration.unregister();
@@ -185,6 +188,7 @@ if ('serviceWorker' in navigator) {
     // Clear all caches
     return caches.keys();
   }).then(cacheNames => {
+    console.log(`Found ${cacheNames.length} caches to delete`);
     return Promise.all(
       cacheNames.map(cacheName => {
         console.log(`Deleting cache: ${cacheName}`);
@@ -194,11 +198,16 @@ if ('serviceWorker' in navigator) {
   }).then(() => {
     console.log('All caches cleared, reloading page...');
     // Force reload to ensure clean state
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   }).catch(err => {
     console.log('Service worker cleanup failed:', err);
   });
-  
+}
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // VitePWA plugin will auto-register, but we can add custom handling here
     navigator.serviceWorker.ready.then((registration) => {
