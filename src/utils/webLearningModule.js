@@ -185,6 +185,103 @@ class WebLearningModule {
     }
   }
 
+  async learnFromText(text, topic = 'general', source = 'manual') {
+    try {
+      console.log(`Learning from text: ${topic}`);
+      
+      // Process and structure the text content
+      const knowledge = await this.processTextContent(text, topic, source);
+      
+      // Add to RAG system
+      const rag = getAdvancedRAG();
+      await rag.addToKnowledgeBase(knowledge.points, source);
+      
+      // Track source
+      this.sources.set(`manual_${Date.now()}`, {
+        topic,
+        timestamp: Date.now(),
+        pointsCount: knowledge.points.length,
+        title: `Manual: ${topic}`,
+        source: 'manual'
+      });
+
+      return {
+        topic,
+        pointsAdded: knowledge.points.length,
+        title: `Manual: ${topic}`,
+        summary: knowledge.summary,
+        source: 'manual'
+      };
+
+    } catch (error) {
+      console.error('Error learning from text:', error);
+      return null;
+    }
+  }
+
+  async processTextContent(content, topic, source) {
+    // Process text content into knowledge points
+    const { callAI } = await import('./aiProvider');
+    
+    const prompt = `Extract key knowledge points from this text about ${topic}:
+
+Content: ${content}
+
+Extract and format as:
+1. Clear, factual statements
+2. Important definitions
+3. Key concepts
+4. Notable features or facts
+5. Action items or steps (if applicable)
+
+Each point should be a complete sentence that can stand alone.
+Format as a numbered list.`;
+
+    try {
+      const response = await callAI(prompt, {
+        provider: 'groq',
+        model: 'llama3-70b-8192'
+      });
+
+      const points = response
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+        .filter(line => line.length > 20); // Filter out very short lines
+
+      // Generate summary
+      const summaryPrompt = `Summarize this content in 2-3 sentences:
+${content.substring(0, 1000)}...`;
+
+      const summary = await callAI(summaryPrompt, {
+        provider: 'groq',
+        model: 'llama3-70b-8192'
+      });
+
+      return {
+        title: `${topic} - Manual Entry`,
+        points,
+        summary,
+        links: []
+      };
+
+    } catch (error) {
+      console.error('Content processing error:', error);
+      
+      // Fallback: simple text splitting
+      const sentences = content.split(/[.!?]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 20);
+
+      return {
+        title: `${topic} - Manual Entry`,
+        points: sentences.slice(0, 10),
+        summary: content.substring(0, 200) + '...',
+        links: []
+      };
+    }
+  }
+
   async processContent(content, topic, url) {
     // Process extracted content into knowledge points
     const { callAI } = await import('./aiProvider');
@@ -324,6 +421,11 @@ export const getWebLearning = () => {
 export const learnFromUrl = (url, options) => {
   const learner = getWebLearning();
   return learner.learnFromUrl(url, options);
+};
+
+export const learnFromText = (text, topic, source) => {
+  const learner = getWebLearning();
+  return learner.learnFromText(text, topic, source);
 };
 
 export const learnFromSearch = (query, topic, maxResults) => {

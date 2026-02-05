@@ -231,6 +231,13 @@ class AdvancedRAGSystem {
     this.webLearner = new WebLearner();
     this.conversationMemories = new Map();
     this.isInitialized = false;
+    this.autoLearningEnabled = true;
+    this.learningStats = {
+      conversationsLearned: 0,
+      webSearchesPerformed: 0,
+      knowledgeItemsAdded: 0,
+      lastLearningActivity: null
+    };
   }
 
   async initialize(userId) {
@@ -323,6 +330,9 @@ Response:`;
       // 6. Check if we should learn from this interaction
       await this.checkAndLearn(message, response);
 
+      // 7. Trigger automatic web learning if needed
+      await this.checkAndLearnFromWeb(message);
+
       return {
         response,
         sources: knowledgeResults.map(r => r.text),
@@ -363,6 +373,77 @@ Response:`;
     return context;
   }
 
+  async checkAndLearnFromWeb(message) {
+    if (!this.autoLearningEnabled) return;
+
+    // Check if message contains questions that need web research
+    const researchKeywords = [
+      'what is', 'latest', 'current', 'recent', 'news', 'update',
+      'how to', 'tutorial', 'guide', 'explain', 'definition',
+      'statistics', 'data', 'research', 'study', 'report'
+    ];
+    
+    const hasResearchKeyword = researchKeywords.some(keyword => 
+      message.toLowerCase().includes(keyword)
+    );
+
+    if (hasResearchKeyword) {
+      // Extract potential search terms from the message
+      const searchTerms = this.extractSearchTerms(message);
+      
+      if (searchTerms.length > 0) {
+        // Schedule web learning (don't block the response)
+        setTimeout(async () => {
+          try {
+            const { learnFromSearch } = await import('./webLearningModule');
+            
+            let totalItemsLearned = 0;
+            for (const term of searchTerms.slice(0, 2)) { // Limit to 2 searches
+              const results = await learnFromSearch(term, 'auto-learn', 3);
+              totalItemsLearned += results.reduce((sum, r) => sum + (r.pointsAdded || 0), 0);
+              
+              // Small delay between searches
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            this.learningStats.webSearchesPerformed += searchTerms.slice(0, 2).length;
+            this.learningStats.knowledgeItemsAdded += totalItemsLearned;
+            this.learningStats.lastLearningActivity = Date.now();
+            
+            console.log(`Auto-learned from web for: ${searchTerms.join(', ')}`);
+          } catch (error) {
+            console.error('Auto web learning failed:', error);
+          }
+        }, 1000); // Delay to not interfere with response
+      }
+    }
+  }
+
+  extractSearchTerms(message) {
+    // Extract key phrases that would make good search terms
+    const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'what', 'how', 'when', 'where', 'why'];
+    
+    const words = message.toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.includes(word));
+    
+    // Look for 2-3 word phrases
+    const phrases = [];
+    for (let i = 0; i < words.length - 1; i++) {
+      phrases.push(words[i] + ' ' + words[i + 1]);
+    }
+    
+    for (let i = 0; i < words.length - 2; i++) {
+      phrases.push(words[i] + ' ' + words[i + 1] + ' ' + words[i + 2]);
+    }
+    
+    // Return unique phrases, prioritized by length
+    return [...new Set(phrases)]
+      .sort((a, b) => b.length - a.length)
+      .slice(0, 5);
+  }
+
   calculateConfidence(knowledgeResults, memories) {
     const knowledgeScore = knowledgeResults.reduce((sum, r) => sum + r.similarity, 0) / Math.max(knowledgeResults.length, 1);
     const memoryScore = memories.length > 0 ? 0.3 : 0;
@@ -370,17 +451,26 @@ Response:`;
   }
 
   async checkAndLearn(message, response) {
+    if (!this.autoLearningEnabled) return;
+
     // Check if this is new information we should learn
-    const learningKeywords = ['new information', 'did you know', 'fact', 'research', 'study'];
+    const learningKeywords = ['new information', 'did you know', 'fact', 'research', 'study', 'important', 'remember', 'note'];
     const hasLearningKeyword = learningKeywords.some(keyword => 
       message.toLowerCase().includes(keyword) || response.toLowerCase().includes(keyword)
     );
 
-    if (hasLearningKeyword) {
+    // Also learn from corrections and detailed explanations
+    const isCorrection = message.toLowerCase().includes('actually') || message.toLowerCase().includes('correct');
+    const isDetailedExplanation = response.length > 300 && message.includes('?');
+
+    if (hasLearningKeyword || isCorrection || isDetailedExplanation) {
       // Extract potential learning content
       const learningContent = await this.extractLearningContent(message, response);
       if (learningContent) {
         await this.addToKnowledgeBase(learningContent, 'conversation');
+        this.learningStats.conversationsLearned++;
+        this.learningStats.knowledgeItemsAdded += learningContent.length;
+        this.learningStats.lastLearningActivity = Date.now();
       }
     }
   }
@@ -392,14 +482,25 @@ Response:`;
 User: ${message}
 Assistant: ${response}
 
-Return only the key facts, one per line, that would be useful to remember.`;
+Return only the key facts, one per line, that would be useful to remember:
+- Facts and definitions
+- Important procedures or steps
+- Key insights or explanations
+- Corrections to misconceptions
+
+Format as a numbered list.`;
 
       const result = await callAI(prompt, {
         provider: 'groq',
         model: 'llama3-70b-8192'
       });
 
-      return result.split('\n').filter(line => line.trim().length > 0);
+      const facts = result.split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+        .filter(line => line.length > 15);
+
+      return facts.length > 0 ? facts : null;
     } catch (error) {
       console.error('Error extracting learning content:', error);
       return null;
@@ -445,7 +546,36 @@ Return only the key facts, one per line, that would be useful to remember.`;
       vectorStoreSize: this.vectorStore.vectors.size,
       isInitialized: this.isInitialized,
       learningQueueSize: this.webLearner.learningQueue.length,
-      memoryUsers: this.conversationMemories.size
+      memoryUsers: this.conversationMemories.size,
+      autoLearningEnabled: this.autoLearningEnabled,
+      learningStats: { ...this.learningStats }
+    };
+  }
+
+  // Control auto-learning
+  setAutoLearning(enabled) {
+    this.autoLearningEnabled = enabled;
+    console.log(`Auto-learning ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  // Get detailed learning statistics
+  getLearningStats() {
+    return {
+      ...this.learningStats,
+      autoLearningEnabled: this.autoLearningEnabled,
+      lastLearningActivityFormatted: this.learningStats.lastLearningActivity 
+        ? new Date(this.learningStats.lastLearningActivity).toLocaleString()
+        : 'Never'
+    };
+  }
+
+  // Reset learning statistics
+  resetLearningStats() {
+    this.learningStats = {
+      conversationsLearned: 0,
+      webSearchesPerformed: 0,
+      knowledgeItemsAdded: 0,
+      lastLearningActivity: null
     };
   }
 }

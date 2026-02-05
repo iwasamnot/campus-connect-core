@@ -3,16 +3,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Globe, Database, Settings, TrendingUp, BookOpen, Zap, RefreshCw, Plus, Search, Filter, Trash2 } from 'lucide-react';
 import { getAdvancedRAG } from '../utils/advancedRAGSystem';
 import { getKnowledgeManager } from '../utils/knowledgeManager';
-import { getWebLearning } from '../utils/webLearningModule';
+import { getWebLearning, learnFromText } from '../utils/webLearningModule';
 
 const RAGManager = ({ userId }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
+  const [learningStats, setLearningStats] = useState(null);
+  const [autoLearningEnabled, setAutoLearningEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [learningUrl, setLearningUrl] = useState('');
   const [learningTopic, setLearningTopic] = useState('');
+  const [learningText, setLearningText] = useState('');
   const [newKnowledge, setNewKnowledge] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('academic');
   const [categories, setCategories] = useState([]);
@@ -32,12 +35,16 @@ const RAGManager = ({ userId }) => {
       const ragStats = rag.getStats();
       const knowledgeStats = await knowledgeManager.getStats();
       const webStats = webLearner.getStats();
+      const learningStats = rag.getLearningStats();
 
       setStats({
         rag: ragStats,
         knowledge: knowledgeStats,
         web: webStats
       });
+      
+      setLearningStats(learningStats);
+      setAutoLearningEnabled(ragStats.autoLearningEnabled);
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -49,6 +56,45 @@ const RAGManager = ({ userId }) => {
       setCategories(Array.from(knowledgeManager.categories.entries()));
     } catch (error) {
       console.error('Error loading categories:', error);
+    }
+  };
+
+  const handleAutoLearningToggle = async () => {
+    try {
+      rag.setAutoLearning(!autoLearningEnabled);
+      setAutoLearningEnabled(!autoLearningEnabled);
+      showNotification(`Auto-learning ${!autoLearningEnabled ? 'enabled' : 'disabled'}`, 'success');
+      loadStats();
+    } catch (error) {
+      console.error('Error toggling auto-learning:', error);
+      showNotification('Failed to toggle auto-learning', 'error');
+    }
+  };
+
+  const handleLearnFromText = async () => {
+    if (!learningText.trim()) return;
+
+    setLoading(true);
+    try {
+      const result = await learnFromText(
+        learningText,
+        learningTopic || 'general',
+        'manual'
+      );
+      
+      if (result) {
+        showNotification(`Successfully learned from text: ${result.pointsAdded} points added`, 'success');
+        setLearningText('');
+        setLearningTopic('');
+        loadStats();
+      } else {
+        showNotification('Failed to learn from text', 'error');
+      }
+    } catch (error) {
+      console.error('Text learning error:', error);
+      showNotification('Text learning failed', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -153,7 +199,7 @@ const RAGManager = ({ userId }) => {
 
   const renderOverview = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -194,31 +240,59 @@ const RAGManager = ({ userId }) => {
           <h3 className="text-lg font-semibold text-white mb-1">Web Sources</h3>
           <p className="text-sm text-gray-400">Websites learned from</p>
         </motion.div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="glass-panel p-6 rounded-xl"
         >
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+          <div className="flex items-center justify-between mb-4">
+            <Zap className={`w-8 h-8 ${autoLearningEnabled ? 'text-yellow-400' : 'text-gray-400'}`} />
+            <span className="text-2xl font-bold text-white">{learningStats?.conversationsLearned || 0}</span>
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-1">Auto-Learned</h3>
+          <p className="text-sm text-gray-400">From conversations</p>
+        </motion.div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="glass-panel p-6 rounded-xl"
+        >
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center justify-between">
             <TrendingUp className="w-5 h-5 mr-2 text-yellow-400" />
-            Usage Statistics
+            Learning Statistics
+            <button
+              onClick={handleAutoLearningToggle}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                autoLearningEnabled 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : 'bg-gray-600 hover:bg-gray-700 text-white'
+              }`}
+            >
+              {autoLearningEnabled ? 'Enabled' : 'Disabled'}
+            </button>
           </h3>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Verified Knowledge</span>
-              <span className="text-white">{stats?.knowledge?.verifiedCount || 0}</span>
+              <span className="text-gray-400">Conversations Learned</span>
+              <span className="text-white">{learningStats?.conversationsLearned || 0}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Outdated Items</span>
-              <span className="text-white">{stats?.knowledge?.outdatedCount || 0}</span>
+              <span className="text-gray-400">Web Searches Performed</span>
+              <span className="text-white">{learningStats?.webSearchesPerformed || 0}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Average Usage</span>
-              <span className="text-white">{stats?.knowledge?.averageUsageCount?.toFixed(1) || 0}</span>
+              <span className="text-gray-400">Knowledge Items Added</span>
+              <span className="text-white">{learningStats?.knowledgeItemsAdded || 0}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Last Activity</span>
+              <span className="text-white">{learningStats?.lastLearningActivityFormatted || 'Never'}</span>
             </div>
           </div>
         </motion.div>
@@ -226,7 +300,7 @@ const RAGManager = ({ userId }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="glass-panel p-6 rounded-xl"
         >
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
@@ -304,7 +378,57 @@ const RAGManager = ({ userId }) => {
         className="glass-panel p-6 rounded-xl"
       >
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-          <Plus className="w-5 h-5 mr-2 text-green-400" />
+          <BookOpen className="w-5 h-5 mr-2 text-green-400" />
+          Learn from Text
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Text Content
+            </label>
+            <textarea
+              value={learningText}
+              onChange={(e) => setLearningText(e.target.value)}
+              placeholder="Paste any text, article, or document to learn from..."
+              rows={6}
+              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Topic (Optional)
+            </label>
+            <input
+              type="text"
+              value={learningTopic}
+              onChange={(e) => setLearningTopic(e.target.value)}
+              placeholder="e.g., science, technology, etc."
+              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <button
+            onClick={handleLearnFromText}
+            disabled={loading || !learningText.trim()}
+            className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
+          >
+            {loading ? (
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4 mr-2" />
+            )}
+            Learn from Text
+          </button>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="glass-panel p-6 rounded-xl"
+      >
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+          <Plus className="w-5 h-5 mr-2 text-purple-400" />
           Add Knowledge Manually
         </h3>
         <div className="space-y-4">
@@ -339,7 +463,7 @@ const RAGManager = ({ userId }) => {
           <button
             onClick={handleAddKnowledge}
             disabled={loading || !newKnowledge.trim()}
-            className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
+            className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
           >
             {loading ? (
               <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
