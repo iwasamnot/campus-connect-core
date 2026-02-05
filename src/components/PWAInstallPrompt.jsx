@@ -4,6 +4,9 @@ import { Download, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 const PWAInstallPrompt = () => {
+  // Temporarily disabled to prevent error
+  return null;
+  
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const { success, error } = useToast();
