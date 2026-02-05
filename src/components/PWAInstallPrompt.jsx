@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext';
 const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const { success, error: showError } = useToast();
+  const { success, error } = useToast();
 
   useEffect(() => {
     // ✅ FIX: Check if app is already installed
@@ -64,7 +64,7 @@ const PWAInstallPrompt = () => {
       }
     } catch (error) {
       console.error('Error showing install prompt:', error);
-      showError('Failed to show install prompt. Please try again.');
+      error('Failed to show install prompt. Please try again.');
     } finally {
       // Clear the deferredPrompt
       setDeferredPrompt(null);
