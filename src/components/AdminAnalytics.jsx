@@ -21,7 +21,10 @@ import {
   Activity,
   FileText,
   Calendar,
-  Download
+  Download,
+  Search,
+  Brain,
+  Sparkles
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SkeletonLoader, CardSkeleton } from './SkeletonLoader';
@@ -34,6 +37,12 @@ const AdminAnalytics = () => {
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, 90d, all
+  
+  // Smart query states
+  const [query, setQuery] = useState('');
+  const [queryResult, setQueryResult] = useState(null);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [showSmartQuery, setShowSmartQuery] = useState(false);
 
   // Fetch data
   useEffect(() => {
@@ -128,6 +137,39 @@ const AdminAnalytics = () => {
       auditLogs: auditLogs.filter(filterByTime),
     };
   }, [messages, reports, auditLogs, timeRange]);
+
+  // Handle smart query
+  const handleSmartQuery = async () => {
+    if (!query.trim()) return;
+    
+    setQueryLoading(true);
+    setQueryResult(null);
+    
+    try {
+      // Import the smart admin queries dynamically
+      const { askAdminQuery } = await import('../utils/smartAdminQueries');
+      const result = await askAdminQuery(query, user?.uid);
+      setQueryResult(result);
+    } catch (error) {
+      console.error('Error processing smart query:', error);
+      setQueryResult({
+        answer: "I'm having trouble processing that query. Please try rephrasing it.",
+        error: error.message
+      });
+    } finally {
+      setQueryLoading(false);
+    }
+  };
+
+  // Sample queries for suggestions
+  const sampleQueries = [
+    "Which users were online between 2 jan to 5 jan?",
+    "How many messages were sent last week?",
+    "Show me most active users this month",
+    "What are the peak activity hours?",
+    "How many new users registered in January?",
+    "Compare message volume this week vs last week"
+  ];
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -292,6 +334,19 @@ const AdminAnalytics = () => {
               <option value="all">All time</option>
             </select>
             <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowSmartQuery(!showSmartQuery)}
+              className={`px-4 py-2 rounded-xl glass-panel backdrop-blur-sm border transition-all duration-300 flex items-center gap-2 ${
+                showSmartQuery 
+                  ? 'bg-indigo-600/30 border-indigo-500/50 text-indigo-300' 
+                  : 'bg-white/5 border-white/10 text-white hover:border-white/20'
+              }`}
+            >
+              <Brain className="w-4 h-4" />
+              <span className="hidden sm:inline">Smart Query</span>
+            </motion.button>
+            <motion.button
               onClick={exportData}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -406,6 +461,96 @@ const AdminAnalytics = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Smart Query Interface */}
+      {showSmartQuery && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel border border-white/10 rounded-[2rem] shadow-xl p-6 backdrop-blur-xl"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="w-5 h-5 text-indigo-400" />
+            <h3 className="text-lg font-semibold text-white text-glow">
+              Smart Query Assistant
+            </h3>
+            <Sparkles className="w-4 h-4 text-yellow-400" />
+          </div>
+          
+          {/* Query Input */}
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSmartQuery()}
+                placeholder="Ask anything about your data... e.g., 'Which users were online between 2 jan to 5 jan?'"
+                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSmartQuery}
+                disabled={queryLoading || !query.trim()}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 text-white rounded-xl font-medium transition-all flex items-center gap-2"
+              >
+                {queryLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Search className="w-4 h-4" />
+                )}
+                Ask
+              </motion.button>
+            </div>
+
+            {/* Sample Queries */}
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-white/60">Try:</span>
+              {sampleQueries.map((sampleQ, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setQuery(sampleQ)}
+                  className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-lg text-sm transition-all"
+                >
+                  {sampleQ}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Query Result */}
+          {queryResult && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 p-4 bg-white/5 border border-white/10 rounded-xl"
+            >
+              <div className="prose prose-invert max-w-none">
+                <div 
+                  className="text-white/90 whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ 
+                    __html: queryResult.answer.replace(/\n/g, '<br />') 
+                  }}
+                />
+              </div>
+              
+              {queryResult.data && (
+                <details className="mt-4">
+                  <summary className="text-sm text-white/60 cursor-pointer hover:text-white/80">
+                    View raw data
+                  </summary>
+                  <pre className="mt-2 text-xs text-white/40 overflow-x-auto">
+                    {JSON.stringify(queryResult.data, null, 2)}
+                  </pre>
+                </details>
+              )}
+            </motion.div>
+          )}
+        </motion.div>
+      )}
 
       {/* Charts and Detailed Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
