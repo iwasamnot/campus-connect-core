@@ -11,95 +11,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AIIntelligenceStatus, AIThinkingAnimation } from './AIIntelligenceStatus';
 
-
-// Enhanced SISTC Knowledge Base with more detailed information
-const SISTC_KNOWLEDGE_BASE = {
-  about: {
-    story: "Sydney International School of Technology and Commerce (SISTC) opened its doors in 2020. We offer innovative courses designed to prepare students for careers in Information Technology.",
-    focus: "SISTC focuses on providing quality IT education with industry partnerships and work-integrated learning opportunities.",
-    locations: "SISTC has campuses in Sydney CBD, Parramatta, and Melbourne.",
-    accreditation: "SISTC is an Accredited Institute of Higher Education. TEQSA PRV14311, CRICOS 03836J, ABN 746 130 55440",
-    mission: "To provide innovative IT education that prepares students for successful careers in the information economy."
-  },
-  courses: {
-    undergraduate: [
-      {
-        name: "Bachelor of Information Technology",
-        majors: ["Business Information Systems", "Digital Enterprise"],
-        certified: "ACS Certified",
-        nested: ["Diploma of Business Information Systems", "Diploma of Information Technology"],
-        duration: "3 years full-time",
-        description: "Comprehensive IT degree with choice of two majors focusing on business applications or digital transformation."
-      }
-    ],
-    postgraduate: [
-      {
-        name: "Master of Information Technology",
-        specialisations: ["Data Analytics", "Digital Leadership", "Cyber Security Major"],
-        certified: "ACS Certified",
-        nested: ["Graduate Diploma in IT", "Graduate Certificate in IT"],
-        duration: "2 years full-time",
-        description: "Advanced IT degree with three specialisation options for career advancement."
-      }
-    ]
-  },
-  locations: {
-    sydney: {
-      description: "Sydney CBD campus is located in the heart of Sydney's Central Business District (CBD), amidst cafes, shopping, and entertainment.",
-      highlights: ["Iconic Landmarks at Sydney Harbour", "World-Class Shopping in CBD", "Diverse Dining Across the City"],
-      address: "Sydney CBD, New South Wales"
-    },
-    parramatta: {
-      description: "Parramatta is a vibrant and rapidly growing city located in the heart of Greater Western Sydney.",
-      highlights: ["Fantastic Shopping at Westfield Parramatta", "Global Cuisine on Church Street", "Historic Landmarks in Parramatta Park"],
-      address: "Parramatta, Greater Western Sydney, New South Wales"
-    },
-    melbourne: {
-      description: "Melbourne is a vibrant city known for its trendy shopping, diverse dining, rich arts scene, beautiful parks, and world-class sporting events.",
-      highlights: ["Trendy Shopping on Collins Street", "Laneway Cafés and Global Cuisine", "Iconic Arts and Music Festivals"],
-      address: "Melbourne, Victoria"
-    }
-  },
-  contact: {
-    phone: "+61 (2) 9061 5900",
-    website: "https://sistc.edu.au/",
-    campuses: ["Sydney", "Parramatta", "Melbourne"],
-    email: "General enquiries available through website contact form"
-  },
-  statistics: {
-    students: "500+ Students in Sydney & Melbourne",
-    teaching: "85.1% rated Teaching Practices positively (National average: 79.8%)",
-    support: "85.4% rated Support Services positively (National average: 72.7%)",
-    development: "82.4% rated Skill Development positively (National average: 79.8%)",
-    survey: "Based on Undergraduate Student Experience Survey 2021-2022"
-  },
-  applying: {
-    requirements: "A Student visa is required for International Students. You must always follow the conditions of your visa.",
-    process: "Entry Requirements, Credit for Prior Learning, Education Agents, How to Apply, Fees",
-    steps: [
-      "Check entry requirements for your chosen course",
-      "Apply for credit for prior learning if applicable",
-      "Contact an education agent or apply directly",
-      "Submit application with required documents",
-      "Pay application fees",
-      "Receive offer and accept",
-      "Apply for student visa (international students)"
-    ]
-  },
-  support: {
-    services: "Student Support, Digital Library, Graduation support available",
-    academic: "Academic Integrity, Work Integrated Learning, Capstone Projects Expo",
-    wellbeing: "Health & Wellbeing support available",
-    library: "Digital Library with extensive resources"
-  },
-  life: {
-    studentLife: "SISTC offers a vibrant student life with various activities and support services",
-    womenInIT: "Women in IT program to support female students",
-    capstone: "Capstone Projects Expo showcases student work",
-    workIntegrated: "Work Integrated Learning opportunities available"
-  }
-};
-
 // Advanced question understanding and classification
 class IntelligentAI {
   constructor() {
@@ -306,6 +217,94 @@ class IntelligentAI {
     return answer;
   }
 }
+
+// Enhanced SISTC Knowledge Base with more detailed information
+const SISTC_KNOWLEDGE_BASE = {
+  about: {
+    story: "Sydney International School of Technology and Commerce (SISTC) opened its doors in 2020. We offer innovative courses designed to prepare students for careers in Information Technology.",
+    focus: "SISTC focuses on providing quality IT education with industry partnerships and work-integrated learning opportunities.",
+    locations: "SISTC has campuses in Sydney CBD, Parramatta, and Melbourne.",
+    accreditation: "SISTC is an Accredited Institute of Higher Education. TEQSA PRV14311, CRICOS 03836J, ABN 746 130 55440",
+    mission: "To provide innovative IT education that prepares students for successful careers in the information economy."
+  },
+  courses: {
+    undergraduate: [
+      {
+        name: "Bachelor of Information Technology",
+        majors: ["Business Information Systems", "Digital Enterprise"],
+        certified: "ACS Certified",
+        nested: ["Diploma of Business Information Systems", "Diploma of Information Technology"],
+        duration: "3 years full-time",
+        description: "Comprehensive IT degree with choice of two majors focusing on business applications or digital transformation."
+      }
+    ],
+    postgraduate: [
+      {
+        name: "Master of Information Technology",
+        specialisations: ["Data Analytics", "Digital Leadership", "Cyber Security Major"],
+        certified: "ACS Certified",
+        nested: ["Graduate Diploma in IT", "Graduate Certificate in IT"],
+        duration: "2 years full-time",
+        description: "Advanced IT degree with three specialisation options for career advancement."
+      }
+    ]
+  },
+  locations: {
+    sydney: {
+      description: "Sydney CBD campus is located in the heart of Sydney's Central Business District (CBD), amidst cafes, shopping, and entertainment.",
+      highlights: ["Iconic Landmarks at Sydney Harbour", "World-Class Shopping in CBD", "Diverse Dining Across the City"],
+      address: "Sydney CBD, New South Wales"
+    },
+    parramatta: {
+      description: "Parramatta is a vibrant and rapidly growing city located in the heart of Greater Western Sydney.",
+      highlights: ["Fantastic Shopping at Westfield Parramatta", "Global Cuisine on Church Street", "Historic Landmarks in Parramatta Park"],
+      address: "Parramatta, Greater Western Sydney, New South Wales"
+    },
+    melbourne: {
+      description: "Melbourne is a vibrant city known for its trendy shopping, diverse dining, rich arts scene, beautiful parks, and world-class sporting events.",
+      highlights: ["Trendy Shopping on Collins Street", "Laneway Cafés and Global Cuisine", "Iconic Arts and Music Festivals"],
+      address: "Melbourne, Victoria"
+    }
+  },
+  contact: {
+    phone: "+61 (2) 9061 5900",
+    website: "https://sistc.edu.au/",
+    campuses: ["Sydney", "Parramatta", "Melbourne"],
+    email: "General enquiries available through website contact form"
+  },
+  statistics: {
+    students: "500+ Students in Sydney & Melbourne",
+    teaching: "85.1% rated Teaching Practices positively (National average: 79.8%)",
+    support: "85.4% rated Support Services positively (National average: 72.7%)",
+    development: "82.4% rated Skill Development positively (National average: 79.8%)",
+    survey: "Based on Undergraduate Student Experience Survey 2021-2022"
+  },
+  applying: {
+    requirements: "A Student visa is required for International Students. You must always follow the conditions of your visa.",
+    process: "Entry Requirements, Credit for Prior Learning, Education Agents, How to Apply, Fees",
+    steps: [
+      "Check entry requirements for your chosen course",
+      "Apply for credit for prior learning if applicable",
+      "Contact an education agent or apply directly",
+      "Submit application with required documents",
+      "Pay application fees",
+      "Receive offer and accept",
+      "Apply for student visa (international students)"
+    ]
+  },
+  support: {
+    services: "Student Support, Digital Library, Graduation support available",
+    academic: "Academic Integrity, Work Integrated Learning, Capstone Projects Expo",
+    wellbeing: "Health & Wellbeing support available",
+    library: "Digital Library with extensive resources"
+  },
+  life: {
+    studentLife: "SISTC offers a vibrant student life with various activities and support services",
+    womenInIT: "Women in IT program to support female students",
+    capstone: "Capstone Projects Expo showcases student work",
+    workIntegrated: "Work Integrated Learning opportunities available"
+  }
+};
 
 const AIHelp = () => {
   const { darkMode } = useTheme();
