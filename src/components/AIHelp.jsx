@@ -325,6 +325,8 @@ const AIHelp = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [editingAssistantName, setEditingAssistantName] = useState(false);
   const [assistantNameInput, setAssistantNameInput] = useState('AI Assistant');
+  const [lastAIMetadata, setLastAIMetadata] = useState(null);
+  const [showAIStatus, setShowAIStatus] = useState(false);
   const messagesEndRef = useRef(null);
   const ai = useRef(new IntelligentAI());
 
@@ -470,52 +472,49 @@ ${question}
     
     if (config) {
       try {
-        // Import advanced RAG system dynamically
-        const { getAdvancedRAG } = await import('../utils/advancedRAGSystem');
-        const rag = getAdvancedRAG();
-        const userId = user?.uid || null; // Pass user ID for personalization
+        // Import ultra-intelligent AI system dynamically
+        const { generateIntelligentResponse } = await import('../utils/ultraIntelligentAI');
+        const userId = user?.uid || null;
         
-        // Initialize RAG system if needed
-        if (!rag.isInitialized) {
-          await rag.initialize(userId);
-        }
-        
-        const ragResult = await rag.generateResponse(
+        const intelligentResult = await generateIntelligentResponse(
           userId,
           question,
           conversationHistory,
           userContext
         );
         
-        // Handle new response format (object with response and metadata)
-        if (ragResult) {
-          let answer = ragResult.response;
-          if (answer && answer.trim() !== '') {
-            // Log RAG metadata for debugging
-            console.log('RAG Response Stats:', {
-              sources: ragResult.sources?.length || 0,
-              memoriesUsed: ragResult.memoriesUsed || 0,
-              confidence: ragResult.confidence || 0
-            });
-            
-            // Check for connection match (Connection Matcher runs asynchronously)
-            // Wait a bit for the background analysis to complete, then append match message
-            await new Promise(resolve => setTimeout(resolve, 2500)); // Wait 2.5 seconds for background analysis
-            
-            if (typeof window !== 'undefined' && window.__lastConnectionMatch) {
-              const matchInfo = window.__lastConnectionMatch;
-              // Append match message to response
-              answer = answer + `\n\n${matchInfo.message}`;
-              console.log('🔗 [Connection Matcher] Match appended to response:', matchInfo);
-              // Clear the match after processing
-              delete window.__lastConnectionMatch;
-            }
-            
-            return answer;
+        if (intelligentResult && intelligentResult.response) {
+          console.log('🧠 Ultra-Intelligent AI Response:', {
+            emotions: intelligentResult.metadata?.emotions,
+            intent: intelligentResult.metadata?.intent,
+            confidence: intelligentResult.metadata?.confidence,
+            sources: intelligentResult.metadata?.sources?.length || 0,
+            enhancements: intelligentResult.metadata?.enhancements || 0
+          });
+          
+          // Store AI metadata for display
+          setLastAIMetadata(intelligentResult.metadata);
+          setShowAIStatus(true);
+          
+          let answer = intelligentResult.response;
+          
+          // Check for connection match (Connection Matcher runs asynchronously)
+          // Wait a bit for the background analysis to complete, then append match message
+          await new Promise(resolve => setTimeout(resolve, 2500)); // Wait 2.5 seconds for background analysis
+          
+          if (typeof window !== 'undefined' && window.__lastConnectionMatch) {
+            const matchInfo = window.__lastConnectionMatch;
+            // Append match message to response
+            answer = answer + `\n\n${matchInfo.message}`;
+            console.log('🔗 [Connection Matcher] Match appended to response:', matchInfo);
+            // Clear the match after processing
+            delete window.__lastConnectionMatch;
           }
+          
+          return answer;
         }
       } catch (ragError) {
-        console.warn('RAG system error, falling back to standard Gemini:', ragError);
+        console.warn('Ultra-Intelligent AI error, falling back to standard AI:', ragError);
       }
       
       // Fallback to AI with local knowledge base and user context
@@ -920,6 +919,12 @@ ${question}
                 }`}>
                   {message.timestamp.toLocaleTimeString()}
                 </div>
+                {message.type === 'bot' && index === messages.length - 1 && (
+                  <AIIntelligenceStatus 
+                    metadata={lastAIMetadata} 
+                    isVisible={showAIStatus} 
+                  />
+                )}
               </motion.div>
               {message.type === 'user' && (
                 <motion.div
@@ -947,16 +952,8 @@ ${question}
               >
                 <Bot className="text-indigo-300" size={20} />
               </motion.div>
-              <div className="glass-panel border border-white/10 rounded-xl px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Loader className="text-indigo-300" size={20} />
-                  </motion.div>
-                  <span className="text-sm text-white/70">Thinking...</span>
-                </div>
+              <div className="glass-panel border border-white/10 rounded-xl px-4 py-3 flex-1">
+                <AIThinkingAnimation isActive={true} />
               </div>
             </motion.div>
           )}

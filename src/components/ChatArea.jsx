@@ -667,34 +667,30 @@ const ChatArea = ({ setActiveView }) => {
     const virtualSeniorSystemPrompt = 'You are an empathetic, knowledgeable Senior Student at the university. Keep answers under 3 sentences.';
 
     try {
-      // Try RAG-enhanced response first (now uses advanced RAG system)
+      // Try Ultra-Intelligent AI response first
       try {
-        const { getAdvancedRAG } = await import('../utils/advancedRAGSystem');
-        const rag = getAdvancedRAG();
+        const { generateIntelligentResponse } = await import('../utils/ultraIntelligentAI');
         const userId = user?.uid || null;
         
-        // Initialize RAG system if needed
-        if (!rag.isInitialized) {
-          await rag.initialize(userId);
-        }
-        
-        const ragResult = await rag.generateResponse(
+        const intelligentResult = await generateIntelligentResponse(
           userId,
           userMessage,
           [], // No conversation history for chat
           ''
         );
         
-        if (ragResult && ragResult.response && ragResult.response.trim() !== '') {
-          console.log('RAG Response Stats:', {
-            sources: ragResult.sources?.length || 0,
-            memoriesUsed: ragResult.memoriesUsed || 0,
-            confidence: ragResult.confidence || 0
+        if (intelligentResult && intelligentResult.response && intelligentResult.response.trim() !== '') {
+          console.log('🧠 ChatArea Ultra-Intelligent AI Response:', {
+            emotions: intelligentResult.metadata?.emotions,
+            intent: intelligentResult.metadata?.intent,
+            confidence: intelligentResult.metadata?.confidence,
+            sources: intelligentResult.metadata?.sources?.length || 0,
+            enhancements: intelligentResult.metadata?.enhancements || 0
           });
-          return ragResult.response.trim();
+          return intelligentResult.response.trim();
         }
-      } catch (ragError) {
-        console.warn('RAG system error, falling back to standard AI provider:', ragError);
+      } catch (aiError) {
+        console.warn('Ultra-Intelligent AI error, falling back to standard AI provider:', aiError);
       }
 
       // Fallback to unified AI provider system (supports Vertex AI, Gemini, and other providers)
