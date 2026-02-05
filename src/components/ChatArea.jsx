@@ -365,8 +365,8 @@ const ChatArea = ({ setActiveView }) => {
   useEffect(() => {
     const initRAG = async () => {
       try {
-        // const { initializeRAG } = await import('../utils/ragSystem');
-        // await initializeRAG();
+        const { initializeRAG } = await import('../utils/advancedRAGSystem');
+        await initializeRAG(user?.uid);
       } catch (error) {
         console.warn('RAG initialization error (will use fallback):', error);
       }
@@ -669,9 +669,8 @@ const ChatArea = ({ setActiveView }) => {
     try {
       // Try RAG-enhanced response first (now uses Vertex AI if configured)
       try {
-        // const { generateRAGResponse } = await import('../utils/ragSystem');
-        // const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel, '', user?.uid || null);
-        const ragResponse = null; // Disabled RAG temporarily
+        const { generateRAGResponse } = await import('../utils/advancedRAGSystem');
+        const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel, '', user?.uid || null);
         if (ragResponse && ragResponse.trim() !== '') {
           return ragResponse.trim();
         }

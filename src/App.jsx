@@ -160,6 +160,7 @@ const SmartNotifications = createLazyComponent(() => import('./components/SmartN
 // const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
 //   return { default: () => null };
 // }));
+const RAGManager = createLazyComponent(() => import('./components/RAGManager'), 'RAG Manager');
 
 // Loading component - Minimal Fluid Design
 const LoadingSpinner = () => (
@@ -324,6 +325,7 @@ function App() {
     const viewLabels = {
       'chat': 'Campus Chat',
       'ai-help': 'AI Help',
+      'rag-manager': 'RAG Manager',
       'groups': 'Groups',
       'private-chat': 'Private Chat',
       'nearby': 'Nearby Chat',
@@ -579,6 +581,17 @@ function App() {
                       <Suspense fallback={<LoadingSpinner />}>
                         <AnimatedPage variant="slideLeft">
                           <AIHelp />
+                        </AnimatedPage>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </motion.div>
+                )}
+                {activeView === 'rag-manager' && (
+                  <motion.div key="rag-manager" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <AnimatedPage variant="slideUp">
+                          <RAGManager userId={user?.uid} />
                         </AnimatedPage>
                       </Suspense>
                     </ErrorBoundary>

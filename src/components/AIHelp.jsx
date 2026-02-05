@@ -441,8 +441,8 @@ ${question}
   useEffect(() => {
     const initRAG = async () => {
       try {
-        // const { initializeRAG } = await import('../utils/ragSystem');
-        // await initializeRAG();
+        const { initializeRAG } = await import('../utils/advancedRAGSystem');
+        await initializeRAG(user?.uid);
       } catch (error) {
         console.warn('RAG initialization error (will use fallback):', error);
       }
@@ -471,16 +471,15 @@ ${question}
     if (config) {
       try {
         // Import RAG system dynamically
-        // const { generateRAGResponse } = await import('../utils/ragSystem');
+        const { generateRAGResponse } = await import('../utils/advancedRAGSystem');
         const userId = user?.uid || null; // Pass user ID for personalization
-        // const ragResult = await generateRAGResponse(
-        //   question,
-        //   conversationHistory,
-        //   null, // modelName not needed - uses Ollama/Groq from aiProvider
-        //   userContext,
-        //   user?.uid || null // Pass userId for connection engine
-        // );
-        const ragResult = null; // Disabled RAG temporarily
+        const ragResult = await generateRAGResponse(
+          question,
+          conversationHistory,
+          null, // modelName not needed - uses Ollama/Groq from aiProvider
+          userContext,
+          user?.uid || null // Pass userId for connection engine
+        );
         
         // Handle new response format (object with answer and metadata)
         if (ragResult) {
