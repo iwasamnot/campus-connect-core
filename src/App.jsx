@@ -133,7 +133,7 @@ const AdminContactMessages = createLazyComponent(() => import('./components/Admi
 const StudentProfile = createLazyComponent(() => import('./components/StudentProfile'), 'Student Profile');
 const UsersManagement = createLazyComponent(() => import('./components/UsersManagement'), 'Users Management');
 const CreateUser = createLazyComponent(() => import('./components/CreateUser'), 'Create User');
-const AIHelp = createLazyComponent(() => import('./components/AIHelp?v=' + Date.now()), 'AI Help');
+const AIHelp = createLazyComponent(() => import('./components/AIHelp'), 'AI Help');
 const Groups = createLazyComponent(() => import('./components/Groups'), 'Groups');
 const GroupChat = createLazyComponent(() => import('./components/GroupChat'), 'Group Chat');
 const PrivateChat = createLazyComponent(() => import('./components/PrivateChat'), 'Private Chat');
