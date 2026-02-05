@@ -157,9 +157,9 @@ const SmartWorkspace = createLazyComponent(() => import('./components/SmartWorks
 const AIStudyGroups = createLazyComponent(() => import('./components/AIStudyGroups'), 'AI Study Groups');
 const EmotionPredictionEngine = createLazyComponent(() => import('./components/EmotionPredictionEngine'), 'Emotion Prediction Engine');
 const SmartNotifications = createLazyComponent(() => import('./components/SmartNotifications'), 'Smart Notifications');
-const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
-  return { default: () => null };
-}));
+// const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').catch(() => {
+//   return { default: () => null };
+// }));
 
 // Loading component - Minimal Fluid Design
 const LoadingSpinner = () => (
@@ -661,7 +661,7 @@ function App() {
                   </motion.div>
                 )}
                 <KeyboardShortcuts />
-                <PWAInstallPrompt />
+                {/* <PWAInstallPrompt /> */}
               </>
             ) : (
               <>
@@ -819,7 +819,7 @@ function App() {
                   </motion.div>
                 )}
                 <KeyboardShortcuts />
-                <PWAInstallPrompt />
+                {/* <PWAInstallPrompt /> */}
               </>
             )}
           </AnimatePresence>
