@@ -667,12 +667,31 @@ const ChatArea = ({ setActiveView }) => {
     const virtualSeniorSystemPrompt = 'You are an empathetic, knowledgeable Senior Student at the university. Keep answers under 3 sentences.';
 
     try {
-      // Try RAG-enhanced response first (now uses Vertex AI if configured)
+      // Try RAG-enhanced response first (now uses advanced RAG system)
       try {
-        const { generateRAGResponse } = await import('../utils/advancedRAGSystem');
-        const ragResponse = await generateRAGResponse(userMessage, [], selectedGeminiModel, '', user?.uid || null);
-        if (ragResponse && ragResponse.trim() !== '') {
-          return ragResponse.trim();
+        const { getAdvancedRAG } = await import('../utils/advancedRAGSystem');
+        const rag = getAdvancedRAG();
+        const userId = user?.uid || null;
+        
+        // Initialize RAG system if needed
+        if (!rag.isInitialized) {
+          await rag.initialize(userId);
+        }
+        
+        const ragResult = await rag.generateResponse(
+          userId,
+          userMessage,
+          [], // No conversation history for chat
+          ''
+        );
+        
+        if (ragResult && ragResult.response && ragResult.response.trim() !== '') {
+          console.log('RAG Response Stats:', {
+            sources: ragResult.sources?.length || 0,
+            memoriesUsed: ragResult.memoriesUsed || 0,
+            confidence: ragResult.confidence || 0
+          });
+          return ragResult.response.trim();
         }
       } catch (ragError) {
         console.warn('RAG system error, falling back to standard AI provider:', ragError);

@@ -470,25 +470,33 @@ ${question}
     
     if (config) {
       try {
-        // Import RAG system dynamically
-        const { generateRAGResponse } = await import('../utils/advancedRAGSystem');
+        // Import advanced RAG system dynamically
+        const { getAdvancedRAG } = await import('../utils/advancedRAGSystem');
+        const rag = getAdvancedRAG();
         const userId = user?.uid || null; // Pass user ID for personalization
-        const ragResult = await generateRAGResponse(
+        
+        // Initialize RAG system if needed
+        if (!rag.isInitialized) {
+          await rag.initialize(userId);
+        }
+        
+        const ragResult = await rag.generateResponse(
+          userId,
           question,
           conversationHistory,
-          null, // modelName not needed - uses Ollama/Groq from aiProvider
-          userContext,
-          user?.uid || null // Pass userId for connection engine
+          userContext
         );
         
-        // Handle new response format (object with answer and metadata)
+        // Handle new response format (object with response and metadata)
         if (ragResult) {
-          let answer = typeof ragResult === 'string' ? ragResult : ragResult.answer;
+          let answer = ragResult.response;
           if (answer && answer.trim() !== '') {
-            // Log metadata for debugging (sentiment, queryType, etc.)
-            if (ragResult.metadata) {
-              console.log('RAG Metadata:', ragResult.metadata);
-            }
+            // Log RAG metadata for debugging
+            console.log('RAG Response Stats:', {
+              sources: ragResult.sources?.length || 0,
+              memoriesUsed: ragResult.memoriesUsed || 0,
+              confidence: ragResult.confidence || 0
+            });
             
             // Check for connection match (Connection Matcher runs asynchronously)
             // Wait a bit for the background analysis to complete, then append match message
