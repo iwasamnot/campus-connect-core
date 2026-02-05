@@ -174,20 +174,29 @@ if (typeof window !== 'undefined') {
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
-  // Clear all caches before registering new service worker
-  caches.keys().then(cacheNames => {
+  // Force unregister all service workers and clear all caches
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    return Promise.all(registrations.map(registration => {
+      console.log('Unregistering service worker:', registration.scope);
+      return registration.unregister();
+    }));
+  }).then(() => {
+    console.log('All service workers unregistered');
+    // Clear all caches
+    return caches.keys();
+  }).then(cacheNames => {
     return Promise.all(
       cacheNames.map(cacheName => {
-        if (cacheName.startsWith('campusconnect-') || cacheName.includes('workbox-')) {
-          console.log(`Deleting old cache: ${cacheName}`);
-          return caches.delete(cacheName);
-        }
+        console.log(`Deleting cache: ${cacheName}`);
+        return caches.delete(cacheName);
       })
     );
   }).then(() => {
-    console.log('All old caches cleared');
+    console.log('All caches cleared, reloading page...');
+    // Force reload to ensure clean state
+    window.location.reload();
   }).catch(err => {
-    console.log('Cache clearing failed:', err);
+    console.log('Service worker cleanup failed:', err);
   });
   
   window.addEventListener('load', () => {
