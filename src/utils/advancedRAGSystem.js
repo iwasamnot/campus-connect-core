@@ -12,79 +12,7 @@
 import { callAI } from './aiProvider';
 import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-
-// Simple in-memory vector store (in production, use Pinecone/Weaviate)
-class VectorStore {
-  constructor() {
-    this.vectors = new Map();
-    this.dimensions = 384; // Default for sentence-transformers
-  }
-
-  // Simple text embedding (in production, use actual embedding model)
-  async embed(text) {
-    // For now, use a simple hash-based embedding
-    // In production, replace with actual embedding API
-    const words = text.toLowerCase().split(/\s+/);
-    const embedding = new Array(this.dimensions).fill(0);
-    
-    words.forEach((word, i) => {
-      const hash = this.simpleHash(word);
-      const idx = Math.abs(hash) % this.dimensions;
-      embedding[idx] = (embedding[idx] || 0) + 1 / (i + 1);
-    });
-
-    // Normalize
-    const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    return embedding.map(val => val / magnitude);
-  }
-
-  simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return hash;
-  }
-
-  async add(id, text, metadata = {}) {
-    const embedding = await this.embed(text);
-    this.vectors.set(id, {
-      embedding,
-      text,
-      metadata,
-      timestamp: Date.now()
-    });
-  }
-
-  async search(query, topK = 5) {
-    const queryEmbedding = await this.embed(query);
-    const results = [];
-
-    for (const [id, data] of this.vectors.entries()) {
-      const similarity = this.cosineSimilarity(queryEmbedding, data.embedding);
-      results.push({
-        id,
-        text: data.text,
-        metadata: data.metadata,
-        similarity,
-        timestamp: data.timestamp
-      });
-    }
-
-    return results
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, topK);
-  }
-
-  cosineSimilarity(a, b) {
-    const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
-    const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-    const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-    return dotProduct / (magnitudeA * magnitudeB);
-  }
-}
+import { RAGRetrieval, KnowledgeDocument } from './ragRetrieval';
 
 // Web scraper for learning
 class WebLearner {
@@ -227,7 +155,7 @@ class ConversationMemory {
 // Main Advanced RAG System
 class AdvancedRAGSystem {
   constructor() {
-    this.vectorStore = new VectorStore();
+    this.vectorStore = new RAGRetrieval(); // Use proper vector database
     this.webLearner = new WebLearner();
     this.conversationMemories = new Map();
     this.isInitialized = false;
@@ -247,15 +175,16 @@ class AdvancedRAGSystem {
       // Initialize conversation memory for user
       if (!this.conversationMemories.has(userId)) {
         this.conversationMemories.set(userId, new ConversationMemory(userId));
+        await this.conversationMemories.get(userId).loadMemories();
       }
 
-      // Load existing knowledge base
-      await this.loadKnowledgeBase();
-      
+      // Load documents into vector store
+      await this.vectorStore.loadDocuments();
+
       this.isInitialized = true;
-      console.log('Advanced RAG System initialized');
+      console.log('Advanced RAG System initialized with Pinecone vector database');
     } catch (error) {
-      console.error('RAG initialization error:', error);
+      console.error('Error initializing RAG system:', error);
     }
   }
 
@@ -287,8 +216,8 @@ class AdvancedRAGSystem {
     }
 
     try {
-      // 1. Search vector store for relevant knowledge
-      const knowledgeResults = await this.vectorStore.search(message, 5);
+      // 1. Search vector store for relevant knowledge using Pinecone
+      const knowledgeResults = await this.vectorStore.retrieve(message, 5, 0.3);
       
       // 2. Get relevant conversation memories
       const memory = this.conversationMemories.get(userId);
@@ -511,24 +440,29 @@ Format as a numbered list.`;
     try {
       const db = getFirestore();
       const knowledgeRef = collection(db, 'knowledgeBase');
-
-      for (const item of content) {
-        const docRef = doc(knowledgeRef);
-        await setDoc(docRef, {
-          content: item,
-          source,
+      
+      // Add each knowledge item to Firebase
+      // Vector embeddings will be created when documents are loaded
+      for (const text of content) {
+        const docId = `${source}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Save to Firebase
+        await setDoc(doc(knowledgeRef, docId), {
+          text: text,
+          metadata: {
+            source,
+            timestamp: Date.now(),
+            category: 'general'
+          },
           timestamp: Date.now(),
-          type: 'knowledge'
-        });
-
-        // Also add to vector store
-        await this.vectorStore.add(docRef.id, item, {
-          source,
-          timestamp: Date.now()
+          source: source
         });
       }
-
-      console.log(`Added ${content.length} items to knowledge base`);
+      
+      // Reload documents to pick up new items
+      await this.vectorStore.loadDocuments();
+      
+      console.log(`Added ${content.length} items to knowledge base and vector database`);
     } catch (error) {
       console.error('Error adding to knowledge base:', error);
     }
@@ -543,9 +477,10 @@ Format as a numbered list.`;
   // Get system statistics
   getStats() {
     return {
-      vectorStoreSize: this.vectorStore.vectors.size,
+      vectorStoreSize: this.vectorStore.documents?.length || 0,
+      pineconeConfigured: this.vectorStore.pineconeConfigured,
       isInitialized: this.isInitialized,
-      learningQueueSize: this.webLearner.learningQueue.length,
+      learningQueueSize: this.webLearner.learningQueue?.length || 0,
       memoryUsers: this.conversationMemories.size,
       autoLearningEnabled: this.autoLearningEnabled,
       learningStats: { ...this.learningStats }
