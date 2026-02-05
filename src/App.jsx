@@ -103,6 +103,11 @@ const retryImport = (importFn, retries = 3, delay = 1000) => {
             setTimeout(() => attempt(remaining - 1, nextDelay), currentDelay);
           } else {
             console.error('Import failed after all retries:', error);
+            // Force reload if it's a cache-related error
+            if (error.message.includes('Unexpected token')) {
+              console.warn('Cache error detected, forcing page reload...');
+              window.location.reload();
+            }
             reject(error);
           }
         });

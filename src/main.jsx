@@ -179,6 +179,22 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then((registration) => {
       console.log('Service Worker ready');
       
+      // Check for service worker updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        console.log('New service worker found, installing...');
+        
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('New service worker installed, refreshing page...');
+            window.location.reload();
+          }
+        });
+      });
+      
+      // Force check for updates immediately
+      registration.update();
+      
       // Register background sync for offline actions
       try {
         if (registration && 'sync' in registration) {
