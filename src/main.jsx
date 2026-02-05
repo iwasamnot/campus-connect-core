@@ -174,6 +174,22 @@ if (typeof window !== 'undefined') {
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
+  // Clear all caches before registering new service worker
+  caches.keys().then(cacheNames => {
+    return Promise.all(
+      cacheNames.map(cacheName => {
+        if (cacheName.startsWith('campusconnect-') || cacheName.includes('workbox-')) {
+          console.log(`Deleting old cache: ${cacheName}`);
+          return caches.delete(cacheName);
+        }
+      })
+    );
+  }).then(() => {
+    console.log('All old caches cleared');
+  }).catch(err => {
+    console.log('Cache clearing failed:', err);
+  });
+  
   window.addEventListener('load', () => {
     // VitePWA plugin will auto-register, but we can add custom handling here
     navigator.serviceWorker.ready.then((registration) => {
