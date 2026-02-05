@@ -9,6 +9,7 @@ import { getUserProfile, updateProfileFromConversation, getPersonalizedSystemPro
 import { useAuth } from '../context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { AIIntelligenceStatus, AIThinkingAnimation } from './AIIntelligenceStatus';
 
 
 // Enhanced SISTC Knowledge Base with more detailed information
