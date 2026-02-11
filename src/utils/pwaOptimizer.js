@@ -9,11 +9,10 @@
  */
 export const registerServiceWorkerUpdate = () => {
   if ('serviceWorker' in navigator) {
-    // Listen for service worker updates
+    // Listen for service worker updates — log only, no auto-reload
+    // The VitePWA prompt mechanism handles user-facing update flow
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // New service worker activated - reload to get latest version
-      console.log('[PWA] New service worker activated, reloading...');
-      window.location.reload();
+      console.log('[PWA] New service worker activated.');
     });
 
     // Check for updates periodically (but don't create multiple intervals)
@@ -28,19 +27,6 @@ export const registerServiceWorkerUpdate = () => {
         });
       }, 60 * 60 * 1000); // Check every hour
     }
-
-    // Also check for updates on page visibility change
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        navigator.serviceWorker.getRegistration().then(registration => {
-          if (registration) {
-            registration.update().catch(err => {
-              console.warn('[PWA] Service worker update check failed:', err);
-            });
-          }
-        });
-      }
-    });
   }
 };
 

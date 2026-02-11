@@ -1,5 +1,5 @@
 // ✅ SANITY CHECK: If you can see this, the console is working
-console.error('🔥 SYSTEM START: Console is active. If you see this, logging is working.');
+console.log('🔥 SYSTEM START: Console is active. If you see this, logging is working.');
 
 // CRITICAL: Import React first and ensure it's available globally
 import React from 'react'
@@ -172,37 +172,18 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Clear all caches and unregister service workers IMMEDIATELY
-if ('serviceWorker' in navigator && 'caches' in window) {
-  console.log('Starting aggressive cache cleanup...');
-  
-  // Force unregister all service workers and clear all caches
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    console.log(`Found ${registrations.length} service worker registrations`);
-    return Promise.all(registrations.map(registration => {
-      console.log('Unregistering service worker:', registration.scope);
-      return registration.unregister();
-    }));
-  }).then(() => {
-    console.log('All service workers unregistered');
-    // Clear all caches
-    return caches.keys();
-  }).then(cacheNames => {
-    console.log(`Found ${cacheNames.length} caches to delete`);
-    return Promise.all(
-      cacheNames.map(cacheName => {
-        console.log(`Deleting cache: ${cacheName}`);
-        return caches.delete(cacheName);
-      })
+// Clean up outdated caches (non-destructive, no reload)
+if ('caches' in window) {
+  caches.keys().then(cacheNames => {
+    const outdated = cacheNames.filter(name =>
+      name.includes('campusconnect') && !name.includes('v8.4.0')
     );
-  }).then(() => {
-    console.log('All caches cleared, reloading page...');
-    // Force reload to ensure clean state
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
+    if (outdated.length > 0) {
+      console.log(`[PWA] Cleaning ${outdated.length} outdated cache(s)`);
+      Promise.all(outdated.map(name => caches.delete(name)));
+    }
   }).catch(err => {
-    console.log('Service worker cleanup failed:', err);
+    console.log('[PWA] Cache cleanup failed:', err);
   });
 }
 
@@ -213,21 +194,17 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then((registration) => {
       console.log('Service Worker ready');
       
-      // Check for service worker updates
+      // Check for service worker updates (don't auto-reload — let VitePWA prompt handle it)
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
-        console.log('New service worker found, installing...');
+        console.log('[PWA] New service worker found, installing...');
         
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('New service worker installed, refreshing page...');
-            window.location.reload();
+            console.log('[PWA] New service worker installed. Update available.');
           }
         });
       });
-      
-      // Force check for updates immediately
-      registration.update();
       
       // Register background sync for offline actions
       try {

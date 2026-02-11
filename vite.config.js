@@ -192,8 +192,6 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,webp,json}'],
         maximumFileSizeToCacheInBytes: 5000000, // 5 MB - optimized for mobile
         cleanupOutdatedCaches: true,
-        skipWaiting: true, // Immediately activate new service worker
-        clientsClaim: true, // Take control of all clients immediately
         // Optimize for mobile networks
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/_/, /\.(?:js|mjs|css)$/, /^\/firebase/, /^blob:/],
