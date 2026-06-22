@@ -100,16 +100,28 @@ export const getOllamaURL = () => {
     : null;
   
   if (customUrl && customUrl !== '') {
-    console.error('🔧 [OLLAMA] Using custom URL from localStorage:', customUrl);
-    // ✅ FIX: Validate ngrok URL format
-    if (customUrl.includes('ngrok')) {
-      console.error('✅ [OLLAMA] Detected ngrok URL - HTTPS tunnel active');
-      // Ensure ngrok URL includes /api/chat if not already present
-      if (!customUrl.includes('/api/chat')) {
-        console.warn('⚠️ [OLLAMA] Ngrok URL missing /api/chat endpoint, will append automatically');
+    // ✅ FIX: Validate URL to detect placeholder/invalid URLs
+    const isPlaceholder = customUrl.includes('abcd1234') || 
+                          customUrl.includes('placeholder') ||
+                          customUrl.includes('example.com') ||
+                          customUrl === 'http://localhost:11434' && customUrl.includes('ngrok');
+    
+    if (isPlaceholder) {
+      console.error('❌ [OLLAMA] Detected placeholder URL in localStorage, ignoring:', customUrl);
+      console.error('� [OLLAMA] Please set a valid ngrok URL: localStorage.setItem("custom_ollama_url", "https://your-ngrok-url.ngrok-free.app")');
+      // Fall through to .env or default
+    } else {
+      console.error('�🔧 [OLLAMA] Using custom URL from localStorage:', customUrl);
+      // ✅ FIX: Validate ngrok URL format
+      if (customUrl.includes('ngrok')) {
+        console.error('✅ [OLLAMA] Detected ngrok URL - HTTPS tunnel active');
+        // Ensure ngrok URL includes /api/chat if not already present
+        if (!customUrl.includes('/api/chat')) {
+          console.warn('⚠️ [OLLAMA] Ngrok URL missing /api/chat endpoint, will append automatically');
+        }
       }
+      return customUrl;
     }
-    return customUrl;
   }
   
   // Fallback to .env variable (static configuration)
@@ -694,6 +706,31 @@ Current Date: ${new Date().toLocaleDateString()}`;
  * ✅ EXPORTED: Used by RAG engine and toxicity checker as fallback
  */
 export const callGroq = async (prompt, config, options) => {
+  // ✅ FIX: Reduce payload size to avoid 429 rate limiting
+  // Truncate prompt if too long (Groq has strict rate limits)
+  const MAX_PROMPT_LENGTH = 4000; // Reduced from unlimited to 4000 chars
+  let truncatedPrompt = prompt;
+  
+  if (prompt.length > MAX_PROMPT_LENGTH) {
+    console.warn(`⚠️ [GROQ] Truncating prompt from ${prompt.length} to ${MAX_PROMPT_LENGTH} chars to avoid rate limiting`);
+    // Truncate intelligently - keep the beginning and end
+    const keepStart = Math.floor(MAX_PROMPT_LENGTH * 0.6);
+    const keepEnd = Math.floor(MAX_PROMPT_LENGTH * 0.4);
+    truncatedPrompt = prompt.substring(0, keepStart) + 
+                     '\n\n[... context truncated ...]\n\n' + 
+                     prompt.substring(prompt.length - keepEnd);
+  }
+  
+  // Reduce system prompt size
+  const systemPrompt = options.systemPrompt || 'You are a helpful assistant.';
+  const MAX_SYSTEM_PROMPT_LENGTH = 1000;
+  let truncatedSystemPrompt = systemPrompt;
+  
+  if (systemPrompt.length > MAX_SYSTEM_PROMPT_LENGTH) {
+    console.warn(`⚠️ [GROQ] Truncating system prompt from ${systemPrompt.length} to ${MAX_SYSTEM_PROMPT_LENGTH} chars`);
+    truncatedSystemPrompt = systemPrompt.substring(0, MAX_SYSTEM_PROMPT_LENGTH);
+  }
+  
   const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -703,8 +740,8 @@ export const callGroq = async (prompt, config, options) => {
     body: JSON.stringify({
       model: config.model,
       messages: [
-        { role: 'system', content: options.systemPrompt || 'You are a helpful assistant.' },
-        { role: 'user', content: prompt }
+        { role: 'system', content: truncatedSystemPrompt },
+        { role: 'user', content: truncatedPrompt }
       ],
       max_tokens: options.maxTokens || config.maxTokens,
       temperature: options.temperature || config.temperature,
@@ -713,6 +750,10 @@ export const callGroq = async (prompt, config, options) => {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    // ✅ FIX: Provide better error message for rate limiting
+    if (response.status === 429) {
+      throw new Error(`Groq rate limit exceeded. Please reduce payload size or wait before retrying. Error: ${error.error?.message || 'Too many requests'}`);
+    }
     throw new Error(error.error?.message || `Groq API error: ${response.statusText}`);
   }
 
